@@ -6,7 +6,10 @@ module.exports = {
   priority: 0.7,
   sitemapSize: 5000,
   exclude: ['/admin'],
-  outDir: './public', // ✅ Add this line
+
+  // ❌ REMOVE outDir (it breaks App Router)
+  // outDir: './public',
+
   robotsTxtOptions: {
     policies: [
       { userAgent: '*', allow: '/' },

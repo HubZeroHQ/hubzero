@@ -124,8 +124,13 @@ export default function Navbar() {
           </AnimatePresence>
         </div>
 
-        <a href="/work" className="text-[var(--text-muted)] hover:text-[var(--text)] transition">WORK WITH US</a>
-        <a href="#blog" className="text-[var(--text-muted)] hover:text-[var(--text)] transition">BLOG</a>
+        <Link href="/work" className="text-[var(--text-muted)] hover:text-[var(--text)] transition">
+          WORK WITH US
+        </Link>
+        <Link href="/blog" className="text-[var(--text-muted)] hover:text-[var(--text)] transition">
+          BLOG
+        </Link>
+
       </div>
 
       {/* Right Controls */}
