@@ -26,12 +26,12 @@ import {
   FaReact,
   FaNodeJs,
   FaTools,
-  FaComments, 
+  FaComments,
   FaSitemap,
-  FaUsers, 
-  FaClipboardList, 
-  FaThLarge, 
-  FaProjectDiagram, 
+  FaUsers,
+  FaClipboardList,
+  FaThLarge,
+  FaProjectDiagram,
   FaToolbox,
   FaRobot,
   FaBrain,
@@ -97,8 +97,34 @@ import { motion } from 'framer-motion';
 import CommandTerminal from "@/components/CommandTerminal";
 import CmdButton from "@/components/CmdButton";
 
+/**
+ * Local extensions for PortfolioData to avoid forcing changes in your types file.
+ * These are optional and mirror the JSON shapes we locked earlier.
+ */
+type ExperienceItem = {
+  role: string;
+  company: string;
+  location?: string;
+  start: string;
+  end: string;
+  description?: string[];
+  tech?: string[];
+};
+
+type EducationItem = {
+  degree: string;
+  institution: string;
+  location?: string;
+  start: string;
+  end: string;
+  details?: string[];
+};
+
 type Props = {
-  data: PortfolioData;
+  data: PortfolioData & {
+    experience?: ExperienceItem[];
+    education?: EducationItem[];
+  };
 };
 
 type SocialLink = {
@@ -133,7 +159,6 @@ const categoryIconMapping: Record<string, JSX.Element> = {
   "Frameworks & Libraries": <FiPackage />,
   "Cloud": <SiGooglecloud />,
 };
-
 
 const skillIconMapping: Record<string, JSX.Element> = {
   // 🖥️ Languages
@@ -189,7 +214,7 @@ const skillIconMapping: Record<string, JSX.Element> = {
   // 🌐 Web Dev
   "React": <FaReact />,
   "Next.js": <SiNextdotjs />,
-  "Tailwind CSS": <SiStreamlit />, 
+  "Tailwind CSS": <SiStreamlit />,
   "CSS": <FaCss3Alt />,
   "HTML": <FaHtml5 />,
   "Tkinter": <FaDesktop />,
@@ -209,13 +234,13 @@ const skillIconMapping: Record<string, JSX.Element> = {
   "Web Development": <FaGlobe />,
 
   // 🖌️ Design
-  "Inkspace": <FaFileAlt />, 
+  "Inkspace": <FaFileAlt />,
   "Visual Design": <FaPaintBrush />,
 
   // Tools
-  "Miro": <FaProjectDiagram />, 
-  "ADK Tools": <FaToolbox />,  
-  "Google Cloud": <SiGooglecloud/>,
+  "Miro": <FaProjectDiagram />,
+  "ADK Tools": <FaToolbox />,
+  "Google Cloud": <SiGooglecloud />,
 
   // Project & Client Management
   "Agile Workflow": <FaProjectDiagram />,
@@ -283,6 +308,15 @@ export default function PortfolioClient({ data }: Props) {
   const allCategories = ['All', ...new Set(data.projects.flatMap(p => p.categories))];
   const CATEGORIES = allCategories;
 
+  // Build nav sections dynamically so the navbar reflects optional sections
+  const navSections = [
+    'about',
+    ...(data.experience && data.experience.length ? ['experience'] : []),
+    ...(data.education && data.education.length ? ['education'] : []),
+    'skills',
+    'projects',
+    'contact',
+  ];
 
   // 🔑 Global keyboard toggle
   useEffect(() => {
@@ -311,7 +345,7 @@ export default function PortfolioClient({ data }: Props) {
     ? data.projects
     : data.projects.filter((p) => p.categories.includes(filter));
 
-return (
+  return (
     <main className="bg-[#0e0e10] text-white font-mono scroll-smooth">
       {/* Navbar */}
       <nav className="fixed top-0 w-full backdrop-blur-md bg-black/50 border-b border-white/10 px-6 py-3 flex justify-between items-center z-50">
@@ -319,7 +353,7 @@ return (
           &lt;<span className="text-gray-100">{data.name}</span> /&gt;
         </h1>
         <div className="hidden md:flex gap-6 text-white/70 text-sm">
-          {['about', 'skills', 'projects','contact'].map((sec) => (
+          {navSections.map((sec) => (
             <button
               key={sec}
               onClick={() => scrollTo(sec)}
@@ -333,9 +367,10 @@ return (
           {menuOpen ? '✕' : <span className="text-2xl">☰</span>}
         </button>
       </nav>
+
       {menuOpen && (
         <div className="fixed top-[44px] w-full bg-[#0e0e10] border-b border-white/10 z-40 px-6 py-4 flex flex-col gap-4">
-          {['about', 'skills', 'projects', 'contact'].map((sec) => (
+          {navSections.map((sec) => (
             <button
               key={sec}
               onClick={() => scrollTo(sec)}
@@ -344,7 +379,6 @@ return (
               {sec.charAt(0).toUpperCase() + sec.slice(1)}
             </button>
           ))}
-
         </div>
       )}
 
@@ -397,15 +431,14 @@ return (
           <div className="max-w-3xl">
             <h2 className="text-3xl md:text-4xl font-bold text-[#3ABEFF] mb-6">About Me</h2>
             <p className="text-white/70 leading-relaxed mb-4 text-sm md:text-base">
-                {data.about[0]}  
+              {data.about[0]}
             </p>
             <p className="text-white/70 leading-relaxed mb-4 text-sm md:text-base">
-                {data.about[1]}  
+              {data.about[1]}
             </p>
             <p className="text-white/70 leading-relaxed mb-6 text-sm md:text-base">
-                {data.about[2]}  
+              {data.about[2]}
             </p>
-
 
             {/* Socials */}
             <div className="flex flex-wrap gap-4 text-sm">
@@ -422,18 +455,114 @@ return (
 
             {/* Location */}
             {data.location && (
-                <div className="mt-6 flex items-center gap-2 text-sm text-white/50">
-                    <GoLocation className="text-[#3ABEFF]" />
-                    <span>{data.location}</span>
-                </div>
+              <div className="mt-6 flex items-center gap-2 text-sm text-white/50">
+                <GoLocation className="text-[#3ABEFF]" />
+                <span>{data.location}</span>
+              </div>
             )}
           </div>
-
-
         </div>
       </section>
 
+      {/* Experience (vertical timeline) */}
+      {data.experience && data.experience.length > 0 && (
+        <section id="experience" className="px-6 py-20 bg-zinc-900">
+          <h2 className="text-2xl font-bold text-[#3ABEFF] text-center mb-12">
+            Experience
+          </h2>
 
+          <div className="max-w-5xl mx-auto relative">
+            {/* vertical line */}
+            <div className="hidden md:block absolute left-6 top-6 bottom-6 w-px bg-white/6" />
+
+            <div className="space-y-10">
+              {data.experience.map((exp, idx) => (
+                <div key={idx} className="relative pl-12 md:pl-16">
+                  {/* dot */}
+                  <div className="absolute left-2 md:left-4 top-3 md:top-4 w-3 h-3 rounded-full bg-[#3ABEFF] ring-0" />
+
+                  <div className="bg-white/5 rounded-lg p-5">
+                    <div className="flex flex-wrap justify-between gap-2 items-start">
+                      <h3 className="text-lg font-semibold text-white">
+                        {exp.role}
+                      </h3>
+                      <span className="text-xs text-white/50">
+                        {exp.start} – {exp.end}
+                      </span>
+                    </div>
+
+                    <p className="text-sm text-white/70 mt-1">
+                      <span className="font-medium text-white/90">{exp.company}</span>
+                      {exp.location && <span className="text-white/60"> • {exp.location}</span>}
+                    </p>
+
+                    {exp.description && exp.description.length > 0 && (
+                      <ul className="mt-3 list-disc list-outside pl-5 text-sm text-white/70 space-y-1">
+                        {exp.description.map((d, i) => (
+                          <li key={i}>{d}</li>
+                        ))}
+                      </ul>
+                    )}
+
+                    {exp.tech && exp.tech.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {exp.tech.map((t) => (
+                          <span
+                            key={t}
+                            className="text-xs bg-white/10 px-2 py-0.5 rounded-full"
+                          >
+                            {t}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Education (stacked cards) */}
+      {data.education && data.education.length > 0 && (
+        <section id="education" className="px-6 py-20">
+          <h2 className="text-2xl font-bold text-[#3ABEFF] text-center mb-10">
+            Education
+          </h2>
+
+          <div className="max-w-5xl mx-auto space-y-6">
+            {data.education.map((edu, idx) => (
+              <div
+                key={idx}
+                className="bg-white/5 rounded-lg p-6"
+              >
+                <div className="flex flex-wrap justify-between gap-2 items-start">
+                  <h3 className="text-lg font-semibold text-white">
+                    {edu.degree}
+                  </h3>
+                  <span className="text-xs text-white/50">
+                    {edu.start} – {edu.end}
+                  </span>
+                </div>
+
+                <p className="text-sm text-white/70 mt-1">
+                  <span className="font-medium text-white/90">{edu.institution}</span>
+                  {edu.location && <span className="text-white/60"> • {edu.location}</span>}
+                </p>
+
+                {edu.details && edu.details.length > 0 && (
+                  <ul className="mt-3 list-disc list-inside text-sm text-white/70 space-y-1">
+                    {edu.details.map((d, i) => (
+                      <li key={i}>{d}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Skills */}
       <section id="skills" className="bg-zinc-900 px-6 py-20">
@@ -441,16 +570,16 @@ return (
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row sm:flex-wrap gap-6">
           {data.skills.map((group, index) => (
             <div key={index} className="flex-1 min-w-[280px] bg-white/5 p-6 rounded-lg">
-                <h3 className="flex items-center gap-2 font-semibold mb-4 text-[#3ABEFF]">
-                  {categoryIconMapping[group.category] && (
-                    <span className="text-lg">{categoryIconMapping[group.category]}</span>
-                  )}
-                  {group.category}
-                </h3>
-                <div className="flex flex-wrap gap-2">
+              <h3 className="flex items-center gap-2 font-semibold mb-4 text-[#3ABEFF]">
+                {categoryIconMapping[group.category] && (
+                  <span className="text-lg">{categoryIconMapping[group.category]}</span>
+                )}
+                {group.category}
+              </h3>
+              <div className="flex flex-wrap gap-2">
                 {group.items.map((item, idx) => {
-                    const icon = skillIconMapping[item];
-                    return (
+                  const icon = skillIconMapping[item];
+                  return (
                     <motion.span
                       key={idx}
                       className="bg-white/10 px-3 py-1 rounded-full flex items-center gap-1 text-sm"
@@ -462,235 +591,232 @@ return (
                       {icon && <span className="text-lg">{icon}</span>}
                       {item}
                     </motion.span>
-                    );
+                  );
                 })}
-                </div>
+              </div>
             </div>
-            ))}
+          ))}
         </div>
       </section>
 
-
       {/* Projects */}
-        <section id="projects" className="px-6 py-20">
+      <section id="projects" className="px-6 py-20">
         <h2 className="text-2xl font-bold text-[#3ABEFF] text-center mb-6">Featured Projects</h2>
 
         {/* Categories (Filter) */}
         <div className="flex justify-center gap-4 mb-8 overflow-x-auto px-2 snap-x">
-            {CATEGORIES.map((cat) => (
+          {CATEGORIES.map((cat) => (
             <button
-                key={cat}
-                onClick={() => setFilter(cat)}
-                className={`px-4 py-1 rounded-full transition border ${
+              key={cat}
+              onClick={() => setFilter(cat)}
+              className={`px-4 py-1 rounded-full transition border ${
                 filter === cat ? 'bg-[#3ABEFF] text-black' : 'bg-white/10 text-white'
-                }`}
+              }`}
             >
-                {formatLabel(cat)}
+              {formatLabel(cat)}
             </button>
-            ))}
+          ))}
         </div>
 
         {/* Project Grid */}
         <motion.div
-            variants={container}
-            initial="hidden"
-            animate="visible"
-            className="max-w-5xl mx-auto grid md:grid-cols-2 gap-8"
+          variants={container}
+          initial="hidden"
+          animate="visible"
+          className="max-w-5xl mx-auto grid md:grid-cols-2 gap-8"
         >
-            {filteredProjects.map((p) => (
+          {filteredProjects.map((p) => (
             <motion.div
-                key={p.name}
-                variants={item}
-                transition={{ duration: 0.4 }}
-                className="bg-white/5 rounded-lg overflow-hidden shadow-lg group hover:shadow-[0_0_20px_#3ABEFF33] transition-transform hover:-translate-y-1"
+              key={p.name}
+              variants={item}
+              transition={{ duration: 0.4 }}
+              className="bg-white/5 rounded-lg overflow-hidden shadow-lg group hover:shadow-[0_0_20px_#3ABEFF33] transition-transform hover:-translate-y-1"
             >
-                {/* Screenshot */}
-                {p.screenshot && (
-                    <div className="relative h-44">
-                        <Image
-                        src={p.screenshot}
-                        alt={p.name}
-                        fill
-                        className="object-cover"
-                        />
-                    </div>
-                )}
+              {/* Screenshot */}
+              {p.screenshot && (
+                <div className="relative h-44">
+                  <Image
+                    src={p.screenshot}
+                    alt={p.name}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+              )}
 
-
-                {/* Project Info */}
-                <div className="p-5">
+              {/* Project Info */}
+              <div className="p-5">
                 <div className="flex justify-between items-start">
-                    <h3 className="text-xl font-semibold text-[#3ABEFF]">{p.name}</h3>
-                    <span className="text-xs whitespace-nowrap bg-white/10 px-2 py-0.5 rounded-full">
+                  <h3 className="text-xl font-semibold text-[#3ABEFF]">{p.name}</h3>
+                  <span className="text-xs whitespace-nowrap bg-white/10 px-2 py-0.5 rounded-full">
                     {p.start}
                     <span className="hidden sm:inline"> – {p.end}</span>
-                    </span>
+                  </span>
                 </div>
 
                 <p className="text-gray-300 mt-2 text-sm line-clamp-3">{p.desc}</p>
 
                 {/* Tech Stack */}
                 <div className="flex flex-wrap gap-2 mt-4">
-                    {p.tech.map((t) => (
+                  {p.tech.map((t) => (
                     <span key={t} className="bg-white/10 px-3 py-1 rounded-full text-xs">{t}</span>
-                    ))}
+                  ))}
                 </div>
 
                 {/* Links */}
                 <div className="mt-4 flex gap-3">
-                    {p.live && (
-                      <a
-                        href={p.live}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="px-4 py-2 flex items-center gap-2 rounded bg-[#3ABEFF] text-black text-sm hover:brightness-90 transition"
-                      >
-                        <FaExternalLinkAlt size={14} /> Demo
-                      </a>
-                    )}
-                    {p.repo && (
-                      <a
-                        href={p.repo}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="px-4 py-2 flex items-center gap-2 rounded border border-white/40 text-sm hover:bg-white/10 transition"
-                      >
-                        <FaGithub size={14} /> Code
-                      </a>
-                    )}
-                  </div>
+                  {p.live && (
+                    <a
+                      href={p.live}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-4 py-2 flex items-center gap-2 rounded bg-[#3ABEFF] text-black text-sm hover:brightness-90 transition"
+                    >
+                      <FaExternalLinkAlt size={14} /> Demo
+                    </a>
+                  )}
+                  {p.repo && (
+                    <a
+                      href={p.repo}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-4 py-2 flex items-center gap-2 rounded border border-white/40 text-sm hover:bg-white/10 transition"
+                    >
+                      <FaGithub size={14} /> Code
+                    </a>
+                  )}
                 </div>
+              </div>
             </motion.div>
-            ))}
+          ))}
         </motion.div>
 
         {/* See More on GitHub */}
         <div className="mt-12 flex justify-center">
-            <a
+          <a
             href={data.socials.github}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 border border-white/10 text-white px-6 py-2 rounded hover:bg-white/10 focus:ring-2 focus:ring-[#3ABEFF] transition"
-            >
+          >
             <FiGithub className="w-5 h-5" />
             <span className="text-sm font-medium">See More on GitHub</span>
-            </a>
+          </a>
         </div>
       </section>
 
-       
       {/* Contact */}
       <section id="contact" className="px-6 py-20">
         <h2 className="text-2xl font-bold text-[#3ABEFF] text-center mb-10">
-            Get in Touch
+          Get in Touch
         </h2>
         <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-8">
-            {/* Contact Form */}
-            <div className="bg-white/5 p-6 rounded-lg">
+          {/* Contact Form */}
+          <div className="bg-white/5 p-6 rounded-lg">
             <h3 className="text-lg font-semibold text-[#3ABEFF] mb-4">Let’s Work Together</h3>
             <form
-                action={`https://formsubmit.co/${data.socials.email.replace('mailto:', '')}`}
-                method="POST"
-                className="space-y-4"
+              action={`https://formsubmit.co/${data.socials.email.replace('mailto:', '')}`}
+              method="POST"
+              className="space-y-4"
             >
-                <div>
+              <div>
                 <label className="block text-sm text-white/80 mb-1">Name</label>
                 <input
-                    type="text"
-                    placeholder="Your name"
-                    className="w-full bg-white/10 text-sm text-white px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-[#3ABEFF] border border-white/10"
-                    required
+                  type="text"
+                  placeholder="Your name"
+                  className="w-full bg-white/10 text-sm text-white px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-[#3ABEFF] border border-white/10"
+                  required
                 />
-                </div>
-                <div>
+              </div>
+              <div>
                 <label className="block text-sm text-white/80 mb-1">Email</label>
                 <input
-                    type="email"
-                    placeholder="you@example.com"
-                    className="w-full bg-white/10 text-sm text-white px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-[#3ABEFF] border border-white/10"
-                    required
+                  type="email"
+                  placeholder="you@example.com"
+                  className="w-full bg-white/10 text-sm text-white px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-[#3ABEFF] border border-white/10"
+                  required
                 />
-                </div>
-                <div>
+              </div>
+              <div>
                 <label className="block text-sm text-white/80 mb-1">Subject</label>
                 <input
-                    type="text"
-                    placeholder="e.g. Project collaboration"
-                    className="w-full bg-white/10 text-sm text-white px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-[#3ABEFF] border border-white/10"
+                  type="text"
+                  placeholder="e.g. Project collaboration"
+                  className="w-full bg-white/10 text-sm text-white px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-[#3ABEFF] border border-white/10"
                 />
-                </div>
-                <div>
+              </div>
+              <div>
                 <label className="block text-sm text-white/80 mb-1">Message</label>
                 <textarea
-                    rows={5}
-                    placeholder="Type your message here..."
-                    className="w-full bg-white/10 text-sm text-white px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-[#3ABEFF] border border-white/10 resize-none"
-                    required
+                  rows={5}
+                  placeholder="Type your message here..."
+                  className="w-full bg-white/10 text-sm text-white px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-[#3ABEFF] border border-white/10 resize-none"
+                  required
                 />
-                </div>
-                <button
+              </div>
+              <button
                 type="submit"
                 className="bg-[#3ABEFF] text-black text-sm font-semibold px-5 py-2 rounded hover:bg-[#56D4FF] transition"
-                >
+              >
                 Send Message
-                </button>
+              </button>
             </form>
-            </div>
+          </div>
 
-            {/* Contact Info & Socials */}
-            <div className="space-y-6">
+          {/* Contact Info & Socials */}
+          <div className="space-y-6">
             <div className="bg-white/5 p-6 rounded-lg">
-                <h3 className="text-lg font-semibold text-[#3ABEFF] mb-4">Contact Info</h3>
-                <div className="space-y-3 text-sm text-white/80">
+              <h3 className="text-lg font-semibold text-[#3ABEFF] mb-4">Contact Info</h3>
+              <div className="space-y-3 text-sm text-white/80">
                 <div className="flex items-center gap-3">
-                    <AiOutlineMail className="text-[#3ABEFF]" />
-                    <a
+                  <AiOutlineMail className="text-[#3ABEFF]" />
+                  <a
                     href={data.socials.email}
                     className="hover:underline hover:text-white transition"
-                    >
+                  >
                     {data.socials.email.replace("mailto:", "")}
-                    </a>
+                  </a>
                 </div>
                 <div className="flex items-center gap-3">
-                    <AiOutlinePhone className="text-[#3ABEFF]" />
-                    <a
+                  <AiOutlinePhone className="text-[#3ABEFF]" />
+                  <a
                     href={`tel:${data.phone.replace(/ /g, '')}`}
                     className="hover:underline hover:text-white transition"
-                    >
+                  >
                     {data.phone}
-                    </a>
+                  </a>
                 </div>
                 <div className="flex items-center gap-3">
-                    <GoLocation className="text-[#3ABEFF]" />
-                    <span>{data.location}</span>
+                  <GoLocation className="text-[#3ABEFF]" />
+                  <span>{data.location}</span>
                 </div>
-                </div>
+              </div>
             </div>
 
             <div className="bg-white/5 p-6 rounded-lg">
-                <h3 className="text-lg font-semibold text-[#3ABEFF] mb-4">Find Me Online</h3>
-                <div className="flex gap-6 text-sm text-white/80">
+              <h3 className="text-lg font-semibold text-[#3ABEFF] mb-4">Find Me Online</h3>
+              <div className="flex gap-6 text-sm text-white/80">
                 {data.socials.github && (
-                    <a
+                  <a
                     href={data.socials.github}
                     target="_blank"
                     className="flex items-center gap-2 hover:text-[#3ABEFF] transition"
-                    >
+                  >
                     <AiFillGithub /> GitHub
-                    </a>
+                  </a>
                 )}
                 {data.socials.linkedin && (
-                    <a
+                  <a
                     href={data.socials.linkedin}
                     target="_blank"
                     className="flex items-center gap-2 hover:text-[#3ABEFF] transition"
-                    >
+                  >
                     <AiFillLinkedin /> LinkedIn
-                    </a>
+                  </a>
                 )}
-                </div>
+              </div>
             </div>
-            </div>
+          </div>
         </div>
       </section>
 
@@ -711,15 +837,15 @@ return (
           <FaInstagram className="w-5 h-5 text-white/70" />
         </div>
       </footer>
-      
-    <CmdButton onClick={() => setShowCmd(!showCmd)} />
-    <CommandTerminal
-      data={data}
-      show={showCmd}
-      onToggle={() => setShowCmd(false)}
-      history={history}
-      setHistory={setHistory}
-    />
+
+      <CmdButton onClick={() => setShowCmd(!showCmd)} />
+      <CommandTerminal
+        data={data}
+        show={showCmd}
+        onToggle={() => setShowCmd(false)}
+        history={history}
+        setHistory={setHistory}
+      />
     </main>
   );
 }

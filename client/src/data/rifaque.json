@@ -18,6 +18,52 @@
     "Proficient in backend technologies like Node.js, Express, and MongoDB, with experience in API design, JWT authentication, and image storage via Imgix. Skilled in integrating frontend and backend workflows for a seamless developer experience.",
     "Well-versed in UI/UX principles and software architecture patterns like MVC, I strive to create intuitive and reliable user experiences. Also familiar with Python, Flask, and machine learning workflows, including building real-time prediction tools."
   ],
+
+  "experience": [
+    {
+      "role": "Frontend Developer Intern",
+      "company": "RG SmartDiscovery LLP",
+      "location": "India (Remote)",
+      "start": "Aug 2025",
+      "end": "Present",
+      "description": [
+        "Developing dynamic and responsive web interfaces for nxnearby.com using React.js.",
+        "Building reusable UI components and optimizing performance across key user flows.",
+        "Collaborating closely with design and backend teams to deliver cohesive, high-quality features.",
+        "Writing clean, maintainable, and scalable code aligned with modern front-end best practices."
+      ],
+      "tech": ["React", "JavaScript", "HTML", "CSS", "API Integration", "GraphQL"]
+    },
+    {
+      "role": "Full Stack Developer (Contract)",
+      "company": "Client Projects",
+      "location": "Remote",
+      "start": "Mar 2025",
+      "end": "Jul 2025",
+      "description": [
+        "Designed and developed end-to-end full-stack web applications using React, Node.js, and MongoDB.",
+        "Built responsive, reusable frontend components and integrated RESTful APIs for client-facing platforms.",
+        "Translated client requirements into scalable technical solutions, handling both frontend and backend workflows.",
+        "Deployed and maintained applications on Linux servers using NGINX, ensuring performance and reliability."
+      ],
+      "tech": ["React", "Node.js", "MongoDB", "Firebase", "NGINX"]
+    }
+  ],
+
+  "education": [
+    {
+      "degree": "Bachelor of Engineering in Computer Science",
+      "institution": "Anjuman Institute of Technology and Management",
+      "location": "Karnataka, India",
+      "start": "2022",
+      "end": "2026",
+      "details": [
+        "Focused on core computer science subjects including Data Structures, DBMS, OS, and Computer Networks.",
+        "Maintained a strong academic record while actively organizing tech events.",
+        "Final year project: QueryCraft - Natural Language to SQL system using locally hosted LLMs."
+      ]
+    }
+  ],
   "skills": [
     {
       "category": "Languages",
@@ -46,12 +92,31 @@
   ],
   "projects": [
     {
+      "name": "QueryCraft",
+      "desc": "Natural language to SQL system that converts user queries into executable database queries using locally hosted LLMs.",
+      "longDesc": "QueryCraft is a Natural Language to SQL (NL2SQL) system that allows users to interact with relational databases using plain English. The system leverages locally hosted large language models to generate optimized SQL queries, executes them securely against structured databases, and returns human-readable results. Designed with a strong focus on privacy, offline capability, and extensibility, QueryCraft follows a modular architecture separating prompt logic, query validation, execution, and result formatting.",
+      "repo": "https://github.com/Rifaque/querycraft",
+      "live": "https://querycraft.hubzero.in",
+      "tech": [
+        "Python",
+        "Flask",
+        "SQL",
+        "SQLite",
+        "Locally Hosted LLMs",
+        "Prompt Engineering"
+      ],
+      "categories": ["Web", "AI"],
+      "start": "Jul 2025",
+      "end": "Jan 2026",
+      "screenshot": "/projectscreenshots/querycraft-thumbnail.png"
+    },
+    {
       "name": "Hub Zero Website",
       "desc": "Official website of Hub Zero, built with Next.js and Tailwind CSS, deployed using NGINX on Ubuntu and accelerated with Cloudflare.",
       "longDesc": "Official Hub Zero site built with Next.js & Tailwind, featuring scroll‑snap sections, GSAP animations, and dynamic content, deployed on Ubuntu via NGINX and accelerated with Cloudflare CDN.",
       "repo": "https://github.com/Rifaque/HubZero-Next",
       "live": "https://hubzero.in",
-      "tech": ["Next.js", "Tailwind CSS", "NGINX", "Ubuntu", "Cloudflare"],
+      "tech": ["Next.js", "Node.js", "TypeScript", "Next.js", "Tailwind CSS", "NGINX", "Ubuntu", "Cloudflare"],
       "categories": ["Web"],
       "start": "Nov 2024",
       "end": "Present",
