@@ -80,23 +80,29 @@ export function HeroSection() {
 
   return (
     <div className="relative overflow-hidden pt-4 pb-8 sm:pb-10 lg:pb-12">
-      {/* Motif bleed layer — deliberately not a grid column. Positioned to
-          run past the content edge toward the viewport's right edge and
-          down far enough to still be present alongside the credibility
-          strip, so that band of the page reads as occupied, not empty. */}
-      <div
-        className="pointer-events-none absolute top-8 -right-24 hidden h-[34rem] w-[30rem] lg:block xl:-right-12"
-        aria-hidden="true"
-      >
-        <CircuitMotif className="h-full w-full" />
-      </div>
-
       <Container className="relative">
         {/* Mobile/tablet signature mark — the compact trace+triangle, sized
             like a printed mark above the headline, not a diffuse full-size
             ghost pattern behind the text (§ recompose, don't shrink). */}
         <div className="mb-6 h-8 w-24 lg:hidden" aria-hidden="true">
           <CircuitSignatureMark className="h-full w-full" />
+        </div>
+
+        {/* Motif bleed layer — deliberately not a grid column. Anchored to
+            this Container (the content grid), not the viewport: its offsets
+            run past the content edge toward the gutter, clipped by the
+            wrapper's overflow-hidden, so it reads as continuing beyond the
+            frame relative to the headline. Anchoring to the viewport instead
+            (as a sibling of Container) is what causes the motif to drift
+            away from the headline on wide/ultrawide/4K screens, where the
+            gap between the content edge and the viewport edge grows much
+            larger than on a laptop — the offset must stay relative to
+            content at every width, not just the ones tested in DevTools. */}
+        <div
+          className="pointer-events-none absolute top-8 -right-24 hidden h-[34rem] w-[30rem] lg:block xl:-right-12"
+          aria-hidden="true"
+        >
+          <CircuitMotif className="h-full w-full" />
         </div>
 
         {/* Text column — left-weighted, asymmetric (§3), capped so it never
