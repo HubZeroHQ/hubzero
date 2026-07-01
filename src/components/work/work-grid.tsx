@@ -1,0 +1,94 @@
+"use client";
+
+import { ArrowUpRight } from "lucide-react";
+import Image from "next/image";
+import { useState } from "react";
+
+import { EmptyState } from "@/components/ui/empty-state";
+import { Link } from "@/components/ui/link";
+import { caseStudies, practiceTags, type PracticeTag } from "@/config/case-studies";
+import { cn } from "@/lib/utils";
+
+/**
+ * ARCHITECTURE/06_PAGE_SPECIFICATIONS.md "Work — index": filter by practice
+ * area, case study cards (client, one-line result, practice-area tag). Built
+ * to gracefully support one case study or a hundred — each entry renders as
+ * a full-width editorial row (image + text), not a boxed SaaS card grid, so
+ * the page still reads as editorial when there's only one entry to show.
+ *
+ * The filter is real, not decorative: selecting a tag with no matching work
+ * yet (e.g. "Hardware & Embedded", before a real hardware case study exists)
+ * shows an honest empty state rather than hiding the option.
+ */
+export function WorkGrid() {
+  const [active, setActive] = useState<PracticeTag | "All">("All");
+  const filtered = caseStudies.filter((study) => active === "All" || study.tag === active);
+
+  return (
+    <div>
+      <div className="flex flex-wrap gap-2" role="group" aria-label="Filter by practice area">
+        {practiceTags.map((tag) => {
+          const isActive = tag.value === active;
+          return (
+            <button
+              key={tag.value}
+              type="button"
+              aria-pressed={isActive}
+              onClick={() => setActive(tag.value)}
+              className={cn(
+                "text-caption rounded-full border px-4 py-1.5 font-medium transition-colors duration-150",
+                isActive
+                  ? "border-accent/30 bg-accent/15 text-accent"
+                  : "border-border-muted text-text-muted hover:text-text hover:border-border",
+              )}
+            >
+              {tag.label}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="divide-border-muted mt-12 divide-y">
+        {filtered.length === 0 && (
+          <EmptyState
+            title="No case studies here yet"
+            description="This practice area doesn't have a published case study yet — but the work is real and ongoing. Get in touch to talk through it directly."
+          />
+        )}
+
+        {filtered.map((study) => (
+          <Link
+            key={study.slug}
+            href={`/work/${study.slug}`}
+            className="group grid grid-cols-1 gap-6 py-12 no-underline first:pt-0 hover:no-underline sm:grid-cols-12 sm:gap-8 lg:py-16"
+          >
+            <div className="sm:order-2 sm:col-span-7">
+              <Image
+                src={study.cover.src}
+                alt={study.cover.alt}
+                width={study.cover.width}
+                height={study.cover.height}
+                sizes="(min-width: 640px) 58vw, 92vw"
+                className="h-auto w-full transition-opacity duration-150 group-hover:opacity-90"
+              />
+            </div>
+            <div className="flex flex-col justify-center sm:order-1 sm:col-span-5">
+              <p className="text-caption text-text-muted font-mono tracking-wide uppercase">
+                {study.tag === "Software" ? "Software Engineering" : study.tag}
+              </p>
+              <h3 className="text-h2 text-text mt-3 font-normal">{study.client}</h3>
+              <p className="text-body text-text-muted mt-3 max-w-md">{study.result}</p>
+              <span className="text-text mt-6 inline-flex items-center gap-1.5">
+                Read the case study
+                <ArrowUpRight
+                  className="size-4 transition-transform duration-150 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                  aria-hidden="true"
+                />
+              </span>
+            </div>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}

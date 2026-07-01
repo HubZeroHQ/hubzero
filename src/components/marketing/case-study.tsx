@@ -8,20 +8,18 @@ import { Link } from "@/components/ui/link";
 /**
  * The homepage's trust climax (ARCHITECTURE/15_HOMEPAGE_DESIGN.md §7/§9):
  * the one real case study, presented editorially rather than as a
- * portfolio card. Every fact below (client, stack, timeline, what was
- * built) is the approved fact set from `15_HOMEPAGE_DESIGN.md` §7/§11 —
- * nothing here is an invented metric or outcome.
+ * portfolio card. Every fact below is sourced from
+ * `docs/research/PROJECT_CASE_STUDY_ANALYSIS_BHATKAL_TIME_LUXE.md` §4/§6/§8
+ * — nothing here is an invented metric or outcome. The build month/duration
+ * that document's own confidentiality note flags as unverifiable against
+ * this repo's git history (the "April 2025" instruction vs. the earliest
+ * corroborating commit) is deliberately left off; only the year is stated.
  *
- * The image is a curated crop of the product-detail panel from the
- * existing `ecommerce-thumbnail.png` collage (per §9/§11 — the collage
- * itself must never be embedded as-is). Source note for future
- * refinement: the only screenshot asset in the repo is a low-resolution
- * thumbnail (~335x187 native); it's presented here at a deliberately
- * contained size with generous surrounding whitespace rather than
- * stretched to a literal full-viewport bleed, which would visibly
- * pixelate. A real, high-resolution capture of the live site should
- * replace this before this beat is considered final — see the
- * end-of-task review for detail.
+ * The image is the official `hero-homepage.webp` capture supplied for this
+ * case study (per task brief — real assets replace the previous low-
+ * resolution placeholder crop). Presented at native aspect ratio, no
+ * browser-chrome mockup, no card/border framing — the screenshot's own
+ * editorial typography and gold accent are the presentation.
  */
 export function CaseStudy() {
   return (
@@ -44,19 +42,17 @@ export function CaseStudy() {
           {/* Asymmetric placement, not centered — the image runs toward the
               right edge of the wider container, the text column below sits
               back at the default content width, so the two don't share an
-              edge. Native-resolution aspect ratio (335:187) is preserved;
-              width is capped rather than stretched full-bleed (see note above). */}
-          <div className="ml-auto w-full max-w-3xl">
-            <div className="border-border-muted overflow-hidden rounded-lg border shadow-xl">
-              <Image
-                src="/case-studies/bhatkal-time-luxe-detail.png"
-                alt="Bhatkal Time Luxe product detail page — Audemars Piguet Royal Oak listing"
-                width={335}
-                height={187}
-                sizes="(min-width: 1024px) 48rem, 90vw"
-                className="h-auto w-full"
-              />
-            </div>
+              edge. Native-resolution aspect ratio (2557:1270) is preserved. */}
+          <div className="ml-auto w-full max-w-5xl">
+            <Image
+              src="/case-studies/bhatkal-time-luxe/hero-homepage.webp"
+              alt="Bhatkal Time Luxe homepage — dark editorial storefront with gold accent and a featured Rolex Datejust listing"
+              width={2557}
+              height={1270}
+              sizes="(min-width: 1024px) 64rem, 92vw"
+              className="h-auto w-full"
+              priority
+            />
           </div>
         </Container>
       </Reveal>
@@ -71,24 +67,26 @@ export function CaseStudy() {
 
           <Reveal delayMs={60} className="mt-8 space-y-5">
             <p className="text-body text-text-muted">
-              A local luxury boutique — watches, bags, apparel across a dozen premium brands —
-              needed a storefront that didn&apos;t feel like a template dropped over their catalog.
+              A luxury watch retailer needed a storefront that didn&apos;t feel like a template
+              dropped over their catalog — plus a back office their own staff could run without
+              calling a developer.
             </p>
             <p className="text-body text-text-muted">
-              We built it as a MERN application in about six weeks, with advanced filtering across
-              the full multi-brand catalog and Imgix-driven image delivery — so product photography
-              loads fast and sharp on every device.
+              We built it on Next.js and MongoDB, with full-catalog search and filtering,
+              WhatsApp-based checkout, and a two-tier Cloudinary-and-CDN image pipeline that took a
+              representative product photo from 458KB down to 42KB — without touching a line of page
+              markup.
             </p>
             <p className="text-body text-text-muted">
-              The result: a real, working storefront a small boutique can actually run — fast,
-              filterable, and built to the same standard of care as the products it sells.
+              The result: a platform Bhatkal Time Luxe runs independently — catalog, pricing, and
+              homepage curation, all from its own admin panel.
             </p>
           </Reveal>
 
           <Reveal delayMs={100}>
             <p className="text-caption text-text-muted mt-8 font-mono">
-              MERN <span aria-hidden="true">·</span> Imgix <span aria-hidden="true">·</span> Apr–May
-              2025 <span aria-hidden="true">·</span> ~6 weeks
+              Next.js <span aria-hidden="true">·</span> MongoDB <span aria-hidden="true">·</span>{" "}
+              Cloudinary <span aria-hidden="true">·</span> 2025
             </p>
           </Reveal>
 
