@@ -65,3 +65,12 @@ coverage/
 
 # TypeScript build info
 *.tsbuildinfo
+
+# Claude Code local state (settings, worktrees, temp files) - never commit
+.claude/
+
+# Unknown local tool/IDE cache artifact
+.nexus/
+
+# Internal team planning data - not for public repo
+docs/team-planning-responses.csv

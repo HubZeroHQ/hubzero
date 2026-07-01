@@ -3,7 +3,7 @@ import prettierConfig from "eslint-config-prettier";
 
 const eslintConfig = [
   {
-    ignores: [".next/**", "node_modules/**", "client/**"],
+    ignores: [".next/**", "node_modules/**", "client/**", ".claude/**"],
   },
   ...nextPlugin,
   prettierConfig,

@@ -20,6 +20,12 @@ as the source of truth for every implementation decision. Start with
 - `ARCHIVED_PROJECT_ANALYSIS.md` — historical audit of the legacy site; several of its findings are
   carried forward into `ARCHITECTURE/` as must-fix rules.
 
+## Legacy application
+
+`client/` is the pre-v2 Next.js site and is temporarily retained during the migration for
+feature/content reference. It is not built or deployed from this README's scripts and should not
+receive new work — see `ARCHITECTURE/14_IMPLEMENTATION_ROADMAP.md` Phase 7 for the cutover plan.
+
 ## Tech stack
 
 | Layer          | Choice                                             |
