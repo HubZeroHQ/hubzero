@@ -1,0 +1,154 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens per ARCHITECTURE/07_DESIGN_SYSTEM.md.
+ * Dark is the default palette (§2); `.light` overrides the same custom
+ * properties so next-themes can toggle by swapping the class on <html>.
+ */
+@theme {
+  --color-bg: oklch(0.15 0.005 264);
+  --color-bg-dark: oklch(0.1 0.005 264);
+  --color-bg-light: oklch(0.2 0.005 264);
+  --color-text: oklch(0.96 0.01 264);
+  --color-text-muted: oklch(0.76 0.01 264);
+  --color-border: oklch(0.4 0.01 264);
+  --color-border-muted: oklch(0.3 0.01 264);
+  --color-highlight: oklch(0.5 0.01 264);
+  --color-accent: oklch(0.7595 0.1442 235.31);
+  /*
+   * Accent stays bright/light in both themes (unlike bg/text, which invert),
+   * so its "printed on" text color doesn't need a .light override — a single
+   * dark value keeps WCAG AA contrast against --color-accent either way.
+   */
+  --color-accent-foreground: oklch(0.15 0.02 264);
+  --color-danger: oklch(0.7 0.05 30);
+  --color-warning: oklch(0.7 0.05 100);
+  --color-success: oklch(0.7 0.05 160);
+  --color-info: oklch(0.7 0.05 260);
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  /* Modular type scale, 4px base unit (§1). */
+  --text-display: 4rem;
+  --text-display--line-height: 1.1;
+  --text-display--letter-spacing: -0.03em;
+  --text-h1: 2.75rem;
+  --text-h1--line-height: 1.15;
+  --text-h1--letter-spacing: -0.025em;
+  --text-h2: 1.875rem;
+  --text-h2--line-height: 1.2;
+  --text-h3: 1.375rem;
+  --text-h3--line-height: 1.3;
+  --text-body: 1.0625rem;
+  --text-body--line-height: 1.6;
+  --text-caption: 0.8125rem;
+  --text-caption--line-height: 1.5;
+
+  /*
+   * Radius scale, 4px base unit (matches Tailwind's default --spacing unit,
+   * kept unmodified — see §3 note below). Namespaced under --radius-* so
+   * Tailwind generates rounded-{key} utilities directly.
+   */
+  --radius-sm: 0.25rem; /* 4px  — inputs, chips, small controls */
+  --radius-md: 0.5rem; /* 8px  — buttons, badges */
+  --radius-lg: 0.75rem; /* 12px — cards, alerts */
+  --radius-xl: 1rem; /* 16px — surfaces, modals (future) */
+  --radius-full: 9999px; /* pills, avatars, switches */
+
+  /*
+   * Elevation. Dark-first shadows must be more diffuse/darker than typical
+   * defaults to read on a dark background; overridden per-value in .light.
+   * Namespaced under --shadow-* so Tailwind generates shadow-{key} utilities.
+   */
+  --shadow-xs: 0 1px 2px 0 oklch(0 0 0 / 0.32);
+  --shadow-sm: 0 1px 3px 0 oklch(0 0 0 / 0.36), 0 1px 2px -1px oklch(0 0 0 / 0.32);
+  --shadow-md: 0 4px 8px -2px oklch(0 0 0 / 0.4), 0 2px 4px -2px oklch(0 0 0 / 0.32);
+  --shadow-lg: 0 12px 24px -6px oklch(0 0 0 / 0.44), 0 4px 8px -4px oklch(0 0 0 / 0.32);
+  --shadow-xl: 0 24px 48px -12px oklch(0 0 0 / 0.5);
+}
+
+.dark {
+  color-scheme: dark;
+}
+
+.light {
+  color-scheme: light;
+  --color-bg: oklch(0.96 0.005 264);
+  --color-bg-dark: oklch(0.92 0.005 264);
+  --color-bg-light: oklch(1 0.005 264);
+  --color-text: oklch(0.15 0.01 264);
+  --color-text-muted: oklch(0.4 0.01 264);
+  --color-border: oklch(0.8 0.01 264);
+  --color-border-muted: oklch(0.88 0.01 264);
+  --color-highlight: oklch(0.7 0.01 264);
+  --color-accent: oklch(0.7985 0.1271 229.93);
+  --color-danger: oklch(0.5 0.05 30);
+  --color-warning: oklch(0.5 0.05 100);
+  --color-success: oklch(0.5 0.05 160);
+  --color-info: oklch(0.5 0.05 260);
+
+  /* Light-mode shadows: lower opacity, tighter spread — dark shadows read as dirt on light surfaces. */
+  --shadow-xs: 0 1px 2px 0 oklch(0.4 0.01 264 / 0.08);
+  --shadow-sm: 0 1px 3px 0 oklch(0.4 0.01 264 / 0.1), 0 1px 2px -1px oklch(0.4 0.01 264 / 0.08);
+  --shadow-md: 0 4px 8px -2px oklch(0.4 0.01 264 / 0.12), 0 2px 4px -2px oklch(0.4 0.01 264 / 0.08);
+  --shadow-lg:
+    0 12px 24px -6px oklch(0.4 0.01 264 / 0.14), 0 4px 8px -4px oklch(0.4 0.01 264 / 0.08);
+  --shadow-xl: 0 24px 48px -12px oklch(0.4 0.01 264 / 0.16);
+}
+
+:root {
+  /* One named gradient token (§2) — hero text / primary CTA only, never a section background. */
+  --brand-gradient: linear-gradient(90deg, #3abeff, #665dcd, #d2ab67);
+
+  /*
+   * Content-width tokens (§3). Not run through Tailwind's @theme namespace —
+   * max-width utilities aren't reliably themeable there, so these are plain
+   * custom properties consumed via `max-w-[var(--content-*)]` (Container).
+   */
+  --content-marketing: 75rem; /* 1200px — default marketing page content width */
+  --content-prose: 46.25rem; /* 740px  — long-form reading (blog, case studies) */
+
+  /* Layering scale — plain vars (z-index isn't a themeable Tailwind namespace). */
+  --z-dropdown: 1000;
+  --z-sticky: 1100;
+  --z-overlay: 1200;
+  --z-modal: 1300;
+  --z-toast: 1400;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+}
+
+/* Every interactive element gets the same visible focus treatment (§6). */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+:disabled,
+[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+::selection {
+  background-color: var(--color-accent);
+  color: var(--color-bg-dark);
+}
+
+/* Respected everywhere motion is used (§4) — one global rule instead of a
+   per-component reduced-motion check. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

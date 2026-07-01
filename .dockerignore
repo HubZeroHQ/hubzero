@@ -1,0 +1,13 @@
+node_modules
+.next
+.git
+.env*.local
+Dockerfile
+.dockerignore
+README.md
+ARCHITECTURE
+ARCHIVED_PROJECT_ANALYSIS.md
+docs
+client
+.claude
+.husky
