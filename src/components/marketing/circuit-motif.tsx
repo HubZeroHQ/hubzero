@@ -2,6 +2,8 @@
 
 import { useEffect, useState, useSyncExternalStore } from "react";
 
+import { useInView } from "@/lib/use-in-view";
+
 const reducedMotionQuery = "(prefers-reduced-motion: reduce)";
 
 function subscribeToReducedMotion(callback: () => void) {
@@ -193,5 +195,95 @@ export function CircuitSignatureMark({ className }: { className?: string }) {
         }}
       />
     </svg>
+  );
+}
+
+/**
+ * The motif's second and final appearance on the homepage
+ * (ARCHITECTURE/15_HOMEPAGE_DESIGN.md §1/§9): a vertical trace running
+ * behind "How We Work"'s three numbered steps, functioning as the thing
+ * that actually connects them rather than a divider or repeated hero
+ * illustration. Same stroke language and the same signature triangle
+ * stamp as `CircuitMotif` (so it reads as one motif, not two), but its own
+ * geometry — a tall connector, not the hero's diagonal composition —
+ * because "second appearance of the motif" means the same visual identity,
+ * not a literal copy-paste of an illustration built for different
+ * negative space.
+ *
+ * Reveals on scroll into view rather than on mount: this beat is below
+ * the fold, so a mount-time reveal (the hero's `useCircuitReveal`) would
+ * finish drawing itself before anyone scrolls down to see it.
+ */
+export function CircuitConnector({ className }: { className?: string }) {
+  const { ref, inView } = useInView<HTMLDivElement>();
+  const reducedMotion = useSyncExternalStore(
+    subscribeToReducedMotion,
+    getReducedMotionSnapshot,
+    getReducedMotionServerSnapshot,
+  );
+  const drawn = inView || reducedMotion;
+
+  const trace = "M 20 0 L 20 130 L 8 150 L 8 300 L 32 320 L 32 460 L 20 480 L 20 560";
+  const nodes = [
+    { cx: 20, cy: 12, r: 4 },
+    { cx: 8, cy: 300, r: 4 },
+    { cx: 20, cy: 560, r: 4 },
+  ];
+  const signatureTriangle = "M 20 578 L 34 588 L 20 598 Z";
+
+  const dashLength = 900;
+  const drawDuration = reducedMotion ? 0 : 1.4;
+  const nodeDelay = reducedMotion ? 0 : 1.1;
+  const triangleDelay = reducedMotion ? 0 : 1.6;
+
+  return (
+    <div ref={ref} className={className}>
+      <svg
+        viewBox="0 0 40 600"
+        fill="none"
+        aria-hidden="true"
+        className="h-full w-full"
+        preserveAspectRatio="none"
+      >
+        <path
+          d={trace}
+          className="text-accent"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          opacity="0.55"
+          vectorEffect="non-scaling-stroke"
+          style={{
+            strokeDasharray: dashLength,
+            strokeDashoffset: drawn ? 0 : dashLength,
+            transition: `stroke-dashoffset ${drawDuration}s cubic-bezier(0.16,1,0.3,1)`,
+          }}
+        />
+        <g className="text-accent" fill="currentColor">
+          {nodes.map((n, i) => (
+            <circle
+              key={`${n.cx}-${n.cy}`}
+              cx={n.cx}
+              cy={n.cy}
+              r={n.r}
+              style={{
+                opacity: drawn ? 0.7 : 0,
+                transition: `opacity 0.3s cubic-bezier(0.16,1,0.3,1) ${nodeDelay + i * 0.15}s`,
+              }}
+            />
+          ))}
+        </g>
+        <path
+          d={signatureTriangle}
+          className="text-accent"
+          fill="currentColor"
+          style={{
+            opacity: drawn ? 1 : 0,
+            transform: drawn ? "scale(1)" : "scale(0.5)",
+            transformOrigin: "27px 588px",
+            transition: `opacity 0.4s cubic-bezier(0.16,1,0.3,1) ${triangleDelay}s, transform 0.4s cubic-bezier(0.16,1,0.3,1) ${triangleDelay}s`,
+          }}
+        />
+      </svg>
+    </div>
   );
 }
