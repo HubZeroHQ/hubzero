@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
 import { ThemeProvider } from "@/components/providers/theme-provider";
+import { brandAssets } from "@/config/brand";
 import { siteConfig } from "@/config/site";
 import type { WithChildren } from "@/types";
 
@@ -30,17 +31,19 @@ export const metadata: Metadata = {
     title: siteConfig.title,
     description: siteConfig.description,
     url: siteConfig.url,
+    images: [{ url: brandAssets.ogImage }],
   },
   twitter: {
     card: "summary_large_image",
     title: siteConfig.title,
     description: siteConfig.description,
+    images: [brandAssets.ogImage],
   },
   icons: {
-    icon: "/favicon.ico",
-    apple: "/icon-192x192.png",
+    icon: brandAssets.favicon,
+    apple: brandAssets.appleTouchIcon,
   },
-  manifest: "/site.webmanifest",
+  manifest: brandAssets.manifest,
 };
 
 export default function RootLayout({ children }: Readonly<WithChildren>) {

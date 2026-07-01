@@ -140,6 +140,34 @@ body {
   color: var(--color-bg-dark);
 }
 
+/*
+ * Mobile nav drawer (Radix Dialog). Plain CSS keyframes keyed off Radix's
+ * data-state, not Framer Motion — durations/easings mirror `lib/motion.ts`
+ * (`duration.base`, `ease.out`/`ease.inOut`) so JS- and CSS-driven motion
+ * stay on the same numbers. Zeroed automatically by the reduced-motion rule
+ * below, since that rule targets `animation-duration` with `!important`.
+ */
+@keyframes overlay-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes overlay-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes drawer-in {
+  from {
+    transform: translateX(100%);
+  }
+}
+@keyframes drawer-out {
+  to {
+    transform: translateX(100%);
+  }
+}
+
 /* Respected everywhere motion is used (§4) — one global rule instead of a
    per-component reduced-motion check. */
 @media (prefers-reduced-motion: reduce) {
