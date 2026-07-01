@@ -53,8 +53,8 @@ This project focuses on modern UI/UX, scroll-triggered animations, SEO, and resp
 
 ```bash
 # Clone the repo
-git clone https://github.com/Rifaque/HubZero-Next.git
-cd HubZero-Next/client
+git clone https://github.com/Rifaque/hubzero.git
+cd hubzero/client
 
 # Install dependencies
 npm install

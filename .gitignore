@@ -1,5 +1,5 @@
 # ------------------------------
-# Root-Level .gitignore for HubZero-Next
+# Root-Level .gitignore for hubzero
 # ------------------------------
 
 # Node.js
@@ -62,3 +62,12 @@ coverage/
 
 # Static Assets Cache
 .cache/
+
+# Claude Code local state (settings, worktrees, temp files) - never commit
+.claude/
+
+# Unknown local tool/IDE cache artifact
+client/.nexus/
+
+# Internal team planning data - not for public repo
+docs/team-planning-responses.csv
