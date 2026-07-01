@@ -74,3 +74,5 @@ coverage/
 
 # Internal team planning data - not for public repo
 docs/team-planning-responses.csv
+
+next-prompt.md
