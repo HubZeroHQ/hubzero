@@ -1,5 +1,5 @@
 # ------------------------------
-# Root-Level .gitignore for HubZero-Next
+# Root-Level .gitignore for hubzero
 # ------------------------------
 
 # Node.js
@@ -62,3 +62,6 @@ coverage/
 
 # Static Assets Cache
 .cache/
+
+# TypeScript build info
+*.tsbuildinfo
