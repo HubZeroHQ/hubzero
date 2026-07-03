@@ -1,6 +1,6 @@
 # 04 — User Journeys
 
-> **Status: Founder Approved — 2026-07-01.** See `00_FOUNDER_APPROVAL.md` §4 for the pricing-guidance resolution incorporated in §2 below. Client portal deferral (§3) reconfirmed unchanged.
+> **Status: Founder Approved — 2026-07-01; amended 2026-07-04.** See `00_FOUNDER_APPROVAL.md` §4 for the pricing-guidance resolution incorporated in §2 below. Client portal deferral (§3) reconfirmed unchanged. §4 and §5 below extended 2026-07-04 to reference Builds and Labs, per `00_FOUNDER_APPROVAL.md` §8.
 
 > Decision convention: see `01_PRODUCT_VISION.md` §0.
 
@@ -43,7 +43,7 @@
 
 **Goals:** Understand if this is a real opportunity or vague volunteer work; see who's already there; understand the commitment expected.
 
-**Journey:** `/careers` (or a shared individual portfolio link from a current member) → Team (sees real people, real roles) → Careers detail (what roles are open, what's expected, how to apply).
+**Journey:** `/careers` (or a shared individual portfolio link from a current member) → Team (sees real people, real roles) → Careers detail (what roles are open, what's expected, how to apply). **[Amended 2026-07-04]** A recruit evaluating whether real engineering exploration happens here, not just client delivery, may also check `/labs` — added as a secondary, optional stop, not a required one.
 
 **Required pages:** Careers, Team.
 **Tone note:** This is the one journey where HubZero's "community/team-building" register (downplayed everywhere else per `01_PRODUCT_VISION.md` §9) is appropriate — Careers can speak to culture, growth, and shared ownership, because CSV §26-59 (the back half of the survey) shows this language genuinely matters internally (commitment, trust, "a leader with supporting members," consistency over talent). **[Consensus]** — every respondent answered the team-culture questions (Q40-59) substantively and consistently around commitment/consistency/trust, unlike the front-half business questions where they diverged — Careers content should draw on this real, consistent internal voice.
@@ -52,8 +52,8 @@
 
 **Profile:** A larger agency or company considering subcontracting work to HubZero (e.g. the embedded/hardware piece of a project they can't do in-house), or a potential business partner.
 
-**Journey:** About (assesses scale/credibility) → Work (assesses capability breadth) → Contact.
-**Required pages:** About, Work, Contact. No dedicated partner page in v1 — the volume doesn't justify it yet; revisit if/when partner-sourced leads become a measurable channel.
+**Journey:** About (assesses scale/credibility) → Work (assesses capability breadth) → Builds / Labs (assesses whether HubZero builds its own things, not just client work — does it have real engineering range beyond what a client happens to ask for?) → Contact.
+**Required pages:** About, Work, Contact. **[Amended 2026-07-04]** Builds and Labs added as required stops for this journey specifically — capability breadth is exactly what a partner evaluating a subcontracting relationship needs to assess, and Builds/Labs are the two pillars that demonstrate it beyond client-scoped work. No dedicated partner page in v1 — the volume doesn't justify it yet; revisit if/when partner-sourced leads become a measurable channel.
 
 ## 6. Internal team member (CMS user)
 

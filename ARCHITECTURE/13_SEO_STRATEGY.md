@@ -1,6 +1,6 @@
 # 13 — SEO Strategy
 
-> **Status: Founder Approved — 2026-07-01.** Target market clarified in §4 below (global English-speaking, not India-locked) and blog scope in §3 (full platform, including search/RSS, ships in MVP) — see `00_FOUNDER_APPROVAL.md` §1, §3.
+> **Status: Founder Approved — 2026-07-01; amended 2026-07-04.** Target market clarified in §4 below (global English-speaking, not India-locked) and blog scope in §3 (full platform, including search/RSS, ships in MVP) — see `00_FOUNDER_APPROVAL.md` §1, §3. §2's metadata table gained Build/Labs/Blueprint rows on 2026-07-04 — see `00_FOUNDER_APPROVAL.md` §8.
 
 > Decision convention: see `01_PRODUCT_VISION.md` §0. The legacy site had real SEO infrastructure (`next-sitemap`, OpenGraph/Twitter metadata, attempted JSON-LD) undermined by a config bug and a no-op API usage — `13` is mostly about making the existing intent actually work, plus extending it to the new content types.
 
@@ -17,14 +17,17 @@
 | Home | `HubZero — [positioning line]` | Organization JSON-LD |
 | Services | `[Service] Engineering | HubZero` | Service JSON-LD |
 | Case study | `[Client] — [one-line result] | HubZero Work` | CreativeWork / Article JSON-LD, with `about` linking practice area |
+| Build *(new, 2026-07-04)* | `[Name] — [Tagline] | HubZero Builds` | CreativeWork JSON-LD — no `client`/`Organization` party in the schema, unlike Case Study |
+| Labs project *(new, 2026-07-04)* | `[Title] — HubZero Labs` | CreativeWork JSON-LD, explicitly marked non-commercial/research in scope where the vocabulary supports it |
+| Blueprint *(new, 2026-07-04)* | `[Name] Blueprint — HubZero Blueprints` | Hybrid Product/CreativeWork JSON-LD — a Blueprint has a category and a live demo the way a product listing does, which plain CreativeWork/Article JSON-LD (used for case studies and blog posts) doesn't capture |
 | Blog post | `[Title] | HubZero Blog` | Article JSON-LD (author, datePublished, dateModified) |
 | Team profile | `[Name] — [Role] | HubZero` | Person JSON-LD (this is the exact data type the legacy site tried and failed to ship via `next/head` — `ARCHIVED_PROJECT_ANALYSIS.md` §3.11) |
 
-All titles/descriptions are CMS-editable per content item (case studies, blog posts) rather than hardcoded, since SEO copy needs to evolve without a deploy — consistent with the CMS mandate in `09_CMS_ARCHITECTURE.md`.
+All titles/descriptions are CMS-editable per content item (case studies, blog posts, **Builds, Labs projects, Blueprints**) rather than hardcoded, since SEO copy needs to evolve without a deploy — consistent with the CMS mandate in `09_CMS_ARCHITECTURE.md`.
 
 ## 3. Sitemap and crawl control
 
-`next-sitemap` (or equivalent) continues to generate `sitemap.xml`/`robots.txt` on build, with `/studio` excluded — same intent as the legacy config's `/admin` exclusion (`ARCHIVED_PROJECT_ANALYSIS.md` §13), now meaningful because `/studio` actually exists. Sitemap entries for case studies and blog posts are generated dynamically from the database (published items only), not from a static file list — this is necessary regardless of preference, since content now lives in MongoDB rather than the filesystem (`08_TECHNICAL_ARCHITECTURE.md` §3). **[Amended 2026-07-01]** An RSS feed for published blog posts is generated alongside the sitemap — the blog ships as a complete platform in the MVP, not a deferred feature (`00_FOUNDER_APPROVAL.md` §3), so RSS/crawl infrastructure for it is in scope from launch.
+`next-sitemap` (or equivalent) continues to generate `sitemap.xml`/`robots.txt` on build, with `/studio` excluded — same intent as the legacy config's `/admin` exclusion (`ARCHIVED_PROJECT_ANALYSIS.md` §13), now meaningful because `/studio` actually exists. Sitemap entries for case studies and blog posts are generated dynamically from the database (published items only), not from a static file list — this is necessary regardless of preference, since content now lives in MongoDB rather than the filesystem (`08_TECHNICAL_ARCHITECTURE.md` §3). **[Amended 2026-07-01]** An RSS feed for published blog posts is generated alongside the sitemap — the blog ships as a complete platform in the MVP, not a deferred feature (`00_FOUNDER_APPROVAL.md` §3), so RSS/crawl infrastructure for it is in scope from launch. **[Amended 2026-07-04]** Sitemap generation extends identically to Builds, Labs, and Blueprints — published entries in each new collection are included in the same dynamic, database-driven generation, not a separately maintained list.
 
 ## 4. Content-led SEO strategy (what to actually rank for)
 

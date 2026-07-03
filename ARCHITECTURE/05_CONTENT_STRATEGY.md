@@ -1,15 +1,17 @@
 # 05 — Content Strategy
 
-> **Status: Founder Approved — 2026-07-01.** See `00_FOUNDER_APPROVAL.md` §2 (Labs/R&D), §3 (blog reversed to MVP-scope), §4 (pricing/FAQ guidance) for revisions incorporated below.
+> **Status: Founder Approved — 2026-07-01; amended 2026-07-04.** See `00_FOUNDER_APPROVAL.md` §2 (Labs/R&D), §3 (blog reversed to MVP-scope), §4 (pricing/FAQ guidance), §8 (four-pillar company structure) for revisions incorporated below.
 
-> Decision convention: see `01_PRODUCT_VISION.md` §0.
+> Decision convention: see `01_PRODUCT_VISION.md` §0. **[Amended 2026-07-04]** Every rule in this document — the zero-fabrication policy, the competitor-sentence test, the "quality bar over quantity" instinct — applies identically to the two new content types added below (Builds, Blueprints) as it already does to Case Studies and Labs/R&D. There is no reduced-rigor tier for content just because no client is watching it get published (`17_COMPANY_STRUCTURE.md` §7).
 
 ## 1. Content types and their purpose
 
 | Content type | Purpose | CMS-managed? | Launch volume |
 |---|---|---|---|
-| Case studies | Primary trust-building proof | Yes | Start with 1-3 real, fully-documented studies — quality bar over quantity, per §2 |
-| Labs / R&D projects | Interim hardware-capability proof where no client case study yet exists | Yes | **[New, added 2026-07-01, see `00_FOUNDER_APPROVAL.md` §2]** Internal/personal embedded/IoT projects, clearly labeled non-client — as many as genuinely exist; never presented as client work |
+| Case studies | Primary trust-building proof — client work only (`17_COMPANY_STRUCTURE.md` §2) | Yes | Start with 1-3 real, fully-documented studies — quality bar over quantity, per §2 |
+| Builds | **[New, 2026-07-04, see `00_FOUNDER_APPROVAL.md` §8]** Evidence HubZero finishes what it starts — completed, first-party products HubZero owns outright, never delivered to a client | Yes | Launches only once at least one real, complete internal product exists — never backfilled early just to populate the pillar (see §2a) |
+| Labs / R&D projects | **[Amended 2026-07-04]** Research, experimental engineering, and active prototypes — hardware, software, or AI — generalized from an interim hardware-only proof mechanism (as originally scoped 2026-07-01) into a permanent, top-level pillar covering every discipline HubZero explores | Yes | Internal/personal projects, clearly labeled non-client and in-progress; as many as genuinely exist; never presented as client work or as a finished product |
+| Blueprints | **[New, 2026-07-04, see `00_FOUNDER_APPROVAL.md` §8]** Reusable, customizable, production-ready engineering foundations that accelerate client delivery — explicitly not templates | Yes | Launches only once a Blueprint has a real, working live demo and preview — see §2b |
 | Service descriptions | Explain the practice areas | Yes (rarely changes) | 2 pages (software, hardware) + overview; schema extensible to future verticals (`00_FOUNDER_APPROVAL.md` §6) |
 | Team profiles | Credibility of named people | Yes | Core members only at launch (**[Consensus]**, see `01` §9); leadership presented as Founder + co-founders (`00_FOUNDER_APPROVAL.md` §2) |
 | Testimonials | Secondary social proof | Yes | Real only — zero placeholder entries (see §3) |
@@ -31,6 +33,29 @@
 - Result (a number where one exists; an honest qualitative outcome where it doesn't — never a vague "they were thrilled")
 - Ongoing relationship note (maintenance, follow-on work) where applicable — this is the "accountability" differentiator made concrete (`02` §6)
 - Optional: client quote, attributed with a real name and title — never unattributed
+
+## 2a. Builds content policy **[New, 2026-07-04]**
+
+A Build qualifies for publication only if HubZero actually finished it and owns it outright — not a work-in-progress dressed up as a completed product, and not a client deliverable relabeled as internal (see `17_COMPANY_STRUCTURE.md` §2 for the ownership test). Required fields, enforced by the CMS schema (`09_CMS_ARCHITECTURE.md`, `11_DATABASE_ARCHITECTURE.md`):
+
+- Title, tagline, practice area
+- Description (what it does and why it exists — not a problem-a-client-had framing, since there is no client)
+- Tech tags, launch date
+- Optional: live URL, repo URL, and — if the Build began life as a Labs project — a reference back to that Labs entry (`graduatedFromLabsId`), so the lifecycle in `17_COMPANY_STRUCTURE.md` §3 is a real, traceable link rather than a narrative claim
+
+Same zero-fabrication bar as Case Studies: no invented usage numbers, no "used by thousands" without a real, verifiable figure behind it.
+
+## 2b. Blueprints content policy **[New, 2026-07-04]**
+
+A Blueprint qualifies for publication only once it has a real, working live demo and preview — publishing a Blueprint with a dead or nonexistent demo link is a new, distinctly operational form of the fabrication this document already prohibits everywhere else, because it makes a specific, checkable claim ("try it yourself") that a visitor can falsify in one click. Required fields:
+
+- Unique Blueprint ID, category, name, description
+- Tech stack, cover image / screenshot
+- Live preview URL and demo deployment URL — both must resolve correctly at publish time
+- Customization notes — what a client can and cannot change, written specifically enough to be useful, not "fully customizable" left unexplained
+- A `demoStatus` field (`live` / `stale` / `retired`) that gates whether the Blueprint is shown publicly at all — a stale demo is fixed or the Blueprint is marked retired, never left silently broken (`17_COMPANY_STRUCTURE.md` §4)
+
+A Blueprint that could describe any agency's stock theme has failed its own "not a template" claim before a client ever sees it (`17_COMPANY_STRUCTURE.md` §2) — the customization notes field exists specifically to force the specificity this document already requires of every other content type.
 
 ## 3. Testimonial and social-proof policy
 

@@ -1,6 +1,6 @@
 # 09 — CMS Architecture
 
-> **Status: Founder Approved — 2026-07-01.** §1, §3, and §4 below were substantially revised in the founder-approval session — see `00_FOUNDER_APPROVAL.md` §3 for the full rationale. The Payload-CMS framing originally in §1 is superseded; the department-based role model originally in §4 is replaced entirely.
+> **Status: Founder Approved — 2026-07-01; amended 2026-07-04.** §1, §3, and §4 below were substantially revised in the founder-approval session — see `00_FOUNDER_APPROVAL.md` §3 for the full rationale. The Payload-CMS framing originally in §1 is superseded; the department-based role model originally in §4 is replaced entirely. §2's collections table was extended 2026-07-04 with Builds and Blueprints, and the Labs/R&D row updated to reflect its new status as a permanent pillar — see `00_FOUNDER_APPROVAL.md` §8 and `17_COMPANY_STRUCTURE.md`.
 
 > Decision convention: see `01_PRODUCT_VISION.md` §0. This is the single most consensus-backed requirement in the entire planning dataset — CSV Q19-22 show every respondent wanting real CMS workflow features, rated 4-5/5 importance by all four.
 
@@ -12,8 +12,10 @@ The original framing here weighed a managed headless CMS (Sanity, Payload, etc.)
 
 | Collection | Fields (summary) | Workflow |
 |---|---|---|
-| **Case Studies** | client, industry, practice area (Software/Hardware/Both), problem, approach, result, quote (optional, attributed), tech tags, cover image, slug, status | Draft → Review → Published (content approval, **[Consensus]** Q19) |
-| **Labs / R&D Projects** *(new, 2026-07-01)* | title, practice area, description, tech tags, cover image, disclosure that it is non-client/internal work, slug, status | Draft → Published; exists specifically to give the Hardware & Embedded page credible proof before a real client case study exists (`00_FOUNDER_APPROVAL.md` §2) |
+| **Case Studies** | client, industry, practice area (Software/Hardware/Both/AI), problem, approach, result, quote (optional, attributed), tech tags, cover image, slug, status | Draft → Review → Published (content approval, **[Consensus]** Q19) |
+| **Builds** *(new, 2026-07-04)* | title, tagline, practice area, description, tech tags, cover image, launch date, live URL (optional), repo URL (optional), graduated-from-Labs reference (optional), slug, status | Draft → Review → Published; completed, first-party HubZero products — no `client` field, the structural difference from Case Studies (`17_COMPANY_STRUCTURE.md` §2, §4) |
+| **Labs / R&D Projects** *(new, 2026-07-01; generalized 2026-07-04)* | title, practice area (Software/Hardware/AI), description, tech tags, cover image, disclosure that it is non-client/internal work, **stage** (active/archived/graduated), **graduated-to-Build reference** (optional), slug, status | Draft → Published; now a permanent top-level pillar covering all exploratory engineering, not only the Hardware & Embedded page's interim proof mechanism (`00_FOUNDER_APPROVAL.md` §2, §8) |
+| **Blueprints** *(new, 2026-07-04)* | unique Blueprint ID, slug, name, category, description, tech stack, preview URL, demo deployment URL, customization notes, cover image, **demo status** (live/stale/retired), status | Draft → Review → Published; publishing is gated on `demoStatus: 'live'` — a Blueprint with a stale or nonexistent demo is not shown publicly (`05_CONTENT_STRATEGY.md` §2b) |
 | **Team Members** | name, username, role, bio, photo, skills, social links, core-member flag, profile-visible flag | Draft → Published |
 | **Testimonials** | quote, attributed name, title, company (optional), linked case study (optional) | Draft → Published; schema rejects unattributed entries (`05_CONTENT_STRATEGY.md` §3) |
 | **Services** | title, practice area, description, capability list | Draft → Published (low edit frequency) |

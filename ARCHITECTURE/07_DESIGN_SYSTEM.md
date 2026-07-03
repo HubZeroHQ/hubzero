@@ -1,6 +1,6 @@
 # 07 — Design System
 
-> **Status: Founder Approved — 2026-07-01.** No content changes from the founder-approval session; carried forward as originally specified. See `00_FOUNDER_APPROVAL.md` for the full decision log.
+> **Status: Founder Approved — 2026-07-01; amended 2026-07-04.** No content changes from the founder-approval session; carried forward as originally specified. See `00_FOUNDER_APPROVAL.md` for the full decision log. New §8 added 2026-07-04, generalizing `15_HOMEPAGE_DESIGN.md`'s per-beat Uniqueness Test into a standing requirement for any new marketing page, per `00_FOUNDER_APPROVAL.md` §8 and the commissioned design review (`docs/design-reviews/MARKETING_SITE_REVIEW_V1.md`).
 
 > Decision convention: see `01_PRODUCT_VISION.md` §0. This document translates the research synthesis in `02_BRAND_STRATEGY.md` §5 into concrete, enforceable tokens and rules.
 
@@ -60,3 +60,16 @@ Directly answers the legacy "Should Become Shared UI" list (`ARCHIVED_PROJECT_AN
 ## 7. What is deliberately not in the v2 design system
 
 Per research principle 10 (what's conspicuously absent on premium sites): no stock photography, no abstract hero illustrations (people/rockets/puzzle pieces), no carousels (the legacy testimonial carousel is removed along with its content, `06_PAGE_SPECIFICATIONS.md` Home), no autoplay background video, no icon-grid-with-vague-claims pattern ("Fast," "Secure," "Easy" unaccompanied by proof), no countdown/urgency banners, no trust-badge wall.
+
+## 8. Editorial consistency and the Uniqueness Test **[New, 2026-07-04]**
+
+`15_HOMEPAGE_DESIGN.md` §12 defined a per-beat gate for the homepage — "could this beat appear on another agency's website simply by replacing the logo?" — and the commissioned design review (`docs/design-reviews/MARKETING_SITE_REVIEW_V1.md`, 2026-07-04) confirmed the homepage passes it convincingly. That same review found Services, Software, and Hardware — three pages built after the homepage — never had the test applied to them, and collapsed into "three fills of one template" as a direct result (identical caption → clamp H1 → subhead → mono facts → numbered-prose-over-texture → pull-quote → CTA-close shape, in the same order, every time).
+
+**This document generalizes `15` §12's test from a homepage-only tool into a standing requirement for any new marketing page**, effective immediately for the Builds, Labs, and Blueprints pages specified in `06_PAGE_SPECIFICATIONS.md`:
+
+- Before a new marketing page is considered done, ask: could this page's macro-composition appear on another agency's site by swapping the logo? If yes, it hasn't passed, regardless of how well-executed the individual components are.
+- Apply the test **per page**, not once at the end of a batch — the Services/Software/Hardware failure happened because the test was only ever run against the homepage in isolation.
+- A shared *component* (e.g. a filterable content-index primitive reused across Work/Builds/Labs/Blueprints) is correct engineering and does not fail this test on its own. A shared *composition* — the same macro-structure, image placement, and beat order reused across multiple pages — does fail it, even if every individual component is well-built.
+- The homepage is the execution bar new pages are measured against, not Services/Software/Hardware — "homepage strongest" (per the same design review) should be read as the standard the rest of the site is still catching up to, not a compliment to file away.
+
+**Component vocabulary for the new pillars:** Builds, Labs, and Blueprints detail pages (`/builds/[slug]`, `/labs/[slug]`, `/blueprints/[slug]`) are evidence pages, the same role a case study plays — they follow the `15`-style editorial override (no `GlassCard`/`GradientButton`/card-grid `SectionGrid`), not §5's base utility vocabulary. Index pages (`/builds`, `/labs`, `/blueprints`) may use a lighter utility treatment for filter controls and list layout, matching how `/work`'s index already combines a real filter UI with an editorial (non-card-grid) row presentation — filter chips and empty states are utility; the content rows themselves are editorial.

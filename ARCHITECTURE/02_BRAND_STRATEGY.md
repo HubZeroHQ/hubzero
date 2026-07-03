@@ -1,6 +1,6 @@
 # 02 — Brand Strategy
 
-> **Status: Founder Approved — 2026-07-01.** See `00_FOUNDER_APPROVAL.md` §4-5 for revisions to pricing language and hero/tagline direction incorporated below.
+> **Status: Founder Approved — 2026-07-01; amended 2026-07-04.** See `00_FOUNDER_APPROVAL.md` §4-5 for revisions to pricing language and hero/tagline direction incorporated below, and §8 for the four-pillar company structure.
 
 > Builds on `01_PRODUCT_VISION.md`. Industry-pattern research (Linear/Stripe/Vercel/etc. — Step 8) is synthesized in §5-6 below.
 
@@ -20,6 +20,8 @@ This matters for tone: HubZero v2's brand voice is closer to a B2B engineering/c
 | **Technical without jargon** | Plain descriptions of what was built and why it worked | Buzzword stacking ("synergistic full-stack solutions") |
 
 Every line of website copy should pass a one-question test: **could a competitor's website say this exact sentence and be equally true?** If yes, cut it. ("We bring your ideas to life," "user-first experience," "innovative solutions" all fail this test today.)
+
+**[New, 2026-07-04]** These voice rules and the competitor-sentence test apply identically to Builds, Labs, and Blueprints copy (`17_COMPANY_STRUCTURE.md`) — there is no separate, looser voice for content where no client is watching it get published.
 
 ## 3. Visual identity direction
 
