@@ -11,11 +11,18 @@ export interface NavItem {
   href: string;
 }
 
+/**
+ * Per `ARCHITECTURE/03_INFORMATION_ARCHITECTURE.md` §2, primary nav is
+ * content-gated: an item only belongs here once it has a real, published
+ * page behind it. Blog, Builds, Labs, and Blueprints are all real
+ * destinations in the target IA but none has shipped a page yet, so none
+ * of them belong in this list — see `footerNav` below for where
+ * not-yet-shipped destinations live in the meantime.
+ */
 export const primaryNav: NavItem[] = [
   { label: "Services", href: "/services" },
   { label: "Work", href: "/work" },
   { label: "About", href: "/about" },
-  { label: "Blog", href: "/blog" },
 ];
 
 export const primaryCta: NavItem = { label: "Start a project", href: "/contact" };
