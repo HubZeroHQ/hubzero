@@ -1,6 +1,6 @@
 # 01 — Product Vision
 
-> **Status: Founder Approved — 2026-07-01.** See `00_FOUNDER_APPROVAL.md` for the full decision log; several items below (hero framing in §6-7, growth-target rigidity referenced from `03`) were revised in that session and this document has been updated to match.
+> **Status: Founder Approved — 2026-07-01; amended 2026-07-04.** See `00_FOUNDER_APPROVAL.md` for the full decision log; several items below (hero framing in §6-7, growth-target rigidity referenced from `03`) were revised in that session and this document has been updated to match. §1's three-year vision is, as of 2026-07-04, also the philosophical basis for `17_COMPANY_STRUCTURE.md`'s four-pillar operating model — see the note at the end of §1.
 
 > Source inputs: `ARCHIVED_PROJECT_ANALYSIS.md` (legacy site, feature research only — not a basis for preservation) and `docs/team-planning-responses.csv` (4 of ~5 core team responses: Rifaque, Salsabeel, Sultan, Iyad — the primary source of truth for business decisions in this document).
 
@@ -24,6 +24,8 @@ The team does not agree on this, and that disagreement is itself the most import
 Three of four respondents describe HubZero as a side project or social group; only the founder describes it as a company. The current website (built on the founder's framing) presents HubZero as an established creative-technology collective — confident copy, stats, testimonials — while the team that operates it is still privately unsure whether this is a company, a hustle, or a friend group.
 
 **This is not a contradiction to hide. It is the actual starting condition, and the website's job is to resolve it in one direction.** Per the founder's 3-year vision — "a large organization of engineers with many contracts with brands, providing engineering solutions" — and per the instruction to prefer business goals when business goals and current execution disagree, HubZero v2 is built as if the company framing is already true, written forward from where the team wants to be, not backward from where it currently is. The website is the forcing function that makes "engineering company" the operating reality, not just the founder's aspiration.
+
+**[New, 2026-07-04]** `17_COMPANY_STRUCTURE.md` is the operational structure this vision implies: a company with "many contracts with brands" also builds its own products, explores in the open, and productizes its own engineering discipline — not client delivery alone. See that document for the four-pillar model (Work, Builds, Labs, Blueprints) this vision is now expressed through.
 
 ## 2. What HubZero is (the v2 definition)
 

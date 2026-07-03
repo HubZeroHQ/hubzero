@@ -1,6 +1,6 @@
 # 00 — Founder Approval & Decision Log
 
-> Status: **Founder Approved — 2026-07-01.** This document is the authoritative record of the founder-approval session that resolved every remaining open decision across `01`–`14`. Where this log conflicts with earlier prose in those documents (particularly around CMS role model, blog sequencing, hero copy, and growth-target rigidity), **this log wins** — the other documents have been updated to match, but this is the source of truth for *why*.
+> Status: **Founder Approved — 2026-07-01; amended 2026-07-04.** This document is the authoritative record of the founder-approval session that resolved every remaining open decision across `01`–`14`, plus the 2026-07-04 amendment session (§8) that adopted the four-pillar company structure and resolved `17_COMPANY_STRUCTURE.md`'s open questions. Where this log conflicts with earlier prose in those documents (particularly around CMS role model, blog sequencing, hero copy, and growth-target rigidity), **this log wins** — the other documents have been updated to match, but this is the source of truth for *why*.
 
 ## How to read this document
 
@@ -52,3 +52,16 @@ Each decision below states the question, the founder's answer (Rifaque, verbatim
 ## 7. Founder Approval Status
 
 All 14 architecture documents (`01`–`14`) are marked **Founder Approved** as of **2026-07-01**, incorporating the decisions in this log. Any future re-opening of a decision recorded here should be logged as an amendment to this file, not a silent edit to the original document.
+
+## 8. Company structure — four pillars **[New, 2026-07-04]**
+
+HubZero's operating structure is expanded from client-delivery-only to four pillars: **Work** (client engagements, unchanged), **Builds** (completed first-party products HubZero owns), **Labs** (research/experimentation — hardware, software, AI — generalizing the 2026-07-01 Labs/R&D decision in §2 above from a Hardware-page-only mechanism into a permanent pillar), and **Blueprints** (reusable, customizable, production-ready engineering foundations — not templates). Full definition, lifecycle, and governance: `17_COMPANY_STRUCTURE.md`, which this entry marks **Founder Approved**.
+
+This entry resolves `17_COMPANY_STRUCTURE.md` §9's open questions:
+
+- **Primary nav ceiling:** raised from five items to six (Services, Work, Builds, Labs, Blueprints, About + Contact CTA), rolled out content-gated — a pillar enters primary nav only once it has ≥1 real published entry; Blog moves to footer-only to keep the top-level count at six. *(Updated: `03` §2)*
+- **Labs / Hardware-page duplication:** resolved as summary-plus-link, not a duplicated write-up. The Hardware & Embedded page's existing Labs/R&D section becomes a short summary linking to the canonical `/labs/[slug]` entry; the full write-up lives only at `/labs`. *(Updated: `06` Hardware & Embedded)*
+- **Blueprints framing:** positioned primarily as proof-of-range and delivery accelerators — the CTA on a Blueprint's detail page routes to `/contact` ("start a project built on this foundation"), not a self-serve checkout or purchase flow, consistent with the existing deferred-payment-gateway decision (§ referenced in `10_FEATURE_SPECIFICATION.md` §6) and the standing "pricing is never a number" rule (§4 above). This is a provisional framing, not a permanent one — revisit if a genuinely self-serve delivery model becomes real later. *(Updated: `06` Blueprints)*
+- **Builds content readiness:** **still open.** Whether a real, complete internal product exists today to publish as the first Build is a factual question this document can't resolve on its own — `14_IMPLEMENTATION_ROADMAP.md` Phase 3a treats Builds as content-gated rather than assuming an answer either way. Confirm directly before Phase 3a reaches this pillar.
+
+*(Updated: `03`, `05`, `06`, `07`, `09`, `10`, `11`, `12`, `13`, `14` — see `18_ARCHITECTURE_CHANGELOG.md` for the itemized list of every section changed as a result of this entry.)*

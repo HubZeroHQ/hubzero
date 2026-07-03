@@ -1,6 +1,6 @@
 # 12 — Admin Panel Specification
 
-> **Status: Founder Approved — 2026-07-01.** §1-3 below updated to match the responsibility-based RBAC and hybrid workflow model in `00_FOUNDER_APPROVAL.md` §3, replacing the original department-based role references.
+> **Status: Founder Approved — 2026-07-01; amended 2026-07-04.** §1-3 below updated to match the responsibility-based RBAC and hybrid workflow model in `00_FOUNDER_APPROVAL.md` §3, replacing the original department-based role references. §2's screen list gained Builds and Blueprints, and the Labs/R&D screen description was updated, on 2026-07-04 — see `00_FOUNDER_APPROVAL.md` §8.
 
 > Decision convention: see `01_PRODUCT_VISION.md` §0. Located at `/studio`, excluded from sitemap/robots (`03_INFORMATION_ARCHITECTURE.md` §5) — this is the system that replaces the legacy's entirely-manual, developer-bottlenecked publishing process (`ARCHIVED_PROJECT_ANALYSIS.md` §9.6).
 
@@ -13,7 +13,9 @@ Per `09_CMS_ARCHITECTURE.md` §4's responsibility-based role model, the dashboar
 - **Dashboard** — at-a-glance: new leads count, content awaiting review (for Admins/Head Admin), recent activity.
 - **Leads inbox** — list of contact submissions (`11_DATABASE_ARCHITECTURE.md` §1 Lead), filterable by status/project type, with the structured intake fields (project type, budget range) visible inline so the team can triage without opening email — directly serves the founder's stated qualification criteria (`01_PRODUCT_VISION.md` §3).
 - **Case Studies** — list + editor (rich text for problem/approach/result, media upload, tag selection, status transitions, version history view).
-- **Labs / R&D Projects** *(new, 2026-07-01)* — list + editor for internal/personal embedded projects shown on the Hardware & Embedded page as interim proof (`00_FOUNDER_APPROVAL.md` §2); simple draft/publish, no approval step required.
+- **Builds** *(new, 2026-07-04)* — list + editor for completed first-party products (`17_COMPANY_STRUCTURE.md` §2); same low-workflow-overhead pattern as Services/FAQs below, plus a field to link a graduated Labs project as provenance.
+- **Labs / R&D Projects** *(new, 2026-07-01; screen updated 2026-07-04)* — list + editor for internal/personal exploratory projects across hardware, software, and AI, now shown on their own top-level `/labs` pillar rather than only as a section on the Hardware & Embedded page (`00_FOUNDER_APPROVAL.md` §2, §8); includes the `stage` field (active/archived/graduated) and a "mark as graduated" action that links to the resulting Build; simple draft/publish, no approval step required.
+- **Blueprints** *(new, 2026-07-04)* — list + editor including live-preview and demo-deployment URL fields, customization notes, and the `demoStatus` field that gates public visibility (`05_CONTENT_STRATEGY.md` §2b) — an editor cannot publish a Blueprint with `demoStatus` set to anything other than `live`.
 - **Team Members** — list + editor, including the `isCoreMember` / `profileVisible` toggles that implement the consensus decision to show only core members publicly (`06_PAGE_SPECIFICATIONS.md` Team), and leadership-title fields supporting the Founder + co-founders structure.
 - **Testimonials** — editor with required name/title fields enforced at the form level, not just the schema, so an editor cannot even attempt to save a placeholder/unattributed entry (`05_CONTENT_STRATEGY.md` §3).
 - **Services, FAQs, Career Listings** — simpler list+editor screens, lower workflow overhead; Services `practiceArea` field accepts new verticals without a schema change (`00_FOUNDER_APPROVAL.md` §6).

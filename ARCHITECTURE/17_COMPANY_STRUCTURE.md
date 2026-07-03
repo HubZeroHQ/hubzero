@@ -1,6 +1,6 @@
 # 17 — Company Structure
 
-> **Status: Proposed — pending founder approval.** Drafted 2026-07-04 in response to the founder's direction that HubZero now operates around four pillars (Work, Builds, Labs, Blueprints), a structural evolution not represented anywhere in `00`–`16`. This document is written to the same bar as the founder-approved documents it sits alongside, but is **not yet itself founder-approved** — treat every decision below as a proposal until it receives its own entry in `00_FOUNDER_APPROVAL.md`, per that document's own stated amendment process ("any future re-opening of a decision recorded here should be logged as an amendment to this file, not a silent edit").
+> **Status: Founder Approved — 2026-07-04.** Drafted 2026-07-04 in response to the founder's direction that HubZero now operates around four pillars (Work, Builds, Labs, Blueprints), a structural evolution not represented anywhere in `00`–`16`. Approved via `00_FOUNDER_APPROVAL.md` §8, which also resolved three of this document's four original open questions (§9 below) — the fourth (Builds content readiness) remains open, since it's a factual question rather than a design decision.
 >
 > Decision convention: see `01_PRODUCT_VISION.md` §0. Nothing below relitigates a decision already settled in `00`–`16` (founding year, RBAC model, CMS build approach, blog MVP scope, etc.) — this document is additive: it names the operating structure those decisions already sit inside, and gives the four pillars a canonical home so `03`, `05`, `06`, `09`, `11`, and `14` have one place to point back to instead of each inventing their own framing.
 
@@ -173,9 +173,11 @@ Every rule in `05_CONTENT_STRATEGY.md` §2-3 (real named clients only, zero fabr
 | `14_IMPLEMENTATION_ROADMAP.md` | §3 above for sequencing Labs → Builds → Blueprints against the existing phased roadmap |
 | `15_HOMEPAGE_DESIGN.md` | §7 above — this document generalizes `15` §12's Uniqueness Test site-wide rather than superseding it |
 
-## 9. Open questions pending founder approval
+## 9. Open questions — status
 
-1. Is the six-item nav ceiling (§5) an acceptable evolution of `03` §2's original five-item rule, or should the founder set a different number?
-2. Does the existing embedded "Labs / R&D" section on `/services/hardware` move fully to the new `/labs`, with Hardware linking out, or keep a permanent in-page summary alongside the link (§6)?
-3. Should Blueprints be positioned as public, self-serve productized offerings, or as proof-of-range shown primarily to prospects already in a conversation? This affects both copy tone and whether a "customize this" action should resemble a checkout flow (out of scope per the deferred payment-gateway decision, `10_FEATURE_SPECIFICATION.md` §6) or route to `/contact`.
-4. Does HubZero have a real, complete internal product ready to publish as a Build today — this determines whether the Builds pillar can launch immediately or is gated on one being finished first.
+**[Updated 2026-07-04, see `00_FOUNDER_APPROVAL.md` §8]** This document's status is now **Founder Approved**, not merely proposed — the first three questions below were resolved in that entry. The fourth remains genuinely open, since it's a factual question about current internal work rather than a design decision.
+
+1. ~~Is the six-item nav ceiling (§5) an acceptable evolution of `03` §2's original five-item rule?~~ **Resolved:** yes — six items, content-gated rollout, Blog moved to footer-only. See `00_FOUNDER_APPROVAL.md` §8, `03_INFORMATION_ARCHITECTURE.md` §2.
+2. ~~Does the existing embedded "Labs / R&D" section on `/services/hardware` move fully to the new `/labs`?~~ **Resolved:** yes, summary-plus-link, not a duplicated write-up. See `06_PAGE_SPECIFICATIONS.md`, Hardware & Embedded.
+3. ~~Should Blueprints be positioned as public, self-serve productized offerings, or as proof-of-range?~~ **Resolved:** proof-of-range and delivery accelerators — CTA routes to `/contact`, not a self-serve checkout flow. See `00_FOUNDER_APPROVAL.md` §8, `06_PAGE_SPECIFICATIONS.md` Blueprints.
+4. **Still open:** does HubZero have a real, complete internal product ready to publish as a Build today? This determines whether the Builds pillar launches alongside Labs or is gated on one being finished first (`14_IMPLEMENTATION_ROADMAP.md` Phase 3a). Confirm directly before that phase is reached.

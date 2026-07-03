@@ -1,6 +1,6 @@
 # 10 — Feature Specification
 
-> **Status: Founder Approved — 2026-07-01.** See `00_FOUNDER_APPROVAL.md` for the full decision log — §3 (blog moved to MVP scope), §4 (data retention/backup added, newsletter capture explicitly deferred) affect this document.
+> **Status: Founder Approved — 2026-07-01; amended 2026-07-04.** See `00_FOUNDER_APPROVAL.md` for the full decision log — §3 (blog moved to MVP scope), §4 (data retention/backup added, newsletter capture explicitly deferred), §8 (four-pillar company structure) affect this document.
 
 > Decision convention: see `01_PRODUCT_VISION.md` §0. Cross-references the legacy feature checklist (`ARCHIVED_PROJECT_ANALYSIS.md` §18) and disposes of every item explicitly — nothing carries forward by default silence.
 
@@ -33,8 +33,10 @@
 - Terms of use page.
 - Lead status tracking (new/contacted/closed) for the team's own follow-up process.
 - Version history / content rollback, built from day one for every content type (`09_CMS_ARCHITECTURE.md` §3, amended 2026-07-01).
-- Labs / R&D content type — internal/personal embedded projects as interim hardware-capability proof (`00_FOUNDER_APPROVAL.md` §2).
+- Labs / R&D content type — originally scoped as interim hardware-capability proof (`00_FOUNDER_APPROVAL.md` §2), generalized 2026-07-04 into the permanent Labs pillar covering all exploratory engineering (`00_FOUNDER_APPROVAL.md` §8).
 - Defined data retention & automated backup policy for the database (`08_TECHNICAL_ARCHITECTURE.md` §9, new 2026-07-01).
+- **[New, 2026-07-04]** Builds content type — completed, first-party HubZero products (`17_COMPANY_STRUCTURE.md` §2).
+- **[New, 2026-07-04]** Blueprints content type — reusable, customizable production-ready foundations with live-demo infrastructure (`17_COMPANY_STRUCTURE.md` §2, `11_DATABASE_ARCHITECTURE.md`).
 
 ## 4. Explicitly removed (not carried forward, with reason)
 

@@ -1,8 +1,8 @@
 # 06 — Page Specifications
 
-> **Status: Founder Approved — 2026-07-01.** See `00_FOUNDER_APPROVAL.md` for the full decision log. Home hero (§ below), Hardware & Embedded (Labs/R&D), About (founding year, leadership), Contact (pricing framing), and Blog (MVP scope) sections were revised in that session.
+> **Status: Founder Approved — 2026-07-01; amended 2026-07-04.** See `00_FOUNDER_APPROVAL.md` for the full decision log. Home hero (§ below), Hardware & Embedded (Labs/R&D), About (founding year, leadership), Contact (pricing framing), and Blog (MVP scope) sections were revised in the 2026-07-01 session. Builds, Labs, and Blueprints page specs (new below) and the Hardware & Embedded Labs/R&D section rewrite were added 2026-07-04 per `00_FOUNDER_APPROVAL.md` §8 and `17_COMPANY_STRUCTURE.md`.
 
-> Decision convention: see `01_PRODUCT_VISION.md` §0. Each page states its **Verdict** on the legacy equivalent (Keep / Merge / Split / Replace / Remove / Rebuild) and why, per the Step 6 instruction to critically evaluate every existing page before designing its replacement.
+> Decision convention: see `01_PRODUCT_VISION.md` §0. Each page states its **Verdict** on the legacy equivalent (Keep / Merge / Split / Replace / Remove / Rebuild) and why, per the Step 6 instruction to critically evaluate every existing page before designing its replacement. **[Amended 2026-07-04]** Before any of the three new pillar pages below ship, apply `07_DESIGN_SYSTEM.md`'s generalized Uniqueness Test to each individually — the commissioned design review (`docs/design-reviews/MARKETING_SITE_REVIEW_V1.md`, 2026-07-04) found Services/Software/Hardware collapsed into "three fills of one template," and Builds/Labs/Blueprints are three more index-plus-detail families at the same risk. Each spec below states explicitly how its composition should differ from the others and from Services/Software/Hardware — this is a requirement of the spec, not a QA step discovered after implementation.
 
 ## Home (`/`)
 
@@ -34,7 +34,9 @@
 
 **Verdict: New page, replaces nothing** (legacy had zero equivalent — ECE/electronics work was entirely absent from the legacy service pages despite being core to the founder's own description of the company, `01` §1). This page is structurally as important as the software page, not a footnote, per the differentiation strategy in `02_BRAND_STRATEGY.md` §6. Content should draw directly on Salsabeel's stated domain (CSV Q33-34: embedded and VLSI domain, IoT) since she is the team's actual electronics expertise.
 
-**Sections:** what's included (embedded systems, IoT integration, hardware-software bridging), why this matters for businesses that don't realize they need it (`04_USER_JOURNEYS.md` §2), relevant case studies (filtered to "Hardware" or "Both"), **Labs / R&D** (internal or personal embedded/IoT projects, clearly labeled non-client — the interim proof mechanism approved 2026-07-01 for launching this page credibly before a real client hardware case study exists, see `00_FOUNDER_APPROVAL.md` §2), CTA.
+**Sections:** what's included (embedded systems, IoT integration, hardware-software bridging), why this matters for businesses that don't realize they need it (`04_USER_JOURNEYS.md` §2), relevant case studies (filtered to "Hardware" or "Both"), **Labs & R&D** (summary + link, see below), CTA.
+
+**[Amended 2026-07-04, see `00_FOUNDER_APPROVAL.md` §8]** The Labs/R&D section on this page is no longer a full, self-contained write-up. Labs/R&D projects (internal or personal embedded/IoT work, clearly labeled non-client — originally approved 2026-07-01 as the interim proof mechanism for this page, `00_FOUNDER_APPROVAL.md` §2) now live as canonical entries in the top-level `/labs` pillar (`03_INFORMATION_ARCHITECTURE.md` §1, `17_COMPANY_STRUCTURE.md` §2). This page shows a short summary of the most relevant Labs entry and links out to its canonical `/labs/[slug]` page, rather than maintaining a second full copy of the same content — the same one-canonical-record discipline that already resolved the legacy `team.json` duplication (`11_DATABASE_ARCHITECTURE.md` §3), applied here before a second duplication has the chance to happen.
 
 ## Service pages — Branding, SEO (legacy `/branding`, `/seo`)
 
@@ -51,6 +53,36 @@
 **Verdict: Rebuild from a single hardcoded example into a real template.** Legacy had one hand-built page (`bhatkaltimeluxe/page.tsx`) with no template behind it — adding a second case study meant writing another full page from scratch. v2 uses the CMS schema defined in `05_CONTENT_STRATEGY.md` §2 to render any case study from structured content, no code change required to add one.
 
 **Sections:** hero (client, project type, practice-area tag), problem, approach (with real tech/architecture specifics — research principle 2, "show the system"), result (metric or honest qualitative outcome), optional client quote (real, attributed), ongoing relationship note, related case studies, CTA.
+
+## Builds — index and detail (`/builds`, `/builds/[slug]`) **[New, 2026-07-04]**
+
+**Verdict: New pages** (no legacy equivalent). Per `17_COMPANY_STRUCTURE.md` §2, Builds are completed, first-party products HubZero owns — evidence the team finishes what it starts, distinct from Work's client-delivery evidence. Ships only once at least one real, complete internal product exists (`05_CONTENT_STRATEGY.md` §2a) — no placeholder entries.
+
+**Index sections:** intro line framing Builds as HubZero's own shipped products, not a portfolio of ideas (distinct framing from Work's "selectivity" intro — see the compositional-difference requirement above); filter by practice area if volume justifies it (`03_INFORMATION_ARCHITECTURE.md` §5); build cards (name, tagline, one-line description, live link if public).
+
+**Detail sections:** hero (name, tagline, practice area — no client/project-type framing, since there is no client), what it does and why HubZero built it, tech specifics (real stack, real architecture decisions — same "show the system" principle as case studies), current status (actively maintained / archived), a visible provenance note if it graduated from a Labs project (linking back to that entry), CTA.
+
+**Compositional difference from Work and from Services/Software/Hardware:** Builds should read as first-person product pages ("here's what we built and why"), not as proof-for-a-prospect pages — the tone is closer to a changelog or product page than a sales page. This is the structural device that keeps it from collapsing into another "problem → approach → result → CTA" template repeat.
+
+## Labs — index and detail (`/labs`, `/labs/[slug]`) **[New, 2026-07-04]**
+
+**Verdict: New pages, migrating existing content.** Generalizes the Labs/R&D content previously embedded only on the Hardware & Embedded page (`00_FOUNDER_APPROVAL.md` §2) into its own top-level pillar covering hardware, software, and AI exploration (`17_COMPANY_STRUCTURE.md` §2). The existing IoT Sensor Dashboard entry migrates here as the first real content — this pillar launches with a content migration, not a content-creation blocker.
+
+**Index sections:** intro line framing Labs honestly as in-progress, exploratory work with no promise it ships (the honesty is the point, not a caveat — `17_COMPANY_STRUCTURE.md` §2); filter by discipline (hardware / software / AI); project cards showing a `stage` badge (active / archived / graduated) so a visitor can tell ongoing exploration from concluded work at a glance (`11_DATABASE_ARCHITECTURE.md`).
+
+**Detail sections:** hero (title, discipline, stage badge), description of what's being explored and why, real technical specifics (a system/data-flow diagram where one exists — the Hardware page's existing IoT diagram is the reference example to extend as a pattern, per the design review's own recommendation), disclosure that this is non-client work, and — if graduated — a link forward to the resulting Build entry.
+
+**Compositional difference:** Labs is the one pillar explicitly allowed to look unfinished or in-motion — status badges, dated entries, and visible "still exploring this" language are appropriate here in a way they would undercut trust anywhere else on the site. This tonal permission is itself the compositional differentiator from Builds (finished, confident) and Work (client-proof, polished).
+
+## Blueprints — index and detail (`/blueprints`, `/blueprints/[slug]`) **[New, 2026-07-04]**
+
+**Verdict: New pages** (no legacy equivalent). Per `17_COMPANY_STRUCTURE.md` §2, a Blueprint is a reusable, customizable, production-ready engineering foundation — explicitly not a template. Ships only once a Blueprint has a real, working live demo (`05_CONTENT_STRATEGY.md` §2b) — a Blueprint with a dead demo actively damages the "not a template" claim.
+
+**Index sections:** intro line stating plainly what a Blueprint is and isn't (the "not a template" distinction has to be made explicitly in copy, not assumed obvious); filter by category; Blueprint cards (name, category, one-line description, live preview link, `demoStatus` gating whether it's shown at all).
+
+**Detail sections:** hero (name, unique Blueprint ID, category), live demo embed or prominent link, description, tech stack, customization notes (what a client can and cannot change — specific, not "fully customizable" left unexplained), CTA framed as "start a project built on this foundation" → `/contact`, not a self-serve checkout flow. **[Resolved 2026-07-04, see `00_FOUNDER_APPROVAL.md` §8]** Blueprints are positioned as proof-of-range and delivery accelerators, not a self-serve product catalog — this CTA wording is final, not provisional, consistent with the deferred payment-gateway decision (`10_FEATURE_SPECIFICATION.md` §6) and the standing "pricing is never a number" rule (`00_FOUNDER_APPROVAL.md` §4).
+
+**Compositional difference:** this is the one pillar where the live demo/preview is the actual hero content, not a supporting image — the page's job is "let them touch it," which none of Work/Builds/Labs are built around. This functional difference is itself the strongest guard against this page collapsing into the Services/Software/Hardware template shape.
 
 ## About (`/about`)
 
