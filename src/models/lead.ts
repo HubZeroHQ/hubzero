@@ -1,6 +1,7 @@
-import { Schema, model, models, type InferSchemaType } from "mongoose";
+import { Schema, type InferSchemaType } from "mongoose";
 
 import { budgetRangeOptions, projectTypeOptions } from "@/lib/lead-schema";
+import { defineModel } from "@/models/shared/define-model";
 
 const projectTypeValues = projectTypeOptions.map((option) => option.value);
 const budgetRangeValues = budgetRangeOptions.map((option) => option.value);
@@ -37,5 +38,4 @@ leadSchema.index({ status: 1, createdAt: -1 });
 
 export type LeadDocument = InferSchemaType<typeof leadSchema>;
 
-// `models.Lead` guards against Mongoose's "OverwriteModelError" across dev hot-reloads.
-export const Lead = models.Lead ?? model("Lead", leadSchema);
+export const Lead = defineModel<LeadDocument>("Lead", leadSchema);
