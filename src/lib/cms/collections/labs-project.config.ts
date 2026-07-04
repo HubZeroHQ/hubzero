@@ -24,7 +24,7 @@ export const labsProjectConfig = registerCollection(
     studioBasePath: "labs",
     recordLabel: (doc) => doc.title,
     // `isClientWork` is always `false` (`models/labs-project.ts`) — not a
-    // form field, injected on every create/update the same way BlogPost
+    // form field, injected on every create/update the same way Note
     // computes `readingTimeMinutes`.
     computedFields: () => ({ isClientWork: false }),
     revalidatesPaths: () => [],

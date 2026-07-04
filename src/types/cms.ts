@@ -40,7 +40,7 @@ export type Resource =
   | "teamMember"
   | "testimonial"
   | "service"
-  | "blogPost"
+  | "note"
   | "faq"
   | "careerListing"
   | "lead"

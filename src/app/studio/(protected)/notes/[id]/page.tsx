@@ -1,39 +1,39 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 
-import { getOne, publish, remove, submitForReview } from "@/actions/studio/blog-posts";
-import { EditBlogPostForm } from "@/app/studio/(protected)/blog/[id]/edit-blog-post-form";
+import { getOne, publish, remove, submitForReview } from "@/actions/studio/notes";
+import { EditNoteForm } from "@/app/studio/(protected)/notes/[id]/edit-note-form";
 import { PageHeader } from "@/components/admin/page-header";
 import { WorkflowActions } from "@/components/admin/workflow-actions";
 import { WorkflowStatusBadge } from "@/components/admin/workflow-status-badge";
 import { Link, Text } from "@/components/ui";
-import type { BlogPostInput } from "@/lib/cms/collections/blog-post-fields";
+import type { NoteInput } from "@/lib/cms/collections/note-fields";
 import { can } from "@/lib/cms/permissions";
 import { requireSessionUser } from "@/lib/cms/session";
 
-interface EditBlogPostPageProps {
+interface EditNotePageProps {
   params: Promise<{ id: string }>;
 }
 
 export const metadata: Metadata = {
-  title: "Edit Blog Post — HubZero Studio",
+  title: "Edit Note — HubZero Studio",
 };
 
-export default async function EditBlogPostPage({ params }: EditBlogPostPageProps) {
+export default async function EditNotePage({ params }: EditNotePageProps) {
   const { id } = await params;
 
   const user = await requireSessionUser();
-  if (!can(user, "view", "blogPost")) redirect("/studio");
+  if (!can(user, "view", "note")) redirect("/studio");
 
   const doc = await getOne(id);
   if (!doc) notFound();
 
   const target = { createdBy: doc.createdBy };
-  const canEdit = can(user, "edit", "blogPost", target);
-  const canPublish = can(user, "publish", "blogPost", target);
-  const canDelete = can(user, "delete", "blogPost", target);
+  const canEdit = can(user, "edit", "note", target);
+  const canPublish = can(user, "publish", "note", target);
+  const canDelete = can(user, "delete", "note", target);
 
-  const initialValues: Partial<BlogPostInput> = {
+  const initialValues: Partial<NoteInput> = {
     slug: doc.slug,
     title: doc.title,
     summary: doc.summary,
@@ -52,10 +52,10 @@ export default async function EditBlogPostPage({ params }: EditBlogPostPageProps
       <PageHeader
         title={doc.title}
         description={`${doc.category} · ${doc.readingTimeMinutes} min read`}
-        breadcrumb={[{ label: "Blog", href: "/studio/blog" }, { label: doc.title }]}
+        breadcrumb={[{ label: "Notes", href: "/studio/notes" }, { label: doc.title }]}
         actions={
           <div className="flex items-center gap-3">
-            <Link href={`/studio/history/blogPost/${id}`}>View history →</Link>
+            <Link href={`/studio/history/note/${id}`}>View history →</Link>
             <WorkflowStatusBadge status={doc.status} />
           </div>
         }
@@ -72,15 +72,15 @@ export default async function EditBlogPostPage({ params }: EditBlogPostPageProps
           submitForReview={submitForReview}
           publish={publish}
           remove={remove}
-          listHref="/studio/blog"
-          itemLabel="blog post"
+          listHref="/studio/notes"
+          itemLabel="note"
         />
       </div>
 
       {canEdit ? (
-        <EditBlogPostForm id={id} initialValues={initialValues} isDraft={doc.status === "draft"} />
+        <EditNoteForm id={id} initialValues={initialValues} isDraft={doc.status === "draft"} />
       ) : (
-        <Text tone="muted">You don&apos;t have permission to edit this post.</Text>
+        <Text tone="muted">You don&apos;t have permission to edit this note.</Text>
       )}
     </>
   );

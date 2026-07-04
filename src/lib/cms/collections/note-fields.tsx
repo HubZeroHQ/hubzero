@@ -3,14 +3,14 @@ import { z } from "zod";
 import { WorkflowStatusBadge } from "@/components/admin/workflow-status-badge";
 import { objectIdField } from "@/lib/cms/collections/shared-validation";
 import { emptyToUndefined } from "@/lib/utils";
-import type { BlogPostDocument } from "@/models/blog-post";
+import type { NoteDocument } from "@/models/note";
 import type { ClientDocument, FieldConfig, FilterConfig, TableColumn } from "@/types/cms";
 
-export type BlogPostRow = ClientDocument<BlogPostDocument>;
+export type NoteRow = ClientDocument<NoteDocument>;
 
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
-export const blogPostSchema = z.object({
+export const noteSchema = z.object({
   slug: z
     .string()
     .trim()
@@ -27,12 +27,12 @@ export const blogPostSchema = z.object({
   coverImage: z.preprocess(emptyToUndefined, z.url("Enter a valid URL.").optional()),
 });
 
-export type BlogPostInput = z.infer<typeof blogPostSchema>;
+export type NoteInput = z.infer<typeof noteSchema>;
 
 /**
  * "Computed on save, not author-entered" (`ARCHITECTURE/11_DATABASE_ARCHITECTURE.md`
  * §1) — a standard 200-words-per-minute reading speed assumption, rounded up
- * so a short post never reads as "0 minutes."
+ * so a short note never reads as "0 minutes."
  */
 const WORDS_PER_MINUTE = 200;
 
@@ -41,9 +41,9 @@ export function computeReadingTimeMinutes(body: string): number {
   return Math.max(1, Math.ceil(wordCount / WORDS_PER_MINUTE));
 }
 
-export const blogPostEmptyStateMessage = "No blog posts yet — create the first one to get started.";
+export const noteEmptyStateMessage = "No notes yet — create the first one to get started.";
 
-export const blogPostFormFields: FieldConfig<BlogPostInput>[] = [
+export const noteFormFields: FieldConfig<NoteInput>[] = [
   { name: "title", label: "Title", type: "text", required: true },
   {
     name: "slug",
@@ -67,7 +67,7 @@ export const blogPostFormFields: FieldConfig<BlogPostInput>[] = [
   { name: "coverImage", label: "Cover image", type: "image" },
 ];
 
-export const blogPostListColumns: TableColumn<BlogPostRow>[] = [
+export const noteListColumns: TableColumn<NoteRow>[] = [
   { key: "title", label: "Title", sortable: true },
   { key: "category", label: "Category" },
   {
@@ -84,7 +84,7 @@ export const blogPostListColumns: TableColumn<BlogPostRow>[] = [
   },
 ];
 
-export const blogPostFilters: FilterConfig<BlogPostRow>[] = [
+export const noteFilters: FilterConfig<NoteRow>[] = [
   {
     name: "status",
     label: "Status",
