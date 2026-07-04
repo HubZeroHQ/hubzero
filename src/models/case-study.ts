@@ -1,6 +1,6 @@
 import { Schema, type InferSchemaType, type Types } from "mongoose";
 
-import { practiceAreaOptions } from "@/lib/cms/collections/case-study-fields";
+import { practiceAreaValues } from "@/lib/cms/collections/shared-options";
 import { defineModel } from "@/models/shared/define-model";
 import { draftReviewPublishStatusValues, workflowFields } from "@/models/shared/workflow-fields";
 
@@ -8,24 +8,19 @@ import { draftReviewPublishStatusValues, workflowFields } from "@/models/shared/
  * `ARCHITECTURE/11_DATABASE_ARCHITECTURE.md` §1's `CaseStudy` collection —
  * the Phase B proof collection (`ARCHITECTURE/19_CMS_FOUNDATION.md` §14).
  * `relatedTeamMembers` and the attributed `quote` are deliberately omitted
- * for now: the former needs a `TeamMember` model that doesn't exist until
- * Phase E, the latter is a nested object outside the fixed field-type
- * vocabulary (§6) this phase's form engine renders. Both are additive —
- * neither requires revisiting the workflow/permission/CRUD engine this
- * collection exists to prove.
+ * for now: the former can now reference the `TeamMember` model added in
+ * Phase D via the `reference` field type, the latter is a nested object
+ * needing the `json` field type Phase D introduces for exactly this shape
+ * (see `TeamMember.skills`) — both are additive, tracked as remaining work
+ * in the Phase D report rather than folded into this pass, since neither
+ * requires revisiting the workflow/permission/CRUD engine this collection
+ * exists to prove.
+ *
+ * `practiceAreaValues` is shared with `Build`/`LabsProject`
+ * (`lib/cms/collections/shared-options.ts`) — one enum, not three
+ * independently maintained copies, matching `lead.ts`'s own
+ * `projectTypeValues`-from-`lead-schema.ts` pattern.
  */
-type PracticeAreaValue = (typeof practiceAreaOptions)[number]["value"];
-
-// Derived from the same `practiceAreaOptions` the form/table config uses
-// (`case-study-fields.tsx`) — one enum, not two independently maintained
-// copies, matching `lead.ts`'s own `projectTypeValues`-from-`lead-schema.ts`
-// pattern. Cast to a literal tuple for the same reason that file documents:
-// a widened `string[]` would still satisfy `enum`'s type but silently lose
-// the literal-union type `InferSchemaType` derives.
-const practiceAreaValues = practiceAreaOptions.map((option) => option.value) as [
-  PracticeAreaValue,
-  ...PracticeAreaValue[],
-];
 
 const caseStudySchema = new Schema(
   {

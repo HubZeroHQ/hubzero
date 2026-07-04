@@ -79,6 +79,22 @@ export interface CollectionConfig<
    * by collections nothing else references yet (e.g. Case Study, for now).
    */
   deleteGuard?: (id: string) => Promise<string | null>;
+  /**
+   * Which field `can()`'s `editOwn` check compares against the signed-in
+   * user's id. Defaults to `createdBy` (whoever's Server Action call created
+   * the row) when omitted — the right default for authored content like
+   * BlogPost, where the creator *is* the author. TeamMember is the
+   * documented exception (`ARCHITECTURE/19_CMS_FOUNDATION.md` §11): a Head
+   * Admin typically creates a Teammate's profile row during onboarding, but
+   * "own content" for a profile means *whose profile it is*
+   * (`linkedUserId`), not who happened to create the row — without this
+   * override, the teammate the profile belongs to could never edit their
+   * own bio, and whichever admin onboarded them could edit it forever. A
+   * genuine, sanctioned per-collection override of one generic assumption,
+   * not a second ownership model (`crud-actions.ts`'s `ownerTarget` is the
+   * only place this is read).
+   */
+  ownerField?: keyof T & string;
 }
 
 /**

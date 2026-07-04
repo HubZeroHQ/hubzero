@@ -19,10 +19,25 @@ const labelByStatus: Record<FieldDiffStatus, string> = {
   unchanged: "Unchanged",
 };
 
+/**
+ * Manual-testing note (Phase D): the first collection with a structured
+ * nested-object field surviving into a snapshot (`TeamMember.socials`)
+ * rendered as `[object Object]` here before this fix — `Array.isArray`'s
+ * `join()` only ever handled arrays of primitives (`techTags`, etc.); a
+ * plain object, or an array of objects (`skills`/`experience`/`education`
+ * once non-empty), fell through to the final `String(value)` branch. Fixed
+ * generically rather than special-cased per field, since any future
+ * collection's own nested/`json`-type field would hit the identical gap.
+ */
 function formatValue(value: unknown): string {
   if (value === undefined || value === null || value === "") return "—";
-  if (Array.isArray(value)) return value.length > 0 ? value.join(", ") : "—";
+  if (Array.isArray(value)) {
+    if (value.length === 0) return "—";
+    const isPrimitiveArray = value.every((item) => item === null || typeof item !== "object");
+    return isPrimitiveArray ? value.join(", ") : JSON.stringify(value);
+  }
   if (typeof value === "boolean") return value ? "Yes" : "No";
+  if (typeof value === "object") return JSON.stringify(value);
   return String(value);
 }
 

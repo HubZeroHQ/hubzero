@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 
-import { getOne } from "@/actions/studio/case-studies";
-import { CaseStudyWorkflowActions } from "@/app/studio/(protected)/case-studies/[id]/case-study-workflow-actions";
+import { getOne, publish, remove, submitForReview } from "@/actions/studio/case-studies";
 import { EditCaseStudyForm } from "@/app/studio/(protected)/case-studies/[id]/edit-case-study-form";
 import { PageHeader } from "@/components/admin/page-header";
+import { WorkflowActions } from "@/components/admin/workflow-actions";
 import { WorkflowStatusBadge } from "@/components/admin/workflow-status-badge";
 import { Link, Text } from "@/components/ui";
 import type { CaseStudyInput } from "@/lib/cms/collections/case-study-fields";
@@ -63,12 +63,20 @@ export default async function EditCaseStudyPage({ params }: EditCaseStudyPagePro
       />
 
       <div className="mb-6">
-        <CaseStudyWorkflowActions
+        <WorkflowActions
           id={id}
           status={doc.status}
+          workflow="draft-review-publish"
           canSubmitForReview={canEdit}
           canPublish={canPublish}
           canDelete={canDelete}
+          submitForReview={submitForReview}
+          publish={publish}
+          remove={remove}
+          listHref="/studio/case-studies"
+          itemLabel="case study"
+          publishDescription="It goes live at /work immediately."
+          republishDescription="This records the current live content as a new version, then updates /work immediately."
         />
       </div>
 

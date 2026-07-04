@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { WorkflowStatusBadge } from "@/components/admin/workflow-status-badge";
+import { practiceAreaOptions, practiceAreaValues } from "@/lib/cms/collections/shared-options";
 import { emptyToUndefined } from "@/lib/utils";
 import type { CaseStudyDocument } from "@/models/case-study";
 import type { ClientDocument, FieldConfig, FilterConfig, TableColumn } from "@/types/cms";
@@ -21,23 +22,7 @@ import type { ClientDocument, FieldConfig, FilterConfig, TableColumn } from "@/t
 
 export type CaseStudyRow = ClientDocument<CaseStudyDocument>;
 
-export const practiceAreaOptions = [
-  { value: "software", label: "Software" },
-  { value: "hardware", label: "Hardware" },
-  { value: "both", label: "Both" },
-  { value: "ai", label: "AI" },
-] as const;
-
-type PracticeAreaValue = (typeof practiceAreaOptions)[number]["value"];
-
-// Cast to a literal, non-empty tuple rather than a widened `string[]` — see
-// `lead-schema.ts`'s note on why a widened array type would silently lose
-// the literal-union type `z.enum()` (and, downstream, `Model.create()`)
-// otherwise derives.
-const practiceAreaValues = practiceAreaOptions.map((option) => option.value) as [
-  PracticeAreaValue,
-  ...PracticeAreaValue[],
-];
+export { practiceAreaOptions };
 
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
