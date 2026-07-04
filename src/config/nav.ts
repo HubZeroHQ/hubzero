@@ -16,8 +16,12 @@ export interface NavItem {
  * content-gated: an item only belongs here once it has a real, published
  * page behind it. Blog, Builds, Labs, and Blueprints are all real
  * destinations in the target IA but none has shipped a page yet, so none
- * of them belong in this list — see `footerNav` below for where
- * not-yet-shipped destinations live in the meantime.
+ * of them belong in this list.
+ *
+ * `footerNav` below is content-gated on the same rule, not exempt from it —
+ * a footer link is still a link a visitor can click today. Team, Careers,
+ * Blog, Privacy, and Terms are added here the same day their page ships,
+ * not before.
  */
 export const primaryNav: NavItem[] = [
   { label: "Services", href: "/services" },
@@ -34,9 +38,6 @@ export const footerNav: {
 } = {
   company: [
     { label: "About", href: "/about" },
-    { label: "Team", href: "/team" },
-    { label: "Careers", href: "/careers" },
-    { label: "Blog", href: "/blog" },
     { label: "Contact", href: "/contact" },
   ],
   services: [
@@ -44,8 +45,5 @@ export const footerNav: {
     { label: "Hardware & Embedded", href: "/services/hardware" },
     { label: "Work / Case Studies", href: "/work" },
   ],
-  legal: [
-    { label: "Privacy", href: "/privacy" },
-    { label: "Terms", href: "/terms" },
-  ],
+  legal: [],
 };
