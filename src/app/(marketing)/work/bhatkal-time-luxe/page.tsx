@@ -321,33 +321,43 @@ export default function BhatkalTimeLuxeCaseStudy() {
         </div>
       </Container>
 
-      {/* By the numbers — repo-verified, not business metrics */}
-      <Container className="mt-24 sm:mt-28 lg:mt-32">
-        <div className="max-w-[var(--content-prose)]">
-          <p className="text-caption text-text-muted font-mono tracking-wide uppercase">
-            By the numbers
-          </p>
-          <p className="text-caption text-text-muted mt-3 max-w-md">
-            Measured directly against the repository and a clean production build — no business,
-            traffic, or revenue figures are claimed here, since none are derivable from the code.
-          </p>
-          <dl className="mt-8 grid grid-cols-2 gap-x-8 gap-y-6 sm:grid-cols-3">
-            {[
-              ["64", "routes generated at build"],
-              ["44", "API route handlers"],
-              ["12", "Mongoose data models"],
-              ["32", "shared UI components"],
-              ["11", "currencies supported"],
-              ["5", "published buying guides"],
-            ].map(([value, label]) => (
-              <div key={label}>
-                <dt className="text-h2 text-text font-mono font-normal">{value}</dt>
-                <dd className="text-caption text-text-muted mt-1">{label}</dd>
-              </div>
-            ))}
-          </dl>
-        </div>
-      </Container>
+      {/* By the numbers — repo-verified, not business metrics. Recessed onto
+          its own surface tone (bg-bg-dark) rather than another flat prose
+          block — this is the one moment on the page that's genuinely a
+          different kind of content (verified data, not narrative), so it
+          earns a distinct material rather than sharing the page's ambient
+          tone by default. */}
+      <div className="mt-24 sm:mt-28 lg:mt-32">
+        <Container>
+          <div className="bg-bg-dark rounded-lg px-6 py-10 sm:px-10 sm:py-12 lg:px-12 lg:py-14">
+            <div className="max-w-[var(--content-prose)]">
+              <p className="text-caption text-text-muted font-mono tracking-wide uppercase">
+                By the numbers
+              </p>
+              <p className="text-caption text-text-muted mt-3 max-w-md">
+                Measured directly against the repository and a clean production build — no business,
+                traffic, or revenue figures are claimed here, since none are derivable from the
+                code.
+              </p>
+              <dl className="mt-8 grid grid-cols-2 gap-x-8 gap-y-6 sm:grid-cols-3">
+                {[
+                  ["64", "routes generated at build"],
+                  ["44", "API route handlers"],
+                  ["12", "Mongoose data models"],
+                  ["32", "shared UI components"],
+                  ["11", "currencies supported"],
+                  ["5", "published buying guides"],
+                ].map(([value, label]) => (
+                  <div key={label}>
+                    <dt className="text-h2 text-text font-mono font-normal">{value}</dt>
+                    <dd className="text-caption text-text-muted mt-1">{label}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          </div>
+        </Container>
+      </div>
 
       {/* Ongoing relationship */}
       <Container className="mt-24 sm:mt-28 lg:mt-32">

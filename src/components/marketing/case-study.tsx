@@ -38,11 +38,16 @@ export function CaseStudy() {
       </Container>
 
       <Reveal delayMs={120}>
-        <Container size="full" className="mt-14 sm:mt-16 lg:mt-20">
+        <Container className="mt-14 sm:mt-16 lg:mt-20">
           {/* Asymmetric placement, not centered — the image runs toward the
-              right edge of the wider container, the text column below sits
-              back at the default content width, so the two don't share an
-              edge. Native-resolution aspect ratio (2557:1270) is preserved. */}
+              right edge of the same content grid the text above/below uses,
+              the text column below sits at the default content width, so
+              the two don't share a left edge. Anchored to the bounded
+              marketing Container (not the bare viewport, per the anchoring
+              rule in ARCHITECTURE/16 §10) so the offset holds steady at
+              every width instead of drifting further right as the viewport
+              grows past 1200px. Native-resolution aspect ratio (2557:1270)
+              is preserved. */}
           <div className="ml-auto w-full max-w-5xl">
             <Image
               src="/case-studies/bhatkal-time-luxe/hero-homepage.webp"

@@ -113,7 +113,7 @@
    * custom properties consumed via `max-w-[var(--content-*)]` (Container).
    */
   --content-marketing: 75rem; /* 1200px — default marketing page content width */
-  --content-prose: 46.25rem; /* 740px  — long-form reading (blog, case studies) */
+  --content-prose: 46.25rem; /* 740px  — long-form reading (notes, case studies) */
 
   /* Layering scale — plain vars (z-index isn't a themeable Tailwind namespace). */
   --z-dropdown: 1000;
@@ -126,6 +126,19 @@
 body {
   background-color: var(--color-bg);
   color: var(--color-text);
+  /*
+   * A near-imperceptible grain, not a decorative pattern — the difference
+   * between a flat digital color swatch and a surface that reads as
+   * material. Same trick a printed page's paper stock or a matte-finish
+   * product photo uses: texture the eye registers as "real" without
+   * consciously noticing it's there. Baked into the SVG's own alpha
+   * (0.035) rather than a separate CSS opacity, so it composites once and
+   * needs no blend-mode. Deliberately theme-agnostic (a single neutral
+   * grain reads correctly at this opacity against both the dark and light
+   * background tokens) rather than a second asset per theme.
+   */
+  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPScxMjgnIGhlaWdodD0nMTI4Jz48ZmlsdGVyIGlkPSduJz48ZmVUdXJidWxlbmNlIHR5cGU9J2ZyYWN0YWxOb2lzZScgYmFzZUZyZXF1ZW5jeT0nMC44NScgbnVtT2N0YXZlcz0nMicgc3RpdGNoVGlsZXM9J3N0aXRjaCcgc2VlZD0nNycvPjxmZUNvbG9yTWF0cml4IHR5cGU9J21hdHJpeCcgdmFsdWVzPScwIDAgMCAwIDEgIDAgMCAwIDAgMSAgMCAwIDAgMCAxICAwIDAgMCAwLjA5IDAnLz48L2ZpbHRlcj48cmVjdCB3aWR0aD0nMTAwJScgaGVpZ2h0PScxMDAlJyBmaWx0ZXI9J3VybCglMjNuKScvPjwvc3ZnPg==");
+  background-repeat: repeat;
 }
 
 /* Every interactive element gets the same visible focus treatment (§6). */
