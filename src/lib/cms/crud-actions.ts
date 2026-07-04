@@ -2,10 +2,11 @@ import { revalidatePath } from "next/cache";
 import { Types } from "mongoose";
 import type { ZodError } from "zod";
 
-import type { CollectionConfig } from "@/lib/cms/collection-config";
+import type { AnyCollectionConfig, CollectionConfig } from "@/lib/cms/collection-config";
 import { connectToDatabase } from "@/lib/db";
 import { requirePermission } from "@/lib/cms/permissions";
 import { serializeDocument } from "@/lib/cms/serialize";
+import { getVersionEntry, omitManagedFields, snapshotVersion } from "@/lib/cms/version-history";
 import type {
   BulkActionResult,
   ClientDocument,
@@ -84,6 +85,69 @@ function patchWorkflowFields(
 
 function ownerTarget(doc: CrudDocument): { createdBy?: string } {
   return { createdBy: doc.createdBy?.toString() };
+}
+
+/**
+ * Restoring version N does **not** overwrite the live document and republish
+ * it — that would silently skip the review step on exactly the operation
+ * (reverting content) that most needs a second set of eyes
+ * (`ARCHITECTURE/19_CMS_FOUNDATION.md` §9). Instead it repopulates the
+ * document's authored fields from the old snapshot and sends its `status`
+ * back to `"draft"`, so it goes through `submitForReview`/`publish` again
+ * like any other edit — "restore" reads as one click, but underneath it's
+ * "create a draft from this snapshot," exactly as §9 specifies. Never bumps
+ * `version` and never writes a new `VersionHistory` entry itself: only
+ * `publish()` does either of those, so restoring-then-abandoning a draft
+ * leaves no phantom version behind.
+ *
+ * Operates on the type-erased `AnyCollectionConfig` (rather than
+ * `createCrudActions<T, TInput>`'s own `T`/`TInput`) so one implementation
+ * serves both a specific collection's own re-exported action (via
+ * `createCrudActions()` below) and the resource-generic dispatcher
+ * (`actions/studio/version-history.ts`) the version-history screen needs,
+ * since that screen doesn't know which collection it's looking at until a
+ * request names it.
+ */
+export async function restoreVersion(
+  config: AnyCollectionConfig,
+  id: string,
+  versionHistoryId: string,
+): Promise<SimpleResult> {
+  if (config.workflow === "none") {
+    throw new Error(`${config.resource} has no version history to restore.`);
+  }
+
+  await connectToDatabase();
+  if (!Types.ObjectId.isValid(id)) return { status: "error", message: "Not found." };
+
+  const doc = await config.model.findById(id);
+  if (!doc) return { status: "error", message: "Not found." };
+
+  const current = doc.toObject() as Record<string, unknown>;
+  await requirePermission("edit", config.resource, {
+    createdBy: current.createdBy ? String(current.createdBy) : undefined,
+  });
+
+  const entry = await getVersionEntry(config.resource, id, versionHistoryId);
+  if (!entry) return { status: "error", message: "That version could not be found." };
+
+  const content = omitManagedFields(entry.snapshot);
+
+  try {
+    Object.assign(doc, content);
+    patchWorkflowFields(doc as unknown as CrudDocument, { status: "draft" });
+    await doc.save();
+
+    const saved = doc.toObject() as Record<string, unknown>;
+    for (const path of config.revalidatesPaths?.(saved) ?? []) revalidatePath(path);
+    return { status: "success" };
+  } catch (error) {
+    console.error(
+      `Failed to restore ${config.resource} ${id} to version ${versionHistoryId}:`,
+      error,
+    );
+    return { status: "error", message: "Something went wrong while restoring. Please try again." };
+  }
 }
 
 /**
@@ -292,10 +356,20 @@ export function createCrudActions<T extends CrudDocument, TInput extends Record<
     const doc = await config.model.findById(id);
     if (!doc) return { status: "error", message: "Not found." };
 
-    await requirePermission("publish", config.resource, ownerTarget(doc));
+    const user = await requirePermission("publish", config.resource, ownerTarget(doc));
 
     const guardError = config.publishGuard?.(doc.toObject() as T);
     if (guardError) return { status: "error", message: guardError };
+
+    // Snapshot *before* the mutation applies — the version entry always
+    // represents "what was live before this change" (`ARCHITECTURE/19_CMS_FOUNDATION.md`
+    // §9), and this is the one and only path that both versions and
+    // publishes, so there's no second way to publish that skips it.
+    await snapshotVersion(
+      config.resource,
+      doc.toObject() as unknown as Record<string, unknown>,
+      user.id,
+    );
 
     patchWorkflowFields(doc, {
       status: "published",
@@ -399,5 +473,7 @@ export function createCrudActions<T extends CrudDocument, TInput extends Record<
     autosaveDraft,
     bulkRemove,
     bulkPublish,
+    restoreVersion: (id: string, versionHistoryId: string) =>
+      restoreVersion(config as unknown as AnyCollectionConfig, id, versionHistoryId),
   };
 }

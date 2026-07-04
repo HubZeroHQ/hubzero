@@ -20,4 +20,5 @@ export const {
   autosaveDraft,
   bulkRemove,
   bulkPublish,
+  restoreVersion,
 } = createCrudActions(caseStudyConfig);

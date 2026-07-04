@@ -19,6 +19,7 @@ import { CaseStudy, type CaseStudyDocument } from "@/models/case-study";
 export const caseStudyConfig = registerCollection(
   defineCollection<CaseStudyDocument, CaseStudyInput>({
     resource: "caseStudy",
+    label: "Case Studies",
     model: CaseStudy,
     zodSchema: caseStudySchema,
     workflow: "draft-review-publish",
@@ -27,6 +28,8 @@ export const caseStudyConfig = registerCollection(
     formFields: caseStudyFormFields,
     searchableFields: ["client", "industry", "slug"],
     emptyStateMessage: caseStudyEmptyStateMessage,
+    studioBasePath: "case-studies",
+    recordLabel: (doc) => doc.client,
     revalidatesPaths: (doc) => ["/work", `/work/${doc.slug}`],
   }),
 );

@@ -18,6 +18,8 @@ export interface CmsFormProps<TInput extends Record<string, unknown>> {
   submitLabel?: string;
   /** Called once the action returns `status: "success"` — e.g. redirect to the new document's edit page. */
   onSuccess?: (state: CrudActionState<TInput>) => void;
+  /** Fired whenever a field changes — the hook a caller wanting to observe live form state (autosave, an unsaved-changes indicator) uses, without `CmsForm` needing to know what autosave is. */
+  onValuesChange?: (values: Partial<TInput>) => void;
 }
 
 /**
@@ -37,6 +39,7 @@ export function CmsForm<TInput extends Record<string, unknown>>({
   action,
   submitLabel = "Save",
   onSuccess,
+  onValuesChange,
 }: CmsFormProps<TInput>) {
   const [values, setValues] = useState<Record<string, unknown>>(() => ({ ...initialValues }));
   const [state, formAction, isPending] = useActionState(action, {
@@ -47,6 +50,11 @@ export function CmsForm<TInput extends Record<string, unknown>>({
     if (state.status === "success") onSuccess?.(state);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state]);
+
+  useEffect(() => {
+    onValuesChange?.(values as Partial<TInput>);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [values]);
 
   return (
     <form action={formAction} className="space-y-6">

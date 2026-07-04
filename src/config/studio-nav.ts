@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { Briefcase, LayoutDashboard } from "lucide-react";
+import { Briefcase, LayoutDashboard, ListChecks } from "lucide-react";
 
 import type { UserRole } from "@/types/cms";
 
@@ -31,4 +31,10 @@ export const studioNavItems: StudioNavItem[] = [
   // portfolio content) — showing this link to a Teammate would point at a
   // screen `can()` immediately denies.
   { label: "Case Studies", href: "/studio/case-studies", icon: Briefcase, minimumRole: "admin" },
+  // No `minimumRole`: the review queue itself filters to collections the
+  // signed-in user holds a `view` grant on (`app/studio/(protected)/review/page.tsx`),
+  // so a Teammate sees an honest empty state today, not a denied screen —
+  // and once a Teammate-reviewable collection (e.g. BlogPost) registers,
+  // this link starts showing real content with no nav change needed.
+  { label: "Review Queue", href: "/studio/review", icon: ListChecks },
 ];

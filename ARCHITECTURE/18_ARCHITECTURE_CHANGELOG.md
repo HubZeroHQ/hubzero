@@ -4,6 +4,35 @@
 
 ---
 
+## Revision 2026-07-05 — CMS Foundation Phase C: version history and editorial workflow
+
+**Trigger:** `19_CMS_FOUNDATION.md` §14 Phase C — build version history, the approval queue, and the version-diff UI on top of Phase B's generic engine (permissions, CRUD, `CmsForm`/`DataTable`, proven against Case Study). This revision is implementation, not redesign: every addition below is either a new, additive file (`VersionHistory` model, `lib/cms/version-history.ts`, `lib/cms/diff.ts`) or a small, sanctioned extension of an existing escape-hatch pattern (`CollectionConfig`'s `publishGuard`/`computedFields`/`deleteGuard` precedent). No existing Phase A/B file was rewritten; three were extended and one UI bug was fixed.
+
+### What was built, matching §9 exactly
+
+`VersionHistory` (`models/version-history.ts`) uses the literal shape `11_DATABASE_ARCHITECTURE.md` §1 specifies (`{_id, collection, documentId, snapshot, editedBy, editedAt}`) — no additional fields invented. `publish()` (`crud-actions.ts`) now snapshots the document's pre-mutation state before every publish, exactly once, in the one function that both versions and publishes (§9's "no second code path that publishes without versioning"). Restore (`restoreVersion`, new) repopulates the document's authored fields from an old snapshot and sends `status` back to `"draft"` — it does not touch `version` and does not itself write a new `VersionHistory` entry, so it goes through `submitForReview`/`publish` again like any other draft, per §9's explicit rejection of "overwrite-and-republish." The review queue (`/studio/review`) and the dashboard's "Awaiting review"/"Recent activity" cards (§10 items 2–3) are generic over `listCollections()` — Case Study is the only collection populating them today, but neither screen names Case Study anywhere in its code.
+
+### Two small, additive `CollectionConfig` fields
+
+Genericity required two fields the original §5 `CollectionConfig` interface didn't anticipate: `label` (a display name for section headers) and `studioBasePath` (the collection's `/studio/**` URL segment, so the review queue and activity feed can deep-link to a document's real edit page rather than only its generic history view). Both are additive to the type (one existing collection, Case Study, was updated to supply them) and follow the same shape as the existing `publishGuard`/`revalidatesPaths` escape hatches — not a new mechanism. `recordLabel` (optional; falls back to `searchableFields[0]`) was added for the same reason. A resource-generic version-history route (`/studio/history/[resource]/[id]`) and a resource-generic `restoreVersion` Server Action (`actions/studio/version-history.ts`) round out the cross-collection surface — both work for any future collection the moment it calls `registerCollection()`, with zero new code, which is the genericity check `19` asks for.
+
+### Two Phase B gaps closed, not redesigned
+
+1. **`useAutosave`/`autosaveDraft` existed but were never wired together** (flagged during this phase's required Phase B review) — `edit-case-study-form.tsx` now calls `useAutosave`, gated to `status === "draft"`, with a visible saved/saving/error indicator per `12_ADMIN_PANEL_SPECIFICATION.md` §4. Required a new `onValuesChange` prop on `CmsForm` (additive, optional) so a parent can observe live form state without `CmsForm` needing to know what autosave is.
+2. **The single-collection "Publish" button was hidden once `status === "published"`** (`case-study-workflow-actions.tsx`), which made it impossible to ever republish an already-live document — silently defeating §9's model of `publish()` as the repeatable, only versioning path. Fixed by showing "Publish"/"Republish" (with distinct confirmation copy) for any status; the generic `publish()` action itself already had no such restriction.
+
+### An architecture tension surfaced, not resolved — flagged for before Phase G
+
+Restoring a **currently-published** document sends its `status` back to `"draft"`, per §9's literal text. In this system's single-document model (no separate drafts/staging collection, §6), that status flip is visible to the public the moment a public page reads `status: "published"` — today that's inert (`/work/[slug]` doesn't exist yet; only the static `/work` index and one hand-written page do, confirmed during this phase's manual QA), but it will not be inert once `14_IMPLEMENTATION_ROADMAP.md`/§13's migration (Phase G) ships a dynamic `/work/[slug]` reading live from `CaseStudy`. At that point, restoring a published Case Study will 404 its public page for the duration of the review window, which is a real, visible product behavior the founder should explicitly confirm as intended (it matches §9's literal text — restore must not silently bypass review — but "the page disappears" is a stronger effect than "the page keeps showing old content while a draft is reviewed," which is what "must not overwrite live content" reads as to a first-time reader). Recommendation: decide this explicitly before Phase G, not after the first real restore-of-a-published-page incident. Not fixed in this revision because fixing it would mean introducing a staging/shadow-document mechanism `19` §6 explicitly chose not to build.
+
+### What was deliberately left unchanged
+
+- **No optimistic concurrency control** (`update()`/`autosaveDraft()` remain unconditional overwrites) — already named as an accepted risk in `19` §13 with its own recommended mitigation (compare `updatedAt`); still not needed at this team's scale, and version history's snapshot-before-mutate guarantee means no edit is ever unrecoverably lost even without it.
+- **No Mongoose transactions** — `snapshotVersion()` writes before the live document's mutation, deliberately, so the one failure mode a missing transaction leaves open is a harmless orphaned version entry, never a silent, unversioned overwrite.
+- **The `"approve"` permission action** (granted in `roleGrants` on several resources, `permissions.ts`) remains unenforced by any distinct status/transition — `19` never specified a fourth workflow status beyond draft/review/published, and this phase's brief was explicit that Draft/Review/Published is the whole model. Left as-is; worth a future decision if a distinct approval record (not just "has publish permission") becomes a real requirement.
+
+---
+
 ## Revision 2026-07-04 — Four-pillar company structure (Work / Builds / Labs / Blueprints)
 
 **Trigger:** HubZero's operating structure evolved from client-delivery-only to four pillars — Work (unchanged), Builds (new), Labs (generalized from an existing interim mechanism), and Blueprints (new). `ARCHITECTURE/00`–`16`, all founder-approved as of 2026-07-01, accurately described the company as it existed before this evolution; none of them anticipated it. This revision is an **evolution of the existing spec, not a rewrite** — every change below is additive or narrowly targeted at the sections that actually depended on the old, narrower company definition.
