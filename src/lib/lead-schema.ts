@@ -24,8 +24,22 @@ export const budgetRangeOptions = [
   { value: "not-sure", label: "Not sure yet" },
 ] as const;
 
-const projectTypeValues = projectTypeOptions.map((option) => option.value) as [string, ...string[]];
-const budgetRangeValues = budgetRangeOptions.map((option) => option.value) as [string, ...string[]];
+type ProjectTypeValue = (typeof projectTypeOptions)[number]["value"];
+type BudgetRangeValue = (typeof budgetRangeOptions)[number]["value"];
+
+// Cast to a literal tuple, not a widened `[string, ...string[]]` — the
+// latter satisfies `z.enum()`'s type signature too, but silently widens
+// `LeadInput["projectType"]` to plain `string`, which let a since-tightened
+// `Lead.create()` call (see `models/lead.ts`) go unchecked against the
+// Mongoose schema's actual literal-union field type.
+const projectTypeValues = projectTypeOptions.map((option) => option.value) as [
+  ProjectTypeValue,
+  ...ProjectTypeValue[],
+];
+const budgetRangeValues = budgetRangeOptions.map((option) => option.value) as [
+  BudgetRangeValue,
+  ...BudgetRangeValue[],
+];
 
 /** Converts a blank string (what an empty optional form field submits as) into `undefined`. */
 function emptyToUndefined(value: unknown) {
