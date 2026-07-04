@@ -19,7 +19,7 @@ The original framing here weighed a managed headless CMS (Sanity, Payload, etc.)
 | **Team Members** | name, username, role, bio, photo, skills, social links, core-member flag, profile-visible flag | Draft → Published |
 | **Testimonials** | quote, attributed name, title, company (optional), linked case study (optional) | Draft → Published; schema rejects unattributed entries (`05_CONTENT_STRATEGY.md` §3) |
 | **Services** | title, practice area, description, capability list | Draft → Published (low edit frequency) |
-| **Blog Posts** | title, summary, body (MDX-compatible rich text), author (ref to Team Member), category, tags, cover image, reading time (computed), slug, status | Draft → Review → Published |
+| **Notes** | title, summary, body (MDX-compatible rich text), author (ref to Team Member), category, tags, cover image, reading time (computed), slug, status | Draft → Review → Published |
 | **FAQs** | question, answer, category | Draft → Published |
 | **Career Listings** | title, description, requirements, status (open/closed) | Draft → Published |
 | **Leads** (contact submissions) | name, email, company, project type, budget range, message, status (new/contacted/closed), source page | System-generated, not authored — admin-viewable and updatable |
@@ -30,7 +30,7 @@ The original framing here weighed a managed headless CMS (Sanity, Payload, etc.)
 Every content type supports **Draft** and **Published** states, shipped in the MVP, not deferred:
 
 - **Company-wide content** (pages, services, company portfolio/case studies, navigation, SEO, site settings) requires **Admin or Head Admin approval** before publishing.
-- **Personal content** — Teammates can create and edit their own blog drafts and portfolio content freely, and submit for approval, but **cannot publish directly** unless explicitly granted.
+- **Personal content** — Teammates can create and edit their own Notes drafts and portfolio content freely, and submit for approval, but **cannot publish directly** unless explicitly granted.
 - **Admins** can publish and manage all content, including approving Teammate submissions.
 - **Version history is built from day one, for every content type** — treated as fundamental infrastructure, not an optional or deferred feature. Every publish creates a retrievable version; Admin/Head Admin can view and roll back.
 - **Publishing workflow** triggers ISR revalidation of the relevant public page on Publish (per `08_TECHNICAL_ARCHITECTURE.md` §4) — replacing the legacy's manual rebuild-and-deploy requirement for any content change.
@@ -43,18 +43,18 @@ The original department-based model (Founder, Core Team, Design, Developers, Con
 
 | Role | Scope | Can publish directly | Can manage users/roles/settings |
 |---|---|---|---|
-| **Head Admin (Founder)** | Unrestricted: users, roles, permissions, site/CMS/nav/SEO settings, media library, all company pages, all services, all portfolio content (company + individual), all blogs, blog approval, draft management, publishing workflow, analytics, contact submissions, feature flags, future modules. Cannot be modified by other users. | Yes, everything | Yes |
-| **Admin (Core Team)** | Company pages, services, company portfolio, all blog posts, media, testimonials, careers, contact info, content SEO. Can approve blog drafts. Can edit only their **own** individual portfolio, not another user's. | Yes, for company content | No — cannot manage users, roles, permissions, or system settings |
-| **Teammate** (default) | Own profile, own portfolio, own blog drafts (create/edit/submit for approval), personal media uploads. | No — unless explicitly granted | No |
+| **Head Admin (Founder)** | Unrestricted: users, roles, permissions, site/CMS/nav/SEO settings, media library, all company pages, all services, all portfolio content (company + individual), all Notes, Notes approval, draft management, publishing workflow, analytics, contact submissions, feature flags, future modules. Cannot be modified by other users. | Yes, everything | Yes |
+| **Admin (Core Team)** | Company pages, services, company portfolio, all Notes, media, testimonials, careers, contact info, content SEO. Can approve Notes drafts. Can edit only their **own** individual portfolio, not another user's. | Yes, for company content | No — cannot manage users, roles, permissions, or system settings |
+| **Teammate** (default) | Own profile, own portfolio, own Notes drafts (create/edit/submit for approval), personal media uploads. | No — unless explicitly granted | No |
 
 **Dynamic permissions, not additional roles.** Some responsibilities are deliberately not modeled as permanent roles — they're assignable/removable permissions layered on any primary role:
 
 - **Team Lead** — e.g. Admin + Team Lead, or Teammate + Team Lead. Grants: create projects, assign members, track project progress, manage project-specific files and discussions, view project analytics, close projects.
-- The permission system is built so future dynamic permissions (Blog Reviewer, Recruiter, HR, Finance, Sales, Client Manager, Moderator, Support, Event Manager) can be added later **without redesigning the architecture** — this is a structural requirement, not a nice-to-have.
+- The permission system is built so future dynamic permissions (Notes Reviewer, Recruiter, HR, Finance, Sales, Client Manager, Moderator, Support, Event Manager) can be added later **without redesigning the architecture** — this is a structural requirement, not a nice-to-have.
 
 ## 5. Authoring experience
 
-Markdown/MDX-style authoring (rich text editor with markdown shortcuts, code-block syntax highlighting) for long-form fields (case study approach, blog body) — preserves what the legacy blog editor got right (a markdown-first writing experience familiar to the team) while removing what it got wrong: the requirement to manually download a file and email it to the founder for a developer to manually commit and deploy (`ARCHIVED_PROJECT_ANALYSIS.md` §3.9, §9.6, explicitly called out by the team's own CMS workflow requests as the thing they want eliminated).
+Markdown/MDX-style authoring (rich text editor with markdown shortcuts, code-block syntax highlighting) for long-form fields (case study approach, note body) — preserves what the legacy blog editor got right (a markdown-first writing experience familiar to the team) while removing what it got wrong: the requirement to manually download a file and email it to the founder for a developer to manually commit and deploy (`ARCHIVED_PROJECT_ANALYSIS.md` §3.9, §9.6, explicitly called out by the team's own CMS workflow requests as the thing they want eliminated).
 
 ## 6. Frontend rendering consistency
 

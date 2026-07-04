@@ -6,7 +6,7 @@
 
 ## 1. Who uses it and what they see
 
-Per `09_CMS_ARCHITECTURE.md` §4's responsibility-based role model, the dashboard surfaces only what a role can act on — a **Teammate** sees only their own profile, portfolio, and blog drafts; an **Admin** sees company content and blog approval queues but not user/role management; a **Head Admin** sees everything, including Users and Site Settings. Any user can additionally carry the **Team Lead** dynamic permission, which surfaces a project-tracking view regardless of their primary role.
+Per `09_CMS_ARCHITECTURE.md` §4's responsibility-based role model, the dashboard surfaces only what a role can act on — a **Teammate** sees only their own profile, portfolio, and Notes drafts; an **Admin** sees company content and Notes approval queues but not user/role management; a **Head Admin** sees everything, including Users and Site Settings. Any user can additionally carry the **Team Lead** dynamic permission, which surfaces a project-tracking view regardless of their primary role.
 
 ## 2. Core screens
 
@@ -19,13 +19,13 @@ Per `09_CMS_ARCHITECTURE.md` §4's responsibility-based role model, the dashboar
 - **Team Members** — list + editor, including the `isCoreMember` / `profileVisible` toggles that implement the consensus decision to show only core members publicly (`06_PAGE_SPECIFICATIONS.md` Team), and leadership-title fields supporting the Founder + co-founders structure.
 - **Testimonials** — editor with required name/title fields enforced at the form level, not just the schema, so an editor cannot even attempt to save a placeholder/unattributed entry (`05_CONTENT_STRATEGY.md` §3).
 - **Services, FAQs, Career Listings** — simpler list+editor screens, lower workflow overhead; Services `practiceArea` field accepts new verticals without a schema change (`00_FOUNDER_APPROVAL.md` §6).
-- **Blog** — editor with the same unified markdown/MDX rendering used on the public site (`09_CMS_ARCHITECTURE.md` §6), live preview, autosave. Shipped in full for MVP, not deferred (`00_FOUNDER_APPROVAL.md` §3).
+- **Notes** — editor with the same unified markdown/MDX rendering used on the public site (`09_CMS_ARCHITECTURE.md` §6), live preview, autosave. Shipped in full for MVP, not deferred (`00_FOUNDER_APPROVAL.md` §3).
 - **Site Settings** — Head Admin only; founding year (2024), real stats, social links.
 - **Users** — Head Admin only; invite/manage admin accounts, assign primary role and dynamic permissions (e.g. Team Lead).
 
 ## 3. Approval workflow UI — hybrid model **[Amended 2026-07-01]**
 
-Company-wide content (pages, services, company portfolio/case studies, nav, SEO, site settings) requires Admin/Head Admin approval before publishing: a submitter moves a draft to "In Review"; an Admin/Head Admin sees it in a review queue, can request changes (with a comment, returning it to Draft) or publish it directly. Teammates' own blog and portfolio drafts follow the same submit-for-approval path but can never be self-published. Version history is visible on every content item regardless of collection, built from day one rather than added later (`09_CMS_ARCHITECTURE.md` §3). Scheduled publishing, multi-stage approval, inline comments, and collaborative editing are explicitly out of scope for this UI in v1.
+Company-wide content (pages, services, company portfolio/case studies, nav, SEO, site settings) requires Admin/Head Admin approval before publishing: a submitter moves a draft to "In Review"; an Admin/Head Admin sees it in a review queue, can request changes (with a comment, returning it to Draft) or publish it directly. Teammates' own Notes and portfolio drafts follow the same submit-for-approval path but can never be self-published. Version history is visible on every content item regardless of collection, built from day one rather than added later (`09_CMS_ARCHITECTURE.md` §3). Scheduled publishing, multi-stage approval, inline comments, and collaborative editing are explicitly out of scope for this UI in v1.
 
 ## 4. Autosave and version history UI
 

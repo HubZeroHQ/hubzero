@@ -1,6 +1,6 @@
 # 10 — Feature Specification
 
-> **Status: Founder Approved — 2026-07-01; amended 2026-07-04.** See `00_FOUNDER_APPROVAL.md` for the full decision log — §3 (blog moved to MVP scope), §4 (data retention/backup added, newsletter capture explicitly deferred), §8 (four-pillar company structure) affect this document.
+> **Status: Founder Approved — 2026-07-01; amended 2026-07-04.** See `00_FOUNDER_APPROVAL.md` for the full decision log — §3 (Notes moved to MVP scope), §4 (data retention/backup added, newsletter capture explicitly deferred), §8 (four-pillar company structure) affect this document.
 
 > Decision convention: see `01_PRODUCT_VISION.md` §0. Cross-references the legacy feature checklist (`ARCHIVED_PROJECT_ANALYSIS.md` §18) and disposes of every item explicitly — nothing carries forward by default silence.
 
@@ -18,7 +18,7 @@
 - **Contact form** — third-party POST → Server Action + database-backed lead capture with structured fields (`06_PAGE_SPECIFICATIONS.md` Contact, `09_CMS_ARCHITECTURE.md` §2 Leads).
 - **Team directory** — client-fetched JSON → server-rendered from CMS, core-members-only (`06_PAGE_SPECIFICATIONS.md` Team).
 - **Portfolio pages** — 5 duplicate hand-written files → single dynamic route + CMS data (`06_PAGE_SPECIFICATIONS.md` Team profile, `08_TECHNICAL_ARCHITECTURE.md` §5).
-- **Blog publishing** — Monaco editor + file download + manual deploy → CMS workflow with autosave/drafts/approval (`09_CMS_ARCHITECTURE.md`).
+- **Notes publishing** — Monaco editor + file download + manual deploy → CMS workflow with autosave/drafts/approval (`09_CMS_ARCHITECTURE.md`).
 - **Case studies** — one hardcoded page → CMS-driven template supporting unlimited entries (`06_PAGE_SPECIFICATIONS.md` Work detail).
 - **Structured data (JSON-LD)** — broken `next/head` usage → `generateMetadata` (`08_TECHNICAL_ARCHITECTURE.md` §7).
 - **Theme toggle** — built but disabled → finished and shipped (`07_DESIGN_SYSTEM.md` §2).
