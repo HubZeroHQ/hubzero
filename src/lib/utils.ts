@@ -21,3 +21,8 @@ const twMerge = extendTailwindMerge({
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
+
+/** Converts a blank string (what an empty optional form field submits as) into `undefined`, for use with `z.preprocess`. */
+export function emptyToUndefined(value: unknown) {
+  return typeof value === "string" && value.trim() === "" ? undefined : value;
+}
