@@ -6,7 +6,7 @@ import { CaseStudyWorkflowActions } from "@/app/studio/(protected)/case-studies/
 import { EditCaseStudyForm } from "@/app/studio/(protected)/case-studies/[id]/edit-case-study-form";
 import { PageHeader } from "@/components/admin/page-header";
 import { WorkflowStatusBadge } from "@/components/admin/workflow-status-badge";
-import { Text } from "@/components/ui";
+import { Link, Text } from "@/components/ui";
 import type { CaseStudyInput } from "@/lib/cms/collections/case-study-fields";
 import { can } from "@/lib/cms/permissions";
 import { requireSessionUser } from "@/lib/cms/session";
@@ -54,7 +54,12 @@ export default async function EditCaseStudyPage({ params }: EditCaseStudyPagePro
           { label: "Case Studies", href: "/studio/case-studies" },
           { label: doc.client },
         ]}
-        actions={<WorkflowStatusBadge status={doc.status} />}
+        actions={
+          <div className="flex items-center gap-3">
+            <Link href={`/studio/history/caseStudy/${id}`}>View history →</Link>
+            <WorkflowStatusBadge status={doc.status} />
+          </div>
+        }
       />
 
       <div className="mb-6">
@@ -68,7 +73,12 @@ export default async function EditCaseStudyPage({ params }: EditCaseStudyPagePro
       </div>
 
       {canEdit ? (
-        <EditCaseStudyForm id={id} initialValues={initialValues} />
+        <EditCaseStudyForm
+          key={doc.updatedAt}
+          id={id}
+          initialValues={initialValues}
+          isDraft={doc.status === "draft"}
+        />
       ) : (
         <Text tone="muted">You don&apos;t have permission to edit this case study.</Text>
       )}
