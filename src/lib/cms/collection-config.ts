@@ -30,6 +30,8 @@ export interface CollectionConfig<
   TInput extends Record<string, unknown> = Record<string, unknown>,
 > {
   resource: Resource;
+  /** Human-readable collection name (e.g. "Case Studies") — the review queue and the dashboard's activity feed render this instead of the machine-cased `resource` key. */
+  label: string;
   model: Model<T>;
   zodSchema: ZodType<TInput>;
   workflow: Workflow;
@@ -38,6 +40,26 @@ export interface CollectionConfig<
   formFields: FieldConfig<TInput>[];
   searchableFields: (keyof T & string)[];
   emptyStateMessage: string;
+  /**
+   * The `/studio/**` URL segment this collection's own list/detail screens
+   * live under (e.g. `"case-studies"`) — lets cross-collection generic
+   * screens (the review queue, the dashboard's activity feed) link straight
+   * to a document's real edit page instead of only its generic version-
+   * history view. Optional: a collection with no studio screens yet (there
+   * are none today, but the registry doesn't assume otherwise) simply won't
+   * get a deep link.
+   */
+  studioBasePath?: string;
+  /**
+   * A short, human display string for one document (e.g. a Case Study's
+   * `client` name) — used anywhere a document needs a label without
+   * importing that collection's own table-column config (the review queue,
+   * the activity feed). Falls back to `searchableFields[0]`'s value, then
+   * the document's `_id`, via `getRecordLabel()` below — supplying this is
+   * an improvement, not a requirement, so a new collection works here with
+   * zero code the moment it's registered.
+   */
+  recordLabel?: (doc: T) => string;
   /** e.g. `(doc) => ["/work", `/work/${doc.slug}`]` — revalidated on publish. */
   revalidatesPaths?: (doc: T) => string[];
   /**
@@ -70,7 +92,11 @@ export function defineCollection<
   return config;
 }
 
-type AnyCollectionConfig = CollectionConfig<Record<string, unknown>, Record<string, unknown>>;
+/** The type-erased shape every cross-collection consumer (the registry, `restoreVersion`, the review queue, the activity feed) works against. */
+export type AnyCollectionConfig = CollectionConfig<
+  Record<string, unknown>,
+  Record<string, unknown>
+>;
 
 const registry = new Map<Resource, AnyCollectionConfig>();
 
@@ -104,4 +130,21 @@ export function getCollection(resource: Resource): AnyCollectionConfig | undefin
 
 export function listCollections(): AnyCollectionConfig[] {
   return [...registry.values()];
+}
+
+/**
+ * The one place that resolves "what do we call this document" generically —
+ * the review queue and the dashboard's activity feed call this instead of
+ * each re-deriving a fallback, so a future collection that forgets
+ * `recordLabel` still gets a reasonable label rather than a blank row.
+ */
+export function getRecordLabel(
+  config: AnyCollectionConfig | undefined,
+  doc: Record<string, unknown>,
+): string {
+  if (!config) return String(doc._id ?? "Untitled");
+  if (config.recordLabel) return config.recordLabel(doc);
+  const field = config.searchableFields[0];
+  const value = field ? doc[field] : undefined;
+  return typeof value === "string" && value.length > 0 ? value : String(doc._id ?? "Untitled");
 }
