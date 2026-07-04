@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { LayoutDashboard } from "lucide-react";
+import { Briefcase, LayoutDashboard } from "lucide-react";
 
 import type { UserRole } from "@/types/cms";
 
@@ -26,4 +26,9 @@ export interface StudioNavItem {
 
 export const studioNavItems: StudioNavItem[] = [
   { label: "Dashboard", href: "/studio", icon: LayoutDashboard },
+  // Admin-only: Teammates hold no `caseStudy` grant at all (09_CMS_ARCHITECTURE
+  // §4 scopes them to their own profile/portfolio/blog drafts, not company
+  // portfolio content) — showing this link to a Teammate would point at a
+  // screen `can()` immediately denies.
+  { label: "Case Studies", href: "/studio/case-studies", icon: Briefcase, minimumRole: "admin" },
 ];

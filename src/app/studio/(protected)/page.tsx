@@ -3,9 +3,10 @@ import type { Metadata } from "next";
 
 import { DashboardCard } from "@/components/admin/dashboard/dashboard-card";
 import { PageHeader } from "@/components/admin/page-header";
-import { EmptyState, Grid, Text } from "@/components/ui";
+import { EmptyState, Grid, Link, Text } from "@/components/ui";
 import { connectToDatabase } from "@/lib/db";
 import { projectTypeOptions } from "@/lib/lead-schema";
+import { can } from "@/lib/cms/permissions";
 import { requireSessionUser } from "@/lib/cms/session";
 import { Lead } from "@/models/lead";
 
@@ -28,12 +29,15 @@ const projectTypeLabels = Object.fromEntries(
  */
 export default async function StudioDashboardPage() {
   const user = await requireSessionUser();
+  const canViewLeads = can(user, "view", "lead");
 
   await connectToDatabase();
-  const [newLeadsCount, recentLeads] = await Promise.all([
-    Lead.countDocuments({ status: "new" }),
-    Lead.find().sort({ createdAt: -1 }).limit(5),
-  ]);
+  const [newLeadsCount, recentLeads] = canViewLeads
+    ? await Promise.all([
+        Lead.countDocuments({ status: "new" }),
+        Lead.find().sort({ createdAt: -1 }).limit(5),
+      ])
+    : [0, []];
 
   return (
     <>
@@ -41,7 +45,12 @@ export default async function StudioDashboardPage() {
 
       <Grid cols={1} colsMd={2} gap="lg">
         <DashboardCard title="New leads" icon={Inbox}>
-          {recentLeads.length === 0 ? (
+          {!canViewLeads ? (
+            <EmptyState
+              title="Nothing to manage here"
+              description="Contact submissions aren't part of your role's scope."
+            />
+          ) : recentLeads.length === 0 ? (
             <EmptyState
               title="No leads yet"
               description="Contact form submissions will show up here as they come in."
@@ -64,7 +73,7 @@ export default async function StudioDashboardPage() {
                       </Text>
                     </div>
                     <Text size="caption" tone="muted">
-                      {new Date(lead.createdAt).toLocaleDateString(undefined, {
+                      {new Date(lead.createdAt).toLocaleDateString("en-US", {
                         month: "short",
                         day: "numeric",
                       })}
@@ -77,10 +86,18 @@ export default async function StudioDashboardPage() {
         </DashboardCard>
 
         <DashboardCard title="Content" icon={FolderKanban}>
-          <EmptyState
-            title="No content types yet"
-            description="Case Studies, Team, Blog, and the rest of the CMS collections ship in the next phase of this build."
-          />
+          {can(user, "view", "caseStudy") ? (
+            <EmptyState
+              title="Case Studies is live"
+              description="Team, Blog, and the rest of the CMS collections roll out on the same engine in later phases."
+              action={<Link href="/studio/case-studies">Go to Case Studies →</Link>}
+            />
+          ) : (
+            <EmptyState
+              title="Nothing to manage here"
+              description="Company portfolio content isn't part of your role's scope."
+            />
+          )}
         </DashboardCard>
       </Grid>
     </>
