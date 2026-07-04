@@ -2,6 +2,7 @@ import { ArrowUpRight } from "lucide-react";
 import type { Metadata } from "next";
 import Image from "next/image";
 
+import { CtaPanel } from "@/components/marketing/cta-panel";
 import { Reveal } from "@/components/marketing/reveal";
 import { Container } from "@/components/ui/container";
 import { Link } from "@/components/ui/link";
@@ -9,94 +10,123 @@ import { Link } from "@/components/ui/link";
 export const metadata: Metadata = {
   title: "Software Engineering",
   description:
-    "Web and mobile applications, the backend systems behind them, and the AI-assisted automation threaded through both — built by HubZero as one connected practice.",
+    "What software engineering at HubZero actually looks like — the interface, the system behind it, and the automation that runs without anyone watching.",
 };
-
-const practice = [
-  {
-    number: "01",
-    title: "Web & mobile applications",
-    body: "Production applications built on frameworks designed for scale, not assembled from a template — server-rendered by default, with rendering strategy chosen deliberately per route rather than applied uniformly. Bhatkal Time Luxe runs static prerendering for content-stable pages, static generation for its guide articles, and dynamic server rendering for catalog and API routes, in the same codebase.",
-  },
-  {
-    number: "02",
-    title: "Backend systems & data",
-    body: "Server logic colocated with the application it serves instead of split into a separate service that drifts out of sync — route handlers, a modeled data layer with real referential integrity (cascade-safe deletes across join tables, not orphaned records), and authentication enforced at the edge before a request reaches a page, not after.",
-  },
-  {
-    number: "03",
-    title: "AI-assisted automation",
-    body: "Where a workflow can be meaningfully automated rather than just accelerated, we build for it. Internally — not as a client deliverable — we've built a natural-language-to-SQL system running entirely on locally hosted language models, as much to understand where LLM-driven automation is trustworthy as to ship a specific feature.",
-  },
-] as const;
 
 /**
  * ARCHITECTURE/06_PAGE_SPECIFICATIONS.md "Services — Software Engineering":
- * what's included, how engagements run, case study links (Software tag), CTA.
- * Built editorially — numbered prose blocks, not an icon/feature-card grid —
- * per the founder's Round 2 direction for the homepage, carried forward here
- * as the same design language rather than reverting to an agency template.
+ * what's included (web apps, backend, AI/automation, UI/UX as integrated
+ * capability), relevant case study evidence, CTA. Services (redesigned in
+ * PR #4) answers "what does HubZero do" — a capability reference, deliberately
+ * shallow. This page answers a different question: "what does software
+ * engineering here actually look like," which earns real technical depth
+ * Services never attempts.
  *
- * The hairline-grid texture from `WhatWeDo`'s Software panel is this page's
- * own visual signature, reused rather than invented anew — a quiet thread
- * connecting the homepage's brief mention to this page's depth.
+ * The reading journey follows the shape of a real system rather than a list
+ * of parallel bullet points: Interface, then System, then Automation — outer
+ * layer to inner layer, plain language to specific engineering vocabulary,
+ * so technical depth increases as the page goes on instead of staying flat.
+ * One concrete decision (real, sourced from the Bhatkal Time Luxe build) is
+ * the page's single "pause" — no italic pull-quote; a `dt`/`dd` fact does
+ * the same job with something checkable instead of something quotable.
+ *
+ * Deliberate conflict, disclosed rather than silently resolved: the section
+ * spec above also lists "how engagements typically run." This page omits
+ * it. `ARCHITECTURE/07_DESIGN_SYSTEM.md` §8 — dated after `06`, and written
+ * specifically because of this exact page — plus the commissioned design
+ * review it cites both name the Discovery/Build/Stay process list, repeated
+ * near-verbatim on Home, Software, and Hardware, as a concrete instance of
+ * the template-repetition problem this redesign effort exists to fix. Home
+ * already owns that beat (`ARCHITECTURE/06` "How we work"); repeating it
+ * here a third time adds no information the reader doesn't already have.
+ * Cut rather than reworded, per the explicit "did we remove more than we
+ * added" bar for this session.
  */
 export default function SoftwareEngineeringPage() {
   return (
-    <div className="pb-32">
-      {/* Hero */}
+    <div className="pb-28 sm:pb-32 lg:pb-40">
+      {/* Opening — the headline previews the reading order itself */}
       <div className="pt-20 pb-16 sm:pt-24 lg:pt-28">
         <Container>
-          <p className="text-caption text-text-muted font-mono tracking-wide uppercase">
-            Services — 01
-          </p>
-          <h1 className="text-text mt-6 max-w-3xl text-[clamp(2.25rem,1rem+4.5vw,4.5rem)] leading-[1.08] font-normal tracking-tight">
-            The web, the backend, and the layer of automation between them.
-          </h1>
-          <p className="text-body text-text-muted mt-6 max-w-xl">
-            We design and build production software — application frontends, the systems behind
-            them, and the AI-assisted automation increasingly threaded through both — as one
-            connected practice, not three separate vendors.
-          </p>
-          <p className="text-caption text-text-muted mt-8 font-mono">
-            Web &amp; mobile <span aria-hidden="true">·</span> Backend systems{" "}
-            <span aria-hidden="true">·</span> AI-assisted automation{" "}
-            <span aria-hidden="true">·</span> UI/UX
-          </p>
+          <Reveal>
+            <p className="text-caption text-text-muted font-mono tracking-wide uppercase">
+              Software Engineering
+            </p>
+            <h1 className="text-text mt-6 max-w-3xl text-[clamp(2.25rem,1rem+4.5vw,4.5rem)] leading-[1.08] font-normal tracking-tight">
+              The interface, the system behind it, and the parts that run without anyone watching.
+            </h1>
+            <p className="text-body text-text-muted mt-6 max-w-xl">
+              Software engineering at HubZero, in the order it actually gets built — what a visitor
+              sees first, what decides what they see, and what keeps running after everyone&apos;s
+              gone home.
+            </p>
+          </Reveal>
         </Container>
       </div>
 
-      {/* The practice — three numbered prose blocks over the hairline texture */}
-      <div
-        className="py-4"
-        style={{
-          backgroundImage:
-            "repeating-linear-gradient(90deg, color-mix(in oklch, var(--color-accent) 7%, transparent) 0 1px, transparent 1px 56px)",
-        }}
-      >
-        <Container>
-          <div className="max-w-[var(--content-prose)] space-y-14 py-16 sm:py-20 lg:py-24">
-            {practice.map((item, i) => (
-              <Reveal key={item.number} delayMs={i * 60}>
-                <p className="text-caption text-text-muted font-mono">{item.number}</p>
-                <h2 className="text-h2 text-text mt-3 font-normal">{item.title}</h2>
-                <p className="text-body text-text-muted mt-4">{item.body}</p>
-              </Reveal>
-            ))}
-          </div>
-        </Container>
-      </div>
+      {/* The stack — three layers, increasing technical depth, not three equal bullets */}
+      <Container>
+        <div className="max-w-[var(--content-prose)] space-y-16 sm:space-y-20">
+          <Reveal>
+            <p className="text-caption text-text-muted font-mono tracking-wide uppercase">
+              Interface
+            </p>
+            <p className="text-body text-text-muted mt-4">
+              Web and mobile applications — the part a customer actually touches, designed and built
+              together rather than handed from a separate design team to an implementation team.
+              Production frameworks built for scale, not assembled from a template.
+            </p>
+          </Reveal>
 
-      {/* The philosophy — the one serif slow-down moment on this page */}
-      <Container className="mt-24 sm:mt-28 lg:mt-32">
-        <Reveal>
-          <p className="text-h3 text-text max-w-2xl font-serif italic">
-            The same engineers who scope a project build it, and stay on it after it ships.
-          </p>
-        </Reveal>
+          <Reveal delayMs={60}>
+            <p className="text-caption text-text-muted font-mono tracking-wide uppercase">System</p>
+            <p className="text-body text-text-muted mt-4">
+              Server logic colocated with the application it serves, not split into a separate
+              service that drifts out of sync over time. A modeled data layer with real referential
+              integrity — deletes that clean up everything downstream of them, not orphaned records
+              waiting to be found later — and authentication enforced at the edge, before a request
+              ever reaches a page.
+            </p>
+          </Reveal>
+
+          <Reveal delayMs={120}>
+            <p className="text-caption text-text-muted font-mono tracking-wide uppercase">
+              Automation
+            </p>
+            <p className="text-body text-text-muted mt-4">
+              Where a workflow can be meaningfully automated rather than just accelerated, we build
+              for it. Internally — not as a client deliverable — we&apos;ve built a
+              natural-language-to-SQL system running entirely on locally hosted language models, as
+              much to understand where LLM-driven automation is trustworthy as to ship a specific
+              feature.
+            </p>
+          </Reveal>
+        </div>
       </Container>
 
-      {/* Evidence — a curated detail from the one real engagement, not a case-study rerun */}
+      {/* The pause — one real decision, in detail, not a slogan */}
+      <Container className="mt-24 sm:mt-28 lg:mt-32">
+        <div className="max-w-[var(--content-prose)]">
+          <Reveal>
+            <p className="text-caption text-text-muted font-mono tracking-wide uppercase">
+              In practice
+            </p>
+            <dl className="mt-6">
+              <dt className="text-h3 text-text font-normal">
+                A rendering strategy chosen per route, not applied uniformly
+              </dt>
+              <dd className="text-body text-text-muted mt-4">
+                On Bhatkal Time Luxe: static prerendering for content-stable pages, static
+                generation for guide articles, dynamic server rendering for catalog and API routes —
+                three strategies, one codebase, chosen deliberately per route rather than defaulted
+                across the whole site.
+              </dd>
+            </dl>
+          </Reveal>
+        </div>
+      </Container>
+
+      {/* Evidence — what that decision actually produces */}
       <Container size="full" className="mt-16 sm:mt-20 lg:mt-24">
         <div className="ml-auto w-full max-w-5xl">
           <Image
@@ -131,66 +161,14 @@ export default function SoftwareEngineeringPage() {
         </div>
       </Container>
 
-      {/* Process */}
-      <Container className="mt-24 sm:mt-28 lg:mt-32">
-        <div className="lg:ml-auto lg:max-w-xl">
-          <Reveal>
-            <p className="text-caption text-text-muted font-mono tracking-wide uppercase">
-              How an engagement runs
-            </p>
-          </Reveal>
-          <ol className="mt-8 space-y-10">
-            {[
-              {
-                n: "01",
-                t: "Discovery",
-                b: "A scoped conversation that establishes whether the work is frontend, backend, AI-assisted automation, or all three — before anything is estimated.",
-              },
-              {
-                n: "02",
-                t: "Build",
-                b: "One team across the stack. The engineer who designed the data model is the same one who can explain why a page renders the way it does.",
-              },
-              {
-                n: "03",
-                t: "Stay",
-                b: "Software drifts — dependencies age, traffic patterns change. We stay on for the maintenance that keeps it working, not just the delivery.",
-              },
-            ].map((step, i) => (
-              <Reveal key={step.n} as="li" delayMs={i * 90}>
-                <p className="text-caption text-text-muted font-mono">{step.n}</p>
-                <h3 className="text-h3 text-text mt-1 font-normal">{step.t}</h3>
-                <p className="text-body text-text-muted mt-2 max-w-md">{step.b}</p>
-              </Reveal>
-            ))}
-          </ol>
-        </div>
-      </Container>
-
       {/* CTA close */}
-      <Container className="mt-32 sm:mt-40 lg:mt-48">
-        <div className="border-border-muted border-t pt-12">
-          <div className="flex flex-col gap-8 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <p className="text-h3 text-text font-normal">Building something like this?</p>
-              <Link
-                href="/contact"
-                className="text-accent text-h2 mt-4 inline-flex items-center gap-2 font-serif italic no-underline hover:no-underline hover:opacity-80"
-              >
-                Start a project
-                <ArrowUpRight className="size-5 not-italic" aria-hidden="true" />
-              </Link>
-            </div>
-            <Link
-              href="/services/hardware"
-              tone="muted"
-              className="hover:text-text inline-flex items-center gap-1.5 no-underline hover:no-underline"
-            >
-              Looking for the hardware side?
-              <ArrowUpRight className="size-4" aria-hidden="true" />
-            </Link>
-          </div>
-        </div>
+      <Container className="mt-28 sm:mt-32 lg:mt-40">
+        <CtaPanel
+          heading="Building something like this?"
+          primaryLabel="Start a project"
+          primaryHref="/contact"
+          secondary={{ label: "Looking for the hardware side?", href: "/services/hardware" }}
+        />
       </Container>
     </div>
   );
