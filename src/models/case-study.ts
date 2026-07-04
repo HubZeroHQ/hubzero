@@ -1,5 +1,6 @@
 import { Schema, type InferSchemaType, type Types } from "mongoose";
 
+import { practiceAreaOptions } from "@/lib/cms/collections/case-study-fields";
 import { defineModel } from "@/models/shared/define-model";
 import { draftReviewPublishStatusValues, workflowFields } from "@/models/shared/workflow-fields";
 
@@ -13,7 +14,18 @@ import { draftReviewPublishStatusValues, workflowFields } from "@/models/shared/
  * neither requires revisiting the workflow/permission/CRUD engine this
  * collection exists to prove.
  */
-const practiceAreaValues = ["software", "hardware", "both", "ai"] as const;
+type PracticeAreaValue = (typeof practiceAreaOptions)[number]["value"];
+
+// Derived from the same `practiceAreaOptions` the form/table config uses
+// (`case-study-fields.tsx`) — one enum, not two independently maintained
+// copies, matching `lead.ts`'s own `projectTypeValues`-from-`lead-schema.ts`
+// pattern. Cast to a literal tuple for the same reason that file documents:
+// a widened `string[]` would still satisfy `enum`'s type but silently lose
+// the literal-union type `InferSchemaType` derives.
+const practiceAreaValues = practiceAreaOptions.map((option) => option.value) as [
+  PracticeAreaValue,
+  ...PracticeAreaValue[],
+];
 
 const caseStudySchema = new Schema(
   {
