@@ -65,16 +65,20 @@ export function CaseStudyWorkflowActions({
           Submit for review
         </Button>
       )}
-      {canPublish && status !== "published" && (
+      {canPublish && (
         <ConfirmDialog
           trigger={
             <Button variant="secondary" type="button">
-              Publish
+              {status === "published" ? "Republish" : "Publish"}
             </Button>
           }
-          title="Publish this case study?"
-          description="It goes live at /work immediately."
-          confirmLabel="Publish"
+          title={status === "published" ? "Republish this case study?" : "Publish this case study?"}
+          description={
+            status === "published"
+              ? "This records the current live content as a new version, then updates /work immediately."
+              : "It goes live at /work immediately."
+          }
+          confirmLabel={status === "published" ? "Republish" : "Publish"}
           onConfirm={handlePublish}
         />
       )}
