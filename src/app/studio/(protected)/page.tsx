@@ -6,6 +6,7 @@ import "@/lib/cms/collections";
 import { DashboardCard } from "@/components/admin/dashboard/dashboard-card";
 import { PageHeader } from "@/components/admin/page-header";
 import { EmptyState, Grid, Link, Text } from "@/components/ui";
+import type { AnyCollectionConfig } from "@/lib/cms/collection-config";
 import { getRecordLabel, listCollections } from "@/lib/cms/collection-config";
 import { connectToDatabase } from "@/lib/db";
 import { projectTypeOptions } from "@/lib/lead-schema";
@@ -39,12 +40,14 @@ export default async function StudioDashboardPage() {
 
   await connectToDatabase();
 
-  const [newLeadsCount, recentLeads, reviewCount, recentActivity] = await Promise.all([
-    canViewLeads ? Lead.countDocuments({ status: "new" }) : Promise.resolve(0),
-    canViewLeads ? Lead.find().sort({ createdAt: -1 }).limit(5) : Promise.resolve([]),
-    canSeeReviewQueue ? countAwaitingReview(user) : Promise.resolve(0),
-    listRecentActivity(20),
-  ]);
+  const [newLeadsCount, recentLeads, reviewCount, recentActivity, contentOverview] =
+    await Promise.all([
+      canViewLeads ? Lead.countDocuments({ status: "new" }) : Promise.resolve(0),
+      canViewLeads ? Lead.find().sort({ createdAt: -1 }).limit(5) : Promise.resolve([]),
+      canSeeReviewQueue ? countAwaitingReview(user) : Promise.resolve(0),
+      listRecentActivity(20),
+      getContentOverview(user),
+    ]);
 
   // `listRecentActivity` reads across every collection; only surface entries
   // for a collection the signed-in user actually holds a `view` grant on —
@@ -101,17 +104,30 @@ export default async function StudioDashboardPage() {
         </DashboardCard>
 
         <DashboardCard title="Content" icon={FolderKanban}>
-          {can(user, "view", "caseStudy") ? (
-            <EmptyState
-              title="Case Studies is live"
-              description="Team, Blog, and the rest of the CMS collections roll out on the same engine in later phases."
-              action={<Link href="/studio/case-studies">Go to Case Studies →</Link>}
-            />
-          ) : (
+          {contentOverview.length === 0 ? (
             <EmptyState
               title="Nothing to manage here"
-              description="Company portfolio content isn't part of your role's scope."
+              description="Content collections aren't part of your role's scope."
             />
+          ) : (
+            <ul className="divide-border-muted -mt-1 divide-y">
+              {contentOverview.map(({ config, total }) => (
+                <li
+                  key={config.resource}
+                  className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0"
+                >
+                  <Text weight="medium">{config.label}</Text>
+                  <div className="flex items-center gap-3">
+                    <Text size="caption" tone="muted">
+                      {total} {total === 1 ? "item" : "items"}
+                    </Text>
+                    {config.studioBasePath && (
+                      <Link href={`/studio/${config.studioBasePath}`}>Open →</Link>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
           )}
         </DashboardCard>
 
@@ -183,4 +199,23 @@ async function countAwaitingReview(user: SessionUser): Promise<number> {
     collections.map((config) => config.model.countDocuments({ status: "review" })),
   );
   return counts.reduce((sum, count) => sum + count, 0);
+}
+
+interface ContentOverviewRow {
+  config: AnyCollectionConfig;
+  total: number;
+}
+
+/**
+ * Real per-collection counts, generic across the registry — the same
+ * "no fabricated metric" discipline `listRecentActivity`/`countAwaitingReview`
+ * already apply, extended to the dashboard's "how much content exists"
+ * question now that Phase D gives most collections real data instead of
+ * being the one hardcoded "Case Studies is live" placeholder card. Adding an
+ * eleventh collection means one more row here, no dashboard code change.
+ */
+async function getContentOverview(user: SessionUser): Promise<ContentOverviewRow[]> {
+  const collections = listCollections().filter((config) => can(user, "view", config.resource));
+  const totals = await Promise.all(collections.map((config) => config.model.countDocuments()));
+  return collections.map((config, index) => ({ config, total: totals[index] ?? 0 }));
 }

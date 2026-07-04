@@ -14,3 +14,11 @@
  * (`ARCHITECTURE/19_CMS_FOUNDATION.md` §14 Phase E's entire premise).
  */
 import "@/lib/cms/collections/case-study.config";
+import "@/lib/cms/collections/team-member.config";
+import "@/lib/cms/collections/testimonial.config";
+import "@/lib/cms/collections/faq.config";
+import "@/lib/cms/collections/career-listing.config";
+import "@/lib/cms/collections/labs-project.config";
+import "@/lib/cms/collections/build.config";
+import "@/lib/cms/collections/blueprint.config";
+import "@/lib/cms/collections/blog-post.config";

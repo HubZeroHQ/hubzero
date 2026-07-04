@@ -83,8 +83,23 @@ function patchWorkflowFields(
   Object.assign(doc as unknown as Record<string, unknown>, patch);
 }
 
-function ownerTarget(doc: CrudDocument): { createdBy?: string } {
-  return { createdBy: doc.createdBy?.toString() };
+/**
+ * The `target` every `can()`/`requirePermission` call passes for an
+ * `editOwn` check — reads `config.ownerField` when a collection declares
+ * one (TeamMember's `linkedUserId`, `collection-config.ts`), `createdBy`
+ * otherwise. The escape to `Record<string, unknown>` mirrors
+ * `patchWorkflowFields`'s contained cast above: `doc`'s static type
+ * (`CrudDocument`) only ever declares `createdBy`, but a configured
+ * `ownerField` names a real field on the collection's own richer document
+ * shape.
+ */
+function ownerTarget(
+  doc: CrudDocument,
+  config: Pick<AnyCollectionConfig, "ownerField">,
+): { createdBy?: string } {
+  if (!config.ownerField) return { createdBy: doc.createdBy?.toString() };
+  const value = (doc as unknown as Record<string, unknown>)[config.ownerField];
+  return { createdBy: value ? String(value) : undefined };
 }
 
 /**
@@ -124,8 +139,9 @@ export async function restoreVersion(
   if (!doc) return { status: "error", message: "Not found." };
 
   const current = doc.toObject() as Record<string, unknown>;
+  const ownerField = config.ownerField ?? "createdBy";
   await requirePermission("edit", config.resource, {
-    createdBy: current.createdBy ? String(current.createdBy) : undefined,
+    createdBy: current[ownerField] ? String(current[ownerField]) : undefined,
   });
 
   const entry = await getVersionEntry(config.resource, id, versionHistoryId);
@@ -299,7 +315,7 @@ export function createCrudActions<T extends CrudDocument, TInput extends Record<
     const existing = await config.model.findById(id);
     if (!existing) return { status: "error", formError: "Not found." };
 
-    await requirePermission("edit", config.resource, ownerTarget(existing));
+    await requirePermission("edit", config.resource, ownerTarget(existing, config));
 
     const parsed = config.zodSchema.safeParse(rawFromFormData(formData));
     if (!parsed.success) {
@@ -331,7 +347,7 @@ export function createCrudActions<T extends CrudDocument, TInput extends Record<
     const doc = await config.model.findById(id);
     if (!doc) return { status: "error", message: "Not found." };
 
-    await requirePermission("edit", config.resource, ownerTarget(doc));
+    await requirePermission("edit", config.resource, ownerTarget(doc, config));
 
     if (doc.status !== "draft") {
       return {
@@ -356,7 +372,7 @@ export function createCrudActions<T extends CrudDocument, TInput extends Record<
     const doc = await config.model.findById(id);
     if (!doc) return { status: "error", message: "Not found." };
 
-    const user = await requirePermission("publish", config.resource, ownerTarget(doc));
+    const user = await requirePermission("publish", config.resource, ownerTarget(doc, config));
 
     const guardError = config.publishGuard?.(doc.toObject() as T);
     if (guardError) return { status: "error", message: guardError };
@@ -389,7 +405,7 @@ export function createCrudActions<T extends CrudDocument, TInput extends Record<
     const doc = await config.model.findById(id);
     if (!doc) return { status: "error", message: "Not found." };
 
-    await requirePermission("delete", config.resource, ownerTarget(doc));
+    await requirePermission("delete", config.resource, ownerTarget(doc, config));
 
     const blockedReason = await config.deleteGuard?.(id);
     if (blockedReason) return { status: "error", message: blockedReason };
@@ -422,7 +438,7 @@ export function createCrudActions<T extends CrudDocument, TInput extends Record<
     if (!doc) return { status: "error" };
 
     try {
-      await requirePermission("edit", config.resource, ownerTarget(doc));
+      await requirePermission("edit", config.resource, ownerTarget(doc, config));
     } catch {
       return { status: "error" };
     }

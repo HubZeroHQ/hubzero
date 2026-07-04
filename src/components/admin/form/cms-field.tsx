@@ -53,7 +53,12 @@ export function CmsField<TInput extends Record<string, unknown>>({
           hint={field.description}
           required={field.required}
           placeholder={field.placeholder}
-          value={typeof value === "string" ? value : ""}
+          // A numeric field with no dedicated field type (`types/cms.ts`'s
+          // fixed vocabulary has no "number") renders through `text` and is
+          // coerced back by the collection's own Zod schema (e.g. FAQ's
+          // `order`, `z.coerce.number()`) — `initialValues` for one of these
+          // arrives as a real `number`, which still needs to display as text.
+          value={typeof value === "string" ? value : typeof value === "number" ? String(value) : ""}
           onChange={(event) => onChange(event.target.value)}
           error={error}
         />
@@ -72,6 +77,28 @@ export function CmsField<TInput extends Record<string, unknown>>({
           value={typeof value === "string" ? value : ""}
           onChange={(event) => onChange(event.target.value)}
           error={error}
+        />
+      );
+
+    case "json":
+      // The escape hatch for a nested array/object shape outside this fixed
+      // vocabulary (`types/cms.ts`'s `FieldConfig` doc comment) — a raw-JSON
+      // textarea, not a structured repeater UI. `value` arrives as a real
+      // array/object on initial load (`ClientDocument` doesn't touch
+      // non-Date/ObjectId fields) and as the raw edited string thereafter,
+      // since `onChange` only ever emits what the textarea holds.
+      return (
+        <Textarea
+          name={field.name}
+          label={`${field.label} (JSON)`}
+          hint={field.description ?? "Raw JSON — validated on save."}
+          required={field.required}
+          placeholder={field.placeholder}
+          rows={6}
+          value={typeof value === "string" ? value : JSON.stringify(value ?? null, null, 2)}
+          onChange={(event) => onChange(event.target.value)}
+          error={error}
+          className="font-mono"
         />
       );
 

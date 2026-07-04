@@ -1,5 +1,17 @@
 import type { LucideIcon } from "lucide-react";
-import { Briefcase, LayoutDashboard, ListChecks } from "lucide-react";
+import {
+  Beaker,
+  Blocks,
+  Briefcase,
+  HelpCircle,
+  LayoutDashboard,
+  ListChecks,
+  Newspaper,
+  Package,
+  Quote,
+  UserPlus,
+  Users,
+} from "lucide-react";
 
 import type { UserRole } from "@/types/cms";
 
@@ -31,6 +43,22 @@ export const studioNavItems: StudioNavItem[] = [
   // portfolio content) — showing this link to a Teammate would point at a
   // screen `can()` immediately denies.
   { label: "Case Studies", href: "/studio/case-studies", icon: Briefcase, minimumRole: "admin" },
+  { label: "Builds", href: "/studio/builds", icon: Package, minimumRole: "admin" },
+  { label: "Labs Projects", href: "/studio/labs", icon: Beaker, minimumRole: "admin" },
+  { label: "Blueprints", href: "/studio/blueprints", icon: Blocks, minimumRole: "admin" },
+  // No `minimumRole`: Admin and Teammate alike hold at least an `editOwn`
+  // grant on `teamMember` (`permissions.ts`), so both should see this link —
+  // a Teammate visiting it edits only their own profile, an Admin/Head Admin
+  // manages everyone's.
+  { label: "Team", href: "/studio/team", icon: Users },
+  // No `minimumRole`: Teammates hold `["view", "create", "editOwn"]` on
+  // `blogPost` (`permissions.ts`) — they create/edit their own drafts here,
+  // same reasoning as the Team link above.
+  { label: "Blog", href: "/studio/blog", icon: Newspaper },
+  // Admin-only: Teammates hold no `testimonial` grant at all (`permissions.ts`).
+  { label: "Testimonials", href: "/studio/testimonials", icon: Quote, minimumRole: "admin" },
+  { label: "FAQs", href: "/studio/faqs", icon: HelpCircle, minimumRole: "admin" },
+  { label: "Careers", href: "/studio/careers", icon: UserPlus, minimumRole: "admin" },
   // No `minimumRole`: the review queue itself filters to collections the
   // signed-in user holds a `view` grant on (`app/studio/(protected)/review/page.tsx`),
   // so a Teammate sees an honest empty state today, not a denied screen —

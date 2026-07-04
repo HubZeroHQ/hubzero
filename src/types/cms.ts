@@ -73,10 +73,23 @@ interface BaseFieldConfig<TInput> {
  * plugin registry) — per that section, a collection needing a genuinely new
  * field type is a signal to reconsider the content model first, not a
  * reason to widen this union.
+ *
+ * `"json"` is the one addition Phase D makes to this vocabulary (§14 Phase
+ * E's collection rollout): `TeamMember.skills`/`socials`/`experience`/
+ * `education` (`ARCHITECTURE/11_DATABASE_ARCHITECTURE.md` §1) are nested
+ * arrays/objects with no flat-field equivalent, the same wall `CaseStudy`'s
+ * `quote` hit and was deferred past rather than solved (`models/case-study.ts`).
+ * Rather than build a full nested-repeater form builder for a shape only one
+ * field family needs so far, this is deliberately the same minimal escape
+ * hatch already established for `reference` ("renders as a plain ID input
+ * for now... a searchable picker lands in a later phase") — a raw-JSON
+ * textarea, validated by the collection's own Zod schema on submit. A future
+ * collection with the same "structured, variable-shape data" need reuses
+ * this instead of prompting a fourth new field type.
  */
 export type FieldConfig<TInput = Record<string, unknown>> =
   | (BaseFieldConfig<TInput> & {
-      type: "text" | "textarea" | "richtext" | "url" | "date" | "image";
+      type: "text" | "textarea" | "richtext" | "url" | "date" | "image" | "json";
     })
   | (BaseFieldConfig<TInput> & { type: "boolean" })
   | (BaseFieldConfig<TInput> & { type: "select"; options: FieldOption[] })
