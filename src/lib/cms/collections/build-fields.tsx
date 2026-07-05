@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { WorkflowStatusBadge } from "@/components/admin/workflow-status-badge";
-import { practiceAreaOptions } from "@/lib/cms/collections/shared-options";
+import { practiceAreaOptions, practiceAreaValues } from "@/lib/cms/collections/shared-options";
 import { optionalObjectIdField } from "@/lib/cms/collections/shared-validation";
 import { emptyToUndefined } from "@/lib/utils";
 import type { BuildDocument } from "@/models/build";
@@ -21,7 +21,7 @@ export const buildSchema = z.object({
     .regex(slugPattern, "Lowercase letters, numbers, and hyphens only."),
   title: z.string().trim().min(1, "Required.").max(160),
   tagline: z.string().trim().min(1, "Required.").max(240),
-  practiceArea: z.enum(practiceAreaOptions.map((option) => option.value) as [string, ...string[]], {
+  practiceArea: z.enum(practiceAreaValues, {
     error: "Choose a practice area.",
   }),
   description: z.string().trim().min(1, "Required.").max(20000),

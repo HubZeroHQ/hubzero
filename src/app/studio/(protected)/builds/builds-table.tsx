@@ -16,9 +16,19 @@ interface BuildsTableProps {
   hasPrev: boolean;
   nextCursor?: string;
   isFiltered: boolean;
+  canDelete: boolean;
+  canPublish: boolean;
 }
 
-export function BuildsTable({ items, hasNext, hasPrev, nextCursor, isFiltered }: BuildsTableProps) {
+export function BuildsTable({
+  items,
+  hasNext,
+  hasPrev,
+  nextCursor,
+  isFiltered,
+  canDelete,
+  canPublish,
+}: BuildsTableProps) {
   return (
     <DataTable
       columns={buildListColumns}
@@ -30,8 +40,8 @@ export function BuildsTable({ items, hasNext, hasPrev, nextCursor, isFiltered }:
       isFiltered={isFiltered}
       emptyStateMessage={buildEmptyStateMessage}
       rowHref={(doc) => `/studio/builds/${doc._id}`}
-      bulkDelete={bulkRemove}
-      bulkPublish={bulkPublish}
+      bulkDelete={canDelete ? bulkRemove : undefined}
+      bulkPublish={canPublish ? bulkPublish : undefined}
     />
   );
 }

@@ -51,6 +51,8 @@ export default async function BuildsListPage({ searchParams }: BuildsPageProps) 
         hasPrev={result.hasPrev}
         nextCursor={result.nextCursor}
         isFiltered={isFiltered}
+        canDelete={can(user, "delete", "build")}
+        canPublish={can(user, "publish", "build")}
       />
     </>
   );

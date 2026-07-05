@@ -12,9 +12,19 @@ interface FaqsTableProps {
   hasPrev: boolean;
   nextCursor?: string;
   isFiltered: boolean;
+  canDelete: boolean;
+  canPublish: boolean;
 }
 
-export function FaqsTable({ items, hasNext, hasPrev, nextCursor, isFiltered }: FaqsTableProps) {
+export function FaqsTable({
+  items,
+  hasNext,
+  hasPrev,
+  nextCursor,
+  isFiltered,
+  canDelete,
+  canPublish,
+}: FaqsTableProps) {
   return (
     <DataTable
       columns={faqListColumns}
@@ -26,8 +36,8 @@ export function FaqsTable({ items, hasNext, hasPrev, nextCursor, isFiltered }: F
       isFiltered={isFiltered}
       emptyStateMessage={faqEmptyStateMessage}
       rowHref={(doc) => `/studio/faqs/${doc._id}`}
-      bulkDelete={bulkRemove}
-      bulkPublish={bulkPublish}
+      bulkDelete={canDelete ? bulkRemove : undefined}
+      bulkPublish={canPublish ? bulkPublish : undefined}
     />
   );
 }

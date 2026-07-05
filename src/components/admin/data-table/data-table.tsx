@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
+import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -49,9 +51,17 @@ export function DataTable<T extends { _id: string }>({
   bulkDelete,
   bulkPublish,
 }: DataTableProps<T>) {
+  const router = useRouter();
   const { state, setParams, toggleSort, goToPreviousPage, isPending } = useCmsTable();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkPending, setBulkPending] = useState(false);
+  // Every other action in this system (`WorkflowActions`, `ConfirmDialog`
+  // consumers) surfaces a failure rather than silently swallowing it — bulk
+  // actions were the one place that didn't: `bulkRemove`/`bulkPublish`
+  // (`crud-actions.ts`) already return a real `{succeeded, failed}` count
+  // (some rows can legitimately fail a permission check or a `publishGuard`
+  // without the whole batch failing), but nothing read it.
+  const [bulkError, setBulkError] = useState<string | null>(null);
 
   const allSelected = items.length > 0 && items.every((item) => selected.has(item._id));
   const hasActiveFilters = Boolean(state.q) || Object.keys(state.filters ?? {}).length > 0;
@@ -71,9 +81,16 @@ export function DataTable<T extends { _id: string }>({
 
   async function runBulk(action: (ids: string[]) => Promise<BulkActionResult>) {
     setBulkPending(true);
+    setBulkError(null);
     try {
-      await action([...selected]);
+      const result = await action([...selected]);
       setSelected(new Set());
+      if (result.failed > 0) {
+        setBulkError(
+          `${result.succeeded} succeeded, ${result.failed} failed — a failed item may be blocked by a permission or publish guard.`,
+        );
+      }
+      router.refresh();
     } finally {
       setBulkPending(false);
     }
@@ -135,6 +152,8 @@ export function DataTable<T extends { _id: string }>({
           )}
         </div>
       )}
+
+      {bulkError && <Alert variant="danger">{bulkError}</Alert>}
 
       {selected.size > 0 && (bulkDelete || bulkPublish) && (
         <div className="bg-bg-light border-border-muted flex items-center gap-3 rounded-md border p-3">

@@ -16,6 +16,8 @@ interface CareerListingsTableProps {
   hasPrev: boolean;
   nextCursor?: string;
   isFiltered: boolean;
+  canDelete: boolean;
+  canPublish: boolean;
 }
 
 export function CareerListingsTable({
@@ -24,6 +26,8 @@ export function CareerListingsTable({
   hasPrev,
   nextCursor,
   isFiltered,
+  canDelete,
+  canPublish,
 }: CareerListingsTableProps) {
   return (
     <DataTable
@@ -36,8 +40,8 @@ export function CareerListingsTable({
       isFiltered={isFiltered}
       emptyStateMessage={careerListingEmptyStateMessage}
       rowHref={(doc) => `/studio/careers/${doc._id}`}
-      bulkDelete={bulkRemove}
-      bulkPublish={bulkPublish}
+      bulkDelete={canDelete ? bulkRemove : undefined}
+      bulkPublish={canPublish ? bulkPublish : undefined}
     />
   );
 }

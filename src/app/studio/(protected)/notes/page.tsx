@@ -51,6 +51,8 @@ export default async function NotesListPage({ searchParams }: NotesPageProps) {
         hasPrev={result.hasPrev}
         nextCursor={result.nextCursor}
         isFiltered={isFiltered}
+        canDelete={can(user, "delete", "note")}
+        canPublish={can(user, "publish", "note")}
       />
     </>
   );

@@ -16,6 +16,8 @@ interface LabsProjectsTableProps {
   hasPrev: boolean;
   nextCursor?: string;
   isFiltered: boolean;
+  canDelete: boolean;
+  canPublish: boolean;
 }
 
 export function LabsProjectsTable({
@@ -24,6 +26,8 @@ export function LabsProjectsTable({
   hasPrev,
   nextCursor,
   isFiltered,
+  canDelete,
+  canPublish,
 }: LabsProjectsTableProps) {
   return (
     <DataTable
@@ -36,8 +40,8 @@ export function LabsProjectsTable({
       isFiltered={isFiltered}
       emptyStateMessage={labsProjectEmptyStateMessage}
       rowHref={(doc) => `/studio/labs/${doc._id}`}
-      bulkDelete={bulkRemove}
-      bulkPublish={bulkPublish}
+      bulkDelete={canDelete ? bulkRemove : undefined}
+      bulkPublish={canPublish ? bulkPublish : undefined}
     />
   );
 }

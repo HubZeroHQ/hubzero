@@ -51,6 +51,8 @@ export default async function TeamListPage({ searchParams }: TeamListPageProps) 
         hasPrev={result.hasPrev}
         nextCursor={result.nextCursor}
         isFiltered={isFiltered}
+        canDelete={can(user, "delete", "teamMember")}
+        canPublish={can(user, "publish", "teamMember")}
       />
     </>
   );

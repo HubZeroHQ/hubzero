@@ -51,6 +51,8 @@ export default async function TestimonialsListPage({ searchParams }: Testimonial
         hasPrev={result.hasPrev}
         nextCursor={result.nextCursor}
         isFiltered={isFiltered}
+        canDelete={can(user, "delete", "testimonial")}
+        canPublish={can(user, "publish", "testimonial")}
       />
     </>
   );

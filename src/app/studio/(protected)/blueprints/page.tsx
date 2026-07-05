@@ -51,6 +51,8 @@ export default async function BlueprintsListPage({ searchParams }: BlueprintsPag
         hasPrev={result.hasPrev}
         nextCursor={result.nextCursor}
         isFiltered={isFiltered}
+        canDelete={can(user, "delete", "blueprint")}
+        canPublish={can(user, "publish", "blueprint")}
       />
     </>
   );
