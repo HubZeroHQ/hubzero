@@ -12,6 +12,7 @@ import {
   Package,
   Quote,
   Settings as SettingsIcon,
+  UserCog,
   UserPlus,
   Users,
 } from "lucide-react";
@@ -74,6 +75,10 @@ export const studioNavItems: StudioNavItem[] = [
   // other role (09_CMS_ARCHITECTURE §4 — "Admin explicitly cannot manage
   // users, roles, permissions, or site settings").
   { label: "Settings", href: "/studio/settings", icon: SettingsIcon, minimumRole: "head_admin" },
+  // Head-Admin-only: `permissions.ts` grants the `user` resource to no other
+  // role (09_CMS_ARCHITECTURE §4 — "Admin explicitly cannot manage users,
+  // roles, permissions, or site settings").
+  { label: "Users", href: "/studio/users", icon: UserCog, minimumRole: "head_admin" },
   // No `minimumRole`: the review queue itself filters to collections the
   // signed-in user holds a `view` grant on (`app/studio/(protected)/review/page.tsx`),
   // so a Teammate sees an honest empty state today, not a denied screen —

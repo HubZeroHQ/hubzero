@@ -223,8 +223,14 @@ async function getContentOverview(user: SessionUser): Promise<ContentOverviewRow
     // (`lib/cms/collections/lead.config.ts`), not because Leads are
     // "content" alongside Case Studies/Notes/etc. — it already has its own
     // dedicated "New leads" card above, so it's excluded here to avoid
-    // showing the same count twice under two different framings.
-    (config) => config.resource !== "lead" && can(user, "view", config.resource),
+    // showing the same count twice under two different framings. `user` is
+    // registered for the same list/getOne/remove reuse
+    // (`lib/cms/collections/user.config.ts`) — accounts aren't "content"
+    // either, so it's excluded for the identical reason.
+    (config) =>
+      config.resource !== "lead" &&
+      config.resource !== "user" &&
+      can(user, "view", config.resource),
   );
   const totals = await Promise.all(collections.map((config) => config.model.countDocuments()));
   return collections.map((config, index) => ({ config, total: totals[index] ?? 0 }));

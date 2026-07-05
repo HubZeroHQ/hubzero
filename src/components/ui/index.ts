@@ -13,6 +13,7 @@ export { IconButton, type IconButtonProps } from "@/components/ui/icon-button";
 export { Input, type InputProps } from "@/components/ui/input";
 export { Label, type LabelProps } from "@/components/ui/label";
 export { Link, type LinkProps } from "@/components/ui/link";
+export { PasswordInput, type PasswordInputProps } from "@/components/ui/password-input";
 export { RadioGroup, type RadioGroupProps, type RadioOption } from "@/components/ui/radio-group";
 export { Section, type SectionProps } from "@/components/ui/section";
 export { Select, type SelectProps, type SelectOption } from "@/components/ui/select";

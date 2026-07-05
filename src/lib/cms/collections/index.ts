@@ -23,3 +23,4 @@ import "@/lib/cms/collections/build.config";
 import "@/lib/cms/collections/blueprint.config";
 import "@/lib/cms/collections/note.config";
 import "@/lib/cms/collections/lead.config";
+import "@/lib/cms/collections/user.config";

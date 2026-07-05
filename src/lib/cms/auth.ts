@@ -7,6 +7,13 @@ import { connectToDatabase } from "@/lib/db";
 import { User, type UserRole } from "@/models/user";
 import type { SessionUser } from "@/types/cms";
 
+/**
+ * A precomputed bcrypt hash of a value nobody will ever type, used only to
+ * give the "no such user" path the same `bcrypt.compare` cost as a real
+ * lookup (see the timing-side-channel comment in `authorize()` below).
+ */
+const DUMMY_PASSWORD_HASH = "$2b$12$6qmm4CojCUCZNEaTWdMziez0eLB2JvHyf3MdDqqQzA4A7ikjDrCty";
+
 declare module "next-auth" {
   interface User {
     role: UserRole;
@@ -63,13 +70,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         // object into the JWT (surfaces as a `DataCloneError` on sign-in).
         // A plain object's `dynamicPermissions` is a real `string[]`.
         const user = await User.findOne({ email }).lean();
-        // Same generic failure for "no such user" and "wrong password" —
-        // never reveal which one was wrong (credential-enumeration hygiene,
-        // `19_CMS_FOUNDATION.md` §2).
-        if (!user) return null;
 
-        const passwordMatches = await bcrypt.compare(password, user.passwordHash);
-        if (!passwordMatches) return null;
+        // Always run a `bcrypt.compare` of the same cost, whether or not a
+        // user was found — comparing against a fixed dummy hash on the
+        // "no such user" path closes a timing side-channel that would
+        // otherwise let an attacker enumerate valid admin emails purely from
+        // response latency, even though the error message itself is already
+        // generic (credential-enumeration hygiene, `19_CMS_FOUNDATION.md` §2).
+        const passwordMatches = await bcrypt.compare(
+          password,
+          user?.passwordHash ?? DUMMY_PASSWORD_HASH,
+        );
+
+        // Same generic failure for "no such user," "wrong password," and a
+        // disabled account — never reveal which one applies.
+        if (!user || !passwordMatches || user.disabled) return null;
 
         return {
           id: user._id.toString(),

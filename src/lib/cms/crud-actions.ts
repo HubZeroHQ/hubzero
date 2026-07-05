@@ -62,7 +62,7 @@ function decodeCursorCondition(
   };
 }
 
-function flattenZodErrors<TInput extends Record<string, unknown>>(
+export function flattenZodErrors<TInput extends Record<string, unknown>>(
   error: ZodError,
 ): Partial<Record<keyof TInput & string, string>> {
   const fieldErrors: Partial<Record<keyof TInput & string, string>> = {};
