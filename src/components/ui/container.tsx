@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 const widths = {
   /** Marketing pages — ARCHITECTURE/07_DESIGN_SYSTEM.md §3 (1100-1200px). */
   default: "max-w-[var(--content-marketing)]",
-  /** Long-form reading — blog posts, case study bodies (720-760px). */
+  /** Long-form reading — notes, case study bodies (720-760px). */
   prose: "max-w-[var(--content-prose)]",
   /** No width constraint — horizontal gutter only (edge-to-edge sections). */
   full: "max-w-none",

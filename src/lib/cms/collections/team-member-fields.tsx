@@ -73,7 +73,7 @@ export type TeamMemberInput = z.infer<typeof teamMemberSchema>;
  * (`ARCHITECTURE/11_DATABASE_ARCHITECTURE.md` §1) but three flat form
  * fields above — better authoring UX for a fixed, known sub-shape than a
  * raw JSON textarea. `config.computedFields` (the same sanctioned hook
- * BlogPost's `readingTimeMinutes` uses) recombines them; the flat
+ * Note's `readingTimeMinutes` uses) recombines them; the flat
  * `socialsGithub`/`socialsLinkedin`/`socialsEmail` keys are simply ignored
  * by Mongoose's strict-by-default schema once `socials` itself is set.
  */

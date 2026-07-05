@@ -4,6 +4,12 @@
 
 ---
 
+## Revision 2026-07-05 — "Blog" renamed to "Notes"
+
+**Trigger:** HubZero publishes engineering write-ups, architectural thinking, dev logs, experiments, lessons learned, and product thinking — not a traditional marketing blog. "Blog" never matched what this content type actually is or was ever going to be, and no public route had shipped under that name, so this is a clean rename with no backward-compatible URL or redirect concerns. This revision renames the content type/collection/section from "Blog" to "Notes" throughout the architecture set — model, CMS collection, admin routes (`/studio/notes`), and public routes (`/notes`, `/notes/[slug]`) — without changing its scope, workflow, or editorial bar in any way. Every prior document reference to "Blog"/"Blog Posts"/"blog platform" is updated in place to "Notes"; only entries in this changelog and `00_FOUNDER_APPROVAL.md` that narrate a specific past session's events (e.g. the Phase D entry immediately below, dated the same day) keep their original "Blog" wording, since they are a record of what was true when they were written, not living architecture. **Affected:** `00`, `01`, `03`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`, `13`, `14`, `17`, `19`, `PROJECT_CONTEXT.md`, `README.md` — documentation only; the corresponding code rename (models, CMS collection config, Server Actions, admin routes, permissions, nav config) is a separate, concurrent change.
+
+---
+
 ## Revision 2026-07-05 — CMS Foundation Phase D: the remaining eight collections
 
 **Trigger:** `19_CMS_FOUNDATION.md` §14 Phase E ("roll out the remaining ten collections... each is now `defineCollection({...})` plus a Mongoose model plus (where needed) a small collection-specific extension") — the payoff phase for Phase B's engine investment. This revision implements Team, Testimonials, FAQ, Career Listings, Labs Projects, Builds, Blueprints, and Blog Posts (Services and Settings remain out of scope; see below) entirely on the Phase B/C generic engine. Two small, sanctioned engine additions were required (a new field type, a configurable ownership field); three UI components were generalized from Case-Study-only to collection-agnostic; two real bugs in the Phase B/C engine were found during manual QA and fixed. No collection needed a bespoke CRUD/permission/versioning path beyond the two explicitly anticipated in `19` §11 (Labs' graduation action, Blueprint's publish guard).

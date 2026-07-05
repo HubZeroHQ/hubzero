@@ -1,6 +1,6 @@
 "use server";
 
-import { blogPostConfig } from "@/lib/cms/collections/blog-post.config";
+import { noteConfig } from "@/lib/cms/collections/note.config";
 import { createCrudActions } from "@/lib/cms/crud-actions";
 
 export const {
@@ -15,4 +15,4 @@ export const {
   bulkRemove,
   bulkPublish,
   restoreVersion,
-} = createCrudActions(blogPostConfig);
+} = createCrudActions(noteConfig);

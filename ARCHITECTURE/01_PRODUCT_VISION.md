@@ -81,7 +81,7 @@ In priority order:
 1. Make a potential client believe, within 15 seconds, that HubZero is a real, capable, combined software/electronics engineering team — not a student portfolio site.
 2. Prove it with a small number of real, well-documented case studies (not a high-volume portfolio grid).
 3. Give the client a low-friction, intent-revealing way to start a conversation (not just a bare contact form).
-4. Give the internal team a CMS that lets non-developers (content/marketing team, per CSV Q16) publish case studies, blog posts, and team updates without needing a developer to rebuild and redeploy — directly fixing the legacy "send Rifaque a markdown file" workflow.
+4. Give the internal team a CMS that lets non-developers (content/marketing team, per CSV Q16) publish case studies, notes, and team updates without needing a developer to rebuild and redeploy — directly fixing the legacy "send Rifaque a markdown file" workflow.
 5. Stay out of the way of (1)-(3): no decorative complexity, no content that exists for its own sake.
 
 ## 8. Positioning statement

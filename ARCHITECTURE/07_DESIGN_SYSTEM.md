@@ -25,7 +25,7 @@
 
 ## 3. Spacing and layout
 
-**[Research-derived]** "Spend money on emptiness" (research principle 4). Section vertical padding: 96-128px desktop (legacy already uses `py-20` to `py-32`, i.e. 80-128px — keep the upper end as the default, not the lower). One primary idea per section/screen. Content max-width: 1100-1200px for marketing pages (slightly tighter than the legacy `max-w-6xl`), 720-760px for long-form reading (blog, case study body) — within the legacy's existing `max-w-4xl` range, kept.
+**[Research-derived]** "Spend money on emptiness" (research principle 4). Section vertical padding: 96-128px desktop (legacy already uses `py-20` to `py-32`, i.e. 80-128px — keep the upper end as the default, not the lower). One primary idea per section/screen. Content max-width: 1100-1200px for marketing pages (slightly tighter than the legacy `max-w-6xl`), 720-760px for long-form reading (Notes, case study body) — within the legacy's existing `max-w-4xl` range, kept.
 
 A faint structural grid (research principle: visible-but-quiet grid lines or dot grid at 10-15% opacity) may be used as a background texture instead of blur orbs — it reads as "engineered system" rather than decoration, and is more consistent with an engineering-company brand than a soft gradient blob.
 
@@ -50,7 +50,7 @@ Directly answers the legacy "Should Become Shared UI" list (`ARCHIVED_PROJECT_AN
 | `GlassCard` | `bg-white/5 border border-white/10 backdrop-blur-lg` repeated inline | Used sparingly — glassmorphism is a legacy signature worth keeping in moderation, not banning |
 | `GradientButton` | 4+ inline instances of the brand gradient | The one place the gradient token is "supposed" to appear (research principle 9) |
 | `SectionGrid` | Inconsistent grid breakpoints per page | Standard responsive grid for card layouts (case studies, team, services) |
-| `StatusBadge` / `TagPill` | Category pills on blog, project tags on portfolio | One pill component, consistent styling |
+| `StatusBadge` / `TagPill` | Category pills on Notes, project tags on portfolio | One pill component, consistent styling |
 | `FormField` | Inconsistent input styling between company contact form and portfolio contact form | Single accessible form-field primitive (label, error state, focus ring) used everywhere a form exists |
 
 ## 6. Accessibility baseline

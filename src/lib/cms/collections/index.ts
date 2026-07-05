@@ -21,4 +21,4 @@ import "@/lib/cms/collections/career-listing.config";
 import "@/lib/cms/collections/labs-project.config";
 import "@/lib/cms/collections/build.config";
 import "@/lib/cms/collections/blueprint.config";
-import "@/lib/cms/collections/blog-post.config";
+import "@/lib/cms/collections/note.config";

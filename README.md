@@ -2,7 +2,7 @@
 
 HubZero is a small, founder-led engineering studio building software and hardware-adjacent
 products for businesses that need both. This repository is the production Next.js application —
-marketing site, blog, and internal CMS — currently under active rebuild as **HubZero v2**.
+marketing site, Notes (engineering write-ups), and internal CMS — currently under active rebuild as **HubZero v2**.
 
 The full product/technical specification lives in [`ARCHITECTURE/`](./ARCHITECTURE) and is treated
 as the source of truth for every implementation decision. Start with

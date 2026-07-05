@@ -6,7 +6,7 @@ import {
   HelpCircle,
   LayoutDashboard,
   ListChecks,
-  Newspaper,
+  NotebookPen,
   Package,
   Quote,
   UserPlus,
@@ -22,7 +22,7 @@ import type { UserRole } from "@/types/cms";
  * applied here to the admin shell's desktop sidebar and (future) mobile
  * drawer. `ARCHITECTURE/19_CMS_FOUNDATION.md` §4 explicitly rules out
  * hardcoding future collections into individual pages — new collections
- * (Case Studies, Team, Blog, …) are added here as a data change once their
+ * (Case Studies, Team, Notes, …) are added here as a data change once their
  * `/studio/**` screens actually exist (Phase E), the same content-gating
  * discipline already applied to the public footer's pillar links (see the
  * "Content-gate footer nav links" commit) — never a placeholder link to a
@@ -39,7 +39,7 @@ export interface StudioNavItem {
 export const studioNavItems: StudioNavItem[] = [
   { label: "Dashboard", href: "/studio", icon: LayoutDashboard },
   // Admin-only: Teammates hold no `caseStudy` grant at all (09_CMS_ARCHITECTURE
-  // §4 scopes them to their own profile/portfolio/blog drafts, not company
+  // §4 scopes them to their own profile/portfolio/note drafts, not company
   // portfolio content) — showing this link to a Teammate would point at a
   // screen `can()` immediately denies.
   { label: "Case Studies", href: "/studio/case-studies", icon: Briefcase, minimumRole: "admin" },
@@ -52,9 +52,9 @@ export const studioNavItems: StudioNavItem[] = [
   // manages everyone's.
   { label: "Team", href: "/studio/team", icon: Users },
   // No `minimumRole`: Teammates hold `["view", "create", "editOwn"]` on
-  // `blogPost` (`permissions.ts`) — they create/edit their own drafts here,
+  // `note` (`permissions.ts`) — they create/edit their own drafts here,
   // same reasoning as the Team link above.
-  { label: "Blog", href: "/studio/blog", icon: Newspaper },
+  { label: "Notes", href: "/studio/notes", icon: NotebookPen },
   // Admin-only: Teammates hold no `testimonial` grant at all (`permissions.ts`).
   { label: "Testimonials", href: "/studio/testimonials", icon: Quote, minimumRole: "admin" },
   { label: "FAQs", href: "/studio/faqs", icon: HelpCircle, minimumRole: "admin" },
@@ -62,7 +62,7 @@ export const studioNavItems: StudioNavItem[] = [
   // No `minimumRole`: the review queue itself filters to collections the
   // signed-in user holds a `view` grant on (`app/studio/(protected)/review/page.tsx`),
   // so a Teammate sees an honest empty state today, not a denied screen —
-  // and once a Teammate-reviewable collection (e.g. BlogPost) registers,
+  // and once a Teammate-reviewable collection (e.g. Note) registers,
   // this link starts showing real content with no nav change needed.
   { label: "Review Queue", href: "/studio/review", icon: ListChecks },
 ];

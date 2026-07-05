@@ -126,8 +126,11 @@ export default function SoftwareEngineeringPage() {
         </div>
       </Container>
 
-      {/* Evidence — what that decision actually produces */}
-      <Container size="full" className="mt-16 sm:mt-20 lg:mt-24">
+      {/* Evidence — what that decision actually produces. Anchored to the
+          bounded marketing Container, not the bare viewport (ARCHITECTURE/16
+          §10's anchoring rule) — the right-weighted asymmetry holds steady
+          at every width instead of drifting further right past 1200px. */}
+      <Container className="mt-16 sm:mt-20 lg:mt-24">
         <div className="ml-auto w-full max-w-5xl">
           <Image
             src="/case-studies/bhatkal-time-luxe/product-page.webp"

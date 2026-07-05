@@ -26,7 +26,7 @@ The single biggest technical-architecture change from the legacy system: **the l
 
 Per the consensus decision in §2, content splits into two tiers:
 
-- **Structured, frequently-queried data → MongoDB.** Case studies (metadata + body, since body is also frequently edited by non-developers via the CMS — see note below), team members, testimonials, services, FAQs, leads/contact submissions, blog post metadata. This is exactly what a CMS needs: queryable, filterable, editable through an admin UI without a code deploy.
+- **Structured, frequently-queried data → MongoDB.** Case studies (metadata + body, since body is also frequently edited by non-developers via the CMS — see note below), team members, testimonials, services, FAQs, leads/contact submissions, note metadata. This is exactly what a CMS needs: queryable, filterable, editable through an admin UI without a code deploy.
 - **Long-form rich body content → stored as MDX-compatible rich text inside MongoDB documents**, not as files in the repository. **[Objective practice clarification]** — the CSV phrase "Hybrid (MongoDB + MDX)" most plausibly describes *MongoDB as the source of truth with MDX/Markdown as the body-content format*, not literally storing some content in the database and other content in the git repository's filesystem (the legacy model). A git-filesystem-based content store (the legacy `content/blog/*.md` approach) is structurally incompatible with the team's own stated requirements — drafts, role-based publishing approval, and non-developer editing all require the content to live somewhere a web UI can read and write to directly, which a developer-only git repository is not. This document interprets "hybrid" as **database-backed storage using a markdown/MDX-compatible rich-text format**, which satisfies both the "developer-familiar markdown authoring experience" half of the request and the "CMS with workflow" half, without the contradiction of requiring a git commit to publish a draft.
 
 ## 4. Rendering strategy
@@ -53,7 +53,7 @@ app/
 │   ├── about/
 │   ├── team/
 │   ├── contact/
-│   ├── blog/
+│   ├── notes/
 │   └── careers/
 ├── studio/
 │   ├── layout.tsx           ← Admin shell, auth-gated

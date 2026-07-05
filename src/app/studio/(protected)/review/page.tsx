@@ -34,7 +34,7 @@ interface ReviewQueueGroup {
  * can view, aggregated from the registry (`listCollections()`), not a
  * hardcoded list of collections. Case Study is the only collection
  * exercising this today, but nothing here names it: adding Build,
- * Blueprint, or BlogPost later means this page's `items.length` count
+ * Blueprint, or Note later means this page's `items.length` count
  * changes, not this page's code (the genericity check
  * `ARCHITECTURE/19_CMS_FOUNDATION.md` asks for, applied to a cross-collection
  * screen rather than a single-collection one).

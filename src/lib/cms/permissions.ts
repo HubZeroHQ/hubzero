@@ -26,7 +26,7 @@ const allResources: Resource[] = [
   "teamMember",
   "testimonial",
   "service",
-  "blogPost",
+  "note",
   "faq",
   "careerListing",
   "lead",
@@ -52,9 +52,9 @@ const roleGrants: Record<UserRole, Partial<Record<Resource, Action[]>>> = {
     service: ["view", "create", "edit", "publish", "delete"],
     faq: ["view", "create", "edit", "publish", "delete"],
     careerListing: ["view", "create", "edit", "publish", "delete"],
-    // Personal content — Admin can author their own posts and approve/publish
-    // Teammate submissions, but does not gain a blanket "edit" over every post.
-    blogPost: ["view", "create", "editOwn", "approve", "publish"],
+    // Personal content — Admin can author their own notes and approve/publish
+    // Teammate submissions, but does not gain a blanket "edit" over every note.
+    note: ["view", "create", "editOwn", "approve", "publish"],
     // "Can edit only their own individual portfolio, not another user's" (09 §4).
     teamMember: ["view", "editOwn"],
     lead: ["view", "edit", "delete"],
@@ -64,11 +64,11 @@ const roleGrants: Record<UserRole, Partial<Record<Resource, Action[]>>> = {
   teammate: {
     teamMember: ["view", "editOwn"],
     // Personal content — create/edit own drafts, submit for review; no direct publish.
-    blogPost: ["view", "create", "editOwn"],
+    note: ["view", "create", "editOwn"],
     // Deliberately no grants on company-content resources (caseStudy, build,
     // blueprint, labsProject, testimonial, service, faq, careerListing) or
     // lead/siteSettings/user — 09_CMS_ARCHITECTURE §4 scopes a Teammate to
-    // "own profile, own portfolio, own blog drafts," nothing broader. A
+    // "own profile, own portfolio, own note drafts," nothing broader. A
     // Teammate reads company content on the public site, not through
     // `/studio` — they have no reason to hold a `view` grant there.
   },
@@ -83,7 +83,7 @@ const dynamicPermissionGrants: Record<string, Partial<Record<Resource, Action[]>
   team_lead: {
     // Project-tracking-specific grants, once that collection exists.
   },
-  // future: blog_reviewer, recruiter, hr, finance, sales, client_manager, moderator, ...
+  // future: notes_reviewer, recruiter, hr, finance, sales, client_manager, moderator, ...
 };
 
 export class ForbiddenError extends Error {

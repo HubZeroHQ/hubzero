@@ -9,7 +9,7 @@ import { draftPublishStatusValues, workflowFields } from "@/models/shared/workfl
  * `isClientWork` is always `false` — "structurally prevents this collection
  * from ever being confused with a real client CaseStudy" — so it's not a
  * form field at all (`labs-project.config.ts`'s `computedFields` injects the
- * constant on every create/update, the same escape hatch BlogPost's
+ * constant on every create/update, the same escape hatch Note's
  * `readingTimeMinutes` uses); there is no path by which an editor sets it to
  * `true`. `graduatedToBuildId` is likewise not in the regular edit form —
  * it's only ever set by the bespoke "mark as graduated" action

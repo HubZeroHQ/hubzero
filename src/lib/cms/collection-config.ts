@@ -70,7 +70,7 @@ export interface CollectionConfig<
    * should fit this hook before the engine grows a second one.
    */
   publishGuard?: (doc: T) => string | null;
-  /** Server-computed fields derived from input before validation/save (e.g. BlogPost's `readingTimeMinutes`, §11). */
+  /** Server-computed fields derived from input before validation/save (e.g. Note's `readingTimeMinutes`, §11). */
   computedFields?: (input: TInput) => Partial<T>;
   /**
    * Referential-integrity check before delete — `ARCHITECTURE/11_DATABASE_ARCHITECTURE.md`
@@ -83,7 +83,7 @@ export interface CollectionConfig<
    * Which field `can()`'s `editOwn` check compares against the signed-in
    * user's id. Defaults to `createdBy` (whoever's Server Action call created
    * the row) when omitted — the right default for authored content like
-   * BlogPost, where the creator *is* the author. TeamMember is the
+   * Note, where the creator *is* the author. TeamMember is the
    * documented exception (`ARCHITECTURE/19_CMS_FOUNDATION.md` §11): a Head
    * Admin typically creates a Teammate's profile row during onboarding, but
    * "own content" for a profile means *whose profile it is*

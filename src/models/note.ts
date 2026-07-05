@@ -4,14 +4,14 @@ import { defineModel } from "@/models/shared/define-model";
 import { draftReviewPublishStatusValues, workflowFields } from "@/models/shared/workflow-fields";
 
 /**
- * `ARCHITECTURE/11_DATABASE_ARCHITECTURE.md` §1's `BlogPost` collection.
+ * `ARCHITECTURE/11_DATABASE_ARCHITECTURE.md` §1's `Note` collection.
  * `readingTimeMinutes` is "computed on save, not author-entered" — not a
- * form field at all, derived by `blog-post.config.ts`'s `computedFields`
+ * form field at all, derived by `note.config.ts`'s `computedFields`
  * from `body`'s word count (`ARCHITECTURE/19_CMS_FOUNDATION.md` §11), the
  * same escape hatch TeamMember's `socials` recombination and LabsProject's
  * constant `isClientWork` use.
  */
-const blogPostSchema = new Schema(
+const noteSchema = new Schema(
   {
     slug: {
       type: String,
@@ -34,8 +34,8 @@ const blogPostSchema = new Schema(
   { timestamps: true },
 );
 
-blogPostSchema.index({ status: 1, publishedAt: -1 });
+noteSchema.index({ status: 1, publishedAt: -1 });
 
-export type BlogPostDocument = InferSchemaType<typeof blogPostSchema> & { _id: Types.ObjectId };
+export type NoteDocument = InferSchemaType<typeof noteSchema> & { _id: Types.ObjectId };
 
-export const BlogPost = defineModel<BlogPostDocument>("BlogPost", blogPostSchema);
+export const Note = defineModel<NoteDocument>("Note", noteSchema);

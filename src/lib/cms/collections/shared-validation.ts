@@ -4,7 +4,7 @@ import { emptyToUndefined } from "@/lib/utils";
 
 /**
  * Validation shared across more than one collection's `reference`-type
- * field (`TeamMember.linkedUserId`, `BlogPost.authorId`,
+ * field (`TeamMember.linkedUserId`, `Note.authorId`,
  * `Testimonial.linkedCaseStudy`, `Build.graduatedFromLabsId`, …) — every one
  * of them is the same shape: a 24-hex-char Mongo ObjectId string, since
  * `CmsField`'s `reference` case (`ARCHITECTURE/19_CMS_FOUNDATION.md` §6) is

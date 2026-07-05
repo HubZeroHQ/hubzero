@@ -14,13 +14,13 @@ export interface NavItem {
 /**
  * Per `ARCHITECTURE/03_INFORMATION_ARCHITECTURE.md` §2, primary nav is
  * content-gated: an item only belongs here once it has a real, published
- * page behind it. Blog, Builds, Labs, and Blueprints are all real
+ * page behind it. Notes, Builds, Labs, and Blueprints are all real
  * destinations in the target IA but none has shipped a page yet, so none
  * of them belong in this list.
  *
  * `footerNav` below is content-gated on the same rule, not exempt from it —
  * a footer link is still a link a visitor can click today. Team, Careers,
- * Blog, Privacy, and Terms are added here the same day their page ships,
+ * Notes, Privacy, and Terms are added here the same day their page ships,
  * not before.
  */
 export const primaryNav: NavItem[] = [
