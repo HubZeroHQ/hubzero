@@ -13,7 +13,7 @@ export const testimonialSchema = z.object({
   name: z.string().trim().min(1, "Required.").max(160),
   title: z.string().trim().min(1, "Required.").max(160),
   company: z.preprocess(emptyToUndefined, z.string().trim().max(160).optional()),
-  linkedCaseStudy: optionalObjectIdField("Enter a valid Case Study ID."),
+  linkedCaseStudy: optionalObjectIdField("Select a case study."),
 });
 
 export type TestimonialInput = z.infer<typeof testimonialSchema>;

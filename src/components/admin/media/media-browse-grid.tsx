@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
 import { MediaThumbnail } from "@/components/admin/media/media-thumbnail";
 import { searchMediaAction } from "@/actions/studio/media";
+import { useDebouncedValue } from "@/lib/use-debounced-value";
 import type { ClientMedia } from "@/lib/cms/media";
 
 export interface MediaBrowseGridProps {
@@ -33,6 +34,7 @@ export function MediaBrowseGrid({ onSelect, renderItemActions, refreshKey }: Med
   const [hasNext, setHasNext] = useState(false);
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const debouncedQuery = useDebouncedValue(query, 300);
 
   function load(q: string, nextCursor?: string, append = false) {
     startTransition(async () => {
@@ -45,11 +47,10 @@ export function MediaBrowseGrid({ onSelect, renderItemActions, refreshKey }: Med
   }
 
   useEffect(() => {
-    load(query);
-    // Only re-runs on mount and when the caller bumps `refreshKey` — an
-    // in-progress search query shouldn't reset itself.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [refreshKey]);
+    load(debouncedQuery);
+    // Re-runs on every debounced keystroke and when the caller bumps
+    // `refreshKey` (e.g. right after an upload).
+  }, [debouncedQuery, refreshKey]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -57,13 +58,6 @@ export function MediaBrowseGrid({ onSelect, renderItemActions, refreshKey }: Med
         placeholder="Search by alt text, caption, or filename"
         value={query}
         onChange={(event) => setQuery(event.target.value)}
-        onKeyDown={(event) => {
-          if (event.key === "Enter") {
-            event.preventDefault();
-            load(query);
-          }
-        }}
-        onBlur={() => load(query)}
       />
 
       {hasLoadedOnce && items.length === 0 ? (

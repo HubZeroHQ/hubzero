@@ -7,6 +7,7 @@ import { connectToDatabase } from "@/lib/db";
 import { serializeDocument } from "@/lib/cms/serialize";
 import { getStorageAdapter } from "@/lib/cms/storage";
 import { Media, type MediaDocument } from "@/models/media";
+import { escapeRegExp } from "@/lib/utils";
 import type { Resource } from "@/types/cms";
 
 /**
@@ -195,7 +196,7 @@ export async function listMedia(params: { q?: string; cursor?: string }): Promis
 
   const filter: Record<string, unknown> = { deletedAt: null };
   if (params.q) {
-    const escaped = params.q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const escaped = escapeRegExp(params.q);
     filter.$or = [
       { alt: { $regex: escaped, $options: "i" } },
       { caption: { $regex: escaped, $options: "i" } },

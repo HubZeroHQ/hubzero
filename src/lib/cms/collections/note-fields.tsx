@@ -20,7 +20,7 @@ export const noteSchema = z.object({
   title: z.string().trim().min(1, "Required.").max(200),
   summary: z.string().trim().min(1, "Required.").max(400),
   body: z.string().trim().min(1, "Required.").max(50000),
-  authorId: objectIdField("Enter the author's TeamMember ID."),
+  authorId: objectIdField("Select the author."),
   category: z.string().trim().min(1, "Required.").max(80),
   tags: z.array(z.string().trim().min(1).max(40)).max(20).default([]),
   coverImage: optionalObjectIdField("Choose a cover image from the media library."),
