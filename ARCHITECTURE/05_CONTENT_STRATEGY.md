@@ -1,6 +1,6 @@
 # 05 — Content Strategy
 
-> **Status: Founder Approved — 2026-07-01; amended 2026-07-04.** See `00_FOUNDER_APPROVAL.md` §2 (Labs/R&D), §3 (blog reversed to MVP-scope), §4 (pricing/FAQ guidance), §8 (four-pillar company structure) for revisions incorporated below.
+> **Status: Founder Approved — 2026-07-01; amended 2026-07-04.** See `00_FOUNDER_APPROVAL.md` §2 (Labs/R&D), §3 (Notes reversed to MVP-scope), §4 (pricing/FAQ guidance), §8 (four-pillar company structure) for revisions incorporated below.
 
 > Decision convention: see `01_PRODUCT_VISION.md` §0. **[Amended 2026-07-04]** Every rule in this document — the zero-fabrication policy, the competitor-sentence test, the "quality bar over quantity" instinct — applies identically to the two new content types added below (Builds, Blueprints) as it already does to Case Studies and Labs/R&D. There is no reduced-rigor tier for content just because no client is watching it get published (`17_COMPANY_STRUCTURE.md` §7).
 
@@ -15,7 +15,7 @@
 | Service descriptions | Explain the practice areas | Yes (rarely changes) | 2 pages (software, hardware) + overview; schema extensible to future verticals (`00_FOUNDER_APPROVAL.md` §6) |
 | Team profiles | Credibility of named people | Yes | Core members only at launch (**[Consensus]**, see `01` §9); leadership presented as Founder + co-founders (`00_FOUNDER_APPROVAL.md` §2) |
 | Testimonials | Secondary social proof | Yes | Real only — zero placeholder entries (see §3) |
-| Blog posts | Thought leadership / SEO | Yes | **[Amended 2026-07-01, supersedes the "maybe someday" sequencing below — see §5 and `00_FOUNDER_APPROVAL.md` §3]** Full platform ships in MVP; launch content is 3-5 cornerstone articles |
+| Notes | Engineering thought leadership / SEO | Yes | **[Amended 2026-07-01, supersedes the "maybe someday" sequencing below — see §5 and `00_FOUNDER_APPROVAL.md` §3]** Full platform ships in MVP; launch content is 3-5 cornerstone articles |
 | Company/about copy | Trust, positioning | Yes (low-frequency edits) | Single page |
 | FAQs | Reduce pre-contact friction, including pricing self-qualification (`00_FOUNDER_APPROVAL.md` §4) | Yes | CSV Q17: 3 of 4 respondents flagged FAQs as editable content — build the content type even if launch content is thin |
 | Career listings | Recruiting | Yes | As needed |
@@ -72,9 +72,9 @@ Every piece of public-facing copy is checked against:
 4. Is this "community/family" language in a client-facing context? If yes, move it to Careers or cut it (`01` §9).
 5. Sentence length: short, declarative, one idea per sentence (per `02` §5 research synthesis).
 
-## 5. Blog content priorities and launch sequencing
+## 5. Notes content priorities and launch sequencing
 
-**[Amended 2026-07-01, see `00_FOUNDER_APPROVAL.md` §3]** The original CSV-consensus reading ("maybe in the future," not a launch priority) is superseded: the full blog platform — public blog, CMS collection, unified rendering pipeline, categories, tags, SEO, search, RSS, author profiles — ships **in the MVP**, not deferred. Launch content is **3-5 high-quality cornerstone articles** demonstrating real expertise; the blog is not required to prove itself as a marketing channel on day one, but the underlying architecture must be production-ready immediately so it can become a major content/SEO asset as the company grows.
+**[Amended 2026-07-01, see `00_FOUNDER_APPROVAL.md` §3]** The original CSV-consensus reading ("maybe in the future," not a launch priority) is superseded: the full Notes platform — public Notes section, CMS collection, unified rendering pipeline, categories, tags, SEO, search, RSS, author profiles — ships **in the MVP**, not deferred. Launch content is **3-5 high-quality cornerstone articles** demonstrating real expertise; Notes is not required to prove itself as a marketing channel on day one, but the underlying architecture must be production-ready immediately so it can become a major content/SEO asset as the company grows.
 
 **[Founder decision]** CSV Q15: Rifaque selected Technical Tutorials, Case Studies, Company Updates, Web Development, AI & Automation (5 categories). Other respondents selected overlapping but broader or narrower sets (Iyad selected ~10 categories; Sultan and Salsabeel selected different 5-6 item mixes with partial overlap). No exact consensus exists on the full list, and per `01` §0 the founder's list is used as the v1 taxonomy since it is also the set with the most cross-respondent overlap. The CMS category taxonomy is extensible (admin-managed, not hardcoded) so additional categories (e.g. Salsabeel's embedded/electronics-specific content) can be added without an engineering change — see `09_CMS_ARCHITECTURE.md`.
 

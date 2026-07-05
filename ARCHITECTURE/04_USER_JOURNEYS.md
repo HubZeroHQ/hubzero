@@ -57,7 +57,7 @@
 
 ## 6. Internal team member (CMS user)
 
-**Profile:** Founder, core team, content/marketing team member who needs to publish a case study, blog post, or update team/testimonial content without a developer rebuilding and redeploying the site — directly replacing the legacy "write markdown in Monaco, download, email Rifaque" workflow (`ARCHIVED_PROJECT_ANALYSIS.md` §3.9, §9.6).
+**Profile:** Founder, core team, content/marketing team member who needs to publish a case study, note, or update team/testimonial content without a developer rebuilding and redeploying the site — directly replacing the legacy "write markdown in Monaco, download, email Rifaque" workflow (`ARCHIVED_PROJECT_ANALYSIS.md` §3.9, §9.6).
 
 **Journey:** `/studio` login → role-appropriate dashboard → create/edit content → submit for review (if their role requires approval) or publish directly (if not) → content goes live without a deploy.
 

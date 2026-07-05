@@ -90,7 +90,7 @@
                                     // 17_COMPANY_STRUCTURE.md §3 is a real, queryable relationship
   status: 'draft' | 'published' }
 
-// BlogPost
+// Note
 { _id, slug, title, summary, body: RichText, authorId: ObjectId,
   category, tags: string[], coverImage?, readingTimeMinutes: number, // computed on save, not author-entered
   status: 'draft' | 'review' | 'published', publishedAt?, version: number }
@@ -115,7 +115,7 @@
 // department (design/dev/marketing/etc.) is metadata on TeamMember, not a permission source here.
 { _id, email, name, role: 'head_admin' | 'admin' | 'teammate',
   dynamicPermissions: string[],   // e.g. ['team_lead'] — assignable/removable, additive to role,
-                                    // extensible without a schema migration (future: blog_reviewer,
+                                    // extensible without a schema migration (future: notes_reviewer,
                                     // recruiter, hr, finance, sales, client_manager, moderator, etc.)
   passwordHash | authProviderId, linkedTeamMemberId?: ObjectId }
 
@@ -126,9 +126,9 @@
 ## 2. Relationships and integrity
 
 MongoDB does not enforce foreign keys — per the honest tradeoff note in `08_TECHNICAL_ARCHITECTURE.md` §6, integrity is enforced at the application/ODM layer:
-- `CaseStudy.relatedTeamMembers`, `BlogPost.authorId`, `Testimonial.linkedCaseStudy` are validated to reference existing documents on write.
+- `CaseStudy.relatedTeamMembers`, `Note.authorId`, `Testimonial.linkedCaseStudy` are validated to reference existing documents on write.
 - **[New, 2026-07-04]** `LabsProject.graduatedToBuildId` and `Build.graduatedFromLabsId` are validated as a consistent pair on write — setting one without the other, or pointing either at a non-existent document, is rejected. This keeps the Labs → Builds lifecycle (`17_COMPANY_STRUCTURE.md` §3) a real, bidirectionally-correct relationship rather than a link that can silently drift.
-- Deleting a `TeamMember` who is referenced as a `BlogPost.authorId` is blocked or requires explicit reassignment — never a silent dangling reference (this is exactly the kind of bug class the legacy site's two-contradictory-team-files problem foreshadows, `ARCHIVED_PROJECT_ANALYSIS.md` §10).
+- Deleting a `TeamMember` who is referenced as a `Note.authorId` is blocked or requires explicit reassignment — never a silent dangling reference (this is exactly the kind of bug class the legacy site's two-contradictory-team-files problem foreshadows, `ARCHIVED_PROJECT_ANALYSIS.md` §10).
 
 ## 3. Why username/profile data finally gets a single source of truth
 
@@ -140,9 +140,9 @@ Every content collection that participates in the CMS workflow (`09_CMS_ARCHITEC
 
 ## 5. Indexing
 
-- `slug` fields (CaseStudy, BlogPost, Service, **Build, LabsProject, Blueprint** — added 2026-07-04): unique index, used for route resolution.
+- `slug` fields (CaseStudy, Note, Service, **Build, LabsProject, Blueprint** — added 2026-07-04): unique index, used for route resolution.
 - `blueprintId` (Blueprint): unique index, separate from `slug` — the stable ID exposed in metadata (§1 above).
-- `status` + `publishedAt`: compound index on CaseStudy, BlogPost, **Build, and Blueprint** for each pillar's "published, newest first" index-page query.
+- `status` + `publishedAt`: compound index on CaseStudy, Note, **Build, and Blueprint** for each pillar's "published, newest first" index-page query.
 - `username` (TeamMember): unique index.
 - `Lead.status` + `createdAt`: index for the admin panel's lead inbox view.
 

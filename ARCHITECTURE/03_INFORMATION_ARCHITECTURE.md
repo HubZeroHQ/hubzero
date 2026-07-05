@@ -32,8 +32,8 @@
 /team                                Core team (leadership) — NOT a full roster
   /team/[username]                  Individual profile (optional, secondary; opt-in for non-core members too)
 /contact                            Start-a-project intake
-/blog                                Index (CMS-backed; content optional at launch)
-  /blog/[slug]                      Post
+/notes                               Index (CMS-backed; content optional at launch)
+  /notes/[slug]                     Note
 /careers                             Recruiting / "join us" (separate from client-facing brand voice)
 /privacy                             Privacy policy
 /terms                               Terms of use (new — legacy site only had privacy)
@@ -51,7 +51,7 @@ Removed relative to legacy: `/web-development`, `/ui-ux`, `/branding`, `/seo` as
 [HubZero logo]    Services   Work   Builds   Labs   Blueprints   About        [Start a project →]
 ```
 
-**[Amended 2026-07-04, see `00_FOUNDER_APPROVAL.md` §8, `17_COMPANY_STRUCTURE.md` §5]** Six items plus one CTA — raised from the original five-item ceiling to accommodate the four-pillar company structure. The *principle* behind the original ceiling is unchanged: a short, stable primary nav that reflects real, distinct visitor intents rather than decorative breadth (`02_BRAND_STRATEGY.md` §5, principle 5/6). What changed is the number of genuinely distinct intents a visitor now has — evaluating HubZero's own products (Builds) and reusable foundations (Blueprints) alongside its client work (Work) and open research (Labs) are four different questions, not one. Blog moves to footer-only under this revision (§3 below) to keep the top-level count at six rather than seven; it can be promoted back to primary nav in a future amendment if it earns the traffic/content volume to justify it.
+**[Amended 2026-07-04, see `00_FOUNDER_APPROVAL.md` §8, `17_COMPANY_STRUCTURE.md` §5]** Six items plus one CTA — raised from the original five-item ceiling to accommodate the four-pillar company structure. The *principle* behind the original ceiling is unchanged: a short, stable primary nav that reflects real, distinct visitor intents rather than decorative breadth (`02_BRAND_STRATEGY.md` §5, principle 5/6). What changed is the number of genuinely distinct intents a visitor now has — evaluating HubZero's own products (Builds) and reusable foundations (Blueprints) alongside its client work (Work) and open research (Labs) are four different questions, not one. Notes moves to footer-only under this revision (§3 below) to keep the top-level count at six rather than seven; it can be promoted back to primary nav in a future amendment if it earns the traffic/content volume to justify it.
 
 **Rollout is content-gated, not simultaneous.** A pillar enters primary nav only once it has at least one real, published entry — Work is already there; Builds, Labs, and Blueprints are shown in the diagram above as the target state, but each should be added to the live nav config only as it ships real content, exactly as Careers and Team already work today. Until a pillar ships, it lives in the footer (§3), never as a nav item pointing at an empty index.
 
@@ -68,7 +68,7 @@ HubZero                  Company              Services              Connect
 [one-line positioning]   About                Software Engineering  Email
                           Team                 Hardware & Embedded   LinkedIn
                           Careers              Work / Case Studies   GitHub (org)
-                          Blog                 Builds
+                          Notes                Builds
                           Contact              Labs
                                                 Blueprints
 
@@ -102,4 +102,4 @@ Per `01_PRODUCT_VISION.md` §1 (Step 5 instruction: "The public website should p
 ## 6. Depth and breadth rules
 
 - No page requires more than **2 clicks** from the homepage for any primary-audience destination (Services, Work, Contact, About). **[Amended 2026-07-04]** This guarantee extends to Builds, Labs, and Blueprints once each is promoted to primary nav (§2) — until then, they remain reachable within 2 clicks via the footer.
-- Case studies, Builds, Labs projects, Blueprints, and blog posts are the content types with indefinite depth (`/work/[slug]`, `/builds/[slug]`, `/labs/[slug]`, `/blueprints/[slug]`, `/blog/[slug]`) — by design. **[Amended 2026-07-01, see `00_FOUNDER_APPROVAL.md` §6]** The founder's original 100+ project estimate (`01_PRODUCT_VISION.md` §3) is no longer treated as a firm design target — the requirement now is simply that these routes and their CMS collections degrade and scale gracefully whether real volume lands at 10 or 200, without a fixed number driving the architecture. This scaling requirement applies identically to the three new pillars.
+- Case studies, Builds, Labs projects, Blueprints, and notes are the content types with indefinite depth (`/work/[slug]`, `/builds/[slug]`, `/labs/[slug]`, `/blueprints/[slug]`, `/notes/[slug]`) — by design. **[Amended 2026-07-01, see `00_FOUNDER_APPROVAL.md` §6]** The founder's original 100+ project estimate (`01_PRODUCT_VISION.md` §3) is no longer treated as a firm design target — the requirement now is simply that these routes and their CMS collections degrade and scale gracefully whether real volume lands at 10 or 200, without a fixed number driving the architecture. This scaling requirement applies identically to the three new pillars.
