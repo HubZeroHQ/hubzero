@@ -45,8 +45,12 @@ export const metadata: Metadata = {
 export default function SoftwareEngineeringPage() {
   return (
     <div className="pb-28 sm:pb-32 lg:pb-40">
-      {/* Opening — the headline previews the reading order itself */}
-      <div className="pt-20 pb-16 sm:pt-24 lg:pt-28">
+      {/* Opening — the headline previews the reading order itself. Bottom
+          padding scales with the breakpoint the same way top does (matching
+          /services' opening beat) — previously fixed at pb-16 regardless of
+          viewport, which read as cramped at desktop widths where the
+          headline itself is largest. */}
+      <div className="pt-20 pb-20 sm:pt-24 sm:pb-24 lg:pt-28 lg:pb-28">
         <Container>
           <Reveal>
             <p className="text-caption text-text-muted font-mono tracking-wide uppercase">
@@ -64,9 +68,13 @@ export default function SoftwareEngineeringPage() {
         </Container>
       </div>
 
-      {/* The stack — three layers, increasing technical depth, not three equal bullets */}
+      {/* The stack — three layers, increasing technical depth, not three equal bullets.
+          Gap scales past sm (unlike most rhythm spacing here) because the copy's own
+          claim is that these are three distinct depth levels, not one list — at desktop
+          width the previous 80px gap read as one continuous paragraph flow instead of
+          three separate movements. */}
       <Container>
-        <div className="max-w-[var(--content-prose)] space-y-16 sm:space-y-20">
+        <div className="max-w-[var(--content-prose)] space-y-16 sm:space-y-20 lg:space-y-28">
           <Reveal>
             <p className="text-caption text-text-muted font-mono tracking-wide uppercase">
               Interface

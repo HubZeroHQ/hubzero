@@ -67,8 +67,11 @@ const stages = [
 export default function HardwareEngineeringPage() {
   return (
     <div className="pb-28 sm:pb-32 lg:pb-40">
-      {/* Opening */}
-      <div className="pt-20 pb-16 sm:pt-24 lg:pt-28">
+      {/* Opening. Bottom padding scales with the breakpoint the same way top
+          does (matching /services' opening beat) — previously fixed at
+          pb-16 regardless of viewport, which read as cramped going into
+          "The path a reading takes" at desktop widths. */}
+      <div className="pt-20 pb-20 sm:pt-24 sm:pb-24 lg:pt-28 lg:pb-28">
         <Container>
           <Reveal>
             <p className="text-caption text-text-muted font-mono tracking-wide uppercase">
