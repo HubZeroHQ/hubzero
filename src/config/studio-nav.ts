@@ -10,6 +10,7 @@ import {
   NotebookPen,
   Package,
   Quote,
+  Settings as SettingsIcon,
   UserPlus,
   Users,
 } from "lucide-react";
@@ -64,6 +65,10 @@ export const studioNavItems: StudioNavItem[] = [
   // on `media` (`permissions.ts`) — both upload/browse files for whatever
   // content they're authoring.
   { label: "Media", href: "/studio/media", icon: ImageIcon },
+  // Head-Admin-only: `permissions.ts` grants `siteSettings` access to no
+  // other role (09_CMS_ARCHITECTURE §4 — "Admin explicitly cannot manage
+  // users, roles, permissions, or site settings").
+  { label: "Settings", href: "/studio/settings", icon: SettingsIcon, minimumRole: "head_admin" },
   // No `minimumRole`: the review queue itself filters to collections the
   // signed-in user holds a `view` grant on (`app/studio/(protected)/review/page.tsx`),
   // so a Teammate sees an honest empty state today, not a denied screen —
