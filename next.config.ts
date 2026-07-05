@@ -36,6 +36,21 @@ const nextConfig: NextConfig = {
   // package entirely, matching the standard fix for this class of
   // native-binary-package interop bug.
   serverExternalPackages: ["sharp"],
+  // `output: "standalone"`'s file tracer (`@vercel/nft`) walks `require`/
+  // `import` graphs — it correctly finds and copies `sharp`'s native `.node`
+  // addon (referenced via `require`), but not the shared libraries that
+  // addon `dlopen`s at runtime (`@img/sharp-win32-x64`'s bundled
+  // `libvips-*.dll` on Windows; `@img/sharp-libvips-<platform>`'s `.so*`
+  // files elsewhere) — nothing in JS ever references those files by path,
+  // so the tracer has no reason to see them. Without this, the standalone
+  // bundle's `sharp-*.node` is present but fails to load
+  // (`ERR_DLOPEN_FAILED: The specified module could not be found`,
+  // confirmed against `.next/standalone` on Windows). This is the
+  // documented escape hatch for exactly this class of tracing gap:
+  // https://nextjs.org/docs/app/api-reference/config/next-config-js/output#automatically-copying-traced-files
+  outputFileTracingIncludes: {
+    "/**": ["./node_modules/@img/sharp-*/lib/**", "./node_modules/@img/sharp-libvips-*/lib/**"],
+  },
   async headers() {
     return [
       {
