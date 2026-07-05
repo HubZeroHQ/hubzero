@@ -79,8 +79,6 @@ next-prompt.md
 
 base-prompt.md
 
-scripts/
-
 # Local media storage adapter's on-disk files (lib/cms/storage/local-adapter.ts) —
 # never committed, same reasoning as any other local dev data store.
 /storage/
