@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { Alert } from "@/components/ui/alert";
@@ -12,8 +12,57 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { useCmsTable } from "@/hooks/use-cms-table";
+import { useDebouncedValue } from "@/lib/use-debounced-value";
 import { cn } from "@/lib/utils";
 import type { BulkActionResult, FilterConfig, TableColumn } from "@/types/cms";
+
+/**
+ * A search/text-filter input that commits to the URL (via `onCommit`) 300ms
+ * after typing stops, instead of only on blur — one instance per text
+ * control (the search box, each `type: "text"` filter), each managing its
+ * own in-progress keystrokes independently. Syncs back from `value` so
+ * "Clear filters" or browser back/forward still visibly resets the input.
+ */
+function DebouncedTextInput({
+  label,
+  value,
+  onCommit,
+  className,
+}: {
+  label: string;
+  value: string | undefined;
+  onCommit: (value: string | undefined) => void;
+  className?: string;
+}) {
+  const [draft, setDraft] = useState(value ?? "");
+  // Tracks the last external `value` seen so an external change (e.g. "Clear
+  // filters", browser back/forward) can reset `draft` during render — the
+  // React-docs-recommended alternative to syncing props into state inside an
+  // effect, which would cascade an extra render for no benefit here.
+  const [syncedValue, setSyncedValue] = useState(value);
+  if (value !== syncedValue) {
+    setSyncedValue(value);
+    setDraft(value ?? "");
+  }
+  const debounced = useDebouncedValue(draft, 300);
+
+  useEffect(() => {
+    if (debounced !== (value ?? "")) onCommit(debounced || undefined);
+    // Only reacts to the debounced draft settling, not to every keystroke or
+    // to `value`/`onCommit` (`value`'s own sync is the effect above).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debounced]);
+
+  return (
+    <Input
+      label={label}
+      placeholder={label === "Search" ? "Search…" : undefined}
+      value={draft}
+      onChange={(event) => setDraft(event.target.value)}
+      className={className}
+    />
+  );
+}
 
 export interface DataTableProps<T extends { _id: string }> {
   columns: TableColumn<T>[];
@@ -110,11 +159,10 @@ export function DataTable<T extends { _id: string }>({
       {(filters.length > 0 || searchable) && (
         <div className="flex flex-wrap items-end gap-3">
           {searchable && (
-            <Input
+            <DebouncedTextInput
               label="Search"
-              placeholder="Search…"
-              defaultValue={state.q}
-              onBlur={(event) => setParams({ q: event.target.value || undefined })}
+              value={state.q}
+              onCommit={(value) => setParams({ q: value })}
               className="max-w-xs"
             />
           )}
@@ -137,11 +185,11 @@ export function DataTable<T extends { _id: string }>({
                 className="min-w-[10rem]"
               />
             ) : filter.type === "text" ? (
-              <Input
+              <DebouncedTextInput
                 key={filter.name}
                 label={filter.label}
-                defaultValue={state.filters?.[filter.name]}
-                onBlur={(event) => setParams({ [filter.name]: event.target.value || undefined })}
+                value={state.filters?.[filter.name]}
+                onCommit={(value) => setParams({ [filter.name]: value })}
               />
             ) : null,
           )}

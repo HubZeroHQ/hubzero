@@ -63,7 +63,7 @@ export const teamMemberSchema = z.object({
   profileVisible: z.boolean().default(false),
   experience: jsonArray(experienceItemSchema),
   education: jsonArray(educationItemSchema),
-  linkedUserId: objectIdField("Enter the linked User's ID."),
+  linkedUserId: objectIdField("Select the linked user account."),
 });
 
 export type TeamMemberInput = z.infer<typeof teamMemberSchema>;

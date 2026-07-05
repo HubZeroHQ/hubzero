@@ -78,7 +78,7 @@ export function MediaPickerList({
         {value.map((id) => (
           <div key={id} className="relative">
             <MediaThumbnail
-              media={isPending && !mediaById[id] ? undefined : mediaById[id]}
+              media={isPending && !mediaById[id] ? undefined : (mediaById[id] ?? null)}
               className="h-20 w-20"
             />
             <button

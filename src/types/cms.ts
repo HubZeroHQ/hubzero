@@ -81,12 +81,19 @@ interface BaseFieldConfig<TInput> {
  * arrays/objects with no flat-field equivalent, the same wall `CaseStudy`'s
  * `quote` hit and was deferred past rather than solved (`models/case-study.ts`).
  * Rather than build a full nested-repeater form builder for a shape only one
- * field family needs so far, this is deliberately the same minimal escape
- * hatch already established for `reference` ("renders as a plain ID input
- * for now... a searchable picker lands in a later phase") — a raw-JSON
- * textarea, validated by the collection's own Zod schema on submit. A future
- * collection with the same "structured, variable-shape data" need reuses
- * this instead of prompting a fourth new field type.
+ * field family needs so far, this is a raw-JSON textarea, validated by the
+ * collection's own Zod schema on submit — a deliberate, minimal escape
+ * hatch, not a placeholder awaiting a future upgrade. A future collection
+ * with the same "structured, variable-shape data" need reuses this instead
+ * of prompting a fourth new field type.
+ *
+ * `"reference"`/`"referenceArray"` render a real searchable picker
+ * (`<ReferencePicker>`/`<ReferencePickerList>`, `reference-picker.tsx`) — the
+ * field only declares `resource` (which collection to search) and
+ * `labelField` (which of that collection's own fields is the human-readable
+ * label); `lib/cms/reference-search.ts` resolves both generically through
+ * the `collection-config.ts` registry, so no collection-specific code exists
+ * anywhere in the picker.
  */
 export type FieldConfig<TInput = Record<string, unknown>> =
   | (BaseFieldConfig<TInput> & {
@@ -97,6 +104,7 @@ export type FieldConfig<TInput = Record<string, unknown>> =
   | (BaseFieldConfig<TInput> & { type: "multiselect"; options?: FieldOption[] })
   | (BaseFieldConfig<TInput> & { type: "imageArray" })
   | (BaseFieldConfig<TInput> & { type: "reference"; resource: Resource; labelField: string })
+  | (BaseFieldConfig<TInput> & { type: "referenceArray"; resource: Resource; labelField: string })
   | (BaseFieldConfig<TInput> & { type: "status" });
 
 /** One column in a collection's `DataTable` — `ARCHITECTURE/19_CMS_FOUNDATION.md` §7. */

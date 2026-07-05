@@ -4,6 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { ReferencePicker } from "@/components/admin/form/reference-picker";
+import { ReferencePickerList } from "@/components/admin/form/reference-picker-list";
 import { TagsInput } from "@/components/admin/form/tags-input";
 import { MediaPicker } from "@/components/admin/media/media-picker";
 import { MediaPickerList } from "@/components/admin/media/media-picker-list";
@@ -26,10 +28,10 @@ export interface CmsFieldProps<TInput extends Record<string, unknown>> {
  *
  * `image`/`imageArray` render the real `<MediaPicker>`/`<MediaPickerList>`
  * (Phase E, `ARCHITECTURE/19_CMS_FOUNDATION.md` §8) — the value they hold is
- * a `Media` `_id` (or array of them), never a raw URL string. `reference`
- * still renders as a plain ID input — a searchable picker needs a target
- * collection to search and hasn't landed yet; per §14's own note, that's an
- * additive upgrade later, not a schema or form-config change now.
+ * a `Media` `_id` (or array of them), never a raw URL string. `reference`/
+ * `referenceArray` render the equivalent `<ReferencePicker>`/
+ * `<ReferencePickerList>` — a searchable picker over the field's declared
+ * `resource`, never a raw ID input.
  */
 export function CmsField<TInput extends Record<string, unknown>>({
   field,
@@ -166,16 +168,30 @@ export function CmsField<TInput extends Record<string, unknown>>({
 
     case "reference":
       return (
-        <Input
+        <ReferencePicker
           name={field.name}
-          label={`${field.label} (${field.resource} ID)`}
-          hint={
-            field.description ??
-            "Paste the referenced record's ID — a searchable picker lands in a later phase."
-          }
+          label={field.label}
+          hint={field.description}
           required={field.required}
-          value={typeof value === "string" ? value : ""}
-          onChange={(event) => onChange(event.target.value)}
+          resource={field.resource}
+          labelField={field.labelField}
+          value={typeof value === "string" && value.length > 0 ? value : undefined}
+          onChange={onChange}
+          error={error}
+        />
+      );
+
+    case "referenceArray":
+      return (
+        <ReferencePickerList
+          name={field.name}
+          label={field.label}
+          hint={field.description}
+          required={field.required}
+          resource={field.resource}
+          labelField={field.labelField}
+          value={Array.isArray(value) ? (value as string[]) : []}
+          onChange={onChange}
           error={error}
         />
       );

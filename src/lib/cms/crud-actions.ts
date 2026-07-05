@@ -7,6 +7,7 @@ import { connectToDatabase } from "@/lib/db";
 import { requirePermission } from "@/lib/cms/permissions";
 import { serializeDocument } from "@/lib/cms/serialize";
 import { getVersionEntry, omitManagedFields, snapshotVersion } from "@/lib/cms/version-history";
+import { escapeRegExp } from "@/lib/utils";
 import type {
   BulkActionResult,
   ClientDocument,
@@ -36,10 +37,6 @@ interface CrudDocument {
 type SimpleResult = { status: "success" } | { status: "error"; message: string };
 
 const PAGE_SIZE = 20;
-
-function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
 
 function encodeCursor(doc: Record<string, unknown>, sortField: string, id: Types.ObjectId): string {
   return Buffer.from(JSON.stringify({ v: doc[sortField], id: id.toString() })).toString(
@@ -181,7 +178,11 @@ export function createCrudActions<T extends CrudDocument, TInput extends Record<
     for (const field of config.formFields) {
       if (field.type === "boolean") {
         raw[field.name] = formData.get(field.name) === "on";
-      } else if (field.type === "multiselect" || field.type === "imageArray") {
+      } else if (
+        field.type === "multiselect" ||
+        field.type === "imageArray" ||
+        field.type === "referenceArray"
+      ) {
         raw[field.name] = formData
           .getAll(field.name)
           .filter((value) => typeof value === "string" && value.length > 0);

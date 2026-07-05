@@ -1,10 +1,12 @@
 import { FileText, ImageOff } from "lucide-react";
 import Image from "next/image";
 
+import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
 import type { ClientMedia } from "@/lib/cms/media";
 
 export interface MediaThumbnailProps {
+  /** `undefined` renders a loading spinner (the id is set but the record hasn't resolved yet); `null` renders the "no image" state (nothing is set). */
   media: ClientMedia | null | undefined;
   className?: string;
 }
@@ -16,6 +18,19 @@ export interface MediaThumbnailProps {
  * the original) is decided once.
  */
 export function MediaThumbnail({ media, className }: MediaThumbnailProps) {
+  if (media === undefined) {
+    return (
+      <div
+        className={cn(
+          "bg-bg-light border-border-muted flex items-center justify-center rounded-md border",
+          className,
+        )}
+      >
+        <Spinner size="sm" label="Loading image…" />
+      </div>
+    );
+  }
+
   if (!media) {
     return (
       <div
@@ -45,7 +60,12 @@ export function MediaThumbnail({ media, className }: MediaThumbnailProps) {
   const smallestVariant = [...media.variants].sort((a, b) => a.width - b.width)[0];
 
   return (
-    <div className={cn("bg-bg-light border-border-muted relative overflow-hidden rounded-md border", className)}>
+    <div
+      className={cn(
+        "bg-bg-light border-border-muted relative overflow-hidden rounded-md border",
+        className,
+      )}
+    >
       <Image
         src={smallestVariant?.url ?? media.url}
         alt={media.alt}
