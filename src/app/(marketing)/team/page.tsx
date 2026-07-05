@@ -73,7 +73,7 @@ export default async function TeamIndexPage() {
                     <div className="bg-bg-light h-full w-full" aria-hidden="true" />
                   )}
                 </div>
-                <h3 className="text-h3 text-text mt-4 font-normal">{member.name}</h3>
+                <h2 className="text-h3 text-text mt-4 font-normal">{member.name}</h2>
                 <p className="text-caption text-text-muted mt-1 font-mono">{member.role}</p>
               </Link>
             ))}

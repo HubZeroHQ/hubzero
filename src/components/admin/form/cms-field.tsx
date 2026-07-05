@@ -147,6 +147,7 @@ export function CmsField<TInput extends Record<string, unknown>>({
           options={field.options}
           value={Array.isArray(value) ? (value as string[]) : []}
           onChange={onChange}
+          error={error}
         />
       );
 

@@ -34,7 +34,9 @@ export default async function NotesIndexPage() {
           .select("name")
           .lean<{ _id: unknown; name: string }[]>()
       : [];
-  const authorNames = Object.fromEntries(authors.map((author) => [String(author._id), author.name]));
+  const authorNames = Object.fromEntries(
+    authors.map((author) => [String(author._id), author.name]),
+  );
 
   const items = await Promise.all(
     notes.map(async (doc) => ({
@@ -94,7 +96,7 @@ export default async function NotesIndexPage() {
                     {note.category} <span aria-hidden="true">·</span> {note.readingTimeMinutes} min
                     read
                   </p>
-                  <h3 className="text-h2 text-text mt-3 font-normal">{note.title}</h3>
+                  <h2 className="text-h2 text-text mt-3 font-normal">{note.title}</h2>
                   <p className="text-body text-text-muted mt-3 max-w-lg">{note.summary}</p>
                   <p className="text-caption text-text-muted mt-4">{note.authorName}</p>
                 </div>

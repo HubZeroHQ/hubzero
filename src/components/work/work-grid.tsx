@@ -97,7 +97,7 @@ export function WorkGrid({ items }: { items: WorkGridItem[] }) {
               <p className="text-caption text-text-muted font-mono tracking-wide uppercase">
                 {practiceAreaLabels[item.practiceArea] ?? item.practiceArea}
               </p>
-              <h3 className="text-h2 text-text mt-3 font-normal">{item.client}</h3>
+              <h2 className="text-h2 text-text mt-3 font-normal">{item.client}</h2>
               <p className="text-body text-text-muted mt-3 max-w-md">{item.resultTeaser}</p>
               <span className="text-text mt-6 inline-flex items-center gap-1.5">
                 Read the case study

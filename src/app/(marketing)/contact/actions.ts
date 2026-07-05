@@ -2,6 +2,7 @@
 
 import { connectToDatabase } from "@/lib/db";
 import { leadSchema, type LeadFieldErrors, type SubmitLeadState } from "@/lib/lead-schema";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { Lead } from "@/models/lead";
 
 /**
@@ -11,9 +12,10 @@ import { Lead } from "@/models/lead";
  * webhook/callback involved here, so a Route Handler would be the wrong
  * primitive.
  *
- * Spam protection, scoped deliberately: this session's brief excludes "spam
- * protection beyond basic validation," which the honeypot field below
- * satisfies at zero infrastructure cost. `06_PAGE_SPECIFICATIONS.md`
+ * Spam protection: the honeypot field below catches naive scrapers at zero
+ * infrastructure cost, and a per-IP rate limit backs it up against a bot
+ * that skips the hidden field (a gap the security audit flagged — a
+ * honeypot alone doesn't bound submission *volume*). `06_PAGE_SPECIFICATIONS.md`
  * "Contact" calls for "real captcha or equivalent" — that's a genuine,
  * disclosed gap against that spec, not an oversight; see the implementation
  * report for why it's deferred rather than silently dropped.
@@ -29,6 +31,15 @@ export async function submitLead(
   // adapt to.
   if (formData.get("website")) {
     return { status: "success" };
+  }
+
+  const ip = await getClientIp();
+  const rateLimit = checkRateLimit(`contact:${ip}`, 5, 10 * 60 * 1000);
+  if (!rateLimit.allowed) {
+    return {
+      status: "error",
+      formError: "Too many submissions from this connection. Please try again in a few minutes.",
+    };
   }
 
   const parsed = leadSchema.safeParse({

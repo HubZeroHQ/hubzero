@@ -23,6 +23,27 @@ const ALLOWED_MIME_TYPES: Record<string, string> = {
   "application/pdf": "pdf",
 };
 
+/**
+ * Magic-byte signatures for every allowed type — a browser-supplied
+ * `mimeType` (`File.type`) is trivially spoofable, so `sharp(...).metadata()`
+ * incidentally validating jpeg/png/webp isn't a real content check for gif
+ * or pdf (both skip that pipeline, see `isProcessableImage` below). Checked
+ * explicitly for all five types rather than relying on that side effect.
+ */
+const FILE_SIGNATURES: Record<string, (buffer: Buffer) => boolean> = {
+  "image/jpeg": (buffer) => buffer.subarray(0, 3).equals(Buffer.from([0xff, 0xd8, 0xff])),
+  "image/png": (buffer) =>
+    buffer.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])),
+  "image/webp": (buffer) =>
+    buffer.subarray(0, 4).toString("ascii") === "RIFF" &&
+    buffer.subarray(8, 12).toString("ascii") === "WEBP",
+  "image/gif": (buffer) => {
+    const header = buffer.subarray(0, 6).toString("ascii");
+    return header === "GIF87a" || header === "GIF89a";
+  },
+  "application/pdf": (buffer) => buffer.subarray(0, 5).toString("ascii") === "%PDF-",
+};
+
 /** Resized WebP copies generated once, at upload time, so the request path never re-encodes an image (§8). Skipped for widths ≥ the original. */
 const VARIANT_WIDTHS = [400, 800, 1600];
 
@@ -96,6 +117,9 @@ export async function uploadMedia(input: UploadMediaInput): Promise<ClientMedia>
   }
   if (input.buffer.byteLength > MAX_UPLOAD_BYTES) {
     throw new MediaUploadError("Files must be 15MB or smaller.");
+  }
+  if (!FILE_SIGNATURES[input.mimeType]!(input.buffer)) {
+    throw new MediaUploadError("The file's contents don't match its declared type.");
   }
   if (!input.alt.trim()) {
     throw new MediaUploadError("Alt text is required.");
@@ -228,7 +252,9 @@ export async function getMediaByIds(ids: string[]): Promise<ClientMedia[]> {
   const validIds = ids.filter((id) => Types.ObjectId.isValid(id));
   if (validIds.length === 0) return [];
   await connectToDatabase();
-  const docs = await Media.find({ _id: { $in: validIds }, deletedAt: null }).lean<MediaDocument[]>();
+  const docs = await Media.find({ _id: { $in: validIds }, deletedAt: null }).lean<
+    MediaDocument[]
+  >();
   const byId = new Map(docs.map((doc) => [doc._id.toString(), doc]));
   // Preserve the caller's order (an `imageArray`'s own ordering matters) —
   // `$in` does not guarantee result order.
@@ -273,9 +299,7 @@ export async function getMediaUsage(mediaId: string): Promise<MediaUsage[]> {
 
 export class MediaInUseError extends Error {
   constructor(public readonly usage: MediaUsage[]) {
-    super(
-      `Still used in: ${usage.map((entry) => `${entry.label} (${entry.count})`).join(", ")}.`,
-    );
+    super(`Still used in: ${usage.map((entry) => `${entry.label} (${entry.count})`).join(", ")}.`);
     this.name = "MediaInUseError";
   }
 }

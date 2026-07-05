@@ -4,6 +4,7 @@ import { AuthError } from "next-auth";
 
 import { signIn } from "@/lib/cms/auth";
 import { loginSchema, type LoginFieldErrors, type LoginState } from "@/lib/cms/login-schema";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 /** Only ever redirect back into `/studio` — a bare `from` value from the URL is untrusted input. */
 function safeRedirectTarget(from: FormDataEntryValue | null): string {
@@ -12,6 +13,9 @@ function safeRedirectTarget(from: FormDataEntryValue | null): string {
   }
   return "/studio";
 }
+
+const TOO_MANY_ATTEMPTS_MESSAGE =
+  "Too many sign-in attempts. Please wait a few minutes and try again.";
 
 export async function loginAction(_prevState: LoginState, formData: FormData): Promise<LoginState> {
   const parsed = loginSchema.safeParse({
@@ -28,6 +32,21 @@ export async function loginAction(_prevState: LoginState, formData: FormData): P
       }
     }
     return { status: "error", fieldErrors };
+  }
+
+  // Two independent buckets: one per IP (caps how many *different* emails one
+  // origin can spray) and one per IP+email (caps repeated guesses against a
+  // single account) — closes the brute-force gap the security audit flagged
+  // without a heavier dependency (`ARCHITECTURE/19_CMS_FOUNDATION.md` §13).
+  const ip = await getClientIp();
+  const ipLimit = checkRateLimit(`login-ip:${ip}`, 20, 15 * 60 * 1000);
+  const accountLimit = checkRateLimit(
+    `login-account:${ip}:${parsed.data.email}`,
+    5,
+    15 * 60 * 1000,
+  );
+  if (!ipLimit.allowed || !accountLimit.allowed) {
+    return { status: "error", formError: TOO_MANY_ATTEMPTS_MESSAGE };
   }
 
   try {

@@ -30,7 +30,15 @@ export interface MediaPickerProps {
  * `rawFromFormData` reads it by `name`), the same contract `<TagsInput>`
  * already establishes for `multiselect`.
  */
-export function MediaPicker({ name, label, hint, error, required, value, onChange }: MediaPickerProps) {
+export function MediaPicker({
+  name,
+  label,
+  hint,
+  error,
+  required,
+  value,
+  onChange,
+}: MediaPickerProps) {
   const [media, setMedia] = useState<ClientMedia | null>(null);
   const [isPending, startTransition] = useTransition();
   const { fieldId, hintId, errorId, describedBy } = useFieldA11y({ hint, error });
@@ -51,20 +59,33 @@ export function MediaPicker({ name, label, hint, error, required, value, onChang
   // immediately instead of waiting on a state update inside the effect.
   const selected = value ? media : null;
 
+  // The hidden `<input>` below isn't focusable, so a `<Label htmlFor>`
+  // pointing at it is invisible to assistive tech — the real interactive
+  // control is the "Choose image" button, associated via `aria-labelledby`
+  // instead (a screen reader focusing it should hear the field's label, not
+  // just "button").
+  const labelId = `${fieldId}-label`;
+
   return (
     <div>
       {label && (
-        <Label htmlFor={fieldId} required={required}>
+        <Label id={labelId} required={required}>
           {label}
         </Label>
       )}
-      <input type="hidden" id={fieldId} name={name} value={value ?? ""} aria-describedby={describedBy} />
+      <input type="hidden" name={name} value={value ?? ""} />
       <div className="flex items-center gap-3">
         <MediaThumbnail media={isPending ? undefined : selected} className="h-20 w-20 shrink-0" />
         <div className="flex flex-col gap-2">
           <MediaPickerModal
             trigger={
-              <Button type="button" variant="secondary" size="sm">
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                aria-labelledby={label ? labelId : undefined}
+                aria-describedby={describedBy}
+              >
                 {selected ? "Change image" : "Choose image"}
               </Button>
             }
