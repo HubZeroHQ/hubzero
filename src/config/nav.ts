@@ -13,18 +13,28 @@ export interface NavItem {
 
 /**
  * Per `ARCHITECTURE/03_INFORMATION_ARCHITECTURE.md` §2, primary nav is
- * content-gated: an item only belongs here once it has a real, published
- * page behind it. Builds and Blueprints are real destinations in the target
- * IA but neither has shipped a page yet (content-readiness for both is
- * still an open question — `17_COMPANY_STRUCTURE.md` §9), so neither
- * belongs in this list yet. Labs shipped in CMS Foundation Phase H with a
- * real migrated project (`scripts/migrate-content.ts`), so it's added here.
+ * content-gated: a pillar enters primary nav only once it has at least one
+ * real, *published* entry behind it — "never as a nav item pointing at an
+ * empty index." Labs shipped in CMS Foundation Phase H with a real migrated
+ * project (`scripts/migrate-content.ts`), so it's added here. Builds remains
+ * unbuilt (its content readiness is still an open founder question —
+ * `17_COMPANY_STRUCTURE.md` §9). Blueprints now has a real, working public
+ * page (`/blueprints`, `/blueprints/[slug]`) — unblocked by any founder
+ * question — but zero published Blueprint documents exist yet (publishing
+ * one is gated on a real live demo, `blueprint.config.ts`'s `publishGuard`),
+ * so it stays out of primary nav until the first one is actually published,
+ * per this section's own rule.
  *
- * `footerNav` below is content-gated on the same "has the page shipped"
- * rule — Team, Careers, and Notes now have real pages (Phase H), so they're
- * added here even though some (Notes, Careers) currently render an honest
- * empty state pending real authored content; that's a content-population
- * gap, not a missing page.
+ * `footerNav` below is gated more loosely — on "has the page shipped," not
+ * on "has real content" — which is why Team, Careers, and Notes are already
+ * here even though some (Notes, Careers) currently render an honest empty
+ * state pending real authored content. Blueprints is deliberately *not*
+ * added to the footer yet either: `03_INFORMATION_ARCHITECTURE.md` §3
+ * specifically ties the footer's Blueprints entry to "as each pillar ships
+ * real content," a stricter bar than Team/Careers/Notes's "page exists"
+ * because a Blueprint's whole claim is "come try the live demo" — a footer
+ * link with nothing behind it yet would undercut that claim on its own
+ * page, not just leave a gap.
  */
 export const primaryNav: NavItem[] = [
   { label: "Services", href: "/services" },
