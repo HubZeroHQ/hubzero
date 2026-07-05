@@ -14,6 +14,10 @@ export interface ConfirmDialogProps {
   confirmLabel?: string;
   /** Destructive actions (delete) render the confirm button in the danger tone. */
   destructive?: boolean;
+  /** Extra content rendered between the description and the action buttons — e.g. Reset Password's new/confirm password fields. */
+  children?: ReactNode;
+  /** Disables the confirm button — e.g. while `children`'s inline form content isn't valid yet. */
+  confirmDisabled?: boolean;
   onConfirm: () => Promise<void> | void;
 }
 
@@ -30,6 +34,8 @@ export function ConfirmDialog({
   description,
   confirmLabel = "Confirm",
   destructive = false,
+  children,
+  confirmDisabled = false,
   onConfirm,
 }: ConfirmDialogProps) {
   const [open, setOpen] = useState(false);
@@ -57,6 +63,8 @@ export function ConfirmDialog({
             {description}
           </Dialog.Description>
 
+          {children}
+
           <div className="mt-6 flex justify-end gap-3">
             <Dialog.Close asChild>
               <Button variant="secondary" type="button">
@@ -68,6 +76,7 @@ export function ConfirmDialog({
               variant="primary"
               className={destructive ? "bg-danger text-bg hover:opacity-90" : undefined}
               isLoading={isPending}
+              disabled={confirmDisabled}
               onClick={handleConfirm}
             >
               {confirmLabel}
