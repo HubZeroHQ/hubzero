@@ -12,6 +12,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "create-admin": "tsx --env-file=.env.local scripts/create-admin.ts",
     "migrate-content": "tsx --env-file=.env.local scripts/migrate-content.ts",
     "prepare": "husky"
@@ -48,11 +50,14 @@
     "eslint-config-prettier": "^10.1.8",
     "husky": "^9.1.7",
     "lint-staged": "^17.0.8",
+    "mongodb-memory-server": "^11.2.0",
     "prettier": "^3.9.4",
     "prettier-plugin-tailwindcss": "^0.8.0",
     "tailwindcss": "^4.3.2",
     "tsx": "^4.23.0",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vite-tsconfig-paths": "^6.1.1",
+    "vitest": "^4.1.9"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
