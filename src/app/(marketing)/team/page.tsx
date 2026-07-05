@@ -7,12 +7,16 @@ import { Container } from "@/components/ui/container";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Link } from "@/components/ui/link";
 import { findPublished, resolveCoverImage } from "@/lib/cms/public-content";
+import { pageMetadata } from "@/lib/seo";
 import { TeamMember, type TeamMemberDocument } from "@/models/team-member";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Team",
   description: "The core people behind HubZero's engineering work.",
-};
+  path: "/team",
+});
+
+export const revalidate = 3600;
 
 /**
  * `ARCHITECTURE/06_PAGE_SPECIFICATIONS.md` Team index — core members only
@@ -73,7 +77,7 @@ export default async function TeamIndexPage() {
                     <div className="bg-bg-light h-full w-full" aria-hidden="true" />
                   )}
                 </div>
-                <h3 className="text-h3 text-text mt-4 font-normal">{member.name}</h3>
+                <h2 className="text-h3 text-text mt-4 font-normal">{member.name}</h2>
                 <p className="text-caption text-text-muted mt-1 font-mono">{member.role}</p>
               </Link>
             ))}

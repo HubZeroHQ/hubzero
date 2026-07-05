@@ -3,7 +3,7 @@
 import { useActionState, useState } from "react";
 
 import { loginAction } from "@/app/studio/login/actions";
-import { Alert, Button, Input } from "@/components/ui";
+import { Alert, Button, Input, PasswordInput } from "@/components/ui";
 import { initialLoginState } from "@/lib/cms/login-schema";
 
 interface StudioLoginFormProps {
@@ -40,9 +40,8 @@ export function StudioLoginForm({ from }: StudioLoginFormProps) {
         onChange={(e) => setEmail(e.target.value)}
         error={state.fieldErrors?.email}
       />
-      <Input
+      <PasswordInput
         name="password"
-        type="password"
         label="Password"
         autoComplete="current-password"
         required

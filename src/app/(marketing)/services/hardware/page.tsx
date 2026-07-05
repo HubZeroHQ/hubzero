@@ -3,15 +3,18 @@ import type { Metadata } from "next";
 
 import { CtaPanel } from "@/components/marketing/cta-panel";
 import { Reveal } from "@/components/marketing/reveal";
+import { JsonLd } from "@/components/seo/json-ld";
 import { Badge } from "@/components/ui/badge";
 import { Container } from "@/components/ui/container";
 import { Link } from "@/components/ui/link";
+import { siteConfig } from "@/config/site";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Hardware & Embedded Engineering",
-  description:
-    "What hardware and embedded engineering at HubZero actually involves — the path a physical signal takes from a sensor to a screen, and the engineering decision at every stage of it.",
-};
+const title = "Hardware & Embedded Engineering";
+const description =
+  "What hardware and embedded engineering at HubZero actually involves — the path a physical signal takes from a sensor to a screen, and the engineering decision at every stage of it.";
+
+export const metadata: Metadata = pageMetadata({ title, description, path: "/services/hardware" });
 
 const stages = [
   {
@@ -67,6 +70,15 @@ const stages = [
 export default function HardwareEngineeringPage() {
   return (
     <div className="pb-28 sm:pb-32 lg:pb-40">
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "Service",
+          name: title,
+          description,
+          provider: { "@type": "Organization", name: siteConfig.name, url: siteConfig.url },
+        }}
+      />
       {/* Opening. Bottom padding scales with the breakpoint the same way top
           does (matching /services' opening beat) — previously fixed at
           pb-16 regardless of viewport, which read as cramped going into

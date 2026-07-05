@@ -6,9 +6,11 @@ import { notFound } from "next/navigation";
 import "@/lib/cms/collections";
 
 import { RichText } from "@/components/marketing/rich-text";
+import { JsonLd } from "@/components/seo/json-ld";
 import { Container } from "@/components/ui/container";
 import { Link } from "@/components/ui/link";
-import { findOnePublished, resolveCoverImage } from "@/lib/cms/public-content";
+import { findOnePublished, findPublished, resolveCoverImage } from "@/lib/cms/public-content";
+import { absoluteUrl, pageMetadata } from "@/lib/seo";
 import { CaseStudy, type CaseStudyDocument } from "@/models/case-study";
 
 interface CaseStudyPageProps {
@@ -22,18 +24,35 @@ const practiceAreaLabels: Record<string, string> = {
   ai: "AI",
 };
 
+// Re-rendered in the background at most once an hour after a request hits a
+// stale copy — `publish()`'s `revalidatePath` (`crud-actions.ts`) already
+// invalidates this immediately on a real content change, so this is only
+// the fallback ceiling, not the primary invalidation path.
+export const revalidate = 3600;
+
 async function getCaseStudy(slug: string) {
   return findOnePublished<CaseStudyDocument>(CaseStudy, { slug });
+}
+
+/** Pre-renders every published case study at build time — the rest of ISR's `revalidate`/`revalidatePath` machinery only has a static page to invalidate once this exists. */
+export async function generateStaticParams() {
+  const caseStudies = await findPublished<CaseStudyDocument>(CaseStudy);
+  return caseStudies.map((doc) => ({ slug: doc.slug }));
 }
 
 export async function generateMetadata({ params }: CaseStudyPageProps): Promise<Metadata> {
   const { slug } = await params;
   const doc = await getCaseStudy(slug);
   if (!doc) return {};
-  return {
+  const description = doc.result.split("\n")[0]?.slice(0, 200) ?? "";
+  const cover = await resolveCoverImage(doc.coverImage ? String(doc.coverImage) : undefined);
+  return pageMetadata({
     title: doc.client,
-    description: doc.result.split("\n")[0]?.slice(0, 200),
-  };
+    description,
+    path: `/work/${doc.slug}`,
+    image: cover ? { url: cover.url, alt: cover.alt } : undefined,
+    type: "article",
+  });
 }
 
 /**
@@ -57,6 +76,16 @@ export default async function CaseStudyPage({ params }: CaseStudyPageProps) {
 
   return (
     <div className="pb-32">
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "CreativeWork",
+          name: doc.client,
+          description: doc.result.split("\n")[0]?.slice(0, 200),
+          about: practiceAreaLabels[doc.practiceArea] ?? doc.practiceArea,
+          ...(cover ? { image: absoluteUrl(cover.url) } : {}),
+        }}
+      />
       <div className="pt-20 pb-16 sm:pt-24 lg:pt-28">
         <Container>
           <p className="text-caption text-text-muted font-mono tracking-wide uppercase">
@@ -67,7 +96,8 @@ export default async function CaseStudyPage({ params }: CaseStudyPageProps) {
           </h1>
           <p className="text-caption text-text-muted mt-8 font-mono">
             {doc.client} <span aria-hidden="true">·</span> {doc.industry}{" "}
-            <span aria-hidden="true">·</span> {practiceAreaLabels[doc.practiceArea] ?? doc.practiceArea}
+            <span aria-hidden="true">·</span>{" "}
+            {practiceAreaLabels[doc.practiceArea] ?? doc.practiceArea}
           </p>
         </Container>
 

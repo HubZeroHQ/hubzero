@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 import { Sidebar } from "@/components/admin/layout/sidebar";
 import { Topbar } from "@/components/admin/layout/topbar";
+import { SkipNav } from "@/components/layout/skip-nav";
 import type { SessionUser } from "@/types/cms";
 
 export interface StudioShellProps {
@@ -24,10 +25,13 @@ export interface StudioShellProps {
 export function StudioShell({ user, children }: StudioShellProps) {
   return (
     <div className="flex min-h-dvh">
+      <SkipNav />
       <Sidebar role={user.role} className="hidden lg:flex" />
       <div className="flex min-w-0 flex-1 flex-col">
         <Topbar user={user} />
-        <main className="flex-1 px-6 py-8 md:px-8">{children}</main>
+        <main id="main-content" className="flex-1 px-6 py-8 md:px-8">
+          {children}
+        </main>
       </div>
     </div>
   );

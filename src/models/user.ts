@@ -35,6 +35,14 @@ const userSchema = new Schema(
     dynamicPermissions: { type: [String], default: [] },
     linkedTeamMemberId: { type: Schema.Types.ObjectId, ref: "TeamMember" },
     sessionVersion: { type: Number, required: true, default: 0 },
+    /**
+     * A disabled account is blocked at login (`auth.ts`'s `authorize()`) but
+     * its data/history is retained — the Users screen's "disable" action
+     * (`ARCHITECTURE/12_ADMIN_PANEL_SPECIFICATION.md` §2), distinct from a
+     * hard delete. Disabling also bumps `sessionVersion` so an already-active
+     * session is killed immediately, not just blocked on the next login.
+     */
+    disabled: { type: Boolean, required: true, default: false },
   },
   { timestamps: true },
 );

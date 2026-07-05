@@ -6,25 +6,41 @@ import { notFound } from "next/navigation";
 import "@/lib/cms/collections";
 
 import { RichText } from "@/components/marketing/rich-text";
+import { JsonLd } from "@/components/seo/json-ld";
 import { Badge } from "@/components/ui/badge";
 import { Container } from "@/components/ui/container";
 import { Link } from "@/components/ui/link";
-import { findOnePublished, resolveCoverImage } from "@/lib/cms/public-content";
+import { findOnePublished, findPublished, resolveCoverImage } from "@/lib/cms/public-content";
+import { absoluteUrl, pageMetadata } from "@/lib/seo";
 import { Blueprint, type BlueprintDocument } from "@/models/blueprint";
 
 interface BlueprintPageProps {
   params: Promise<{ slug: string }>;
 }
 
+export const revalidate = 3600;
+
 async function getBlueprint(slug: string) {
   return findOnePublished<BlueprintDocument>(Blueprint, { slug });
+}
+
+export async function generateStaticParams() {
+  const blueprints = await findPublished<BlueprintDocument>(Blueprint);
+  return blueprints.map((doc) => ({ slug: doc.slug }));
 }
 
 export async function generateMetadata({ params }: BlueprintPageProps): Promise<Metadata> {
   const { slug } = await params;
   const doc = await getBlueprint(slug);
   if (!doc) return {};
-  return { title: doc.name, description: doc.description.split("\n")[0]?.slice(0, 200) };
+  const description = doc.description.split("\n")[0]?.slice(0, 200) ?? "";
+  const cover = await resolveCoverImage(doc.coverImage ? String(doc.coverImage) : undefined);
+  return pageMetadata({
+    title: doc.name,
+    description,
+    path: `/blueprints/${doc.slug}`,
+    image: cover ? { url: cover.url, alt: cover.alt } : undefined,
+  });
 }
 
 /**
@@ -48,6 +64,17 @@ export default async function BlueprintPage({ params }: BlueprintPageProps) {
 
   return (
     <div className="pb-32">
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": ["Product", "CreativeWork"],
+          name: doc.name,
+          description: doc.description.split("\n")[0]?.slice(0, 200),
+          category: doc.category,
+          ...(demoUrl ? { url: demoUrl } : {}),
+          ...(cover ? { image: absoluteUrl(cover.url) } : {}),
+        }}
+      />
       <div className="pt-20 pb-16 sm:pt-24 lg:pt-28">
         <Container>
           <p className="text-caption text-text-muted font-mono tracking-wide uppercase">

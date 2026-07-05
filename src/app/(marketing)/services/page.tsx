@@ -5,12 +5,14 @@ import { CtaPanel } from "@/components/marketing/cta-panel";
 import { Reveal } from "@/components/marketing/reveal";
 import { Container } from "@/components/ui/container";
 import { Link } from "@/components/ui/link";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Services",
   description:
     "Software and the hardware it runs on, treated as one problem — HubZero's two engineering practices, and how they work together.",
-};
+  path: "/services",
+});
 
 /**
  * ARCHITECTURE/06_PAGE_SPECIFICATIONS.md "Services overview": a short
@@ -82,7 +84,7 @@ export default function ServicesPage() {
         <div className="mt-20 max-w-md sm:mt-24 sm:ml-[14%] lg:mt-28 lg:ml-[22%]">
           <Reveal delayMs={100}>
             <p className="text-caption text-text-muted font-mono">02 — Hardware &amp; Embedded</p>
-            <h3 className="text-h2 text-text mt-4 font-normal">Hardware &amp; Embedded</h3>
+            <h2 className="text-h2 text-text mt-4 font-normal">Hardware &amp; Embedded</h2>
             <p className="text-body text-text-muted mt-5">
               Embedded systems, IoT integration, and the hardware-software bridge most software-only
               studios structurally can&apos;t offer. The first dedicated hardware case study is

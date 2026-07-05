@@ -7,14 +7,17 @@ import { BlueprintsGrid, type BlueprintsGridItem } from "@/components/marketing/
 import { Container } from "@/components/ui/container";
 import { Link } from "@/components/ui/link";
 import { findPublished, resolveCoverImage } from "@/lib/cms/public-content";
+import { pageMetadata } from "@/lib/seo";
 import { firstLineTeaser } from "@/lib/utils";
 import { Blueprint, type BlueprintDocument } from "@/models/blueprint";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Blueprints",
-  description:
-    "Reusable, customizable, production-ready engineering foundations — not templates.",
-};
+  description: "Reusable, customizable, production-ready engineering foundations — not templates.",
+  path: "/blueprints",
+});
+
+export const revalidate = 3600;
 
 /**
  * `ARCHITECTURE/06_PAGE_SPECIFICATIONS.md`'s Blueprints index. Publishing a
@@ -42,9 +45,7 @@ export default async function BlueprintsIndexPage() {
   return (
     <div className="pt-16 pb-28 sm:pt-20 lg:pt-24">
       <Container>
-        <p className="text-caption text-text-muted font-mono tracking-wide uppercase">
-          Blueprints
-        </p>
+        <p className="text-caption text-text-muted font-mono tracking-wide uppercase">Blueprints</p>
         <h1 className="text-text mt-4 max-w-2xl text-[clamp(2rem,1rem+4vw,3.5rem)] leading-[1.1] font-normal tracking-tight">
           Real foundations, not templates.
         </h1>

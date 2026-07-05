@@ -4,14 +4,18 @@ import { notFound } from "next/navigation";
 
 import "@/lib/cms/collections";
 
+import { JsonLd } from "@/components/seo/json-ld";
 import { Container } from "@/components/ui/container";
 import { Link } from "@/components/ui/link";
-import { findOnePublished, resolveCoverImage } from "@/lib/cms/public-content";
+import { findOnePublished, findPublished, resolveCoverImage } from "@/lib/cms/public-content";
+import { absoluteUrl, pageMetadata } from "@/lib/seo";
 import { TeamMember, type TeamMemberDocument } from "@/models/team-member";
 
 interface TeamMemberPageProps {
   params: Promise<{ username: string }>;
 }
+
+export const revalidate = 3600;
 
 async function getTeamMember(username: string) {
   return findOnePublished<TeamMemberDocument>(TeamMember, {
@@ -20,11 +24,22 @@ async function getTeamMember(username: string) {
   });
 }
 
+export async function generateStaticParams() {
+  const teamMembers = await findPublished<TeamMemberDocument>(TeamMember, { profileVisible: true });
+  return teamMembers.map((doc) => ({ username: doc.username }));
+}
+
 export async function generateMetadata({ params }: TeamMemberPageProps): Promise<Metadata> {
   const { username } = await params;
   const doc = await getTeamMember(username);
   if (!doc) return {};
-  return { title: doc.name, description: doc.bio.slice(0, 200) };
+  const photo = await resolveCoverImage(doc.photo ? String(doc.photo) : undefined);
+  return pageMetadata({
+    title: doc.name,
+    description: doc.bio.slice(0, 200),
+    path: `/team/${doc.username}`,
+    image: photo ? { url: photo.url, alt: photo.alt } : undefined,
+  });
 }
 
 /**
@@ -40,9 +55,23 @@ export default async function TeamMemberPage({ params }: TeamMemberPageProps) {
   if (!doc) notFound();
 
   const photo = await resolveCoverImage(doc.photo ? String(doc.photo) : undefined);
+  const sameAs = [doc.socials.linkedin, doc.socials.github].filter((value): value is string =>
+    Boolean(value),
+  );
 
   return (
     <div className="pt-20 pb-32 sm:pt-24 lg:pt-28">
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "Person",
+          name: doc.name,
+          jobTitle: doc.role,
+          description: doc.bio.slice(0, 200),
+          ...(photo ? { image: absoluteUrl(photo.url) } : {}),
+          ...(sameAs.length > 0 ? { sameAs } : {}),
+        }}
+      />
       <Container>
         <div className="flex flex-col gap-8 sm:flex-row sm:items-start">
           <div className="size-24 shrink-0 overflow-hidden rounded-sm sm:size-32">
@@ -66,7 +95,7 @@ export default async function TeamMemberPage({ params }: TeamMemberPageProps) {
             {/* Plain labeled text links, matching the site's existing
                 Footer social-link convention — no brand-icon set is
                 available in this project's lucide-react version. */}
-            <div className="mt-4 flex items-center gap-4 text-caption">
+            <div className="text-caption mt-4 flex items-center gap-4">
               <a href={`mailto:${doc.socials.email}`} className="text-text-muted hover:text-text">
                 Email
               </a>

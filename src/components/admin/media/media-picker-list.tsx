@@ -62,10 +62,15 @@ export function MediaPickerList({
     onChange(value.filter((existing) => existing !== id));
   }
 
+  // Same reasoning as `<MediaPicker>`: `fieldId` names a plain, non-focusable
+  // `<div>` here, so the label associates with the "Add" button (the actual
+  // interactive control) via `aria-labelledby` instead of `htmlFor`.
+  const labelId = `${fieldId}-label`;
+
   return (
     <div>
       {label && (
-        <Label htmlFor={fieldId} required={required}>
+        <Label id={labelId} required={required}>
           {label}
         </Label>
       )}
@@ -88,7 +93,13 @@ export function MediaPickerList({
         ))}
         <MediaPickerModal
           trigger={
-            <Button type="button" variant="secondary" size="sm" className="h-20 w-20 rounded-md px-0">
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              className="h-20 w-20 rounded-md px-0"
+              aria-labelledby={label ? labelId : undefined}
+            >
               Add
             </Button>
           }

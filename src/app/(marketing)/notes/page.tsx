@@ -8,13 +8,21 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Link } from "@/components/ui/link";
 import { findPublished, resolveCoverImage } from "@/lib/cms/public-content";
 import { connectToDatabase } from "@/lib/db";
+import { pageMetadata } from "@/lib/seo";
 import { Note, type NoteDocument } from "@/models/note";
 import { TeamMember } from "@/models/team-member";
 
 export const metadata: Metadata = {
-  title: "Notes",
-  description: "Engineering write-ups, dev logs, and lessons learned from HubZero.",
+  ...pageMetadata({
+    title: "Notes",
+    description: "Engineering write-ups, dev logs, and lessons learned from HubZero.",
+    path: "/notes",
+  }),
+  // Feed discovery — points readers/aggregators at `rss.xml/route.ts`.
+  alternates: { canonical: "/notes", types: { "application/rss+xml": "/notes/rss.xml" } },
 };
+
+export const revalidate = 3600;
 
 /**
  * `ARCHITECTURE/06_PAGE_SPECIFICATIONS.md` Notes index — real, published
@@ -34,7 +42,9 @@ export default async function NotesIndexPage() {
           .select("name")
           .lean<{ _id: unknown; name: string }[]>()
       : [];
-  const authorNames = Object.fromEntries(authors.map((author) => [String(author._id), author.name]));
+  const authorNames = Object.fromEntries(
+    authors.map((author) => [String(author._id), author.name]),
+  );
 
   const items = await Promise.all(
     notes.map(async (doc) => ({
@@ -94,7 +104,7 @@ export default async function NotesIndexPage() {
                     {note.category} <span aria-hidden="true">·</span> {note.readingTimeMinutes} min
                     read
                   </p>
-                  <h3 className="text-h2 text-text mt-3 font-normal">{note.title}</h3>
+                  <h2 className="text-h2 text-text mt-3 font-normal">{note.title}</h2>
                   <p className="text-body text-text-muted mt-3 max-w-lg">{note.summary}</p>
                   <p className="text-caption text-text-muted mt-4">{note.authorName}</p>
                 </div>
