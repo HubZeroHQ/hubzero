@@ -7,12 +7,14 @@ import { Container } from "@/components/ui/container";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Link } from "@/components/ui/link";
 import { findPublished } from "@/lib/cms/public-content";
+import { pageMetadata } from "@/lib/seo";
 import { CareerListing, type CareerListingDocument } from "@/models/career-listing";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Careers",
   description: "Open roles at HubZero.",
-};
+  path: "/careers",
+});
 
 /**
  * `ARCHITECTURE/06_PAGE_SPECIFICATIONS.md` Careers — "open roles (CMS-managed,

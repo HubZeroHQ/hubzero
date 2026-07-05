@@ -7,14 +7,21 @@ import { Container } from "@/components/ui/container";
 import { Link } from "@/components/ui/link";
 import { WorkGrid, type WorkGridItem } from "@/components/work/work-grid";
 import { findPublished, resolveCoverImage } from "@/lib/cms/public-content";
+import { pageMetadata } from "@/lib/seo";
 import { firstLineTeaser } from "@/lib/utils";
 import { CaseStudy, type CaseStudyDocument } from "@/models/case-study";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Work",
   description:
     "Real, completed engineering work from HubZero — every project here was worth doing.",
-};
+  path: "/work",
+});
+
+// `publish()`/`remove()` (`crud-actions.ts`) already `revalidatePath("/work")`
+// on a real change — this is only the background-refresh ceiling for
+// whatever a stale cached copy might otherwise miss.
+export const revalidate = 3600;
 
 /**
  * ARCHITECTURE/06_PAGE_SPECIFICATIONS.md "Work — index": intro line

@@ -6,12 +6,14 @@ import { Reveal } from "@/components/marketing/reveal";
 import { Badge } from "@/components/ui/badge";
 import { Container } from "@/components/ui/container";
 import { Link } from "@/components/ui/link";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "About",
   description:
     "Why HubZero exists, how the team thinks, and the people who build both the software and the hardware behind it.",
-};
+  path: "/about",
+});
 
 const thinking = [
   {

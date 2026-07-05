@@ -6,10 +6,12 @@ import { notFound } from "next/navigation";
 import "@/lib/cms/collections";
 
 import { RichText } from "@/components/marketing/rich-text";
+import { JsonLd } from "@/components/seo/json-ld";
 import { Badge } from "@/components/ui/badge";
 import { Container } from "@/components/ui/container";
 import { Link } from "@/components/ui/link";
-import { findOnePublished, resolveCoverImage } from "@/lib/cms/public-content";
+import { findOnePublished, findPublished, resolveCoverImage } from "@/lib/cms/public-content";
+import { absoluteUrl, pageMetadata } from "@/lib/seo";
 import { LabsProject, type LabsProjectDocument } from "@/models/labs-project";
 
 interface LabsProjectPageProps {
@@ -22,15 +24,29 @@ const stageLabels: Record<string, string> = {
   graduated: "Graduated to Builds",
 };
 
+export const revalidate = 3600;
+
 async function getLabsProject(slug: string) {
   return findOnePublished<LabsProjectDocument>(LabsProject, { slug });
+}
+
+export async function generateStaticParams() {
+  const labsProjects = await findPublished<LabsProjectDocument>(LabsProject);
+  return labsProjects.map((doc) => ({ slug: doc.slug }));
 }
 
 export async function generateMetadata({ params }: LabsProjectPageProps): Promise<Metadata> {
   const { slug } = await params;
   const doc = await getLabsProject(slug);
   if (!doc) return {};
-  return { title: doc.title, description: doc.description.split("\n")[0]?.slice(0, 200) };
+  const description = doc.description.split("\n")[0]?.slice(0, 200) ?? "";
+  const cover = await resolveCoverImage(doc.coverImage ? String(doc.coverImage) : undefined);
+  return pageMetadata({
+    title: doc.title,
+    description,
+    path: `/labs/${doc.slug}`,
+    image: cover ? { url: cover.url, alt: cover.alt } : undefined,
+  });
 }
 
 export default async function LabsProjectPage({ params }: LabsProjectPageProps) {
@@ -42,6 +58,16 @@ export default async function LabsProjectPage({ params }: LabsProjectPageProps) 
 
   return (
     <div className="pb-32">
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "CreativeWork",
+          name: doc.title,
+          description: doc.description.split("\n")[0]?.slice(0, 200),
+          genre: "Research & Development",
+          ...(cover ? { image: absoluteUrl(cover.url) } : {}),
+        }}
+      />
       <div className="pt-20 pb-16 sm:pt-24 lg:pt-28">
         <Container>
           <p className="text-caption text-text-muted font-mono tracking-wide uppercase">

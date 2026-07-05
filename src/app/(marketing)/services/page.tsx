@@ -5,12 +5,14 @@ import { CtaPanel } from "@/components/marketing/cta-panel";
 import { Reveal } from "@/components/marketing/reveal";
 import { Container } from "@/components/ui/container";
 import { Link } from "@/components/ui/link";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Services",
   description:
     "Software and the hardware it runs on, treated as one problem — HubZero's two engineering practices, and how they work together.",
-};
+  path: "/services",
+});
 
 /**
  * ARCHITECTURE/06_PAGE_SPECIFICATIONS.md "Services overview": a short

@@ -2,12 +2,14 @@ import type { Metadata } from "next";
 
 import { ContactForm } from "@/components/marketing/contact-form";
 import { Container } from "@/components/ui/container";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Contact",
   description:
     "Tell us what you're building. Every engagement starts as a conversation, not a commitment — here's what helps, and what happens after you send it.",
-};
+  path: "/contact",
+});
 
 /**
  * ARCHITECTURE/06_PAGE_SPECIFICATIONS.md "Contact": pricing framing without

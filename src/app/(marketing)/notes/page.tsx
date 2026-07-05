@@ -8,13 +8,21 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Link } from "@/components/ui/link";
 import { findPublished, resolveCoverImage } from "@/lib/cms/public-content";
 import { connectToDatabase } from "@/lib/db";
+import { pageMetadata } from "@/lib/seo";
 import { Note, type NoteDocument } from "@/models/note";
 import { TeamMember } from "@/models/team-member";
 
 export const metadata: Metadata = {
-  title: "Notes",
-  description: "Engineering write-ups, dev logs, and lessons learned from HubZero.",
+  ...pageMetadata({
+    title: "Notes",
+    description: "Engineering write-ups, dev logs, and lessons learned from HubZero.",
+    path: "/notes",
+  }),
+  // Feed discovery — points readers/aggregators at `rss.xml/route.ts`.
+  alternates: { canonical: "/notes", types: { "application/rss+xml": "/notes/rss.xml" } },
 };
+
+export const revalidate = 3600;
 
 /**
  * `ARCHITECTURE/06_PAGE_SPECIFICATIONS.md` Notes index — real, published

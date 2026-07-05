@@ -7,13 +7,18 @@ import { LabsGrid, type LabsGridItem } from "@/components/marketing/labs-grid";
 import { Container } from "@/components/ui/container";
 import { Link } from "@/components/ui/link";
 import { findPublished, resolveCoverImage } from "@/lib/cms/public-content";
+import { pageMetadata } from "@/lib/seo";
 import { firstLineTeaser } from "@/lib/utils";
 import { LabsProject, type LabsProjectDocument } from "@/models/labs-project";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Labs",
-  description: "Internal R&D — hardware, software, and AI exploration built with no client watching.",
-};
+  description:
+    "Internal R&D — hardware, software, and AI exploration built with no client watching.",
+  path: "/labs",
+});
+
+export const revalidate = 3600;
 
 /**
  * `ARCHITECTURE/06_PAGE_SPECIFICATIONS.md`'s Labs index — real, published

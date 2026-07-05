@@ -5,9 +5,11 @@ import { notFound } from "next/navigation";
 import "@/lib/cms/collections";
 
 import { RichText } from "@/components/marketing/rich-text";
+import { JsonLd } from "@/components/seo/json-ld";
 import { Container } from "@/components/ui/container";
 import { Link } from "@/components/ui/link";
-import { findOnePublished, resolveCoverImage } from "@/lib/cms/public-content";
+import { findOnePublished, findPublished, resolveCoverImage } from "@/lib/cms/public-content";
+import { absoluteUrl, pageMetadata } from "@/lib/seo";
 import { Note, type NoteDocument } from "@/models/note";
 import { TeamMember } from "@/models/team-member";
 
@@ -15,15 +17,29 @@ interface NotePageProps {
   params: Promise<{ slug: string }>;
 }
 
+export const revalidate = 3600;
+
 async function getNote(slug: string) {
   return findOnePublished<NoteDocument>(Note, { slug });
+}
+
+export async function generateStaticParams() {
+  const notes = await findPublished<NoteDocument>(Note);
+  return notes.map((doc) => ({ slug: doc.slug }));
 }
 
 export async function generateMetadata({ params }: NotePageProps): Promise<Metadata> {
   const { slug } = await params;
   const doc = await getNote(slug);
   if (!doc) return {};
-  return { title: doc.title, description: doc.summary };
+  const cover = await resolveCoverImage(doc.coverImage ? String(doc.coverImage) : undefined);
+  return pageMetadata({
+    title: doc.title,
+    description: doc.summary,
+    path: `/notes/${doc.slug}`,
+    image: cover ? { url: cover.url, alt: cover.alt } : undefined,
+    type: "article",
+  });
 }
 
 export default async function NotePage({ params }: NotePageProps) {
@@ -33,11 +49,25 @@ export default async function NotePage({ params }: NotePageProps) {
 
   const [cover, author] = await Promise.all([
     resolveCoverImage(doc.coverImage ? String(doc.coverImage) : undefined),
-    TeamMember.findById(doc.authorId).select("name username").lean<{ name: string; username: string } | null>(),
+    TeamMember.findById(doc.authorId)
+      .select("name username")
+      .lean<{ name: string; username: string } | null>(),
   ]);
 
   return (
     <div className="pb-32">
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "Article",
+          headline: doc.title,
+          description: doc.summary,
+          datePublished: doc.publishedAt,
+          dateModified: doc.updatedAt ?? doc.publishedAt,
+          ...(author ? { author: { "@type": "Person", name: author.name } } : {}),
+          ...(cover ? { image: absoluteUrl(cover.url) } : {}),
+        }}
+      />
       <div className="pt-20 pb-16 sm:pt-24 lg:pt-28">
         <Container>
           <p className="text-caption text-text-muted font-mono tracking-wide uppercase">

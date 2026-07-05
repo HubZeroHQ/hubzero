@@ -4,14 +4,17 @@ import Image from "next/image";
 
 import { CtaPanel } from "@/components/marketing/cta-panel";
 import { Reveal } from "@/components/marketing/reveal";
+import { JsonLd } from "@/components/seo/json-ld";
 import { Container } from "@/components/ui/container";
 import { Link } from "@/components/ui/link";
+import { siteConfig } from "@/config/site";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Software Engineering",
-  description:
-    "What software engineering at HubZero actually looks like — the interface, the system behind it, and the automation that runs without anyone watching.",
-};
+const title = "Software Engineering";
+const description =
+  "What software engineering at HubZero actually looks like — the interface, the system behind it, and the automation that runs without anyone watching.";
+
+export const metadata: Metadata = pageMetadata({ title, description, path: "/services/software" });
 
 /**
  * ARCHITECTURE/06_PAGE_SPECIFICATIONS.md "Services — Software Engineering":
@@ -45,6 +48,15 @@ export const metadata: Metadata = {
 export default function SoftwareEngineeringPage() {
   return (
     <div className="pb-28 sm:pb-32 lg:pb-40">
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "Service",
+          name: title,
+          description,
+          provider: { "@type": "Organization", name: siteConfig.name, url: siteConfig.url },
+        }}
+      />
       {/* Opening — the headline previews the reading order itself. Bottom
           padding scales with the breakpoint the same way top does (matching
           /services' opening beat) — previously fixed at pb-16 regardless of
