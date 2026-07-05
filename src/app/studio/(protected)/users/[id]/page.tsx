@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { getOne, remove } from "@/actions/studio/users";
 import { UserDeleteButton } from "@/app/studio/(protected)/users/[id]/user-delete-button";
 import { UserEditForm } from "@/app/studio/(protected)/users/[id]/user-edit-form";
+import { UserResetPasswordButton } from "@/app/studio/(protected)/users/[id]/user-reset-password-button";
 import { Card, Heading } from "@/components/ui";
 import { PageHeader } from "@/components/admin/page-header";
 import { can } from "@/lib/cms/permissions";
@@ -48,6 +49,13 @@ export default async function EditUserPage({ params }: EditUserPageProps) {
           }}
           isSelf={isSelf}
         />
+
+        <Card>
+          <Heading level={3} className="mb-4">
+            Security
+          </Heading>
+          <UserResetPasswordButton id={id} isSelf={isSelf} />
+        </Card>
 
         <Card>
           <Heading level={3} className="mb-4">

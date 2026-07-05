@@ -2,7 +2,6 @@ import { z } from "zod";
 
 import { Badge } from "@/components/ui/badge";
 import { passwordSchema } from "@/lib/cms/password";
-import { emptyToUndefined } from "@/lib/utils";
 import type { UserDocument, UserRole } from "@/models/user";
 import type { ClientDocument, FieldOption, FilterConfig, TableColumn } from "@/types/cms";
 
@@ -11,12 +10,14 @@ import type { ClientDocument, FieldOption, FilterConfig, TableColumn } from "@/t
  * for the same reason every other collection's `-fields.tsx` module is (see
  * `team-member-fields.tsx`). No `formFields`/`FieldConfig` export here: the
  * Users screen uses bespoke forms (`users/new/user-create-form.tsx`,
- * `users/[id]/user-edit-form.tsx`), not the generic `<CmsForm>`, because a
- * masked password field with a strength rule and an "unchanged unless
- * filled in" edit semantics doesn't fit `FieldConfig`'s fixed vocabulary
+ * `users/[id]/user-edit-form.tsx`, `users/[id]/user-reset-password-button.tsx`),
+ * not the generic `<CmsForm>`, because a masked password field with a
+ * strength rule doesn't fit `FieldConfig`'s fixed vocabulary
  * (`ARCHITECTURE/19_CMS_FOUNDATION.md` §6) — the same reasoning that already
  * gives Lead (the other `workflow: "none"` collection) its own bespoke
- * detail-screen forms instead of `<CmsForm>`.
+ * detail-screen forms instead of `<CmsForm>`. Password reset lives in its own
+ * dedicated confirm-dialog action, not the edit form, so an unrelated
+ * name/email/role save can never carry a stray password value along with it.
  */
 
 export type UserRow = ClientDocument<UserDocument>;
@@ -59,9 +60,6 @@ export const updateUserSchema = z.object({
   name: nameField,
   role: roleField,
   disabled: z.boolean().default(false),
-  // Blank means "leave the password unchanged" — only validated against the
-  // strength rule when an editor actually types a new one.
-  password: z.preprocess(emptyToUndefined, passwordSchema.optional()),
 });
 export type UpdateUserInput = z.infer<typeof updateUserSchema>;
 

@@ -12,10 +12,12 @@ import {
 import { userConfig } from "@/lib/cms/collections/user.config";
 import { createCrudActions, flattenZodErrors } from "@/lib/cms/crud-actions";
 import { connectToDatabase } from "@/lib/db";
-import { PASSWORD_HASH_COST } from "@/lib/cms/password";
+import { PASSWORD_HASH_COST, passwordSchema } from "@/lib/cms/password";
 import { requirePermission } from "@/lib/cms/permissions";
 import { User } from "@/models/user";
 import type { CrudActionState } from "@/types/cms";
+
+type SimpleResult = { status: "success" } | { status: "error"; message: string };
 
 /**
  * Users management (`ARCHITECTURE/12_ADMIN_PANEL_SPECIFICATION.md` §2,
@@ -131,19 +133,16 @@ export async function updateUser(
 
   const roleChanged = parsed.data.role !== existing.role;
   const disabledChanged = parsed.data.disabled !== existing.disabled;
-  const passwordChanged = Boolean(parsed.data.password);
 
   existing.email = parsed.data.email;
   existing.name = parsed.data.name;
   existing.role = parsed.data.role;
   existing.disabled = parsed.data.disabled;
-  if (parsed.data.password) {
-    existing.passwordHash = await bcrypt.hash(parsed.data.password, PASSWORD_HASH_COST);
-  }
   // Force re-authentication wherever this account is already signed in
   // (`ARCHITECTURE/19_CMS_FOUNDATION.md` §2's revocation mechanism) whenever
-  // something security-relevant about the account just changed.
-  if (roleChanged || disabledChanged || passwordChanged) {
+  // something security-relevant about the account just changed. (Password
+  // changes go through `resetUserPassword` below, which bumps this itself.)
+  if (roleChanged || disabledChanged) {
     existing.sessionVersion += 1;
   }
 
@@ -153,5 +152,51 @@ export async function updateUser(
   } catch (error) {
     console.error(`Failed to update user ${id}:`, error);
     return { status: "error", formError: "Something went wrong while saving. Please try again." };
+  }
+}
+
+/**
+ * Admin-driven password reset — `ARCHITECTURE/12_ADMIN_PANEL_SPECIFICATION.md`
+ * §2's "Reset Password" action on the Users screen. Deliberately its own
+ * action rather than folded into `updateUser`'s form (as an earlier revision
+ * did): a password change is significant enough to warrant its own explicit
+ * confirm step, and separating it means an unrelated name/email/role edit can
+ * never accidentally carry a stray password value along with it.
+ *
+ * No last-Head-Admin check: unlike a role change or a disable, resetting a
+ * password never removes a Head Admin's access — the same person can still
+ * sign in once they have the new password. `requirePermission` below is the
+ * only gate (`manageUsers` is Head-Admin-only per `permissions.ts`), matching
+ * every other mutation on this collection.
+ */
+export async function resetUserPassword(id: string, password: string): Promise<SimpleResult> {
+  await requirePermission("manageUsers", "user");
+  await connectToDatabase();
+
+  if (!Types.ObjectId.isValid(id)) return { status: "error", message: "Not found." };
+
+  const parsed = passwordSchema.safeParse(password);
+  if (!parsed.success) {
+    return {
+      status: "error",
+      message: parsed.error.issues[0]?.message ?? "Invalid password.",
+    };
+  }
+
+  const existing = await User.findById(id);
+  if (!existing) return { status: "error", message: "Not found." };
+
+  try {
+    existing.passwordHash = await bcrypt.hash(parsed.data, PASSWORD_HASH_COST);
+    // Unconditional — this is exactly the security-relevant change
+    // `ARCHITECTURE/19_CMS_FOUNDATION.md` §2's revocation mechanism exists
+    // for. Every session already issued for this account must die
+    // immediately, not just be blocked on its next silent refresh.
+    existing.sessionVersion += 1;
+    await existing.save();
+    return { status: "success" };
+  } catch (error) {
+    console.error(`Failed to reset password for user ${id}:`, error);
+    return { status: "error", message: "Something went wrong while saving. Please try again." };
   }
 }
