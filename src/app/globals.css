@@ -132,12 +132,22 @@ body {
    * material. Same trick a printed page's paper stock or a matte-finish
    * product photo uses: texture the eye registers as "real" without
    * consciously noticing it's there. Baked into the SVG's own alpha
-   * (0.035) rather than a separate CSS opacity, so it composites once and
-   * needs no blend-mode. Deliberately theme-agnostic (a single neutral
-   * grain reads correctly at this opacity against both the dark and light
-   * background tokens) rather than a second asset per theme.
+   * (~4.5%, averaged) rather than a separate CSS opacity, so it composites
+   * once and needs no blend-mode. Deliberately theme-agnostic (a single
+   * neutral grain reads correctly at this opacity against both the dark
+   * and light background tokens) rather than a second asset per theme.
+   *
+   * The filter reference must be a literal `#n`, not a percent-encoded
+   * `%23n` — this SVG is base64-encoded (not URL-encoded), so `%23` is
+   * inert text inside the decoded XML rather than an escaped `#`. Getting
+   * this wrong doesn't error or warn; the <rect>'s filter attribute simply
+   * fails to resolve and it falls back to its default fill (solid black),
+   * silently painting an opaque tile over the real background token
+   * instead of the intended noise — invisible on this near-black dark
+   * theme (which is why it shipped unnoticed) but a real bug, not a taste
+   * call, and one that would have fully blacked out light mode.
    */
-  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPScxMjgnIGhlaWdodD0nMTI4Jz48ZmlsdGVyIGlkPSduJz48ZmVUdXJidWxlbmNlIHR5cGU9J2ZyYWN0YWxOb2lzZScgYmFzZUZyZXF1ZW5jeT0nMC44NScgbnVtT2N0YXZlcz0nMicgc3RpdGNoVGlsZXM9J3N0aXRjaCcgc2VlZD0nNycvPjxmZUNvbG9yTWF0cml4IHR5cGU9J21hdHJpeCcgdmFsdWVzPScwIDAgMCAwIDEgIDAgMCAwIDAgMSAgMCAwIDAgMCAxICAwIDAgMCAwLjA5IDAnLz48L2ZpbHRlcj48cmVjdCB3aWR0aD0nMTAwJScgaGVpZ2h0PScxMDAlJyBmaWx0ZXI9J3VybCglMjNuKScvPjwvc3ZnPg==");
+  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPScxMjgnIGhlaWdodD0nMTI4Jz48ZmlsdGVyIGlkPSduJz48ZmVUdXJidWxlbmNlIHR5cGU9J2ZyYWN0YWxOb2lzZScgYmFzZUZyZXF1ZW5jeT0nMC44NScgbnVtT2N0YXZlcz0nMicgc3RpdGNoVGlsZXM9J3N0aXRjaCcgc2VlZD0nNycvPjxmZUNvbG9yTWF0cml4IHR5cGU9J21hdHJpeCcgdmFsdWVzPScwIDAgMCAwIDEgIDAgMCAwIDAgMSAgMCAwIDAgMCAxICAwIDAgMCAwLjA5IDAnLz48L2ZpbHRlcj48cmVjdCB3aWR0aD0nMTAwJScgaGVpZ2h0PScxMDAlJyBmaWx0ZXI9J3VybCgjbiknLz48L3N2Zz4=");
   background-repeat: repeat;
 }
 
