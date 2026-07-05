@@ -31,6 +31,8 @@ export const blueprintConfig = registerCollection(
       doc.demoStatus === "live"
         ? null
         : 'This Blueprint can only be published while its demo status is "Live".',
-    revalidatesPaths: () => [],
+    // `/blueprints` and `/blueprints/[slug]` are real public pages as of this
+    // change — same ISR-on-publish wiring as CaseStudy/LabsProject/Note.
+    revalidatesPaths: (doc) => ["/blueprints", `/blueprints/${doc.slug}`],
   }),
 );
