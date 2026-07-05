@@ -44,7 +44,7 @@ export default async function EditNotePage({ params }: EditNotePageProps) {
     authorId: String(doc.authorId),
     category: doc.category,
     tags: doc.tags,
-    coverImage: doc.coverImage ?? undefined,
+    coverImage: doc.coverImage ? String(doc.coverImage) : undefined,
   };
 
   return (

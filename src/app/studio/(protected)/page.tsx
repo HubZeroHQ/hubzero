@@ -75,9 +75,12 @@ export default async function StudioDashboardPage() {
             />
           ) : (
             <div className="flex flex-col gap-4">
-              <Text as="span" className="text-h3 text-text font-semibold">
-                {newLeadsCount}
-              </Text>
+              <div className="flex items-center justify-between">
+                <Text as="span" className="text-h3 text-text font-semibold">
+                  {newLeadsCount}
+                </Text>
+                <Link href="/studio/leads">Open inbox →</Link>
+              </div>
               <ul className="divide-border-muted -mt-1 divide-y">
                 {recentLeads.map((lead) => (
                   <li
@@ -215,7 +218,14 @@ interface ContentOverviewRow {
  * eleventh collection means one more row here, no dashboard code change.
  */
 async function getContentOverview(user: SessionUser): Promise<ContentOverviewRow[]> {
-  const collections = listCollections().filter((config) => can(user, "view", config.resource));
+  const collections = listCollections().filter(
+    // `lead` is registered for its `list()`/`getOne()`/`remove()` reuse
+    // (`lib/cms/collections/lead.config.ts`), not because Leads are
+    // "content" alongside Case Studies/Notes/etc. — it already has its own
+    // dedicated "New leads" card above, so it's excluded here to avoid
+    // showing the same count twice under two different framings.
+    (config) => config.resource !== "lead" && can(user, "view", config.resource),
+  );
   const totals = await Promise.all(collections.map((config) => config.model.countDocuments()));
   return collections.map((config, index) => ({ config, total: totals[index] ?? 0 }));
 }

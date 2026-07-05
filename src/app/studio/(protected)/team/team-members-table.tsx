@@ -16,6 +16,8 @@ interface TeamMembersTableProps {
   hasPrev: boolean;
   nextCursor?: string;
   isFiltered: boolean;
+  canDelete: boolean;
+  canPublish: boolean;
 }
 
 /**
@@ -30,6 +32,8 @@ export function TeamMembersTable({
   hasPrev,
   nextCursor,
   isFiltered,
+  canDelete,
+  canPublish,
 }: TeamMembersTableProps) {
   return (
     <DataTable
@@ -42,8 +46,8 @@ export function TeamMembersTable({
       isFiltered={isFiltered}
       emptyStateMessage={teamMemberEmptyStateMessage}
       rowHref={(doc) => `/studio/team/${doc._id}`}
-      bulkDelete={bulkRemove}
-      bulkPublish={bulkPublish}
+      bulkDelete={canDelete ? bulkRemove : undefined}
+      bulkPublish={canPublish ? bulkPublish : undefined}
     />
   );
 }

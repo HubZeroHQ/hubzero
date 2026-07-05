@@ -1,8 +1,7 @@
 import { z } from "zod";
 
 import { WorkflowStatusBadge } from "@/components/admin/workflow-status-badge";
-import { objectIdField } from "@/lib/cms/collections/shared-validation";
-import { emptyToUndefined } from "@/lib/utils";
+import { objectIdField, optionalObjectIdField } from "@/lib/cms/collections/shared-validation";
 import type { NoteDocument } from "@/models/note";
 import type { ClientDocument, FieldConfig, FilterConfig, TableColumn } from "@/types/cms";
 
@@ -24,7 +23,7 @@ export const noteSchema = z.object({
   authorId: objectIdField("Enter the author's TeamMember ID."),
   category: z.string().trim().min(1, "Required.").max(80),
   tags: z.array(z.string().trim().min(1).max(40)).max(20).default([]),
-  coverImage: z.preprocess(emptyToUndefined, z.url("Enter a valid URL.").optional()),
+  coverImage: optionalObjectIdField("Choose a cover image from the media library."),
 });
 
 export type NoteInput = z.infer<typeof noteSchema>;

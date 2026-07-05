@@ -27,6 +27,6 @@ export const labsProjectConfig = registerCollection(
     // form field, injected on every create/update the same way Note
     // computes `readingTimeMinutes`.
     computedFields: () => ({ isClientWork: false }),
-    revalidatesPaths: () => [],
+    revalidatesPaths: (doc) => ["/labs", `/labs/${doc.slug}`],
   }),
 );

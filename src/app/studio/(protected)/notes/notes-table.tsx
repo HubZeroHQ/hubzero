@@ -16,9 +16,19 @@ interface NotesTableProps {
   hasPrev: boolean;
   nextCursor?: string;
   isFiltered: boolean;
+  canDelete: boolean;
+  canPublish: boolean;
 }
 
-export function NotesTable({ items, hasNext, hasPrev, nextCursor, isFiltered }: NotesTableProps) {
+export function NotesTable({
+  items,
+  hasNext,
+  hasPrev,
+  nextCursor,
+  isFiltered,
+  canDelete,
+  canPublish,
+}: NotesTableProps) {
   return (
     <DataTable
       columns={noteListColumns}
@@ -30,8 +40,8 @@ export function NotesTable({ items, hasNext, hasPrev, nextCursor, isFiltered }: 
       isFiltered={isFiltered}
       emptyStateMessage={noteEmptyStateMessage}
       rowHref={(doc) => `/studio/notes/${doc._id}`}
-      bulkDelete={bulkRemove}
-      bulkPublish={bulkPublish}
+      bulkDelete={canDelete ? bulkRemove : undefined}
+      bulkPublish={canPublish ? bulkPublish : undefined}
     />
   );
 }

@@ -45,6 +45,7 @@ export type Resource =
   | "careerListing"
   | "lead"
   | "siteSettings"
+  | "media"
   | "user";
 
 /**

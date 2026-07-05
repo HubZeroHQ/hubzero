@@ -166,10 +166,13 @@ export default function HardwareEngineeringPage() {
               Socket.IO <span aria-hidden="true">·</span> Chart.js <span aria-hidden="true">·</span>{" "}
               Nov 2024 – Jan 2025
             </p>
-            <p className="text-caption text-text-muted mt-6">
-              The full write-up will live at HubZero Labs, alongside every other project we build
-              with no client watching.
-            </p>
+            <Link
+              href="/labs/iot-sensor-dashboard"
+              className="text-text mt-6 inline-flex items-center gap-1.5 no-underline hover:no-underline hover:opacity-80"
+            >
+              Read the full write-up at HubZero Labs
+              <ArrowUpRight className="size-4" aria-hidden="true" />
+            </Link>
           </div>
 
           <div className="mt-12 max-w-[var(--content-prose)]">

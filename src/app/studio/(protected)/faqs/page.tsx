@@ -51,6 +51,8 @@ export default async function FaqsListPage({ searchParams }: FaqsPageProps) {
         hasPrev={result.hasPrev}
         nextCursor={result.nextCursor}
         isFiltered={isFiltered}
+        canDelete={can(user, "delete", "faq")}
+        canPublish={can(user, "publish", "faq")}
       />
     </>
   );

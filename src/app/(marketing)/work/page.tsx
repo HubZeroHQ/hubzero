@@ -1,9 +1,14 @@
 import { ArrowUpRight } from "lucide-react";
 import type { Metadata } from "next";
 
+import "@/lib/cms/collections";
+
 import { Container } from "@/components/ui/container";
 import { Link } from "@/components/ui/link";
-import { WorkGrid } from "@/components/work/work-grid";
+import { WorkGrid, type WorkGridItem } from "@/components/work/work-grid";
+import { findPublished, resolveCoverImage } from "@/lib/cms/public-content";
+import { firstLineTeaser } from "@/lib/utils";
+import { CaseStudy, type CaseStudyDocument } from "@/models/case-study";
 
 export const metadata: Metadata = {
   title: "Work",
@@ -14,10 +19,23 @@ export const metadata: Metadata = {
 /**
  * ARCHITECTURE/06_PAGE_SPECIFICATIONS.md "Work — index": intro line
  * (selectivity framing), filter by practice area, case study cards, CTA.
- * Built as a real, filterable list from day one so it scales from one case
- * study to many without a redesign.
+ * Reads real, published `CaseStudy` documents — replaces the static
+ * `config/case-studies.ts` list (`ARCHITECTURE/19_CMS_FOUNDATION.md` §13's
+ * flagged migration).
  */
-export default function WorkPage() {
+export default async function WorkPage() {
+  const caseStudies = await findPublished<CaseStudyDocument>(CaseStudy);
+
+  const items: WorkGridItem[] = await Promise.all(
+    caseStudies.map(async (doc) => ({
+      slug: doc.slug,
+      client: doc.client,
+      resultTeaser: firstLineTeaser(doc.result),
+      practiceArea: doc.practiceArea,
+      cover: await resolveCoverImage(doc.coverImage ? String(doc.coverImage) : undefined),
+    })),
+  );
+
   return (
     <div className="pt-16 pb-28 sm:pt-20 lg:pt-24">
       <Container>
@@ -32,7 +50,7 @@ export default function WorkPage() {
       </Container>
 
       <Container className="mt-16 lg:mt-20">
-        <WorkGrid />
+        <WorkGrid items={items} />
       </Container>
 
       <Container className="mt-24 lg:mt-32">

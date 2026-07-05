@@ -40,7 +40,7 @@ export default async function EditLabsProjectPage({ params }: EditLabsProjectPag
     practiceArea: doc.practiceArea,
     description: doc.description,
     techTags: doc.techTags,
-    coverImage: doc.coverImage ?? undefined,
+    coverImage: doc.coverImage ? String(doc.coverImage) : undefined,
     stage: doc.stage === "graduated" ? undefined : doc.stage,
   };
 

@@ -2,8 +2,8 @@ import { z } from "zod";
 
 import { WorkflowStatusBadge } from "@/components/admin/workflow-status-badge";
 import { Badge } from "@/components/ui/badge";
-import { practiceAreaOptions } from "@/lib/cms/collections/shared-options";
-import { emptyToUndefined } from "@/lib/utils";
+import { practiceAreaOptions, practiceAreaValues } from "@/lib/cms/collections/shared-options";
+import { optionalObjectIdField } from "@/lib/cms/collections/shared-validation";
 import type { LabsProjectDocument } from "@/models/labs-project";
 import type { ClientDocument, FieldConfig, FilterConfig, TableColumn } from "@/types/cms";
 
@@ -32,12 +32,12 @@ export const labsProjectSchema = z.object({
     .max(80, "Keep it under 80 characters.")
     .regex(slugPattern, "Lowercase letters, numbers, and hyphens only."),
   title: z.string().trim().min(1, "Required.").max(160),
-  practiceArea: z.enum(practiceAreaOptions.map((option) => option.value) as [string, ...string[]], {
+  practiceArea: z.enum(practiceAreaValues, {
     error: "Choose a practice area.",
   }),
   description: z.string().trim().min(1, "Required.").max(20000),
   techTags: z.array(z.string().trim().min(1).max(40)).max(20).default([]),
-  coverImage: z.preprocess(emptyToUndefined, z.url("Enter a valid URL.").optional()),
+  coverImage: optionalObjectIdField("Choose a cover image from the media library."),
   stage: z.enum(["active", "archived"], { error: "Choose active or archived." }),
 });
 

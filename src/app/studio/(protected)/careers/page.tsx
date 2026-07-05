@@ -51,6 +51,8 @@ export default async function CareerListingsListPage({ searchParams }: CareerLis
         hasPrev={result.hasPrev}
         nextCursor={result.nextCursor}
         isFiltered={isFiltered}
+        canDelete={can(user, "delete", "careerListing")}
+        canPublish={can(user, "publish", "careerListing")}
       />
     </>
   );

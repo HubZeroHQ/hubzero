@@ -31,6 +31,7 @@ const allResources: Resource[] = [
   "careerListing",
   "lead",
   "siteSettings",
+  "media",
   "user",
 ];
 
@@ -52,6 +53,10 @@ const roleGrants: Record<UserRole, Partial<Record<Resource, Action[]>>> = {
     service: ["view", "create", "edit", "publish", "delete"],
     faq: ["view", "create", "edit", "publish", "delete"],
     careerListing: ["view", "create", "edit", "publish", "delete"],
+    // Anyone authoring content needs to upload/browse media; delete is
+    // usage-guarded (`lib/cms/media.ts`'s `deleteMedia`), so granting it here
+    // can't create a dangling reference.
+    media: ["view", "create", "delete"],
     // Personal content — Admin can author their own notes and approve/publish
     // Teammate submissions, but does not gain a blanket "edit" over every note.
     note: ["view", "create", "editOwn", "approve", "publish"],
@@ -65,6 +70,10 @@ const roleGrants: Record<UserRole, Partial<Record<Resource, Action[]>>> = {
     teamMember: ["view", "editOwn"],
     // Personal content — create/edit own drafts, submit for review; no direct publish.
     note: ["view", "create", "editOwn"],
+    // Needs to upload a profile photo / note cover image, same reasoning as
+    // Admin above — no delete grant, since a Teammate has no broader
+    // "manage the library" responsibility.
+    media: ["view", "create"],
     // Deliberately no grants on company-content resources (caseStudy, build,
     // blueprint, labsProject, testimonial, service, faq, careerListing) or
     // lead/siteSettings/user — 09_CMS_ARCHITECTURE §4 scopes a Teammate to

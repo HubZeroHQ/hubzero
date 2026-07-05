@@ -80,3 +80,11 @@ next-prompt.md
 base-prompt.md
 
 scripts/
+
+# Local media storage adapter's on-disk files (lib/cms/storage/local-adapter.ts) —
+# never committed, same reasoning as any other local dev data store.
+/storage/
+
+# Vitest's globalSetup writes the in-memory MongoDB instance's connection
+# URI here for setupFiles (tests/setup.ts) to read — regenerated every run.
+/tests/.mongo-uri

@@ -4,11 +4,14 @@ import {
   Blocks,
   Briefcase,
   HelpCircle,
+  Image as ImageIcon,
+  Inbox,
   LayoutDashboard,
   ListChecks,
   NotebookPen,
   Package,
   Quote,
+  Settings as SettingsIcon,
   UserPlus,
   Users,
 } from "lucide-react";
@@ -38,6 +41,10 @@ export interface StudioNavItem {
 
 export const studioNavItems: StudioNavItem[] = [
   { label: "Dashboard", href: "/studio", icon: LayoutDashboard },
+  // Admin-only: Teammates hold no `lead` grant at all (`permissions.ts` scopes
+  // them to their own profile/portfolio/note drafts, same reasoning as
+  // Case Studies below).
+  { label: "Leads", href: "/studio/leads", icon: Inbox, minimumRole: "admin" },
   // Admin-only: Teammates hold no `caseStudy` grant at all (09_CMS_ARCHITECTURE
   // §4 scopes them to their own profile/portfolio/note drafts, not company
   // portfolio content) — showing this link to a Teammate would point at a
@@ -59,6 +66,14 @@ export const studioNavItems: StudioNavItem[] = [
   { label: "Testimonials", href: "/studio/testimonials", icon: Quote, minimumRole: "admin" },
   { label: "FAQs", href: "/studio/faqs", icon: HelpCircle, minimumRole: "admin" },
   { label: "Careers", href: "/studio/careers", icon: UserPlus, minimumRole: "admin" },
+  // No `minimumRole`: Admin and Teammate alike hold a `create`/`view` grant
+  // on `media` (`permissions.ts`) — both upload/browse files for whatever
+  // content they're authoring.
+  { label: "Media", href: "/studio/media", icon: ImageIcon },
+  // Head-Admin-only: `permissions.ts` grants `siteSettings` access to no
+  // other role (09_CMS_ARCHITECTURE §4 — "Admin explicitly cannot manage
+  // users, roles, permissions, or site settings").
+  { label: "Settings", href: "/studio/settings", icon: SettingsIcon, minimumRole: "head_admin" },
   // No `minimumRole`: the review queue itself filters to collections the
   // signed-in user holds a `view` grant on (`app/studio/(protected)/review/page.tsx`),
   // so a Teammate sees an honest empty state today, not a denied screen —

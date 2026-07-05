@@ -27,7 +27,7 @@ const noteSchema = new Schema(
     authorId: { type: Schema.Types.ObjectId, ref: "TeamMember", required: true },
     category: { type: String, required: true, trim: true, maxlength: 80 },
     tags: { type: [String], default: [] },
-    coverImage: { type: String, trim: true },
+    coverImage: { type: Schema.Types.ObjectId, ref: "Media" },
     readingTimeMinutes: { type: Number, required: true, default: 1 },
     ...workflowFields(draftReviewPublishStatusValues),
   },

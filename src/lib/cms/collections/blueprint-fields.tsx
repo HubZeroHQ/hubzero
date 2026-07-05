@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import { WorkflowStatusBadge } from "@/components/admin/workflow-status-badge";
 import { Badge } from "@/components/ui/badge";
+import { optionalObjectIdField } from "@/lib/cms/collections/shared-validation";
 import { emptyToUndefined } from "@/lib/utils";
 import type { BlueprintDocument } from "@/models/blueprint";
 import type { ClientDocument, FieldConfig, FilterConfig, TableColumn } from "@/types/cms";
@@ -29,7 +30,7 @@ export const blueprintSchema = z.object({
   category: z.string().trim().min(1, "Required.").max(80),
   description: z.string().trim().min(1, "Required.").max(20000),
   techStack: z.array(z.string().trim().min(1).max(40)).max(30).default([]),
-  coverImage: z.preprocess(emptyToUndefined, z.url("Enter a valid URL.").optional()),
+  coverImage: optionalObjectIdField("Choose a cover image from the media library."),
   previewUrl: z.preprocess(emptyToUndefined, z.url("Enter a valid URL.").optional()),
   demoDeploymentUrl: z.preprocess(emptyToUndefined, z.url("Enter a valid URL.").optional()),
   customizationNotes: z.string().trim().max(20000).optional(),

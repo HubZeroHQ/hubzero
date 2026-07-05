@@ -6,23 +6,40 @@ import { useState } from "react";
 
 import { EmptyState } from "@/components/ui/empty-state";
 import { Link } from "@/components/ui/link";
-import { caseStudies, practiceTags, type PracticeTag } from "@/config/case-studies";
 import { cn } from "@/lib/utils";
+
+export interface WorkGridItem {
+  slug: string;
+  client: string;
+  /** A short, single-line teaser derived from the full `result` field — see `[slug]/page.tsx` for the full write-up. */
+  resultTeaser: string;
+  practiceArea: string;
+  cover: { url: string; alt: string; width?: number; height?: number } | null;
+}
+
+const practiceAreaLabels: Record<string, string> = {
+  software: "Software Engineering",
+  hardware: "Hardware & Embedded",
+  both: "Software + Hardware",
+  ai: "AI",
+};
+
+const practiceTags = [
+  { label: "All work", value: "all" },
+  { label: "Software Engineering", value: "software" },
+  { label: "Hardware & Embedded", value: "hardware" },
+] as const;
 
 /**
  * ARCHITECTURE/06_PAGE_SPECIFICATIONS.md "Work — index": filter by practice
- * area, case study cards (client, one-line result, practice-area tag). Built
- * to gracefully support one case study or a hundred — each entry renders as
- * a full-width editorial row (image + text), not a boxed SaaS card grid, so
- * the page still reads as editorial when there's only one entry to show.
- *
- * The filter is real, not decorative: selecting a tag with no matching work
- * yet (e.g. "Hardware & Embedded", before a real hardware case study exists)
- * shows an honest empty state rather than hiding the option.
+ * area, case study cards. Now reads real `CaseStudy` documents (passed in as
+ * `items`, fetched server-side in `page.tsx`) instead of the retired static
+ * `config/case-studies.ts` — same editorial row layout, same honest
+ * empty-state-per-filter behavior.
  */
-export function WorkGrid() {
-  const [active, setActive] = useState<PracticeTag | "All">("All");
-  const filtered = caseStudies.filter((study) => active === "All" || study.tag === active);
+export function WorkGrid({ items }: { items: WorkGridItem[] }) {
+  const [active, setActive] = useState<string>("all");
+  const filtered = items.filter((item) => active === "all" || item.practiceArea === active);
 
   return (
     <div>
@@ -56,28 +73,32 @@ export function WorkGrid() {
           />
         )}
 
-        {filtered.map((study) => (
+        {filtered.map((item) => (
           <Link
-            key={study.slug}
-            href={`/work/${study.slug}`}
+            key={item.slug}
+            href={`/work/${item.slug}`}
             className="group grid grid-cols-1 gap-6 py-12 no-underline first:pt-0 hover:no-underline sm:grid-cols-12 sm:gap-8 lg:py-16"
           >
             <div className="sm:order-2 sm:col-span-7">
-              <Image
-                src={study.cover.src}
-                alt={study.cover.alt}
-                width={study.cover.width}
-                height={study.cover.height}
-                sizes="(min-width: 640px) 58vw, 92vw"
-                className="h-auto w-full transition-opacity duration-150 group-hover:opacity-90"
-              />
+              {item.cover ? (
+                <Image
+                  src={item.cover.url}
+                  alt={item.cover.alt}
+                  width={item.cover.width ?? 1600}
+                  height={item.cover.height ?? 900}
+                  sizes="(min-width: 640px) 58vw, 92vw"
+                  className="h-auto w-full transition-opacity duration-150 group-hover:opacity-90"
+                />
+              ) : (
+                <div className="bg-bg-light aspect-video w-full" aria-hidden="true" />
+              )}
             </div>
             <div className="flex flex-col justify-center sm:order-1 sm:col-span-5">
               <p className="text-caption text-text-muted font-mono tracking-wide uppercase">
-                {study.tag === "Software" ? "Software Engineering" : study.tag}
+                {practiceAreaLabels[item.practiceArea] ?? item.practiceArea}
               </p>
-              <h3 className="text-h2 text-text mt-3 font-normal">{study.client}</h3>
-              <p className="text-body text-text-muted mt-3 max-w-md">{study.result}</p>
+              <h3 className="text-h2 text-text mt-3 font-normal">{item.client}</h3>
+              <p className="text-body text-text-muted mt-3 max-w-md">{item.resultTeaser}</p>
               <span className="text-text mt-6 inline-flex items-center gap-1.5">
                 Read the case study
                 <ArrowUpRight

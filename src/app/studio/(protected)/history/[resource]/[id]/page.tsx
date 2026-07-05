@@ -53,8 +53,15 @@ export default async function VersionHistoryPage({ params }: VersionHistoryPageP
   const liveDoc = serializeDocument(rawDoc) as Record<string, unknown>;
 
   const versions = await listVersions(resource, id);
+  // Reads `config.ownerField` rather than hardcoding `createdBy` — for a
+  // collection like TeamMember (`ownerField: "linkedUserId"`), "own content"
+  // means whose profile it is, not who created the row during onboarding.
+  // Mirrors `crud-actions.ts`'s `ownerTarget()`/`restoreVersion()`, which
+  // already get this right; this generic screen previously didn't.
+  const ownerField = config.ownerField ?? "createdBy";
+  const ownerValue = liveDoc[ownerField];
   const canRestore = can(user, "edit", resource, {
-    createdBy: typeof liveDoc.createdBy === "string" ? liveDoc.createdBy : undefined,
+    createdBy: typeof ownerValue === "string" ? ownerValue : undefined,
   });
 
   const fieldLabels = Object.fromEntries(

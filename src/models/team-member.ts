@@ -74,7 +74,7 @@ const teamMemberSchema = new Schema(
     name: { type: String, required: true, trim: true, maxlength: 120 },
     role: { type: String, required: true, trim: true, maxlength: 120 },
     bio: { type: String, required: true, trim: true, maxlength: 8000 },
-    photo: { type: String, trim: true },
+    photo: { type: Schema.Types.ObjectId, ref: "Media" },
     skills: { type: [skillGroupSchema], default: [] },
     socials: { type: socialsSchema, required: true },
     isCoreMember: { type: Boolean, required: true, default: false },

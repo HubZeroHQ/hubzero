@@ -14,18 +14,22 @@ export interface NavItem {
 /**
  * Per `ARCHITECTURE/03_INFORMATION_ARCHITECTURE.md` §2, primary nav is
  * content-gated: an item only belongs here once it has a real, published
- * page behind it. Notes, Builds, Labs, and Blueprints are all real
- * destinations in the target IA but none has shipped a page yet, so none
- * of them belong in this list.
+ * page behind it. Builds and Blueprints are real destinations in the target
+ * IA but neither has shipped a page yet (content-readiness for both is
+ * still an open question — `17_COMPANY_STRUCTURE.md` §9), so neither
+ * belongs in this list yet. Labs shipped in CMS Foundation Phase H with a
+ * real migrated project (`scripts/migrate-content.ts`), so it's added here.
  *
- * `footerNav` below is content-gated on the same rule, not exempt from it —
- * a footer link is still a link a visitor can click today. Team, Careers,
- * Notes, Privacy, and Terms are added here the same day their page ships,
- * not before.
+ * `footerNav` below is content-gated on the same "has the page shipped"
+ * rule — Team, Careers, and Notes now have real pages (Phase H), so they're
+ * added here even though some (Notes, Careers) currently render an honest
+ * empty state pending real authored content; that's a content-population
+ * gap, not a missing page.
  */
 export const primaryNav: NavItem[] = [
   { label: "Services", href: "/services" },
   { label: "Work", href: "/work" },
+  { label: "Labs", href: "/labs" },
   { label: "About", href: "/about" },
 ];
 
@@ -38,12 +42,16 @@ export const footerNav: {
 } = {
   company: [
     { label: "About", href: "/about" },
+    { label: "Team", href: "/team" },
+    { label: "Careers", href: "/careers" },
+    { label: "Notes", href: "/notes" },
     { label: "Contact", href: "/contact" },
   ],
   services: [
     { label: "Software Engineering", href: "/services/software" },
     { label: "Hardware & Embedded", href: "/services/hardware" },
     { label: "Work / Case Studies", href: "/work" },
+    { label: "Labs", href: "/labs" },
   ],
   legal: [],
 };

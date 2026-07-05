@@ -40,7 +40,7 @@ export default async function EditBuildPage({ params }: EditBuildPageProps) {
     practiceArea: doc.practiceArea,
     description: doc.description,
     techTags: doc.techTags,
-    coverImage: doc.coverImage ?? undefined,
+    coverImage: doc.coverImage ? String(doc.coverImage) : undefined,
     // `launchDate` isn't in `ClientDocument`'s fixed date-field whitelist
     // (`types/cms.ts`), so it keeps its storage-side `Date` type even though
     // it's a serialized ISO string at runtime — the same treatment

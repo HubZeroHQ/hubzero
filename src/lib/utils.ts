@@ -26,3 +26,10 @@ export function cn(...inputs: ClassValue[]) {
 export function emptyToUndefined(value: unknown) {
   return typeof value === "string" && value.trim() === "" ? undefined : value;
 }
+
+/** A short single-line teaser from the first paragraph of a longer markdown/richtext field — e.g. a Case Study card's result line, derived from the full `result` field rather than a second author-maintained summary. */
+export function firstLineTeaser(value: string, maxLength = 160): string {
+  const firstLine = value.trim().split("\n").find((line) => line.trim().length > 0) ?? "";
+  if (firstLine.length <= maxLength) return firstLine;
+  return `${firstLine.slice(0, maxLength - 1).trimEnd()}…`;
+}

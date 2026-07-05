@@ -16,6 +16,8 @@ interface TestimonialsTableProps {
   hasPrev: boolean;
   nextCursor?: string;
   isFiltered: boolean;
+  canDelete: boolean;
+  canPublish: boolean;
 }
 
 export function TestimonialsTable({
@@ -24,6 +26,8 @@ export function TestimonialsTable({
   hasPrev,
   nextCursor,
   isFiltered,
+  canDelete,
+  canPublish,
 }: TestimonialsTableProps) {
   return (
     <DataTable
@@ -36,8 +40,8 @@ export function TestimonialsTable({
       isFiltered={isFiltered}
       emptyStateMessage={testimonialEmptyStateMessage}
       rowHref={(doc) => `/studio/testimonials/${doc._id}`}
-      bulkDelete={bulkRemove}
-      bulkPublish={bulkPublish}
+      bulkDelete={canDelete ? bulkRemove : undefined}
+      bulkPublish={canPublish ? bulkPublish : undefined}
     />
   );
 }

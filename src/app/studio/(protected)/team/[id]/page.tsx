@@ -52,7 +52,7 @@ export default async function EditTeamMemberPage({ params }: EditTeamMemberPageP
     role: doc.role,
     linkedUserId: String(doc.linkedUserId),
     bio: doc.bio,
-    photo: doc.photo ?? undefined,
+    photo: doc.photo ? String(doc.photo) : undefined,
     skills: doc.skills as TeamMemberInput["skills"],
     socialsEmail: doc.socials?.email,
     socialsGithub: doc.socials?.github ?? undefined,

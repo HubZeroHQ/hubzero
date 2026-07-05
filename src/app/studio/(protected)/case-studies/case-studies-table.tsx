@@ -16,6 +16,8 @@ interface CaseStudiesTableProps {
   hasPrev: boolean;
   nextCursor?: string;
   isFiltered: boolean;
+  canDelete: boolean;
+  canPublish: boolean;
 }
 
 /**
@@ -33,6 +35,8 @@ export function CaseStudiesTable({
   hasPrev,
   nextCursor,
   isFiltered,
+  canDelete,
+  canPublish,
 }: CaseStudiesTableProps) {
   return (
     <DataTable
@@ -45,8 +49,8 @@ export function CaseStudiesTable({
       isFiltered={isFiltered}
       emptyStateMessage={caseStudyEmptyStateMessage}
       rowHref={(doc) => `/studio/case-studies/${doc._id}`}
-      bulkDelete={bulkRemove}
-      bulkPublish={bulkPublish}
+      bulkDelete={canDelete ? bulkRemove : undefined}
+      bulkPublish={canPublish ? bulkPublish : undefined}
     />
   );
 }

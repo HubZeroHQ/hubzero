@@ -54,6 +54,8 @@ export default async function CaseStudiesListPage({ searchParams }: CaseStudiesP
         hasPrev={result.hasPrev}
         nextCursor={result.nextCursor}
         isFiltered={isFiltered}
+        canDelete={can(user, "delete", "caseStudy")}
+        canPublish={can(user, "publish", "caseStudy")}
       />
     </>
   );

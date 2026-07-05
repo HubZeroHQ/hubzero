@@ -51,6 +51,8 @@ export default async function LabsProjectsListPage({ searchParams }: LabsProject
         hasPrev={result.hasPrev}
         nextCursor={result.nextCursor}
         isFiltered={isFiltered}
+        canDelete={can(user, "delete", "labsProject")}
+        canPublish={can(user, "publish", "labsProject")}
       />
     </>
   );

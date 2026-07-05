@@ -28,7 +28,7 @@ const buildSchema = new Schema(
     practiceArea: { type: String, required: true, enum: practiceAreaValues },
     description: { type: String, required: true, trim: true, maxlength: 20000 },
     techTags: { type: [String], default: [] },
-    coverImage: { type: String, trim: true },
+    coverImage: { type: Schema.Types.ObjectId, ref: "Media" },
     launchDate: { type: Date, required: true },
     liveUrl: { type: String, trim: true },
     repoUrl: { type: String, trim: true },

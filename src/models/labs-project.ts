@@ -35,7 +35,7 @@ const labsProjectSchema = new Schema(
     practiceArea: { type: String, required: true, enum: practiceAreaValues },
     description: { type: String, required: true, trim: true, maxlength: 20000 },
     techTags: { type: [String], default: [] },
-    coverImage: { type: String, trim: true },
+    coverImage: { type: Schema.Types.ObjectId, ref: "Media" },
     isClientWork: { type: Boolean, required: true, default: false, immutable: true },
     stage: { type: String, required: true, enum: stageValues, default: "active" },
     graduatedToBuildId: { type: Schema.Types.ObjectId, ref: "Build" },
