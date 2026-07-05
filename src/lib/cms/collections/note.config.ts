@@ -27,6 +27,6 @@ export const noteConfig = registerCollection(
     // "Computed on save, not author-entered" (`ARCHITECTURE/11_DATABASE_ARCHITECTURE.md`
     // §1) — the sanctioned `computedFields` hook, not a bespoke code path.
     computedFields: (input) => ({ readingTimeMinutes: computeReadingTimeMinutes(input.body) }),
-    revalidatesPaths: () => [],
+    revalidatesPaths: (doc) => ["/notes", `/notes/${doc.slug}`],
   }),
 );

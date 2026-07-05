@@ -23,6 +23,6 @@ export const careerListingConfig = registerCollection(
     emptyStateMessage: careerListingEmptyStateMessage,
     studioBasePath: "careers",
     recordLabel: (doc) => doc.title,
-    revalidatesPaths: () => [],
+    revalidatesPaths: () => ["/careers"],
   }),
 );

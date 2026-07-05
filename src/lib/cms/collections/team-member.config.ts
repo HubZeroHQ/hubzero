@@ -29,9 +29,6 @@ export const teamMemberConfig = registerCollection(
     // the row (`ARCHITECTURE/19_CMS_FOUNDATION.md` §11) — see
     // `collection-config.ts`'s `ownerField` doc comment.
     ownerField: "linkedUserId",
-    // No public `/team` page exists yet (`config/nav.ts`: "Team... added
-    // here the same day their page ships, not before") — nothing to
-    // revalidate until that page exists.
-    revalidatesPaths: () => [],
+    revalidatesPaths: (doc) => ["/team", `/team/${doc.username}`],
   }),
 );
