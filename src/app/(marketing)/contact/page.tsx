@@ -44,8 +44,12 @@ export const metadata: Metadata = {
 export default function ContactPage() {
   return (
     <div className="pb-28 sm:pb-32 lg:pb-40">
-      {/* Opening */}
-      <div className="pt-20 pb-16 sm:pt-24 lg:pt-28">
+      {/* Opening. Bottom padding scales with the breakpoint the same way top
+          does (matching /services' opening beat) — previously fixed at
+          pb-16 regardless of viewport, which let the context+form grid
+          start almost immediately after the intro paragraph at desktop
+          widths, reading as one dense block instead of two chapters. */}
+      <div className="pt-20 pb-20 sm:pt-24 sm:pb-24 lg:pt-28 lg:pb-28">
         <Container>
           <p className="text-caption text-text-muted font-mono tracking-wide uppercase">Contact</p>
           <h1 className="text-text mt-6 max-w-2xl text-[clamp(2.25rem,1rem+4.5vw,4.5rem)] leading-[1.08] font-normal tracking-tight">

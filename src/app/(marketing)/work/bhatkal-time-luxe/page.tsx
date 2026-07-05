@@ -81,8 +81,12 @@ export default function BhatkalTimeLuxeCaseStudy() {
         </Container>
       </div>
 
-      {/* The brief */}
-      <Container className="mt-8 sm:mt-12">
+      {/* The brief. lg gap added: this follows the page's single largest
+          image (the full-bleed hero), so it was landing tighter than every
+          later image→text handoff on this page (which run ~lg:mt-24+) —
+          brought in line with that established rhythm rather than left as
+          the one outlier. */}
+      <Container className="mt-8 sm:mt-12 lg:mt-16">
         <div className="max-w-[var(--content-prose)]">
           <h2 className="text-h2 text-text font-normal">The brief</h2>
           <p className="text-body text-text-muted mt-5">

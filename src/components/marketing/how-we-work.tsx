@@ -26,10 +26,17 @@ const steps = [
  * page — a change of tempo right after the case study's slow immersion
  * (§9a). The circuit motif's second and final appearance lives here as
  * the connective line running between the three steps, not a divider.
+ *
+ * Top padding is intentionally tighter than bottom: the case study already
+ * closes on a generous pause (its own pb-44 at lg), so an equally generous
+ * pt here stacked two slow pauses back to back and blunted the "confidence
+ * returning, briskly" tempo change §9a calls for. Bottom keeps its original
+ * size — that gap feeds the CTA close's own arrival and was never the
+ * problem.
  */
 export function HowWeWork() {
   return (
-    <div className="py-16 sm:py-20 lg:py-24">
+    <div className="pt-8 pb-16 sm:pt-10 sm:pb-20 lg:pt-12 lg:pb-24">
       <Container>
         <div className="lg:ml-auto lg:max-w-xl">
           <Reveal>
