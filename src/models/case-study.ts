@@ -39,7 +39,7 @@ const caseStudySchema = new Schema(
     approach: { type: String, required: true, trim: true, maxlength: 20000 },
     result: { type: String, required: true, trim: true, maxlength: 20000 },
     techTags: { type: [String], default: [] },
-    coverImage: { type: String, trim: true },
+    coverImage: { type: Schema.Types.ObjectId, ref: "Media" },
     ...workflowFields(draftReviewPublishStatusValues),
   },
   { timestamps: true },

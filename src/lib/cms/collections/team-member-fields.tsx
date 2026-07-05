@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { WorkflowStatusBadge } from "@/components/admin/workflow-status-badge";
-import { objectIdField } from "@/lib/cms/collections/shared-validation";
+import { objectIdField, optionalObjectIdField } from "@/lib/cms/collections/shared-validation";
 import { jsonArray } from "@/lib/cms/json-field";
 import { emptyToUndefined } from "@/lib/utils";
 import type { TeamMemberDocument } from "@/models/team-member";
@@ -49,7 +49,7 @@ export const teamMemberSchema = z.object({
   name: z.string().trim().min(1, "Required.").max(120),
   role: z.string().trim().min(1, "Required.").max(120),
   bio: z.string().trim().min(1, "Required.").max(8000),
-  photo: z.preprocess(emptyToUndefined, z.url("Enter a valid URL.").optional()),
+  photo: optionalObjectIdField("Choose a photo from the media library."),
   skills: jsonArray(skillGroupSchema),
   socialsGithub: z.preprocess(emptyToUndefined, z.url("Enter a valid URL.").optional()),
   socialsLinkedin: z.preprocess(emptyToUndefined, z.url("Enter a valid URL.").optional()),

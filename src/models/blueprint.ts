@@ -33,7 +33,7 @@ const blueprintSchema = new Schema(
     category: { type: String, required: true, trim: true, maxlength: 80 },
     description: { type: String, required: true, trim: true, maxlength: 20000 },
     techStack: { type: [String], default: [] },
-    coverImage: { type: String, trim: true },
+    coverImage: { type: Schema.Types.ObjectId, ref: "Media" },
     previewUrl: { type: String, trim: true },
     demoDeploymentUrl: { type: String, trim: true },
     customizationNotes: { type: String, trim: true, maxlength: 20000 },

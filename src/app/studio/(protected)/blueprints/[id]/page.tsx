@@ -40,7 +40,7 @@ export default async function EditBlueprintPage({ params }: EditBlueprintPagePro
     category: doc.category,
     description: doc.description,
     techStack: doc.techStack,
-    coverImage: doc.coverImage ?? undefined,
+    coverImage: doc.coverImage ? String(doc.coverImage) : undefined,
     previewUrl: doc.previewUrl ?? undefined,
     demoDeploymentUrl: doc.demoDeploymentUrl ?? undefined,
     customizationNotes: doc.customizationNotes ?? undefined,

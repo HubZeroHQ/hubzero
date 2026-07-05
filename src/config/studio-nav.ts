@@ -4,6 +4,7 @@ import {
   Blocks,
   Briefcase,
   HelpCircle,
+  Image as ImageIcon,
   LayoutDashboard,
   ListChecks,
   NotebookPen,
@@ -59,6 +60,10 @@ export const studioNavItems: StudioNavItem[] = [
   { label: "Testimonials", href: "/studio/testimonials", icon: Quote, minimumRole: "admin" },
   { label: "FAQs", href: "/studio/faqs", icon: HelpCircle, minimumRole: "admin" },
   { label: "Careers", href: "/studio/careers", icon: UserPlus, minimumRole: "admin" },
+  // No `minimumRole`: Admin and Teammate alike hold a `create`/`view` grant
+  // on `media` (`permissions.ts`) — both upload/browse files for whatever
+  // content they're authoring.
+  { label: "Media", href: "/studio/media", icon: ImageIcon },
   // No `minimumRole`: the review queue itself filters to collections the
   // signed-in user holds a `view` grant on (`app/studio/(protected)/review/page.tsx`),
   // so a Teammate sees an honest empty state today, not a denied screen —
