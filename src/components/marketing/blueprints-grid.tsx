@@ -4,8 +4,15 @@ import { ArrowUpRight } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 
+import {
+  CardTags,
+  ContributorAvatars,
+  FeaturedBadge,
+  ReadingTimeLabel,
+} from "@/components/marketing/card-meta";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Link } from "@/components/ui/link";
+import type { PublicTeamMember } from "@/lib/cms/public-content";
 import { cn } from "@/lib/utils";
 
 export interface BlueprintsGridItem {
@@ -15,6 +22,10 @@ export interface BlueprintsGridItem {
   descriptionTeaser: string;
   hasLiveDemo: boolean;
   cover: { url: string; alt: string; width?: number; height?: number } | null;
+  techStack: string[];
+  featured: boolean;
+  readingTimeMinutes: number;
+  contributors: PublicTeamMember[];
 }
 
 /**
@@ -33,27 +44,28 @@ export function BlueprintsGrid({ items }: { items: BlueprintsGridItem[] }) {
   return (
     <div>
       <div className="flex flex-wrap gap-2" role="group" aria-label="Filter by category">
-        {[{ label: "All categories", value: "all" }, ...categories.map((c) => ({ label: c, value: c }))].map(
-          (tag) => {
-            const isActive = tag.value === active;
-            return (
-              <button
-                key={tag.value}
-                type="button"
-                aria-pressed={isActive}
-                onClick={() => setActive(tag.value)}
-                className={cn(
-                  "text-caption rounded-full border px-4 py-1.5 font-medium transition-colors duration-150",
-                  isActive
-                    ? "border-accent/30 bg-accent/15 text-accent"
-                    : "border-border-muted text-text-muted hover:text-text hover:border-border",
-                )}
-              >
-                {tag.label}
-              </button>
-            );
-          },
-        )}
+        {[
+          { label: "All categories", value: "all" },
+          ...categories.map((c) => ({ label: c, value: c })),
+        ].map((tag) => {
+          const isActive = tag.value === active;
+          return (
+            <button
+              key={tag.value}
+              type="button"
+              aria-pressed={isActive}
+              onClick={() => setActive(tag.value)}
+              className={cn(
+                "text-caption rounded-full border px-4 py-1.5 font-medium transition-colors duration-150",
+                isActive
+                  ? "border-accent/30 bg-accent/15 text-accent"
+                  : "border-border-muted text-text-muted hover:text-text hover:border-border",
+              )}
+            >
+              {tag.label}
+            </button>
+          );
+        })}
       </div>
 
       <div className="divide-border-muted mt-12 divide-y">
@@ -95,16 +107,24 @@ export function BlueprintsGrid({ items }: { items: BlueprintsGridItem[] }) {
                     Live demo
                   </span>
                 )}
+                {item.featured && <FeaturedBadge />}
               </div>
               <h3 className="text-h2 text-text mt-3 font-normal">{item.name}</h3>
               <p className="text-body text-text-muted mt-3 max-w-md">{item.descriptionTeaser}</p>
-              <span className="text-text mt-6 inline-flex items-center gap-1.5">
-                Explore this Blueprint
-                <ArrowUpRight
-                  className="size-4 transition-transform duration-150 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-                  aria-hidden="true"
-                />
-              </span>
+              <CardTags tags={item.techStack} />
+              <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2">
+                <span className="text-text inline-flex items-center gap-1.5">
+                  Explore this Blueprint
+                  <ArrowUpRight
+                    className="size-4 transition-transform duration-150 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                    aria-hidden="true"
+                  />
+                </span>
+                <span className="text-caption text-text-muted">
+                  <ReadingTimeLabel minutes={item.readingTimeMinutes} />
+                </span>
+                <ContributorAvatars members={item.contributors} />
+              </div>
             </div>
           </Link>
         ))}

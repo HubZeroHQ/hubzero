@@ -1,5 +1,6 @@
-import { ArrowUpRight } from "lucide-react";
+import { AlertTriangle, ArrowUpRight, CheckCircle2, Info, Pin } from "lucide-react";
 import Image from "next/image";
+import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { Container } from "@/components/ui/container";
@@ -40,6 +41,14 @@ const calloutToneClasses: Record<CalloutTone, string> = {
   info: "border-info/30 bg-info/10 text-info",
   success: "border-success/30 bg-success/10 text-success",
   warning: "border-warning/30 bg-warning/10 text-warning",
+};
+
+/** Matches `components/ui/alert.tsx`'s tone→icon convention — color is never the only signal here either. */
+const calloutToneIcons: Record<CalloutTone, LucideIcon> = {
+  note: Pin,
+  info: Info,
+  success: CheckCircle2,
+  warning: AlertTriangle,
 };
 
 const spacerHeight: Record<string, string> = {
@@ -114,8 +123,14 @@ export function BlockRenderer({ block, media, bare }: BlockRendererProps) {
     case "quote":
       return (
         <Wrap size="prose" bare={bare}>
-          <blockquote className="border-accent text-text border-l-2 pl-6">
-            <p className="text-h3 font-serif italic">&ldquo;{block.data.text}&rdquo;</p>
+          <blockquote className="border-accent relative border-l-2 pl-6">
+            <span
+              className="text-accent/20 font-serif text-6xl leading-none select-none"
+              aria-hidden="true"
+            >
+              &ldquo;
+            </span>
+            <p className="text-h3 text-text -mt-4 font-serif italic">{block.data.text}</p>
             {(block.data.attribution || block.data.role) && (
               <footer className="text-caption text-text-muted mt-4 font-mono not-italic">
                 {block.data.attribution}
@@ -127,14 +142,19 @@ export function BlockRenderer({ block, media, bare }: BlockRendererProps) {
         </Wrap>
       );
 
-    case "callout":
+    case "callout": {
+      const ToneIcon = calloutToneIcons[block.data.tone];
       return (
         <Wrap size="prose" bare={bare}>
-          <div className={cn("rounded-lg border p-5", calloutToneClasses[block.data.tone])}>
+          <div
+            className={cn("flex gap-3 rounded-lg border p-5", calloutToneClasses[block.data.tone])}
+          >
+            <ToneIcon className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
             <p className="text-body">{block.data.text}</p>
           </div>
         </Wrap>
       );
+    }
 
     case "image": {
       const resolved = media[block.data.media];
@@ -171,19 +191,24 @@ export function BlockRenderer({ block, media, bare }: BlockRendererProps) {
         .map((id) => media[id])
         .filter((img): img is ResolvedImage => Boolean(img));
       if (images.length === 0) return null;
+      // A denser grid earns its keep once there's enough images to fill a
+      // third column without starving any of them — below that, two large
+      // images read better than three cramped ones.
+      const gridColsClass = images.length >= 5 ? "sm:grid-cols-3" : "sm:grid-cols-2";
       return (
         <Wrap size="default" bare={bare}>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className={cn("grid grid-cols-1 gap-4", gridColsClass)}>
             {images.map((image, index) => (
-              <Image
-                key={`${image.url}-${index}`}
-                src={image.url}
-                alt={image.alt}
-                width={image.width ?? 1200}
-                height={image.height ?? 800}
-                sizes="(min-width: 640px) 50vw, 92vw"
-                className="h-auto w-full"
-              />
+              <div key={`${image.url}-${index}`} className="overflow-hidden rounded-lg">
+                <Image
+                  src={image.url}
+                  alt={image.alt}
+                  width={image.width ?? 1200}
+                  height={image.height ?? 800}
+                  sizes="(min-width: 640px) 50vw, 92vw"
+                  className="h-auto w-full transition-transform duration-300 hover:scale-[1.03]"
+                />
+              </div>
             ))}
           </div>
           {block.data.caption && (
@@ -198,7 +223,7 @@ export function BlockRenderer({ block, media, bare }: BlockRendererProps) {
       return (
         <Wrap size="default" bare={bare}>
           {embedUrl ? (
-            <div className="aspect-video w-full overflow-hidden rounded-lg">
+            <div className="border-border-muted aspect-video w-full overflow-hidden rounded-lg border">
               <iframe
                 src={embedUrl}
                 title={block.data.caption ?? "Embedded video"}
@@ -241,9 +266,13 @@ export function BlockRenderer({ block, media, bare }: BlockRendererProps) {
     case "timeline":
       return (
         <Wrap size="prose" bare={bare}>
-          <ol className="flex flex-col gap-6">
+          <ol className="flex flex-col gap-8">
             {block.data.items.map((item, index) => (
-              <li key={index} className="border-border-muted border-l-2 pl-6">
+              <li key={index} className="border-border-muted relative border-l-2 pl-6">
+                <span
+                  className="border-accent bg-bg absolute top-1 -left-[5px] size-2 rounded-full border-2"
+                  aria-hidden="true"
+                />
                 <p className="text-caption text-text-muted font-mono">{item.date}</p>
                 <p className="text-body text-text mt-1 font-medium">{item.title}</p>
                 {item.description && (
