@@ -120,7 +120,7 @@ export async function updateSiteSettings(
         },
         $unset: { featuredCaseStudyId: "" },
       },
-      { upsert: true, new: true, runValidators: true },
+      { upsert: true, returnDocument: "after", runValidators: true },
     );
     // The homepage feature system (`ARCHITECTURE/20_CONTENT_BLOCKS.md` §6)
     // is the first public page reading `SiteSettings` — `featuredCaseStudyId`
