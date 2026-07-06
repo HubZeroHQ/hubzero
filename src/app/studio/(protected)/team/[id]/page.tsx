@@ -12,10 +12,11 @@ import {
   scheduleUnpublish,
 } from "@/actions/studio/team-members";
 import { EditTeamMemberForm } from "@/app/studio/(protected)/team/[id]/edit-team-member-form";
+import { CommentThread } from "@/components/admin/comment-thread";
 import { PageHeader } from "@/components/admin/page-header";
 import { WorkflowActions } from "@/components/admin/workflow-actions";
 import { WorkflowStatusBadge } from "@/components/admin/workflow-status-badge";
-import { Link, Text } from "@/components/ui";
+import { Heading, Link, Text } from "@/components/ui";
 import type { TeamMemberInput } from "@/lib/cms/collections/team-member-fields";
 import { can } from "@/lib/cms/permissions";
 import { requireSessionUser } from "@/lib/cms/session";
@@ -117,6 +118,13 @@ export default async function EditTeamMemberPage({ params }: EditTeamMemberPageP
       ) : (
         <Text tone="muted">You don&apos;t have permission to edit this team member.</Text>
       )}
+
+      <div className="mt-8">
+        <Heading level={3} className="mb-3">
+          Comments
+        </Heading>
+        <CommentThread resource="teamMember" documentId={id} />
+      </div>
     </>
   );
 }

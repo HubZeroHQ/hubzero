@@ -13,10 +13,11 @@ import {
 } from "@/actions/studio/labs-projects";
 import { EditLabsProjectForm } from "@/app/studio/(protected)/labs/[id]/edit-labs-project-form";
 import { GraduateToBuildForm } from "@/app/studio/(protected)/labs/[id]/graduate-to-build-form";
+import { CommentThread } from "@/components/admin/comment-thread";
 import { PageHeader } from "@/components/admin/page-header";
 import { WorkflowActions } from "@/components/admin/workflow-actions";
 import { WorkflowStatusBadge } from "@/components/admin/workflow-status-badge";
-import { Link, Text } from "@/components/ui";
+import { Heading, Link, Text } from "@/components/ui";
 import type { LabsProjectInput } from "@/lib/cms/collections/labs-project-fields";
 import { can } from "@/lib/cms/permissions";
 import { requireSessionUser } from "@/lib/cms/session";
@@ -110,6 +111,13 @@ export default async function EditLabsProjectPage({ params }: EditLabsProjectPag
       ) : (
         <Text tone="muted">You don&apos;t have permission to edit this project.</Text>
       )}
+
+      <div className="mt-8">
+        <Heading level={3} className="mb-3">
+          Comments
+        </Heading>
+        <CommentThread resource="labsProject" documentId={id} />
+      </div>
     </>
   );
 }

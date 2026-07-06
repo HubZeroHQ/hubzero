@@ -17,6 +17,7 @@ import {
 } from "@/actions/studio/builds";
 import { EditBuildForm } from "@/app/studio/(protected)/builds/[id]/edit-build-form";
 import { CommentList } from "@/components/admin/comment-list";
+import { CommentThread } from "@/components/admin/comment-thread";
 import { PageHeader } from "@/components/admin/page-header";
 import { ReviewActions } from "@/components/admin/review-actions";
 import { WorkflowActions } from "@/components/admin/workflow-actions";
@@ -142,6 +143,13 @@ export default async function EditBuildPage({ params }: EditBuildPageProps) {
       ) : (
         <Text tone="muted">You don&apos;t have permission to edit this Build.</Text>
       )}
+
+      <div className="mt-8">
+        <Heading level={3} className="mb-3">
+          Comments
+        </Heading>
+        <CommentThread resource="build" documentId={id} />
+      </div>
     </>
   );
 }

@@ -17,6 +17,7 @@ import {
 } from "@/actions/studio/blueprints";
 import { EditBlueprintForm } from "@/app/studio/(protected)/blueprints/[id]/edit-blueprint-form";
 import { CommentList } from "@/components/admin/comment-list";
+import { CommentThread } from "@/components/admin/comment-thread";
 import { PageHeader } from "@/components/admin/page-header";
 import { ReviewActions } from "@/components/admin/review-actions";
 import { WorkflowActions } from "@/components/admin/workflow-actions";
@@ -134,6 +135,13 @@ export default async function EditBlueprintPage({ params }: EditBlueprintPagePro
       ) : (
         <Text tone="muted">You don&apos;t have permission to edit this Blueprint.</Text>
       )}
+
+      <div className="mt-8">
+        <Heading level={3} className="mb-3">
+          Comments
+        </Heading>
+        <CommentThread resource="blueprint" documentId={id} />
+      </div>
     </>
   );
 }
