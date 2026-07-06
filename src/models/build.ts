@@ -1,11 +1,23 @@
 import { Schema, type InferSchemaType, type Types } from "mongoose";
 
 import { practiceAreaValues } from "@/lib/cms/collections/shared-options";
+import type { Block } from "@/lib/cms/blocks/types";
+import {
+  contentField,
+  contributorsField,
+  featuredField,
+  readingTimeField,
+} from "@/models/shared/card-fields";
 import { defineModel } from "@/models/shared/define-model";
 import { draftReviewPublishStatusValues, workflowFields } from "@/models/shared/workflow-fields";
 
 /**
  * `ARCHITECTURE/11_DATABASE_ARCHITECTURE.md` §1's `Build` collection.
+ * `tagline` already served as the card blurb pre-blocks, so it's kept as-is
+ * rather than duplicated by a second `summary` field
+ * (`ARCHITECTURE/20_CONTENT_BLOCKS.md` §3). `description` — a single
+ * mandatory markdown field — is replaced by ordered `content: Block[]`.
+ *
  * `graduatedFromLabsId` is the inverse of `LabsProject.graduatedToBuildId` —
  * deliberately excluded from `build-fields.tsx`'s regular form fields for
  * the identical reason that file documents: it's only ever set by the
@@ -26,9 +38,12 @@ const buildSchema = new Schema(
     title: { type: String, required: true, trim: true, maxlength: 160 },
     tagline: { type: String, required: true, trim: true, maxlength: 240 },
     practiceArea: { type: String, required: true, enum: practiceAreaValues },
-    description: { type: String, required: true, trim: true, maxlength: 20000 },
+    ...contentField(),
     techTags: { type: [String], default: [] },
     coverImage: { type: Schema.Types.ObjectId, ref: "Media" },
+    ...contributorsField(),
+    ...featuredField(),
+    ...readingTimeField(),
     launchDate: { type: Date, required: true },
     liveUrl: { type: String, trim: true },
     repoUrl: { type: String, trim: true },
@@ -40,6 +55,9 @@ const buildSchema = new Schema(
 
 buildSchema.index({ status: 1, publishedAt: -1 });
 
-export type BuildDocument = InferSchemaType<typeof buildSchema> & { _id: Types.ObjectId };
+export type BuildDocument = Omit<InferSchemaType<typeof buildSchema>, "content"> & {
+  _id: Types.ObjectId;
+  content: Block[];
+};
 
 export const Build = defineModel<BuildDocument>("Build", buildSchema);

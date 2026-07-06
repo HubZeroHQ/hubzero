@@ -4,6 +4,7 @@ import type { ZodError } from "zod";
 
 import type { AnyCollectionConfig, CollectionConfig } from "@/lib/cms/collection-config";
 import { connectToDatabase } from "@/lib/db";
+import { checkHtmlBlockPublishGuard } from "@/lib/cms/blocks/guard";
 import { requirePermission } from "@/lib/cms/permissions";
 import { serializeDocument } from "@/lib/cms/serialize";
 import { getVersionEntry, omitManagedFields, snapshotVersion } from "@/lib/cms/version-history";
@@ -14,7 +15,9 @@ import type {
   CrudActionState,
   ListResult,
   TableSearchParams,
+  UserRole,
 } from "@/types/cms";
+import type { Block } from "@/lib/cms/blocks/types";
 
 /**
  * The document shape `createCrudActions()` itself needs — a stricter bound
@@ -97,6 +100,28 @@ function ownerTarget(
   if (!config.ownerField) return { createdBy: doc.createdBy?.toString() };
   const value = (doc as unknown as Record<string, unknown>)[config.ownerField];
   return { createdBy: value ? String(value) : undefined };
+}
+
+/**
+ * The generic half of the Raw HTML block's "admin-only" rule
+ * (`lib/cms/blocks/guard.ts`'s header comment explains why this lives at
+ * publish time, not save time) — introspects `config.formFields` for any
+ * `"blocks"`-type field the same way `rawFromFormData` already introspects
+ * it for array-shaped field types, so no collection needs its own
+ * `publishGuard` just to get this rule; a collection-specific `publishGuard`
+ * (Blueprint's `demoStatus` gate) still runs alongside it in `publish()`.
+ */
+function checkBlocksPublishGuard(
+  config: Pick<AnyCollectionConfig, "formFields">,
+  doc: Record<string, unknown>,
+  role: UserRole,
+): string | null {
+  for (const field of config.formFields) {
+    if (field.type !== "blocks") continue;
+    const guardMessage = checkHtmlBlockPublishGuard(doc[field.name] as Block[] | undefined, role);
+    if (guardMessage) return guardMessage;
+  }
+  return null;
 }
 
 /**
@@ -374,6 +399,13 @@ export function createCrudActions<T extends CrudDocument, TInput extends Record<
     if (!doc) return { status: "error", message: "Not found." };
 
     const user = await requirePermission("publish", config.resource, ownerTarget(doc, config));
+
+    const blocksGuardError = checkBlocksPublishGuard(
+      config,
+      doc.toObject() as unknown as Record<string, unknown>,
+      user.role,
+    );
+    if (blocksGuardError) return { status: "error", message: blocksGuardError };
 
     const guardError = config.publishGuard?.(doc.toObject() as T);
     if (guardError) return { status: "error", message: guardError };

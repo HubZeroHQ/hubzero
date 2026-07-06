@@ -38,14 +38,15 @@ export default async function EditCaseStudyPage({ params }: EditCaseStudyPagePro
     client: doc.client,
     industry: doc.industry,
     practiceArea: doc.practiceArea,
-    problem: doc.problem,
-    approach: doc.approach,
-    result: doc.result,
+    summary: doc.summary,
+    content: doc.content,
     techTags: doc.techTags,
     // `coverImage` is now a `Media` reference, not in `ClientDocument`'s
     // date/ObjectId whitelist (`types/cms.ts`) — same treatment as
     // `team/[id]/page.tsx`'s `linkedUserId`.
     coverImage: doc.coverImage ? String(doc.coverImage) : undefined,
+    contributors: (doc.contributors ?? []).map((memberId) => String(memberId)),
+    featured: doc.featured,
   };
 
   return (

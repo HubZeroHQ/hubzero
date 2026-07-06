@@ -1,15 +1,27 @@
 import { Schema, type InferSchemaType, type Types } from "mongoose";
 
+import type { Block } from "@/lib/cms/blocks/types";
+import {
+  contentField,
+  contributorsField,
+  featuredField,
+  readingTimeField,
+} from "@/models/shared/card-fields";
 import { defineModel } from "@/models/shared/define-model";
 import { draftReviewPublishStatusValues, workflowFields } from "@/models/shared/workflow-fields";
 
 /**
- * `ARCHITECTURE/11_DATABASE_ARCHITECTURE.md` §1's `Note` collection.
- * `readingTimeMinutes` is "computed on save, not author-entered" — not a
- * form field at all, derived by `note.config.ts`'s `computedFields`
- * from `body`'s word count (`ARCHITECTURE/19_CMS_FOUNDATION.md` §11), the
- * same escape hatch TeamMember's `socials` recombination and LabsProject's
- * constant `isClientWork` use.
+ * `ARCHITECTURE/11_DATABASE_ARCHITECTURE.md` §1's `Note` collection. `body` —
+ * a single mandatory markdown field — is replaced by ordered
+ * `content: Block[]` (`ARCHITECTURE/20_CONTENT_BLOCKS.md`); `summary`
+ * already existed as the dedicated card blurb, unchanged. `readingTimeMinutes`
+ * remains "computed on save, not author-entered" — `note.config.ts`'s
+ * `computedFields` now derives it from `content`'s word count
+ * (`lib/cms/blocks/text.ts`) instead of `body`'s.
+ *
+ * `authorId` (a single required `TeamMember` reference) remains the
+ * collection's primary-author field; `contributors` is the new, optional,
+ * additional-people relationship every narrative collection gains.
  */
 const noteSchema = new Schema(
   {
@@ -23,12 +35,14 @@ const noteSchema = new Schema(
     },
     title: { type: String, required: true, trim: true, maxlength: 200 },
     summary: { type: String, required: true, trim: true, maxlength: 400 },
-    body: { type: String, required: true, trim: true, maxlength: 50000 },
+    ...contentField(),
     authorId: { type: Schema.Types.ObjectId, ref: "TeamMember", required: true },
+    ...contributorsField(),
     category: { type: String, required: true, trim: true, maxlength: 80 },
     tags: { type: [String], default: [] },
     coverImage: { type: Schema.Types.ObjectId, ref: "Media" },
-    readingTimeMinutes: { type: Number, required: true, default: 1 },
+    ...featuredField(),
+    ...readingTimeField(),
     ...workflowFields(draftReviewPublishStatusValues),
   },
   { timestamps: true },
@@ -36,6 +50,9 @@ const noteSchema = new Schema(
 
 noteSchema.index({ status: 1, publishedAt: -1 });
 
-export type NoteDocument = InferSchemaType<typeof noteSchema> & { _id: Types.ObjectId };
+export type NoteDocument = Omit<InferSchemaType<typeof noteSchema>, "content"> & {
+  _id: Types.ObjectId;
+  content: Block[];
+};
 
 export const Note = defineModel<NoteDocument>("Note", noteSchema);

@@ -121,9 +121,8 @@ describe("getMediaUsage / deleteMedia", () => {
       client: "Test Client",
       industry: "Test",
       practiceArea: "software",
-      problem: "p",
-      approach: "a",
-      result: "r",
+      summary: "A test case study.",
+      content: [{ id: "b1", type: "markdown", data: { markdown: "Body." } }],
       coverImage: new Types.ObjectId(media.id),
       status: "draft",
       version: 0,
@@ -142,5 +141,40 @@ describe("getMediaUsage / deleteMedia", () => {
     // Soft-deleted — no longer returned by the picker/library's list.
     const afterDelete = await listMedia({ q: "cover" });
     expect(afterDelete.items.find((item) => item.id === media.id)).toBeUndefined();
+  });
+
+  it("finds media referenced only inside a block's data (an Image block), not just a top-level image field", async () => {
+    const buffer = await pngBuffer({ r: 40, g: 50, b: 60 });
+    const media = await uploadMedia({
+      buffer,
+      originalName: "in-block.png",
+      mimeType: "image/png",
+      alt: "Referenced only from inside a content block",
+      uploadedBy: uploaderId,
+    });
+
+    expect(await getMediaUsage(media.id)).toEqual([]);
+
+    const caseStudy = await CaseStudy.create({
+      slug: "media-in-block-test",
+      client: "Test Client",
+      industry: "Test",
+      practiceArea: "software",
+      summary: "A test case study.",
+      content: [
+        { id: "b1", type: "image", data: { media: media.id, align: "center", width: "content" } },
+      ],
+      status: "draft",
+      version: 0,
+      createdBy: new Types.ObjectId(uploaderId),
+    });
+
+    const usage = await getMediaUsage(media.id);
+    expect(usage).toEqual([{ resource: "caseStudy", label: "Case Studies", count: 1 }]);
+
+    await expect(deleteMedia(media.id)).rejects.toThrow(MediaInUseError);
+
+    await CaseStudy.findByIdAndDelete(caseStudy._id);
+    await expect(deleteMedia(media.id)).resolves.toBeUndefined();
   });
 });

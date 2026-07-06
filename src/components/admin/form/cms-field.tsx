@@ -4,11 +4,13 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { BlockEditor } from "@/components/admin/blocks/block-editor";
 import { ReferencePicker } from "@/components/admin/form/reference-picker";
 import { ReferencePickerList } from "@/components/admin/form/reference-picker-list";
 import { TagsInput } from "@/components/admin/form/tags-input";
 import { MediaPicker } from "@/components/admin/media/media-picker";
 import { MediaPickerList } from "@/components/admin/media/media-picker-list";
+import type { Block } from "@/lib/cms/blocks/types";
 import type { FieldConfig } from "@/types/cms";
 
 export interface CmsFieldProps<TInput extends Record<string, unknown>> {
@@ -193,6 +195,19 @@ export function CmsField<TInput extends Record<string, unknown>>({
           value={Array.isArray(value) ? (value as string[]) : []}
           onChange={onChange}
           error={error}
+        />
+      );
+
+    case "blocks":
+      return (
+        <BlockEditor
+          name={field.name}
+          label={field.label}
+          hint={field.description}
+          required={field.required}
+          error={error}
+          value={Array.isArray(value) ? (value as Block[]) : []}
+          onChange={onChange}
         />
       );
 

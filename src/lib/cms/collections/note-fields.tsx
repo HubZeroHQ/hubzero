@@ -1,6 +1,13 @@
 import { z } from "zod";
 
-import { WorkflowStatusBadge } from "@/components/admin/workflow-status-badge";
+import { blocksField } from "@/lib/cms/blocks/schema";
+import {
+  cardFieldsSchemaShape,
+  contributorsFormField,
+  featuredFormField,
+  featuredListColumn,
+  statusListColumn,
+} from "@/lib/cms/collections/card-fields";
 import { objectIdField, optionalObjectIdField } from "@/lib/cms/collections/shared-validation";
 import type { NoteDocument } from "@/models/note";
 import type { ClientDocument, FieldConfig, FilterConfig, TableColumn } from "@/types/cms";
@@ -19,26 +26,15 @@ export const noteSchema = z.object({
     .regex(slugPattern, "Lowercase letters, numbers, and hyphens only."),
   title: z.string().trim().min(1, "Required.").max(200),
   summary: z.string().trim().min(1, "Required.").max(400),
-  body: z.string().trim().min(1, "Required.").max(50000),
+  content: blocksField(),
   authorId: objectIdField("Select the author."),
   category: z.string().trim().min(1, "Required.").max(80),
   tags: z.array(z.string().trim().min(1).max(40)).max(20).default([]),
   coverImage: optionalObjectIdField("Choose a cover image from the media library."),
+  ...cardFieldsSchemaShape,
 });
 
 export type NoteInput = z.infer<typeof noteSchema>;
-
-/**
- * "Computed on save, not author-entered" (`ARCHITECTURE/11_DATABASE_ARCHITECTURE.md`
- * §1) — a standard 200-words-per-minute reading speed assumption, rounded up
- * so a short note never reads as "0 minutes."
- */
-const WORDS_PER_MINUTE = 200;
-
-export function computeReadingTimeMinutes(body: string): number {
-  const wordCount = body.trim().split(/\s+/).filter(Boolean).length;
-  return Math.max(1, Math.ceil(wordCount / WORDS_PER_MINUTE));
-}
 
 export const noteEmptyStateMessage = "No notes yet — create the first one to get started.";
 
@@ -52,7 +48,7 @@ export const noteFormFields: FieldConfig<NoteInput>[] = [
     description: "Used in the public URL — lowercase, hyphenated.",
   },
   { name: "summary", label: "Summary", type: "textarea", required: true },
-  { name: "body", label: "Body", type: "richtext", required: true },
+  { name: "content", label: "Content", type: "blocks", required: true },
   {
     name: "authorId",
     label: "Author",
@@ -61,9 +57,11 @@ export const noteFormFields: FieldConfig<NoteInput>[] = [
     labelField: "name",
     required: true,
   },
+  contributorsFormField("Anyone else who worked on this note, beyond the author."),
   { name: "category", label: "Category", type: "text", required: true },
   { name: "tags", label: "Tags", type: "multiselect" },
   { name: "coverImage", label: "Cover image", type: "image" },
+  featuredFormField(),
 ];
 
 export const noteListColumns: TableColumn<NoteRow>[] = [
@@ -74,7 +72,8 @@ export const noteListColumns: TableColumn<NoteRow>[] = [
     label: "Read time",
     render: (doc) => `${doc.readingTimeMinutes} min`,
   },
-  { key: "status", label: "Status", render: (doc) => <WorkflowStatusBadge status={doc.status} /> },
+  featuredListColumn(),
+  statusListColumn(),
   {
     key: "updatedAt",
     label: "Updated",

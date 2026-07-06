@@ -4,6 +4,8 @@ import sharp from "sharp";
 
 import { listCollections } from "@/lib/cms/collection-config";
 import { connectToDatabase } from "@/lib/db";
+import { collectBlockMediaIds } from "@/lib/cms/blocks/guard";
+import type { Block } from "@/lib/cms/blocks/types";
 import { serializeDocument } from "@/lib/cms/serialize";
 import { getStorageAdapter } from "@/lib/cms/storage";
 import { Media, type MediaDocument } from "@/models/media";
@@ -277,6 +279,15 @@ export interface MediaUsage {
  * collection: scans each collection's own `formFields` for `image`/
  * `imageArray` fields and counts matches — a future collection with an image
  * field is covered the moment it registers, no change here.
+ *
+ * A `"blocks"` field (`ARCHITECTURE/20_CONTENT_BLOCKS.md`) needs a different
+ * check: an Image/Gallery block's media id is nested inside the field's JSON,
+ * invisible to a plain `{ [field.name]: mediaId }` equality query. Rather
+ * than a fragile dot-path query across a heterogeneous array, this loads the
+ * (small, five-person-team-scale) collection's block field and scans it in
+ * application code — the same "app-layer integrity check, not an exotic Mongo
+ * query" posture `11_DATABASE_ARCHITECTURE.md` §2 already applies to the
+ * Labs↔Builds graduation link.
  */
 export async function getMediaUsage(mediaId: string): Promise<MediaUsage[]> {
   await connectToDatabase();
@@ -286,12 +297,25 @@ export async function getMediaUsage(mediaId: string): Promise<MediaUsage[]> {
     const imageFields = config.formFields.filter(
       (field) => field.type === "image" || field.type === "imageArray",
     );
-    if (imageFields.length === 0) continue;
+    const blockFields = config.formFields.filter((field) => field.type === "blocks");
 
     let count = 0;
     for (const field of imageFields) {
       count += await config.model.countDocuments({ [field.name]: mediaId });
     }
+
+    if (blockFields.length > 0) {
+      const docs = await config.model
+        .find({}, Object.fromEntries(blockFields.map((field) => [field.name, 1])))
+        .lean<Record<string, unknown>[]>();
+      for (const doc of docs) {
+        const usesMedia = blockFields.some((field) =>
+          collectBlockMediaIds(doc[field.name] as Block[] | undefined).includes(mediaId),
+        );
+        if (usesMedia) count += 1;
+      }
+    }
+
     if (count > 0) usage.push({ resource: config.resource, label: config.label, count });
   }
 

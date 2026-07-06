@@ -8,7 +8,6 @@ import { Container } from "@/components/ui/container";
 import { Link } from "@/components/ui/link";
 import { findPublished, resolveCoverImage } from "@/lib/cms/public-content";
 import { pageMetadata } from "@/lib/seo";
-import { firstLineTeaser } from "@/lib/utils";
 import { Blueprint, type BlueprintDocument } from "@/models/blueprint";
 
 export const metadata: Metadata = pageMetadata({
@@ -36,7 +35,7 @@ export default async function BlueprintsIndexPage() {
       slug: doc.slug,
       name: doc.name,
       category: doc.category,
-      descriptionTeaser: firstLineTeaser(doc.description),
+      descriptionTeaser: doc.summary,
       hasLiveDemo: Boolean(doc.demoDeploymentUrl ?? doc.previewUrl),
       cover: await resolveCoverImage(doc.coverImage ? String(doc.coverImage) : undefined),
     })),

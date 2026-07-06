@@ -5,12 +5,18 @@ import { notFound } from "next/navigation";
 
 import "@/lib/cms/collections";
 
-import { RichText } from "@/components/marketing/rich-text";
+import { ContentRenderer } from "@/components/marketing/blocks/content-renderer";
+import { ContributorChips } from "@/components/marketing/blocks/contributor-chips";
 import { JsonLd } from "@/components/seo/json-ld";
 import { Badge } from "@/components/ui/badge";
 import { Container } from "@/components/ui/container";
 import { Link } from "@/components/ui/link";
-import { findOnePublished, findPublished, resolveCoverImage } from "@/lib/cms/public-content";
+import {
+  findOnePublished,
+  findPublished,
+  getPublicTeamMembers,
+  resolveCoverImage,
+} from "@/lib/cms/public-content";
 import { absoluteUrl, pageMetadata } from "@/lib/seo";
 import { LabsProject, type LabsProjectDocument } from "@/models/labs-project";
 
@@ -39,11 +45,10 @@ export async function generateMetadata({ params }: LabsProjectPageProps): Promis
   const { slug } = await params;
   const doc = await getLabsProject(slug);
   if (!doc) return {};
-  const description = doc.description.split("\n")[0]?.slice(0, 200) ?? "";
   const cover = await resolveCoverImage(doc.coverImage ? String(doc.coverImage) : undefined);
   return pageMetadata({
     title: doc.title,
-    description,
+    description: doc.summary,
     path: `/labs/${doc.slug}`,
     image: cover ? { url: cover.url, alt: cover.alt } : undefined,
   });
@@ -54,7 +59,10 @@ export default async function LabsProjectPage({ params }: LabsProjectPageProps) 
   const doc = await getLabsProject(slug);
   if (!doc) notFound();
 
-  const cover = await resolveCoverImage(doc.coverImage ? String(doc.coverImage) : undefined);
+  const [cover, contributors] = await Promise.all([
+    resolveCoverImage(doc.coverImage ? String(doc.coverImage) : undefined),
+    getPublicTeamMembers((doc.contributors ?? []).map((id) => String(id))),
+  ]);
 
   return (
     <div className="pb-32">
@@ -63,7 +71,7 @@ export default async function LabsProjectPage({ params }: LabsProjectPageProps) 
           "@context": "https://schema.org",
           "@type": "CreativeWork",
           name: doc.title,
-          description: doc.description.split("\n")[0]?.slice(0, 200),
+          description: doc.summary,
           genre: "Research & Development",
           ...(cover ? { image: absoluteUrl(cover.url) } : {}),
         }}
@@ -107,11 +115,15 @@ export default async function LabsProjectPage({ params }: LabsProjectPageProps) 
         )}
       </div>
 
-      <Container className="mt-8 sm:mt-12 lg:mt-16">
-        <div className="max-w-[var(--content-prose)]">
-          <RichText>{doc.description}</RichText>
+      <div className="mt-8 sm:mt-12 lg:mt-16">
+        <ContentRenderer blocks={doc.content} />
+      </div>
+
+      {contributors.length > 0 && (
+        <div className="mt-16">
+          <ContributorChips members={contributors} />
         </div>
-      </Container>
+      )}
 
       <Container className="mt-32 sm:mt-40 lg:mt-48">
         <div className="border-border-muted border-t pt-12 text-center">

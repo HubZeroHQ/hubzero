@@ -38,9 +38,12 @@ export default async function EditLabsProjectPage({ params }: EditLabsProjectPag
     slug: doc.slug,
     title: doc.title,
     practiceArea: doc.practiceArea,
-    description: doc.description,
+    summary: doc.summary,
+    content: doc.content,
     techTags: doc.techTags,
     coverImage: doc.coverImage ? String(doc.coverImage) : undefined,
+    contributors: (doc.contributors ?? []).map((memberId) => String(memberId)),
+    featured: doc.featured,
     stage: doc.stage === "graduated" ? undefined : doc.stage,
   };
 

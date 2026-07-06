@@ -1,7 +1,14 @@
 import { z } from "zod";
 
-import { WorkflowStatusBadge } from "@/components/admin/workflow-status-badge";
 import { Badge } from "@/components/ui/badge";
+import { blocksField } from "@/lib/cms/blocks/schema";
+import {
+  cardFieldsSchemaShape,
+  contributorsFormField,
+  featuredFormField,
+  featuredListColumn,
+  statusListColumn,
+} from "@/lib/cms/collections/card-fields";
 import { optionalObjectIdField } from "@/lib/cms/collections/shared-validation";
 import { emptyToUndefined } from "@/lib/utils";
 import type { BlueprintDocument } from "@/models/blueprint";
@@ -28,12 +35,13 @@ export const blueprintSchema = z.object({
     .regex(slugPattern, "Lowercase letters, numbers, and hyphens only."),
   name: z.string().trim().min(1, "Required.").max(160),
   category: z.string().trim().min(1, "Required.").max(80),
-  description: z.string().trim().min(1, "Required.").max(20000),
+  summary: z.string().trim().min(1, "Required.").max(400),
+  content: blocksField(),
   techStack: z.array(z.string().trim().min(1).max(40)).max(30).default([]),
   coverImage: optionalObjectIdField("Choose a cover image from the media library."),
+  ...cardFieldsSchemaShape,
   previewUrl: z.preprocess(emptyToUndefined, z.url("Enter a valid URL.").optional()),
   demoDeploymentUrl: z.preprocess(emptyToUndefined, z.url("Enter a valid URL.").optional()),
-  customizationNotes: z.string().trim().max(20000).optional(),
   demoStatus: z.enum(["live", "stale", "retired"], { error: "Choose a demo status." }),
 });
 
@@ -53,12 +61,14 @@ export const blueprintFormFields: FieldConfig<BlueprintInput>[] = [
     description: "Used in the public URL — lowercase, hyphenated.",
   },
   { name: "category", label: "Category", type: "text", required: true },
-  { name: "description", label: "Description", type: "richtext", required: true },
+  { name: "summary", label: "Card summary", type: "textarea", required: true },
+  { name: "content", label: "Content", type: "blocks", required: true },
   { name: "techStack", label: "Tech stack", type: "multiselect" },
   { name: "coverImage", label: "Cover image", type: "image" },
+  contributorsFormField(),
+  featuredFormField(),
   { name: "previewUrl", label: "Preview URL", type: "url" },
   { name: "demoDeploymentUrl", label: "Demo deployment URL", type: "url" },
-  { name: "customizationNotes", label: "Customization notes", type: "richtext" },
   {
     name: "demoStatus",
     label: "Demo status",
@@ -85,7 +95,8 @@ export const blueprintListColumns: TableColumn<BlueprintRow>[] = [
       </Badge>
     ),
   },
-  { key: "status", label: "Status", render: (doc) => <WorkflowStatusBadge status={doc.status} /> },
+  featuredListColumn(),
+  statusListColumn(),
 ];
 
 export const blueprintFilters: FilterConfig<BlueprintRow>[] = [

@@ -1,7 +1,14 @@
 import { z } from "zod";
 
-import { WorkflowStatusBadge } from "@/components/admin/workflow-status-badge";
 import { Badge } from "@/components/ui/badge";
+import { blocksField } from "@/lib/cms/blocks/schema";
+import {
+  cardFieldsSchemaShape,
+  contributorsFormField,
+  featuredFormField,
+  featuredListColumn,
+  statusListColumn,
+} from "@/lib/cms/collections/card-fields";
 import { practiceAreaOptions, practiceAreaValues } from "@/lib/cms/collections/shared-options";
 import { optionalObjectIdField } from "@/lib/cms/collections/shared-validation";
 import type { LabsProjectDocument } from "@/models/labs-project";
@@ -35,9 +42,11 @@ export const labsProjectSchema = z.object({
   practiceArea: z.enum(practiceAreaValues, {
     error: "Choose a practice area.",
   }),
-  description: z.string().trim().min(1, "Required.").max(20000),
+  summary: z.string().trim().min(1, "Required.").max(400),
+  content: blocksField(),
   techTags: z.array(z.string().trim().min(1).max(40)).max(20).default([]),
   coverImage: optionalObjectIdField("Choose a cover image from the media library."),
+  ...cardFieldsSchemaShape,
   stage: z.enum(["active", "archived"], { error: "Choose active or archived." }),
 });
 
@@ -62,9 +71,12 @@ export const labsProjectFormFields: FieldConfig<LabsProjectInput>[] = [
     required: true,
     options: [...practiceAreaOptions],
   },
-  { name: "description", label: "Description", type: "richtext", required: true },
+  { name: "summary", label: "Card summary", type: "textarea", required: true },
+  { name: "content", label: "Content", type: "blocks", required: true },
   { name: "techTags", label: "Tech tags", type: "multiselect" },
   { name: "coverImage", label: "Cover image", type: "image" },
+  contributorsFormField(),
+  featuredFormField(),
   {
     name: "stage",
     label: "Stage",
@@ -90,7 +102,8 @@ export const labsProjectListColumns: TableColumn<LabsProjectRow>[] = [
       </Badge>
     ),
   },
-  { key: "status", label: "Status", render: (doc) => <WorkflowStatusBadge status={doc.status} /> },
+  featuredListColumn(),
+  statusListColumn(),
 ];
 
 export const labsProjectFilters: FilterConfig<LabsProjectRow>[] = [

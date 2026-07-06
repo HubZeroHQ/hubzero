@@ -4,11 +4,17 @@ import { notFound } from "next/navigation";
 
 import "@/lib/cms/collections";
 
-import { RichText } from "@/components/marketing/rich-text";
+import { ContentRenderer } from "@/components/marketing/blocks/content-renderer";
+import { ContributorChips } from "@/components/marketing/blocks/contributor-chips";
 import { JsonLd } from "@/components/seo/json-ld";
 import { Container } from "@/components/ui/container";
 import { Link } from "@/components/ui/link";
-import { findOnePublished, findPublished, resolveCoverImage } from "@/lib/cms/public-content";
+import {
+  findOnePublished,
+  findPublished,
+  getPublicTeamMembers,
+  resolveCoverImage,
+} from "@/lib/cms/public-content";
 import { absoluteUrl, pageMetadata } from "@/lib/seo";
 import { Note, type NoteDocument } from "@/models/note";
 import { TeamMember } from "@/models/team-member";
@@ -47,11 +53,12 @@ export default async function NotePage({ params }: NotePageProps) {
   const doc = await getNote(slug);
   if (!doc) notFound();
 
-  const [cover, author] = await Promise.all([
+  const [cover, author, contributors] = await Promise.all([
     resolveCoverImage(doc.coverImage ? String(doc.coverImage) : undefined),
     TeamMember.findById(doc.authorId)
       .select("name username")
       .lean<{ name: string; username: string } | null>(),
+    getPublicTeamMembers((doc.contributors ?? []).map((id) => String(id))),
   ]);
 
   return (
@@ -107,16 +114,20 @@ export default async function NotePage({ params }: NotePageProps) {
         )}
       </div>
 
-      <Container className="mt-8 sm:mt-12 lg:mt-16">
-        <div className="max-w-[var(--content-prose)]">
-          <RichText>{doc.body}</RichText>
-        </div>
-      </Container>
+      <div className="mt-8 sm:mt-12 lg:mt-16">
+        <ContentRenderer blocks={doc.content} />
+      </div>
 
       {doc.tags.length > 0 && (
         <Container className="mt-16">
           <p className="text-caption text-text-muted font-mono">{doc.tags.join(" · ")}</p>
         </Container>
+      )}
+
+      {contributors.length > 0 && (
+        <div className="mt-16">
+          <ContributorChips members={contributors} label="Contributors" />
+        </div>
       )}
 
       <Container className="mt-16">
