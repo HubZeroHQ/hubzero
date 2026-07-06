@@ -105,7 +105,7 @@ Measured directly against the repository and a clean production build — no bus
       publishedAt: new Date(),
       createdBy: adminId,
     },
-    { upsert: true, new: true, setDefaultsOnInsert: true, runValidators: true },
+    { upsert: true, returnDocument: "after", setDefaultsOnInsert: true, runValidators: true },
   );
 
   await snapshotVersion("caseStudy", doc.toObject() as unknown as Record<string, unknown>, adminId);
@@ -132,7 +132,7 @@ async function migrateIotSensorDashboard(adminId: string) {
       publishedAt: new Date(),
       createdBy: adminId,
     },
-    { upsert: true, new: true, setDefaultsOnInsert: true, runValidators: true },
+    { upsert: true, returnDocument: "after", setDefaultsOnInsert: true, runValidators: true },
   );
 
   await snapshotVersion(
