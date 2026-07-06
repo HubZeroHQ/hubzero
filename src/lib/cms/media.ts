@@ -241,13 +241,22 @@ export async function renameMedia(
   input: { originalName?: string; alt?: string; caption?: string },
 ): Promise<ClientMedia> {
   await connectToDatabase();
-  const update: Record<string, unknown> = {};
-  if (input.originalName !== undefined) update.originalName = input.originalName.trim();
+  const set: Record<string, unknown> = {};
+  const unset: Record<string, unknown> = {};
+  if (input.originalName !== undefined) set.originalName = input.originalName.trim();
   if (input.alt !== undefined) {
     if (!input.alt.trim()) throw new MediaUploadError("Alt text is required.");
-    update.alt = input.alt.trim();
+    set.alt = input.alt.trim();
   }
-  if (input.caption !== undefined) update.caption = input.caption.trim() || undefined;
+  if (input.caption !== undefined) {
+    const trimmed = input.caption.trim();
+    if (trimmed) set.caption = trimmed;
+    else unset.caption = "";
+  }
+
+  const update: Record<string, unknown> = {};
+  if (Object.keys(set).length > 0) update.$set = set;
+  if (Object.keys(unset).length > 0) update.$unset = unset;
 
   const updated = await Media.findOneAndUpdate({ _id: id, deletedAt: null }, update, {
     returnDocument: "after",
@@ -258,9 +267,10 @@ export async function renameMedia(
 
 export async function moveMediaToFolder(ids: string[], folder: string | null): Promise<void> {
   await connectToDatabase();
+  const trimmed = folder?.trim();
   await Media.updateMany(
     { _id: { $in: ids }, deletedAt: null },
-    { folder: folder?.trim() || undefined },
+    trimmed ? { $set: { folder: trimmed } } : { $unset: { folder: "" } },
   );
 }
 
@@ -299,7 +309,12 @@ export async function listMedia(params: {
       { originalName: { $regex: escaped, $options: "i" } },
     ];
   }
-  if (params.folder) filter.folder = params.folder;
+  // `folder: ""` means "unfiled" (deliberately distinct from `undefined`,
+  // which means "any folder") — Mongo's `{ folder: null }` matches both an
+  // explicit `null` and a document where the field is absent entirely, which
+  // is exactly "no folder set" for every document created before this field
+  // existed as well as ones explicitly moved out of a folder.
+  if (params.folder !== undefined) filter.folder = params.folder === "" ? null : params.folder;
   if (params.resourceType) filter.resourceType = params.resourceType;
 
   const sortMap: Record<MediaSort, Record<string, 1 | -1>> = {

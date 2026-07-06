@@ -8,12 +8,14 @@ import {
   type ClientMedia,
   type ListMediaResult,
   type MediaSort,
+  type MediaUsage,
   MediaInUseError,
   MediaUploadError,
   deleteMedia,
   findBrokenMediaReferences,
   getMediaById,
   getMediaByIds,
+  getMediaUsage,
   getStorageUsageSummary,
   listMedia,
   listMediaFolders,
@@ -243,4 +245,9 @@ export async function getStorageUsageAction(): Promise<StorageUsageSummary> {
 export async function getBrokenMediaReferencesAction(): Promise<BrokenMediaReference[]> {
   await requirePermission("view", "media");
   return findBrokenMediaReferences();
+}
+
+export async function getMediaUsageAction(id: string): Promise<MediaUsage[]> {
+  await requirePermission("view", "media");
+  return getMediaUsage(id);
 }
