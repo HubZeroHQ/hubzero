@@ -2,6 +2,7 @@
 
 import * as Dialog from "@radix-ui/react-dialog";
 import { UploadCloud } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 
 import { Alert } from "@/components/ui/alert";
@@ -37,6 +38,8 @@ const UNFILED = "__unfiled__";
  * machinery built for a different shape.
  */
 export function MediaLibrary({ canDelete, canEdit }: MediaLibraryProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [refreshKey, setRefreshKey] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [folders, setFolders] = useState<string[]>([]);
@@ -51,6 +54,19 @@ export function MediaLibrary({ canDelete, canEdit }: MediaLibraryProps) {
   useEffect(() => {
     listMediaFoldersAction().then(setFolders);
   }, [refreshKey]);
+
+  // The command palette's "Upload Media" action (Phase F) links here with
+  // `?upload=1` to open the upload dialog immediately — the URL param is
+  // consumed once, then stripped, so refreshing/bookmarking the plain
+  // `/studio/media` URL never force-opens it.
+  useEffect(() => {
+    if (searchParams.get("upload") !== "1") return;
+    Promise.resolve().then(() => {
+      setUploadOpen(true);
+      router.replace("/studio/media");
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function refresh() {
     setRefreshKey((key) => key + 1);

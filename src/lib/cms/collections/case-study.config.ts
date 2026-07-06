@@ -30,6 +30,7 @@ export const caseStudyConfig = registerCollection(
     searchableFields: ["client", "industry", "slug"],
     emptyStateMessage: caseStudyEmptyStateMessage,
     studioBasePath: "case-studies",
+    quickCreateLabel: "New Case Study",
     recordLabel: (doc) => doc.client,
     computedFields: (input) => ({ readingTimeMinutes: computeReadingTimeMinutes(input.content) }),
     // "/" is included because this case study may be one of the homepage's

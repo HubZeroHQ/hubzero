@@ -126,6 +126,16 @@ export interface CollectionConfig<
    * only place this is read).
    */
   ownerField?: keyof T & string;
+  /**
+   * Label for this collection's "new" command in the global command palette
+   * (`components/admin/command-palette/command-palette.tsx`) — e.g. `"New
+   * Case Study"`. Omit for a collection with no standalone create screen yet,
+   * or one that shouldn't be quick-creatable (`Lead`, `User`). The palette's
+   * command list is generated from `listCollections()` filtered to this
+   * field, never a hardcoded per-collection list — a new collection gets a
+   * quick-create command the moment it sets this, no palette code change.
+   */
+  quickCreateLabel?: string;
 }
 
 /**
