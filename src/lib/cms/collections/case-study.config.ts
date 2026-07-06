@@ -6,6 +6,7 @@ import {
   caseStudySchema,
   type CaseStudyInput,
 } from "@/lib/cms/collections/case-study-fields";
+import { computeReadingTimeMinutes } from "@/lib/cms/blocks/text";
 import { defineCollection, registerCollection } from "@/lib/cms/collection-config";
 import { CaseStudy, type CaseStudyDocument } from "@/models/case-study";
 
@@ -30,6 +31,11 @@ export const caseStudyConfig = registerCollection(
     emptyStateMessage: caseStudyEmptyStateMessage,
     studioBasePath: "case-studies",
     recordLabel: (doc) => doc.client,
-    revalidatesPaths: (doc) => ["/work", `/work/${doc.slug}`],
+    computedFields: (input) => ({ readingTimeMinutes: computeReadingTimeMinutes(input.content) }),
+    // "/" is included because this case study may be the homepage's featured
+    // one (`ARCHITECTURE/20_CONTENT_BLOCKS.md` §6, `lib/cms/public-content.ts`'s
+    // `getFeaturedCaseStudy`) — cheap and safe to always revalidate, since a
+    // stale homepage would otherwise only self-correct on the next ISR tick.
+    revalidatesPaths: (doc) => ["/", "/work", `/work/${doc.slug}`],
   }),
 );

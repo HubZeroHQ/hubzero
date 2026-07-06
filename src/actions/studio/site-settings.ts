@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { Types } from "mongoose";
 import type { ZodError } from "zod";
 
@@ -72,37 +73,60 @@ export async function updateSiteSettings(
     seoDefaultTitle,
     seoDefaultDescription,
     ogImage,
+    featuredCaseStudyId,
     googleAnalyticsId,
     plausibleDomain,
     ...rest
   } = parsed.data;
 
+  // A plain-object `findOneAndUpdate` silently drops any key whose value is
+  // `undefined` before it reaches MongoDB — it does *not* unset a
+  // previously-stored value. `featuredCaseStudyId` is a top-level optional
+  // reference an editor can legitimately clear back to "unset," so clearing
+  // it needs an explicit `$unset`, not a `$set` to `undefined` (which would
+  // silently leave the old reference in place). `ogImage` doesn't need the
+  // same treatment: it lives inside `seo`, and `$set`ting the whole `seo`
+  // object below already replaces it wholesale — omitting `ogImage` from
+  // that object already clears it, and `$unset`ting a child of a path this
+  // same update also `$set`s (`seo.ogImage` under `seo`) is a MongoDB
+  // conflict error, not a no-op.
+  const unset: Record<string, ""> = {};
+  if (!featuredCaseStudyId) unset.featuredCaseStudyId = "";
+
   try {
     await SiteSettings.findOneAndUpdate(
       { singletonKey: "default" },
       {
-        singletonKey: "default",
-        ...rest,
-        socials: {
-          linkedin: socialsLinkedin,
-          github: socialsGithub,
-          twitter: socialsTwitter,
-          instagram: socialsInstagram,
+        $set: {
+          singletonKey: "default",
+          ...rest,
+          ...(featuredCaseStudyId
+            ? { featuredCaseStudyId: new Types.ObjectId(featuredCaseStudyId) }
+            : {}),
+          socials: {
+            linkedin: socialsLinkedin,
+            github: socialsGithub,
+            twitter: socialsTwitter,
+            instagram: socialsInstagram,
+          },
+          seo: {
+            defaultTitle: seoDefaultTitle,
+            defaultDescription: seoDefaultDescription,
+            ...(ogImage ? { ogImage: new Types.ObjectId(ogImage) } : {}),
+          },
+          analytics: { googleAnalyticsId, plausibleDomain },
         },
-        seo: {
-          defaultTitle: seoDefaultTitle,
-          defaultDescription: seoDefaultDescription,
-          ogImage: ogImage ? new Types.ObjectId(ogImage) : undefined,
-        },
-        analytics: { googleAnalyticsId, plausibleDomain },
+        ...(Object.keys(unset).length > 0 ? { $unset: unset } : {}),
       },
       { upsert: true, new: true, runValidators: true },
     );
-    // No `revalidatePath` call: no public page reads `SiteSettings` yet
-    // (the same "nothing to revalidate" state every other collection
-    // shipped in — `ARCHITECTURE/18_ARCHITECTURE_CHANGELOG.md`'s Phase D
-    // entry) — wiring root metadata/footer/OG defaults to read from here is
-    // real follow-up work, not done silently as a side effect of this form.
+    // The homepage feature system (`ARCHITECTURE/20_CONTENT_BLOCKS.md` §6)
+    // is the first public page reading `SiteSettings` — `featuredCaseStudyId`
+    // changing is the one field on this form the homepage's own ISR cache
+    // needs to hear about immediately, so this is a narrow, deliberate
+    // exception to this action's previous "nothing to revalidate" state, not
+    // a general revalidation of every settings field.
+    revalidatePath("/");
     return { status: "success" };
   } catch (error) {
     console.error("Failed to update site settings:", error);

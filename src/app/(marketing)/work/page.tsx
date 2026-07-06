@@ -8,7 +8,6 @@ import { Link } from "@/components/ui/link";
 import { WorkGrid, type WorkGridItem } from "@/components/work/work-grid";
 import { findPublished, resolveCoverImage } from "@/lib/cms/public-content";
 import { pageMetadata } from "@/lib/seo";
-import { firstLineTeaser } from "@/lib/utils";
 import { CaseStudy, type CaseStudyDocument } from "@/models/case-study";
 
 export const metadata: Metadata = pageMetadata({
@@ -37,7 +36,7 @@ export default async function WorkPage() {
     caseStudies.map(async (doc) => ({
       slug: doc.slug,
       client: doc.client,
-      resultTeaser: firstLineTeaser(doc.result),
+      resultTeaser: doc.summary,
       practiceArea: doc.practiceArea,
       cover: await resolveCoverImage(doc.coverImage ? String(doc.coverImage) : undefined),
     })),

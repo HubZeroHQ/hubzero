@@ -6,6 +6,7 @@ import {
   blueprintSchema,
   type BlueprintInput,
 } from "@/lib/cms/collections/blueprint-fields";
+import { computeReadingTimeMinutes } from "@/lib/cms/blocks/text";
 import { defineCollection, registerCollection } from "@/lib/cms/collection-config";
 import { Blueprint, type BlueprintDocument } from "@/models/blueprint";
 
@@ -23,6 +24,7 @@ export const blueprintConfig = registerCollection(
     emptyStateMessage: blueprintEmptyStateMessage,
     studioBasePath: "blueprints",
     recordLabel: (doc) => doc.name,
+    computedFields: (input) => ({ readingTimeMinutes: computeReadingTimeMinutes(input.content) }),
     // `09_CMS_ARCHITECTURE.md` §2 / `ARCHITECTURE/19_CMS_FOUNDATION.md` §11:
     // "publishing is gated on demoStatus: 'live' — a Blueprint with a stale
     // or nonexistent demo is not shown publicly." The sanctioned

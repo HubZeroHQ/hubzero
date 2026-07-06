@@ -37,14 +37,16 @@ export default async function EditNotePage({ params }: EditNotePageProps) {
     slug: doc.slug,
     title: doc.title,
     summary: doc.summary,
-    body: doc.body,
+    content: doc.content,
     // `authorId` isn't in `ClientDocument`'s date/ObjectId whitelist
     // (`types/cms.ts`) — same treatment as `team/[id]/page.tsx`'s
     // `linkedUserId`.
     authorId: String(doc.authorId),
+    contributors: (doc.contributors ?? []).map((memberId) => String(memberId)),
     category: doc.category,
     tags: doc.tags,
     coverImage: doc.coverImage ? String(doc.coverImage) : undefined,
+    featured: doc.featured,
   };
 
   return (

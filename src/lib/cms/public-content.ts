@@ -1,8 +1,11 @@
 import type { Model } from "mongoose";
 
-import { getMediaById } from "@/lib/cms/media";
+import { getMediaById, getMediaByIds } from "@/lib/cms/media";
 import { serializeDocument } from "@/lib/cms/serialize";
 import { connectToDatabase } from "@/lib/db";
+import { CaseStudy, type CaseStudyDocument } from "@/models/case-study";
+import { SiteSettings } from "@/models/site-settings";
+import { TeamMember, type TeamMemberDocument } from "@/models/team-member";
 
 /**
  * The public-read half of every workflow collection — deliberately not
@@ -67,4 +70,109 @@ export async function resolveCoverImage(
     width: largestVariant?.width ?? media.width,
     height: media.height,
   };
+}
+
+/**
+ * Batch-resolves every `Media` id an editorial block tree references
+ * (`ContentRenderer`'s Image/Gallery blocks) into a lookup map — one query
+ * for the whole document, not one per block, the same "batch population,
+ * never per-row" discipline `ARCHITECTURE/19_CMS_FOUNDATION.md` §13 already
+ * calls for on the admin list screens, applied here to public rendering.
+ */
+export async function resolveMediaMap(mediaIds: string[]): Promise<Record<string, ResolvedImage>> {
+  if (mediaIds.length === 0) return {};
+  const unique = [...new Set(mediaIds)];
+  const media = await getMediaByIds(unique);
+  const map: Record<string, ResolvedImage> = {};
+  for (const item of media) {
+    const largestVariant = [...item.variants].sort((a, b) => b.width - a.width)[0];
+    map[item.id] = {
+      url: largestVariant?.url ?? item.url,
+      alt: item.alt,
+      width: largestVariant?.width ?? item.width,
+      height: item.height,
+    };
+  }
+  return map;
+}
+
+/**
+ * The homepage feature system (`ARCHITECTURE/20_CONTENT_BLOCKS.md` §6):
+ * an explicit `SiteSettings.featuredCaseStudyId` wins when set (and still
+ * published); otherwise the most recently published `featured: true` Case
+ * Study; otherwise the most recently published Case Study of any kind — so
+ * the homepage always has something honest to show, never a hardcoded slug.
+ */
+export async function getFeaturedCaseStudy(): Promise<CaseStudyDocument | null> {
+  await connectToDatabase();
+
+  const settings = await SiteSettings.findOne({ singletonKey: "default" }).lean<{
+    featuredCaseStudyId?: unknown;
+  }>();
+
+  if (settings?.featuredCaseStudyId) {
+    const picked = await CaseStudy.findOne({
+      _id: settings.featuredCaseStudyId,
+      status: "published",
+    }).lean<CaseStudyDocument>();
+    if (picked) return serializeDocument(picked) as CaseStudyDocument;
+  }
+
+  const featured = await CaseStudy.findOne({ status: "published", featured: true })
+    .sort({ publishedAt: -1 })
+    .lean<CaseStudyDocument>();
+  if (featured) return serializeDocument(featured) as CaseStudyDocument;
+
+  const mostRecent = await CaseStudy.findOne({ status: "published" })
+    .sort({ publishedAt: -1 })
+    .lean<CaseStudyDocument>();
+  return mostRecent ? (serializeDocument(mostRecent) as CaseStudyDocument) : null;
+}
+
+export interface PublicTeamMember {
+  id: string;
+  username: string;
+  name: string;
+  role: string;
+  photo: ResolvedImage | null;
+}
+
+/**
+ * Resolves a narrative document's `contributors` (and Note's `authorId`) to
+ * public-safe `TeamMember` display data — order-preserving, and silently
+ * drops anyone not `profileVisible`/published, so an unpublished or
+ * intentionally-hidden profile never leaks into a public contributor chip
+ * (the same visibility gate `/team` itself enforces).
+ */
+export async function getPublicTeamMembers(
+  ids: (string | undefined)[],
+): Promise<PublicTeamMember[]> {
+  const validIds = ids.filter((id): id is string => Boolean(id));
+  if (validIds.length === 0) return [];
+
+  await connectToDatabase();
+  const docs = await TeamMember.find({
+    _id: { $in: validIds },
+    status: "published",
+    profileVisible: true,
+  }).lean<TeamMemberDocument[]>();
+
+  const byId = new Map(docs.map((doc) => [doc._id.toString(), doc]));
+  const ordered = validIds
+    .map((id) => byId.get(id))
+    .filter((doc): doc is TeamMemberDocument => Boolean(doc));
+
+  const photoIds = ordered
+    .map((doc) => doc.photo)
+    .filter(Boolean)
+    .map((id) => String(id));
+  const photoMap = await resolveMediaMap(photoIds);
+
+  return ordered.map((doc) => ({
+    id: doc._id.toString(),
+    username: doc.username,
+    name: doc.name,
+    role: doc.role,
+    photo: doc.photo ? (photoMap[String(doc.photo)] ?? null) : null,
+  }));
 }

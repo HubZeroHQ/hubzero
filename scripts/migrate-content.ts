@@ -3,6 +3,10 @@ import path from "path";
 
 import "@/lib/cms/collections";
 import { connectToDatabase } from "@/lib/db";
+import {
+  migrateCaseStudyContent,
+  migrateSingleFieldContent,
+} from "@/lib/cms/blocks/legacy-migration";
 import { uploadMedia } from "@/lib/cms/media";
 import { snapshotVersion } from "@/lib/cms/version-history";
 import { CaseStudy } from "@/models/case-study";
@@ -18,10 +22,13 @@ import { User } from "@/models/user";
  * `work/bhatkal-time-luxe` route) and the IoT Sensor Dashboard Labs project
  * (previously embedded on the Hardware page and About page) — into real,
  * published documents. Every fact below is copied from the existing
- * hand-written pages/`docs/research/`, condensed to fit `CaseStudy`'s
- * `problem`/`approach`/`result` three-part shape — nothing invented.
+ * hand-written pages/`docs/research/`; the original problem/approach/result
+ * framing is preserved as `content` blocks via `migrateCaseStudyContent()`
+ * (`ARCHITECTURE/20_CONTENT_BLOCKS.md`) — nothing invented.
  *
- * Idempotent: safe to re-run (upserts by `slug`).
+ * Idempotent: safe to re-run (upserts by `slug`, `runValidators: true` so a
+ * schema change — e.g. a new required field — fails loudly here rather than
+ * silently writing an incomplete document).
  *
  * Usage: `npm run migrate-content` (after `npm run create-admin`, so a
  * `head_admin` exists to attribute `createdBy`/`uploadedBy` to).
@@ -89,16 +96,16 @@ Measured directly against the repository and a clean production build — no bus
       client: "Bhatkal Time Luxe",
       industry: "Luxury retail — watches",
       practiceArea: "software",
-      problem,
-      approach,
-      result,
+      summary:
+        "A luxury watch retailer needed a storefront that read as premium as the timepieces it sells, plus a back office the business could run independently.",
+      content: migrateCaseStudyContent({ problem, approach, result }),
       techTags: ["Next.js", "React", "MongoDB", "Mongoose", "Cloudinary", "Tailwind CSS"],
       coverImage: media.id,
       status: "published",
       publishedAt: new Date(),
       createdBy: adminId,
     },
-    { upsert: true, new: true, setDefaultsOnInsert: true },
+    { upsert: true, new: true, setDefaultsOnInsert: true, runValidators: true },
   );
 
   await snapshotVersion("caseStudy", doc.toObject() as unknown as Record<string, unknown>, adminId);
@@ -115,7 +122,9 @@ async function migrateIotSensorDashboard(adminId: string) {
       slug: "iot-sensor-dashboard",
       title: "IoT Sensor Dashboard",
       practiceArea: "hardware",
-      description,
+      summary:
+        "A real-time environmental monitoring system built internally — a sensor node, a microcontroller bridge, and a live dashboard, with no client involved.",
+      content: migrateSingleFieldContent(description),
       techTags: ["Arduino", "Node.js", "Socket.IO", "Chart.js"],
       isClientWork: false,
       stage: "active",
@@ -123,10 +132,14 @@ async function migrateIotSensorDashboard(adminId: string) {
       publishedAt: new Date(),
       createdBy: adminId,
     },
-    { upsert: true, new: true, setDefaultsOnInsert: true },
+    { upsert: true, new: true, setDefaultsOnInsert: true, runValidators: true },
   );
 
-  await snapshotVersion("labsProject", doc.toObject() as unknown as Record<string, unknown>, adminId);
+  await snapshotVersion(
+    "labsProject",
+    doc.toObject() as unknown as Record<string, unknown>,
+    adminId,
+  );
   console.log(`Migrated LabsProject "iot-sensor-dashboard" (${doc._id.toString()})`);
 }
 

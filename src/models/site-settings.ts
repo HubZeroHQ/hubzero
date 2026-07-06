@@ -33,6 +33,16 @@ const siteSettingsSchema = new Schema(
       instagram: { type: String, trim: true },
     },
     footerText: { type: String, trim: true, maxlength: 500 },
+    /**
+     * The homepage feature system (`ARCHITECTURE/20_CONTENT_BLOCKS.md` §6):
+     * an explicit, founder-editable pick of which Case Study the homepage
+     * shows, replacing the hardcoded "Bhatkal Time Luxe" component. Optional
+     * — `lib/cms/public-content.ts`'s `getFeaturedCaseStudy()` falls back to
+     * the most recently published `featured: true` Case Study, then to the
+     * most recently published Case Study of any kind, so the homepage is
+     * never left with nothing to show just because no one has picked one yet.
+     */
+    featuredCaseStudyId: { type: Schema.Types.ObjectId, ref: "CaseStudy" },
     seo: {
       defaultTitle: { type: String, required: true, trim: true, maxlength: 160 },
       defaultDescription: { type: String, required: true, trim: true, maxlength: 300 },
@@ -46,6 +56,8 @@ const siteSettingsSchema = new Schema(
   { timestamps: true },
 );
 
-export type SiteSettingsDocument = InferSchemaType<typeof siteSettingsSchema> & { _id: Types.ObjectId };
+export type SiteSettingsDocument = InferSchemaType<typeof siteSettingsSchema> & {
+  _id: Types.ObjectId;
+};
 
 export const SiteSettings = defineModel<SiteSettingsDocument>("SiteSettings", siteSettingsSchema);

@@ -4,6 +4,36 @@
 
 ---
 
+## Revision 2026-07-06 — Editorial content blocks replace fixed markdown fields
+
+**Trigger:** the CMS's five narrative collections (Case Studies, Labs Projects, Builds, Blueprints, Notes) each forced authors into a fixed set of named markdown fields — most visibly Case Study's mandatory `problem`/`approach`/`result` three-beat structure. A hardware bring-up log and a client web platform aren't the same kind of story; this revision replaces the fixed fields with a single ordered `content: Block[]` field per collection, so the author arranges whatever mix of building blocks (heading, paragraph, image, gallery, quote, callout, code, divider, metrics, timeline, video, spacer, two-column, markdown, raw HTML) the actual narrative needs, in whatever order. New canonical document: `20_CONTENT_BLOCKS.md` (full spec, cross-referenced from `19_CMS_FOUNDATION.md` §6's field-type vocabulary).
+
+### Genericity held — one new field type, not a parallel system
+
+`"blocks"` is the one addition to `FieldConfig.type` (`types/cms.ts`), following the exact precedent `"json"` set in the Phase D collections rollout: a closed-vocabulary field type, not a plugin registry. `crud-actions.ts`'s `rawFromFormData`/`create`/`update`/`autosaveDraft` needed zero changes beyond one generic addition (the Raw HTML publish guard, below) — a `content: Block[]` field is, to the engine, just another opaque field value carried as a JSON string over the wire (`lib/cms/blocks/schema.ts`'s `blocksField()`), the same wire contract `"json"` already established. `getMediaUsage()` (`lib/cms/media.ts`) gained one generic extension: scanning any `"blocks"`-type field's content for embedded `Media` ids (`lib/cms/blocks/guard.ts`'s `collectBlockMediaIds`), so "which documents use this image" stays correct for an image referenced only inside a block.
+
+### What was added, beyond the block field itself
+
+- **Card metadata** (`ARCHITECTURE/20_CONTENT_BLOCKS.md` §3): `summary` (Case Study, Labs Project, Blueprint — Build's `tagline`/Note's `summary` already served this role), `featured` (all five), `readingTimeMinutes` (generalized from Note-only to all five, computed from `content`'s word count).
+- **Team relationships** (§4): `contributors: TeamMember[]` on all five collections, via the existing generic `referenceArray` field type and searchable picker — zero new picker code needed.
+- **Homepage feature system** (§6): `SiteSettings.featuredCaseStudyId` (optional) plus a fallback chain (explicit pick → most recent `featured: true` → most recent published) replaces the hardcoded "Bhatkal Time Luxe" homepage component (`components/marketing/case-study.tsx`, now an async Server Component reading real CMS data).
+- **Generic public renderer** (§7): `<ContentRenderer>`/`<BlockRenderer>` (`components/marketing/blocks/`) replace the old fixed `<RichText>{doc.problem}</RichText>`-style sections on `/work/[slug]`, `/labs/[slug]`, `/blueprints/[slug]`, `/notes/[slug]` — each page shrank to one renderer call plus contributor chips.
+- **Generic admin block editor** (`components/admin/blocks/`): reorder (via `motion`'s `Reorder.Group`, already a dependency — no new drag-and-drop library added), collapse/expand, duplicate, delete, and an "Add block" picker grouped by purpose. One implementation, used identically by all five collections' `content` field.
+
+### The Raw HTML block's "admin-only" rule is a publish-time guard, not a save-time one
+
+Rejecting an `html` block at save time would brick a Teammate's in-progress draft the moment they experiment with the block. Instead, `crud-actions.ts`'s `publish()` gained a generic `checkBlocksPublishGuard()` — introspects `formFields` for any `"blocks"` field and blocks publish (with a clear message) unless the publishing user is Admin/Head Admin — composing alongside a collection's own `publishGuard` (Blueprint's `demoStatus` gate), not a second guard mechanism.
+
+### Migration — idempotent, nothing lost
+
+`scripts/migrate-content-blocks.ts` converts every pre-existing document's legacy fields into `content`, via pure, unit-tested transforms (`lib/cms/blocks/legacy-migration.ts`): Case Study's `problem`/`approach`/`result` each become a heading+markdown pair; Build/Labs Project/Note's single field becomes one markdown block; Blueprint's `description`+`customizationNotes` become a markdown block plus an optional heading+markdown pair. `needsContentMigration()` makes re-running the script a safe no-op for already-migrated documents; old fields are `$unset` only after `content` is written successfully.
+
+### What was deliberately not built, and two open founder decisions
+
+No syntax highlighting for the Code block (would need a new dependency — plain monospace matches the existing `RichText` inline-code treatment), no structured per-block version-history diff (the existing generic JSON-diff fallback already renders it, just not beautifully), no rotating/multiple featured Case Studies (the schema is shaped for an easy additive upgrade later). Two fields named as *examples* in the brief — a card `accentImage` distinct from `coverImage`, and a Notes `difficulty` field — were deliberately not invented without a concrete design for what either means; flagged for founder decision in `ARCHITECTURE/20_CONTENT_BLOCKS.md` §11 rather than built speculatively.
+
+---
+
 ## Revision 2026-07-05 — "Blog" renamed to "Notes"
 
 **Trigger:** HubZero publishes engineering write-ups, architectural thinking, dev logs, experiments, lessons learned, and product thinking — not a traditional marketing blog. "Blog" never matched what this content type actually is or was ever going to be, and no public route had shipped under that name, so this is a clean rename with no backward-compatible URL or redirect concerns. This revision renames the content type/collection/section from "Blog" to "Notes" throughout the architecture set — model, CMS collection, admin routes (`/studio/notes`), and public routes (`/notes`, `/notes/[slug]`) — without changing its scope, workflow, or editorial bar in any way. Every prior document reference to "Blog"/"Blog Posts"/"blog platform" is updated in place to "Notes"; only entries in this changelog and `00_FOUNDER_APPROVAL.md` that narrate a specific past session's events (e.g. the Phase D entry immediately below, dated the same day) keep their original "Blog" wording, since they are a record of what was true when they were written, not living architecture. **Affected:** `00`, `01`, `03`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`, `13`, `14`, `17`, `19`, `PROJECT_CONTEXT.md`, `README.md` — documentation only; the corresponding code rename (models, CMS collection config, Server Actions, admin routes, permissions, nav config) is a separate, concurrent change.

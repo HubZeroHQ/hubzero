@@ -24,6 +24,7 @@ export const siteSettingsSchema = z.object({
   socialsTwitter: z.preprocess(emptyToUndefined, z.url("Enter a valid URL.").optional()),
   socialsInstagram: z.preprocess(emptyToUndefined, z.url("Enter a valid URL.").optional()),
   footerText: z.preprocess(emptyToUndefined, z.string().trim().max(500).optional()),
+  featuredCaseStudyId: optionalObjectIdField("Choose a Case Study to feature on the homepage."),
   seoDefaultTitle: z.string().trim().min(1, "Required.").max(160),
   seoDefaultDescription: z.string().trim().min(1, "Required.").max(300),
   ogImage: optionalObjectIdField("Choose a default OpenGraph image from the media library."),
@@ -47,6 +48,14 @@ export const siteSettingsFormFields: FieldConfig<SiteSettingsInput>[] = [
     label: "Footer text",
     type: "textarea",
     description: "Short blurb shown in the site footer.",
+  },
+  {
+    name: "featuredCaseStudyId",
+    label: "Featured case study",
+    type: "reference",
+    resource: "caseStudy",
+    labelField: "client",
+    description: "Shown on the homepage. Leave unset to feature the most recently published one.",
   },
   { name: "seoDefaultTitle", label: "Default SEO title", type: "text", required: true },
   {

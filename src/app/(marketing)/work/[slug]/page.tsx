@@ -5,11 +5,17 @@ import { notFound } from "next/navigation";
 
 import "@/lib/cms/collections";
 
-import { RichText } from "@/components/marketing/rich-text";
+import { ContentRenderer } from "@/components/marketing/blocks/content-renderer";
+import { ContributorChips } from "@/components/marketing/blocks/contributor-chips";
 import { JsonLd } from "@/components/seo/json-ld";
 import { Container } from "@/components/ui/container";
 import { Link } from "@/components/ui/link";
-import { findOnePublished, findPublished, resolveCoverImage } from "@/lib/cms/public-content";
+import {
+  findOnePublished,
+  findPublished,
+  getPublicTeamMembers,
+  resolveCoverImage,
+} from "@/lib/cms/public-content";
 import { absoluteUrl, pageMetadata } from "@/lib/seo";
 import { CaseStudy, type CaseStudyDocument } from "@/models/case-study";
 
@@ -44,11 +50,10 @@ export async function generateMetadata({ params }: CaseStudyPageProps): Promise<
   const { slug } = await params;
   const doc = await getCaseStudy(slug);
   if (!doc) return {};
-  const description = doc.result.split("\n")[0]?.slice(0, 200) ?? "";
   const cover = await resolveCoverImage(doc.coverImage ? String(doc.coverImage) : undefined);
   return pageMetadata({
     title: doc.client,
-    description,
+    description: doc.summary,
     path: `/work/${doc.slug}`,
     image: cover ? { url: cover.url, alt: cover.alt } : undefined,
     type: "article",
@@ -72,7 +77,10 @@ export default async function CaseStudyPage({ params }: CaseStudyPageProps) {
   const doc = await getCaseStudy(slug);
   if (!doc) notFound();
 
-  const cover = await resolveCoverImage(doc.coverImage ? String(doc.coverImage) : undefined);
+  const [cover, contributors] = await Promise.all([
+    resolveCoverImage(doc.coverImage ? String(doc.coverImage) : undefined),
+    getPublicTeamMembers((doc.contributors ?? []).map((id) => String(id))),
+  ]);
 
   return (
     <div className="pb-32">
@@ -81,7 +89,7 @@ export default async function CaseStudyPage({ params }: CaseStudyPageProps) {
           "@context": "https://schema.org",
           "@type": "CreativeWork",
           name: doc.client,
-          description: doc.result.split("\n")[0]?.slice(0, 200),
+          description: doc.summary,
           about: practiceAreaLabels[doc.practiceArea] ?? doc.practiceArea,
           ...(cover ? { image: absoluteUrl(cover.url) } : {}),
         }}
@@ -118,31 +126,20 @@ export default async function CaseStudyPage({ params }: CaseStudyPageProps) {
         )}
       </div>
 
-      <Container className="mt-8 sm:mt-12 lg:mt-16">
-        <div className="max-w-[var(--content-prose)]">
-          <h2 className="text-h2 text-text font-normal">The brief</h2>
-          <RichText>{doc.problem}</RichText>
-        </div>
-      </Container>
-
-      <Container className="mt-24 sm:mt-28 lg:mt-32">
-        <div className="max-w-[var(--content-prose)]">
-          <h2 className="text-h2 text-text font-normal">Approach</h2>
-          <RichText>{doc.approach}</RichText>
-        </div>
-      </Container>
-
-      <Container className="mt-24 sm:mt-28 lg:mt-32">
-        <div className="max-w-[var(--content-prose)]">
-          <h2 className="text-h2 text-text font-normal">Result</h2>
-          <RichText>{doc.result}</RichText>
-        </div>
-      </Container>
+      <div className="mt-8 sm:mt-12 lg:mt-16">
+        <ContentRenderer blocks={doc.content} />
+      </div>
 
       {doc.techTags.length > 0 && (
         <Container className="mt-16">
           <p className="text-caption text-text-muted font-mono">{doc.techTags.join(" · ")}</p>
         </Container>
+      )}
+
+      {contributors.length > 0 && (
+        <div className="mt-16">
+          <ContributorChips members={contributors} />
+        </div>
       )}
 
       <Container className="mt-32 sm:mt-40 lg:mt-48">

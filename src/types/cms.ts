@@ -95,6 +95,16 @@ interface BaseFieldConfig<TInput> {
  * the `collection-config.ts` registry, so no collection-specific code exists
  * anywhere in the picker.
  */
+/**
+ * `"blocks"` (`ARCHITECTURE/20_CONTENT_BLOCKS.md`) is the one addition this
+ * document's editorial-block evolution makes to the vocabulary — the
+ * escape hatch for a narrative collection's long-form content, the same way
+ * `"json"` was the sanctioned addition for `TeamMember`'s nested arrays.
+ * Renders `<BlockEditor>` (`components/admin/blocks/block-editor.tsx`); the
+ * value is a real `Block[]` (`lib/cms/blocks/types.ts`), never a markdown
+ * string — a document's content is an ordered list of blocks the author
+ * arranges freely, not a fixed set of named sections.
+ */
 export type FieldConfig<TInput = Record<string, unknown>> =
   | (BaseFieldConfig<TInput> & {
       type: "text" | "textarea" | "richtext" | "url" | "date" | "image" | "json";
@@ -105,7 +115,8 @@ export type FieldConfig<TInput = Record<string, unknown>> =
   | (BaseFieldConfig<TInput> & { type: "imageArray" })
   | (BaseFieldConfig<TInput> & { type: "reference"; resource: Resource; labelField: string })
   | (BaseFieldConfig<TInput> & { type: "referenceArray"; resource: Resource; labelField: string })
-  | (BaseFieldConfig<TInput> & { type: "status" });
+  | (BaseFieldConfig<TInput> & { type: "status" })
+  | (BaseFieldConfig<TInput> & { type: "blocks" });
 
 /** One column in a collection's `DataTable` — `ARCHITECTURE/19_CMS_FOUNDATION.md` §7. */
 export interface TableColumn<T> {

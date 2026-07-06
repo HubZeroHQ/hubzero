@@ -1,14 +1,24 @@
 import { Schema, type InferSchemaType, type Types } from "mongoose";
 
+import type { Block } from "@/lib/cms/blocks/types";
+import {
+  contentField,
+  contributorsField,
+  featuredField,
+  readingTimeField,
+  summaryField,
+} from "@/models/shared/card-fields";
 import { defineModel } from "@/models/shared/define-model";
 import { draftReviewPublishStatusValues, workflowFields } from "@/models/shared/workflow-fields";
 
 /**
  * `ARCHITECTURE/11_DATABASE_ARCHITECTURE.md` §1's `Blueprint` collection.
- * `blueprintId` is a second unique identifier alongside `slug` — "exposed in
- * metadata, never in the URL" — editor-provided like `slug` rather than
- * auto-generated, since `11` specifies its shape and uniqueness but not a
- * generation scheme, and inventing one isn't this phase's call to make.
+ * `description` and `customizationNotes` — two mandatory/optional markdown
+ * fields — are replaced by a single ordered `content: Block[]`
+ * (`ARCHITECTURE/20_CONTENT_BLOCKS.md`); `summary` is the new dedicated card
+ * blurb. `blueprintId` is a second unique identifier alongside `slug` —
+ * "exposed in metadata, never in the URL" — editor-provided like `slug`
+ * rather than auto-generated.
  */
 const demoStatusValues = ["live", "stale", "retired"] as const;
 
@@ -31,12 +41,15 @@ const blueprintSchema = new Schema(
     },
     name: { type: String, required: true, trim: true, maxlength: 160 },
     category: { type: String, required: true, trim: true, maxlength: 80 },
-    description: { type: String, required: true, trim: true, maxlength: 20000 },
+    ...summaryField(),
+    ...contentField(),
     techStack: { type: [String], default: [] },
     coverImage: { type: Schema.Types.ObjectId, ref: "Media" },
+    ...contributorsField(),
+    ...featuredField(),
+    ...readingTimeField(),
     previewUrl: { type: String, trim: true },
     demoDeploymentUrl: { type: String, trim: true },
-    customizationNotes: { type: String, trim: true, maxlength: 20000 },
     demoStatus: { type: String, required: true, enum: demoStatusValues, default: "stale" },
     ...workflowFields(draftReviewPublishStatusValues),
   },
@@ -45,6 +58,9 @@ const blueprintSchema = new Schema(
 
 blueprintSchema.index({ status: 1, publishedAt: -1 });
 
-export type BlueprintDocument = InferSchemaType<typeof blueprintSchema> & { _id: Types.ObjectId };
+export type BlueprintDocument = Omit<InferSchemaType<typeof blueprintSchema>, "content"> & {
+  _id: Types.ObjectId;
+  content: Block[];
+};
 
 export const Blueprint = defineModel<BlueprintDocument>("Blueprint", blueprintSchema);

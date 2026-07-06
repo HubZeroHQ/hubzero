@@ -5,12 +5,18 @@ import { notFound } from "next/navigation";
 
 import "@/lib/cms/collections";
 
-import { RichText } from "@/components/marketing/rich-text";
+import { ContentRenderer } from "@/components/marketing/blocks/content-renderer";
+import { ContributorChips } from "@/components/marketing/blocks/contributor-chips";
 import { JsonLd } from "@/components/seo/json-ld";
 import { Badge } from "@/components/ui/badge";
 import { Container } from "@/components/ui/container";
 import { Link } from "@/components/ui/link";
-import { findOnePublished, findPublished, resolveCoverImage } from "@/lib/cms/public-content";
+import {
+  findOnePublished,
+  findPublished,
+  getPublicTeamMembers,
+  resolveCoverImage,
+} from "@/lib/cms/public-content";
 import { absoluteUrl, pageMetadata } from "@/lib/seo";
 import { Blueprint, type BlueprintDocument } from "@/models/blueprint";
 
@@ -33,11 +39,10 @@ export async function generateMetadata({ params }: BlueprintPageProps): Promise<
   const { slug } = await params;
   const doc = await getBlueprint(slug);
   if (!doc) return {};
-  const description = doc.description.split("\n")[0]?.slice(0, 200) ?? "";
   const cover = await resolveCoverImage(doc.coverImage ? String(doc.coverImage) : undefined);
   return pageMetadata({
     title: doc.name,
-    description,
+    description: doc.summary,
     path: `/blueprints/${doc.slug}`,
     image: cover ? { url: cover.url, alt: cover.alt } : undefined,
   });
@@ -59,7 +64,10 @@ export default async function BlueprintPage({ params }: BlueprintPageProps) {
   const doc = await getBlueprint(slug);
   if (!doc) notFound();
 
-  const cover = await resolveCoverImage(doc.coverImage ? String(doc.coverImage) : undefined);
+  const [cover, contributors] = await Promise.all([
+    resolveCoverImage(doc.coverImage ? String(doc.coverImage) : undefined),
+    getPublicTeamMembers((doc.contributors ?? []).map((id) => String(id))),
+  ]);
   const demoUrl = doc.demoDeploymentUrl ?? doc.previewUrl;
 
   return (
@@ -69,7 +77,7 @@ export default async function BlueprintPage({ params }: BlueprintPageProps) {
           "@context": "https://schema.org",
           "@type": ["Product", "CreativeWork"],
           name: doc.name,
-          description: doc.description.split("\n")[0]?.slice(0, 200),
+          description: doc.summary,
           category: doc.category,
           ...(demoUrl ? { url: demoUrl } : {}),
           ...(cover ? { image: absoluteUrl(cover.url) } : {}),
@@ -122,11 +130,9 @@ export default async function BlueprintPage({ params }: BlueprintPageProps) {
         </Container>
       </div>
 
-      <Container className="mt-8 sm:mt-12 lg:mt-16">
-        <div className="max-w-[var(--content-prose)]">
-          <RichText>{doc.description}</RichText>
-        </div>
-      </Container>
+      <div className="mt-8 sm:mt-12 lg:mt-16">
+        <ContentRenderer blocks={doc.content} />
+      </div>
 
       {doc.techStack.length > 0 && (
         <Container className="mt-16">
@@ -134,13 +140,10 @@ export default async function BlueprintPage({ params }: BlueprintPageProps) {
         </Container>
       )}
 
-      {doc.customizationNotes && (
-        <Container className="mt-24 sm:mt-28 lg:mt-32">
-          <div className="max-w-[var(--content-prose)]">
-            <h2 className="text-h2 text-text font-normal">What you can customize</h2>
-            <RichText>{doc.customizationNotes}</RichText>
-          </div>
-        </Container>
+      {contributors.length > 0 && (
+        <div className="mt-16">
+          <ContributorChips members={contributors} />
+        </div>
       )}
 
       <Container className="mt-32 sm:mt-40 lg:mt-48">

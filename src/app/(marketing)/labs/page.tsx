@@ -8,7 +8,6 @@ import { Container } from "@/components/ui/container";
 import { Link } from "@/components/ui/link";
 import { findPublished, resolveCoverImage } from "@/lib/cms/public-content";
 import { pageMetadata } from "@/lib/seo";
-import { firstLineTeaser } from "@/lib/utils";
 import { LabsProject, type LabsProjectDocument } from "@/models/labs-project";
 
 export const metadata: Metadata = pageMetadata({
@@ -32,7 +31,7 @@ export default async function LabsIndexPage() {
     projects.map(async (doc) => ({
       slug: doc.slug,
       title: doc.title,
-      descriptionTeaser: firstLineTeaser(doc.description),
+      descriptionTeaser: doc.summary,
       practiceArea: doc.practiceArea,
       stage: doc.stage,
       cover: await resolveCoverImage(doc.coverImage ? String(doc.coverImage) : undefined),

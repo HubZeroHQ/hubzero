@@ -6,6 +6,7 @@ import {
   buildSchema,
   type BuildInput,
 } from "@/lib/cms/collections/build-fields";
+import { computeReadingTimeMinutes } from "@/lib/cms/blocks/text";
 import { defineCollection, registerCollection } from "@/lib/cms/collection-config";
 import { Build, type BuildDocument } from "@/models/build";
 
@@ -23,6 +24,9 @@ export const buildConfig = registerCollection(
     emptyStateMessage: buildEmptyStateMessage,
     studioBasePath: "builds",
     recordLabel: (doc) => doc.title,
+    computedFields: (input) => ({ readingTimeMinutes: computeReadingTimeMinutes(input.content) }),
+    // No public route exists for Builds yet (`ARCHITECTURE/18_ARCHITECTURE_CHANGELOG.md`'s
+    // Phase D entry) — nothing to revalidate until one ships.
     revalidatesPaths: () => [],
   }),
 );

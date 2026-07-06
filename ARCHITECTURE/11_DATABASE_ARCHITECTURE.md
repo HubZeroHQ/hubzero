@@ -1,13 +1,14 @@
 # 11 — Database Architecture
 
-> **Status: Founder Approved — 2026-07-01; amended 2026-07-04.** `User.role` enum and the `LabsProject` collection below reflect the responsibility-based RBAC and Labs/R&D decisions in `00_FOUNDER_APPROVAL.md` §2-3, superseding the department-based roles originally listed here. §1 gained the `Build` and `Blueprint` collections and `LabsProject`'s graduation fields on 2026-07-04 — see `00_FOUNDER_APPROVAL.md` §8 and `17_COMPANY_STRUCTURE.md` §4.
+> **Status: Founder Approved — 2026-07-01; amended 2026-07-04, 2026-07-06.** `User.role` enum and the `LabsProject` collection below reflect the responsibility-based RBAC and Labs/R&D decisions in `00_FOUNDER_APPROVAL.md` §2-3, superseding the department-based roles originally listed here. §1 gained the `Build` and `Blueprint` collections and `LabsProject`'s graduation fields on 2026-07-04 — see `00_FOUNDER_APPROVAL.md` §8 and `17_COMPANY_STRUCTURE.md` §4. **2026-07-06:** `CaseStudy`/`Build`/`LabsProject`/`Blueprint`/`Note`'s fixed markdown fields are replaced by `content: Block[]`, plus `summary`/`featured`/`readingTimeMinutes`/`contributors`; `SiteSettings` gained `featuredCaseStudyId` — see `20_CONTENT_BLOCKS.md`, the canonical spec for the new shape.
 
 > Decision convention: see `01_PRODUCT_VISION.md` §0. Database choice (MongoDB) and the hybrid storage interpretation are decided in `08_TECHNICAL_ARCHITECTURE.md` §2-3 — this document specifies the resulting schema.
 
 ## 1. Collections and shape
 
 ```ts
-// CaseStudy
+// CaseStudy   (2026-07-06: problem/approach/result replaced by `content: Block[]` —
+//              20_CONTENT_BLOCKS.md; summary/featured/readingTimeMinutes/contributors added)
 {
   _id, slug, client, industry,
   practiceArea: 'software' | 'hardware' | 'both' | 'ai',   // 'ai' added 2026-07-04 — Labs now
@@ -16,18 +17,24 @@
                                                              // enum is shared across CaseStudy/Build/
                                                              // LabsProject per 00_FOUNDER_APPROVAL.md §6's
                                                              // existing extensibility clause
-  problem: RichText, approach: RichText, result: RichText,
-  quote?: { text, name, title, company? },
-  techTags: string[], coverImage, relatedTeamMembers: ObjectId[],
+  summary: string,   // dedicated card blurb — never derived from content (20_CONTENT_BLOCKS.md §3)
+  content: Block[],   // ordered editorial blocks — the author's narrative, no fixed structure
+  quote?: { text, name, title, company? },   // still deferred — see the model's own header comment
+  techTags: string[], coverImage,
+  contributors: ObjectId[],   // TeamMember references — 20_CONTENT_BLOCKS.md §4
+  featured: boolean,   // homepage feature system, 20_CONTENT_BLOCKS.md §6
+  readingTimeMinutes: number,   // computed from `content`, not author-entered
   status: 'draft' | 'review' | 'published',
   publishedAt?, createdAt, updatedAt, createdBy: ObjectId, version: number
 }
 
-// Build   (new, 2026-07-04 — completed first-party HubZero products, 17_COMPANY_STRUCTURE.md §2)
+// Build   (new, 2026-07-04 — completed first-party HubZero products, 17_COMPANY_STRUCTURE.md §2;
+//          2026-07-06: description replaced by `content: Block[]`)
 {
   _id, slug, title, tagline, practiceArea: 'software' | 'hardware' | 'both' | 'ai',
-  description: RichText, techTags: string[], coverImage, launchDate,
+  content: Block[], techTags: string[], coverImage, launchDate,
   liveUrl?, repoUrl?,
+  contributors: ObjectId[], featured: boolean, readingTimeMinutes: number,
   graduatedFromLabsId?: ObjectId,   // provenance, if this Build started as a LabsProject —
                                      // the inverse of LabsProject.graduatedToBuildId below
   status: 'draft' | 'review' | 'published',
@@ -36,12 +43,14 @@
   // a Build with a client belongs in CaseStudy instead (17_COMPANY_STRUCTURE.md §2)
 }
 
-// Blueprint   (new, 2026-07-04 — reusable, customizable production-ready foundations, not templates)
+// Blueprint   (new, 2026-07-04 — reusable, customizable production-ready foundations, not templates;
+//              2026-07-06: description + customizationNotes replaced by `content: Block[]`)
 {
   _id, blueprintId,   // stable, unique — exposed in metadata, never in the URL (mirrors the
                        // existing CaseStudy._id vs. CaseStudy.slug split, 03_INFORMATION_ARCHITECTURE.md §5)
-  slug, name, category, description: RichText, techStack: string[], coverImage,
-  previewUrl, demoDeploymentUrl, customizationNotes: RichText,
+  slug, name, category, summary: string, content: Block[], techStack: string[], coverImage,
+  previewUrl, demoDeploymentUrl,
+  contributors: ObjectId[], featured: boolean, readingTimeMinutes: number,
   demoStatus: 'live' | 'stale' | 'retired',   // gates public visibility — a Blueprint is not shown
                                                 // unless demoStatus is 'live' (05_CONTENT_STRATEGY.md §2b)
   status: 'draft' | 'review' | 'published',
@@ -78,11 +87,13 @@
 
 // LabsProject   (new, 2026-07-01 — originally interim hardware-capability proof, see
 //                00_FOUNDER_APPROVAL.md §2; generalized 2026-07-04 into the permanent Labs pillar,
-//                covering hardware, software, and AI exploration, 00_FOUNDER_APPROVAL.md §8)
+//                covering hardware, software, and AI exploration, 00_FOUNDER_APPROVAL.md §8;
+//                2026-07-06: description replaced by `content: Block[]`, summary added)
 { _id, slug, title, practiceArea: 'software' | 'hardware' | 'both' | 'ai',
-  description: RichText, techTags: string[],
-  coverImage, isClientWork: false,   // always false — structurally prevents this collection
-                                      // from ever being confused with a real client CaseStudy
+  summary: string, content: Block[], techTags: string[],
+  coverImage, contributors: ObjectId[], featured: boolean, readingTimeMinutes: number,
+  isClientWork: false,   // always false — structurally prevents this collection
+                          // from ever being confused with a real client CaseStudy
   stage: 'active' | 'archived' | 'graduated',   // new, 2026-07-04 — lets the /labs index show
                                                   // ongoing vs. concluded work honestly
   graduatedToBuildId?: ObjectId,   // new, 2026-07-04 — inverse of Build.graduatedFromLabsId;
@@ -90,9 +101,11 @@
                                     // 17_COMPANY_STRUCTURE.md §3 is a real, queryable relationship
   status: 'draft' | 'published' }
 
-// Note
-{ _id, slug, title, summary, body: RichText, authorId: ObjectId,
-  category, tags: string[], coverImage?, readingTimeMinutes: number, // computed on save, not author-entered
+// Note   (2026-07-06: body replaced by `content: Block[]`; contributors/featured added)
+{ _id, slug, title, summary, content: Block[], authorId: ObjectId,
+  contributors: ObjectId[],   // additional people beyond the primary author (20_CONTENT_BLOCKS.md §4)
+  category, tags: string[], coverImage?, featured: boolean,
+  readingTimeMinutes: number, // computed on save, not author-entered
   status: 'draft' | 'review' | 'published', publishedAt?, version: number }
 
 // FAQ
@@ -106,9 +119,14 @@
   budgetRange?, message, sourcePage, status: 'new' | 'contacted' | 'closed',
   createdAt }
 
-// SiteSettings   (single document)
+// SiteSettings   (single document; 2026-07-06: featuredCaseStudyId added)
 { foundingYear, currentStats: { caseStudyCount, ... } /* real, computed where possible, not manually inflated */,
-  socials, footerContent }
+  socials, footerContent,
+  featuredCaseStudyId?: ObjectId   // homepage feature system — 20_CONTENT_BLOCKS.md §6. Optional:
+                                     // falls back to the most recently published `featured: true`
+                                     // CaseStudy, then to the most recently published CaseStudy of
+                                     // any kind, so the homepage never has nothing to show.
+}
 
 // User   (admin panel accounts — distinct from TeamMember; not every TeamMember has a login)
 // role reflects the responsibility-based RBAC in 09_CMS_ARCHITECTURE.md §4 (amended 2026-07-01) —

@@ -38,12 +38,14 @@ export default async function EditBlueprintPage({ params }: EditBlueprintPagePro
     slug: doc.slug,
     name: doc.name,
     category: doc.category,
-    description: doc.description,
+    summary: doc.summary,
+    content: doc.content,
     techStack: doc.techStack,
     coverImage: doc.coverImage ? String(doc.coverImage) : undefined,
+    contributors: (doc.contributors ?? []).map((memberId) => String(memberId)),
+    featured: doc.featured,
     previewUrl: doc.previewUrl ?? undefined,
     demoDeploymentUrl: doc.demoDeploymentUrl ?? undefined,
-    customizationNotes: doc.customizationNotes ?? undefined,
     demoStatus: doc.demoStatus,
   };
 

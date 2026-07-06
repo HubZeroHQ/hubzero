@@ -1,5 +1,4 @@
 import {
-  computeReadingTimeMinutes,
   noteEmptyStateMessage,
   noteFilters,
   noteFormFields,
@@ -7,6 +6,7 @@ import {
   noteSchema,
   type NoteInput,
 } from "@/lib/cms/collections/note-fields";
+import { computeReadingTimeMinutes } from "@/lib/cms/blocks/text";
 import { defineCollection, registerCollection } from "@/lib/cms/collection-config";
 import { Note, type NoteDocument } from "@/models/note";
 
@@ -26,7 +26,7 @@ export const noteConfig = registerCollection(
     recordLabel: (doc) => doc.title,
     // "Computed on save, not author-entered" (`ARCHITECTURE/11_DATABASE_ARCHITECTURE.md`
     // §1) — the sanctioned `computedFields` hook, not a bespoke code path.
-    computedFields: (input) => ({ readingTimeMinutes: computeReadingTimeMinutes(input.body) }),
+    computedFields: (input) => ({ readingTimeMinutes: computeReadingTimeMinutes(input.content) }),
     revalidatesPaths: (doc) => ["/notes", `/notes/${doc.slug}`],
   }),
 );

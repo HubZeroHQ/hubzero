@@ -56,7 +56,13 @@ describe("createCrudActions — basic draft-publish lifecycle (Testimonial)", ()
 
   it("creates a draft, lists it, updates it, publishes it, then deletes it", async () => {
     const adminId = await realUserId("admin");
-    loginAs({ id: adminId, email: "admin@example.com", name: "Admin", role: "admin", dynamicPermissions: [] });
+    loginAs({
+      id: adminId,
+      email: "admin@example.com",
+      name: "Admin",
+      role: "admin",
+      dynamicPermissions: [],
+    });
 
     const created = await create(
       { status: "idle" },
@@ -94,21 +100,39 @@ describe("createCrudActions — basic draft-publish lifecycle (Testimonial)", ()
 
   it("draft-publish collections have no review step", async () => {
     const adminId = await realUserId("admin");
-    loginAs({ id: adminId, email: "admin@example.com", name: "Admin", role: "admin", dynamicPermissions: [] });
+    loginAs({
+      id: adminId,
+      email: "admin@example.com",
+      name: "Admin",
+      role: "admin",
+      dynamicPermissions: [],
+    });
     const created = await create(
       { status: "idle" },
       toFormData({ quote: "Q", name: "N", title: "T" }),
     );
-    await expect(createCrudActions(testimonialConfig).submitForReview(created.id as string)).rejects.toThrow();
+    await expect(
+      createCrudActions(testimonialConfig).submitForReview(created.id as string),
+    ).rejects.toThrow();
   });
 });
 
 describe("createCrudActions — publishGuard (Blueprint)", () => {
   const { create, publish } = createCrudActions(blueprintConfig);
 
-  it("blocks publish while demoStatus isn't \"live\", then allows it once it is", async () => {
+  it('blocks publish while demoStatus isn\'t "live", then allows it once it is', async () => {
     const adminId = await realUserId("admin");
-    loginAs({ id: adminId, email: "admin@example.com", name: "Admin", role: "admin", dynamicPermissions: [] });
+    loginAs({
+      id: adminId,
+      email: "admin@example.com",
+      name: "Admin",
+      role: "admin",
+      dynamicPermissions: [],
+    });
+
+    const content = JSON.stringify([
+      { id: "b1", type: "markdown", data: { markdown: "A reusable starter." } },
+    ]);
 
     const created = await create(
       { status: "idle" },
@@ -117,7 +141,8 @@ describe("createCrudActions — publishGuard (Blueprint)", () => {
         blueprintId: "bp-001",
         slug: "starter-kit",
         category: "Web",
-        description: "A reusable starter.",
+        summary: "A reusable starter kit.",
+        content,
         demoStatus: "stale",
       }),
     );
@@ -135,7 +160,8 @@ describe("createCrudActions — publishGuard (Blueprint)", () => {
         blueprintId: "bp-001",
         slug: "starter-kit",
         category: "Web",
-        description: "A reusable starter.",
+        summary: "A reusable starter kit.",
+        content,
         demoStatus: "live",
       }),
     );
@@ -155,7 +181,13 @@ describe("createCrudActions — ownerField / editOwn (TeamMember)", () => {
 
     // A Head Admin onboards the profile — `createdBy` is the admin, not the
     // teammate the profile belongs to (`ARCHITECTURE/19_CMS_FOUNDATION.md` §11).
-    loginAs({ id: headAdminId, email: "ha@example.com", name: "HA", role: "head_admin", dynamicPermissions: [] });
+    loginAs({
+      id: headAdminId,
+      email: "ha@example.com",
+      name: "HA",
+      role: "head_admin",
+      dynamicPermissions: [],
+    });
     const created = await create(
       { status: "idle" },
       toFormData({
@@ -173,7 +205,13 @@ describe("createCrudActions — ownerField / editOwn (TeamMember)", () => {
     expect(created.status).toBe("success");
 
     // The profile owner (linkedUserId) can edit their own profile via editOwn.
-    loginAs({ id: ownerId, email: "owner@example.com", name: "Owner", role: "teammate", dynamicPermissions: [] });
+    loginAs({
+      id: ownerId,
+      email: "owner@example.com",
+      name: "Owner",
+      role: "teammate",
+      dynamicPermissions: [],
+    });
     const ownerEdit = await update(
       created.id as string,
       { status: "idle" },
@@ -224,9 +262,19 @@ describe("createCrudActions — draft-review-publish workflow and restore (Case 
   const { create, submitForReview, publish, update, restoreVersion } =
     createCrudActions(caseStudyConfig);
 
+  function contentField(markdown: string): string {
+    return JSON.stringify([{ id: "b1", type: "markdown", data: { markdown } }]);
+  }
+
   it("moves draft → review → published, then restoring an old version returns it to draft with the old content", async () => {
     const adminId = await realUserId("admin");
-    loginAs({ id: adminId, email: "admin@example.com", name: "Admin", role: "admin", dynamicPermissions: [] });
+    loginAs({
+      id: adminId,
+      email: "admin@example.com",
+      name: "Admin",
+      role: "admin",
+      dynamicPermissions: [],
+    });
 
     const created = await create(
       { status: "idle" },
@@ -235,9 +283,8 @@ describe("createCrudActions — draft-review-publish workflow and restore (Case 
         client: "Acme Widgets",
         industry: "Manufacturing",
         practiceArea: "software",
-        problem: "Version one problem.",
-        approach: "Version one approach.",
-        result: "Version one result.",
+        summary: "A manufacturing case study.",
+        content: contentField("Version one content."),
       }),
     );
     expect(created.status).toBe("success");
@@ -258,9 +305,8 @@ describe("createCrudActions — draft-review-publish workflow and restore (Case 
         client: "Acme Widgets",
         industry: "Manufacturing",
         practiceArea: "software",
-        problem: "Version two problem — completely rewritten.",
-        approach: "Version one approach.",
-        result: "Version one result.",
+        summary: "A manufacturing case study.",
+        content: contentField("Version two content — completely rewritten."),
       }),
     );
     const secondPublish = await publish(id);
@@ -278,8 +324,43 @@ describe("createCrudActions — draft-review-publish workflow and restore (Case 
 
     const restoredDoc = await caseStudyConfig.model.findById(id).lean();
     expect(restoredDoc?.status).toBe("draft");
-    expect(restoredDoc?.problem).toBe("Version one problem.");
+    expect((restoredDoc?.content as { data: { markdown: string } }[])?.[0]?.data.markdown).toBe(
+      "Version one content.",
+    );
     // Restoring never bumps `version` itself — only `publish()` does.
     expect(restoredDoc?.version).toBe(2);
+  });
+
+  it("blocks publishing while a Raw HTML block is present unless the publisher is Admin/Head Admin", async () => {
+    const adminId = await realUserId("admin");
+    loginAs({
+      id: adminId,
+      email: "admin2@example.com",
+      name: "Admin",
+      role: "admin",
+      dynamicPermissions: [],
+    });
+
+    const created = await create(
+      { status: "idle" },
+      toFormData({
+        slug: "html-block-case",
+        client: "HTML Block Co",
+        industry: "Testing",
+        practiceArea: "software",
+        summary: "Has a raw HTML block.",
+        content: JSON.stringify([{ id: "b1", type: "html", data: { html: "<div>raw</div>" } }]),
+      }),
+    );
+    expect(created.status).toBe("success");
+
+    // Publish is admin-only for this collection's role grants, so this
+    // exercises the "allowed" arm end-to-end; the "blocked for a
+    // non-admin/head-admin role" arm is unit-tested directly against
+    // `checkHtmlBlockPublishGuard` in `tests/blocks.test.ts`, since Case
+    // Study grants no teammate a `publish` permission to attempt the call
+    // with in the first place.
+    const published = await publish(created.id as string);
+    expect(published.status).toBe("success");
   });
 });

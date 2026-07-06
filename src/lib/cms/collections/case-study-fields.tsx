@@ -1,6 +1,13 @@
 import { z } from "zod";
 
-import { WorkflowStatusBadge } from "@/components/admin/workflow-status-badge";
+import { blocksField } from "@/lib/cms/blocks/schema";
+import {
+  cardFieldsSchemaShape,
+  contributorsFormField,
+  featuredFormField,
+  featuredListColumn,
+  statusListColumn,
+} from "@/lib/cms/collections/card-fields";
 import { practiceAreaOptions, practiceAreaValues } from "@/lib/cms/collections/shared-options";
 import { optionalObjectIdField } from "@/lib/cms/collections/shared-validation";
 import type { CaseStudyDocument } from "@/models/case-study";
@@ -18,6 +25,14 @@ import type { ClientDocument, FieldConfig, FilterConfig, TableColumn } from "@/t
  * Mongoose-touching half (`caseStudyConfig`, importing `CaseStudy` from
  * here) lives in the sibling `case-study.config.ts`, imported only from
  * `actions/studio/case-studies.ts` and Server Components.
+ *
+ * `problem`/`approach`/`result` are replaced by `content`, a single ordered
+ * `Block[]` field (`ARCHITECTURE/20_CONTENT_BLOCKS.md`) — the author decides
+ * the story, this collection no longer forces a three-part structure.
+ * `summary`/`featured`/`contributors` are the card-metadata and
+ * team-relationship additions the same evolution introduces.
+ * `readingTimeMinutes` is computed (`case-study.config.ts`'s
+ * `computedFields`), never a form field.
  */
 
 export type CaseStudyRow = ClientDocument<CaseStudyDocument>;
@@ -37,11 +52,11 @@ export const caseStudySchema = z.object({
   client: z.string().trim().min(1, "Required.").max(160, "Keep it under 160 characters."),
   industry: z.string().trim().min(1, "Required.").max(160, "Keep it under 160 characters."),
   practiceArea: z.enum(practiceAreaValues, { error: "Choose a practice area." }),
-  problem: z.string().trim().min(1, "Required.").max(20000),
-  approach: z.string().trim().min(1, "Required.").max(20000),
-  result: z.string().trim().min(1, "Required.").max(20000),
+  summary: z.string().trim().min(1, "Required.").max(400),
+  content: blocksField(),
   techTags: z.array(z.string().trim().min(1).max(40)).max(20).default([]),
   coverImage: optionalObjectIdField("Choose a cover image from the media library."),
+  ...cardFieldsSchemaShape,
 });
 
 export type CaseStudyInput = z.infer<typeof caseStudySchema>;
@@ -66,18 +81,28 @@ export const caseStudyFormFields: FieldConfig<CaseStudyInput>[] = [
     required: true,
     options: [...practiceAreaOptions],
   },
-  { name: "problem", label: "Problem", type: "richtext", required: true },
-  { name: "approach", label: "Approach", type: "richtext", required: true },
-  { name: "result", label: "Result", type: "richtext", required: true },
+  {
+    name: "summary",
+    label: "Card summary",
+    type: "textarea",
+    required: true,
+    description: "Shown on /work and anywhere else this case study appears as a card.",
+  },
+  { name: "content", label: "Content", type: "blocks", required: true },
   { name: "techTags", label: "Tech tags", type: "multiselect" },
   { name: "coverImage", label: "Cover image", type: "image" },
+  contributorsFormField("Team members who worked on this project."),
+  featuredFormField(
+    "Used as the default homepage feature when Site Settings doesn't pick one explicitly.",
+  ),
 ];
 
 export const caseStudyListColumns: TableColumn<CaseStudyRow>[] = [
   { key: "client", label: "Client", sortable: true },
   { key: "industry", label: "Industry" },
   { key: "practiceArea", label: "Practice area" },
-  { key: "status", label: "Status", render: (doc) => <WorkflowStatusBadge status={doc.status} /> },
+  featuredListColumn(),
+  statusListColumn(),
   {
     key: "updatedAt",
     label: "Updated",
