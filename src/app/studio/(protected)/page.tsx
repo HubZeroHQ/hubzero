@@ -1,19 +1,30 @@
-import { ClipboardCheck, FolderKanban, History, Inbox } from "lucide-react";
+import {
+  AlertTriangle,
+  ClipboardCheck,
+  FolderKanban,
+  HardDrive,
+  History,
+  Inbox,
+  UploadCloud,
+} from "lucide-react";
 import type { Metadata } from "next";
 
 import "@/lib/cms/collections";
 
 import { DashboardCard } from "@/components/admin/dashboard/dashboard-card";
+import { MediaThumbnail } from "@/components/admin/media/media-thumbnail";
 import { PageHeader } from "@/components/admin/page-header";
 import { EmptyState, Grid, Link, Text } from "@/components/ui";
 import type { AnyCollectionConfig } from "@/lib/cms/collection-config";
 import { getRecordLabel, listCollections } from "@/lib/cms/collection-config";
 import { connectToDatabase } from "@/lib/db";
 import { projectTypeOptions } from "@/lib/lead-schema";
+import { findBrokenMediaReferences, getStorageUsageSummary, listMedia } from "@/lib/cms/media";
 import { can } from "@/lib/cms/permissions";
 import { roleMeetsMinimum } from "@/lib/cms/roles";
 import { requireSessionUser } from "@/lib/cms/session";
 import { listRecentActivity } from "@/lib/cms/version-history";
+import { formatBytes } from "@/lib/utils";
 import { Lead } from "@/models/lead";
 import type { SessionUser } from "@/types/cms";
 
@@ -26,28 +37,48 @@ const projectTypeLabels = Object.fromEntries(
 );
 
 /**
- * Deliberately small (`ARCHITECTURE/19_CMS_FOUNDATION.md` §10) — four cards,
- * each earning its place with real data or an honest empty state, never a
- * placeholder chart or a fabricated metric. "Awaiting review" and "Recent
- * activity" are generic across the collection registry (`listCollections()`)
- * rather than hardcoded to Case Study, so a future collection's review
- * submissions and publishes show up here with no dashboard code change.
+ * Each card earns its place with real data or an honest empty state, never a
+ * placeholder chart or a fabricated metric (`ARCHITECTURE/19_CMS_FOUNDATION.md`
+ * §10). "Awaiting review," "Recent activity," "Content," "Draft counts," and
+ * media-related cards are generic across the collection registry
+ * (`listCollections()`) rather than hardcoded to Case Study, so a future
+ * collection shows up everywhere it belongs with no dashboard code change.
+ *
+ * "Recent activity" below already *is* "recent publishes" — `VersionHistory`
+ * entries are only ever written from `publish()` (`version-history.ts`'s
+ * `snapshotVersion` header comment), so a separate "recent publishes" card
+ * would just duplicate it under a second label; this dashboard doesn't add
+ * one.
  */
 export default async function StudioDashboardPage() {
   const user = await requireSessionUser();
   const canViewLeads = can(user, "view", "lead");
   const canSeeReviewQueue = roleMeetsMinimum(user.role, "admin");
+  const canViewMedia = can(user, "view", "media");
 
   await connectToDatabase();
 
-  const [newLeadsCount, recentLeads, reviewCount, recentActivity, contentOverview] =
-    await Promise.all([
-      canViewLeads ? Lead.countDocuments({ status: "new" }) : Promise.resolve(0),
-      canViewLeads ? Lead.find().sort({ createdAt: -1 }).limit(5) : Promise.resolve([]),
-      canSeeReviewQueue ? countAwaitingReview(user) : Promise.resolve(0),
-      listRecentActivity(20),
-      getContentOverview(user),
-    ]);
+  const [
+    newLeadsCount,
+    recentLeads,
+    reviewCount,
+    recentActivity,
+    contentOverview,
+    draftOverview,
+    recentUploads,
+    storageUsage,
+    brokenMedia,
+  ] = await Promise.all([
+    canViewLeads ? Lead.countDocuments({ status: "new" }) : Promise.resolve(0),
+    canViewLeads ? Lead.find().sort({ createdAt: -1 }).limit(5) : Promise.resolve([]),
+    canSeeReviewQueue ? countAwaitingReview(user) : Promise.resolve(0),
+    listRecentActivity(20),
+    getContentOverview(user),
+    getDraftOverview(user),
+    canViewMedia ? listMedia({ sort: "newest", page: 1 }) : Promise.resolve(null),
+    canViewMedia ? getStorageUsageSummary() : Promise.resolve(null),
+    canViewMedia ? findBrokenMediaReferences() : Promise.resolve([]),
+  ]);
 
   // `listRecentActivity` reads across every collection; only surface entries
   // for a collection the signed-in user actually holds a `view` grant on —
@@ -189,6 +220,138 @@ export default async function StudioDashboardPage() {
             </ul>
           )}
         </DashboardCard>
+
+        <DashboardCard title="Draft counts" icon={FolderKanban}>
+          {draftOverview.length === 0 ? (
+            <EmptyState
+              title="Nothing to manage here"
+              description="Content collections aren't part of your role's scope."
+            />
+          ) : draftOverview.every((row) => row.total === 0) ? (
+            <EmptyState title="No drafts" description="Nothing is sitting in draft right now." />
+          ) : (
+            <ul className="divide-border-muted -mt-1 divide-y">
+              {draftOverview
+                .filter((row) => row.total > 0)
+                .map(({ config, total }) => (
+                  <li
+                    key={config.resource}
+                    className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0"
+                  >
+                    <Text weight="medium">{config.label}</Text>
+                    <div className="flex items-center gap-3">
+                      <Text size="caption" tone="muted">
+                        {total} {total === 1 ? "draft" : "drafts"}
+                      </Text>
+                      {config.studioBasePath && (
+                        <Link href={`/studio/${config.studioBasePath}`}>Open →</Link>
+                      )}
+                    </div>
+                  </li>
+                ))}
+            </ul>
+          )}
+        </DashboardCard>
+
+        <DashboardCard title="Recent uploads" icon={UploadCloud}>
+          {!canViewMedia ? (
+            <EmptyState
+              title="Nothing to manage here"
+              description="The media library isn't part of your role's scope."
+            />
+          ) : !recentUploads || recentUploads.items.length === 0 ? (
+            <EmptyState
+              title="No uploads yet"
+              description="Files uploaded anywhere in Studio show up here."
+            />
+          ) : (
+            <div className="flex flex-col gap-4">
+              <div className="grid grid-cols-5 gap-2">
+                {recentUploads.items.slice(0, 5).map((media) => (
+                  <MediaThumbnail key={media.id} media={media} className="aspect-square w-full" />
+                ))}
+              </div>
+              <Link href="/studio/media">Open the media library →</Link>
+            </div>
+          )}
+        </DashboardCard>
+
+        <DashboardCard title="Storage usage" icon={HardDrive}>
+          {!canViewMedia ? (
+            <EmptyState
+              title="Nothing to manage here"
+              description="The media library isn't part of your role's scope."
+            />
+          ) : !storageUsage || storageUsage.count === 0 ? (
+            <EmptyState title="Nothing stored yet" description="Upload a file to get started." />
+          ) : (
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center justify-between">
+                <Text as="span" className="text-h3 text-text font-semibold">
+                  {formatBytes(storageUsage.totalBytes)}
+                </Text>
+                <Text size="caption" tone="muted">
+                  {storageUsage.count} {storageUsage.count === 1 ? "file" : "files"}
+                </Text>
+              </div>
+              <ul className="divide-border-muted -mt-1 divide-y">
+                {storageUsage.byResourceType.map((row) => (
+                  <li
+                    key={row.resourceType}
+                    className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0"
+                  >
+                    <Text weight="medium" className="capitalize">
+                      {row.resourceType}
+                    </Text>
+                    <Text size="caption" tone="muted">
+                      {formatBytes(row.bytes)} · {row.count}
+                    </Text>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </DashboardCard>
+
+        <DashboardCard title="Broken media" icon={AlertTriangle}>
+          {!canViewMedia ? (
+            <EmptyState
+              title="Nothing to manage here"
+              description="The media library isn't part of your role's scope."
+            />
+          ) : brokenMedia.length === 0 ? (
+            <EmptyState
+              title="Nothing broken"
+              description="Every image/document field resolves to a real file."
+            />
+          ) : (
+            <ul className="divide-border-muted -mt-1 divide-y">
+              {brokenMedia.slice(0, 8).map((entry, index) => {
+                const config = listCollections().find(
+                  (candidate) => candidate.resource === entry.resource,
+                );
+                return (
+                  <li
+                    key={`${entry.documentId}-${entry.field}-${index}`}
+                    className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0"
+                  >
+                    <div>
+                      <Text weight="medium">{entry.documentLabel}</Text>
+                      <Text size="caption" tone="muted">
+                        {entry.label} · missing reference on &ldquo;{entry.field}&rdquo;
+                      </Text>
+                    </div>
+                    {config?.studioBasePath && (
+                      <Link href={`/studio/${config.studioBasePath}/${entry.documentId}`}>
+                        Fix →
+                      </Link>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </DashboardCard>
       </Grid>
     </>
   );
@@ -233,5 +396,26 @@ async function getContentOverview(user: SessionUser): Promise<ContentOverviewRow
       can(user, "view", config.resource),
   );
   const totals = await Promise.all(collections.map((config) => config.model.countDocuments()));
+  return collections.map((config, index) => ({ config, total: totals[index] ?? 0 }));
+}
+
+/**
+ * Real per-collection draft counts — every workflow collection has a
+ * `"draft"` status regardless of whether its workflow is `draft-publish` or
+ * `draft-review-publish` (`models/shared/workflow-fields.ts`), so this needs
+ * no per-workflow branching. Same registry-driven, no-fabricated-metric
+ * posture as `getContentOverview`/`countAwaitingReview`.
+ */
+async function getDraftOverview(user: SessionUser): Promise<ContentOverviewRow[]> {
+  const collections = listCollections().filter(
+    (config) =>
+      config.workflow !== "none" &&
+      config.resource !== "lead" &&
+      config.resource !== "user" &&
+      can(user, "view", config.resource),
+  );
+  const totals = await Promise.all(
+    collections.map((config) => config.model.countDocuments({ status: "draft" })),
+  );
   return collections.map((config, index) => ({ config, total: totals[index] ?? 0 }));
 }
