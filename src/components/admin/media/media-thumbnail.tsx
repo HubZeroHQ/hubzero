@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useState } from "react";
 
 import { Spinner } from "@/components/ui/spinner";
+import { cloudinaryImageLoader, isCloudinaryUrl } from "@/lib/cms/media-url";
 import { cn } from "@/lib/utils";
 import type { ClientMedia } from "@/lib/cms/media";
 
@@ -83,8 +84,6 @@ export function MediaThumbnail({ media, className }: MediaThumbnailProps) {
     );
   }
 
-  const smallestVariant = [...media.variants].sort((a, b) => a.width - b.width)[0];
-
   return (
     <div
       className={cn(
@@ -93,11 +92,12 @@ export function MediaThumbnail({ media, className }: MediaThumbnailProps) {
       )}
     >
       <Image
-        src={smallestVariant?.url ?? media.url}
+        src={media.secureUrl}
         alt={media.alt}
         fill
         sizes="200px"
         className="object-cover"
+        loader={isCloudinaryUrl(media.secureUrl) ? cloudinaryImageLoader : undefined}
         unoptimized={media.mimeType === "image/gif"}
         onError={() => {
           console.warn(

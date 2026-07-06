@@ -32,10 +32,20 @@ export const caseStudyConfig = registerCollection(
     studioBasePath: "case-studies",
     recordLabel: (doc) => doc.client,
     computedFields: (input) => ({ readingTimeMinutes: computeReadingTimeMinutes(input.content) }),
-    // "/" is included because this case study may be the homepage's featured
-    // one (`ARCHITECTURE/20_CONTENT_BLOCKS.md` §6, `lib/cms/public-content.ts`'s
-    // `getFeaturedCaseStudy`) — cheap and safe to always revalidate, since a
-    // stale homepage would otherwise only self-correct on the next ISR tick.
+    // "/" is included because this case study may be one of the homepage's
+    // featured items (`lib/cms/public-content.ts`'s `getHomepageContent`) —
+    // cheap and safe to always revalidate, since a stale homepage would
+    // otherwise only self-correct on the next ISR tick.
     revalidatesPaths: (doc) => ["/", "/work", `/work/${doc.slug}`],
+    publicCard: (doc) => ({
+      title: doc.client,
+      summary: doc.summary,
+      href: `/work/${doc.slug}`,
+      coverImageId: doc.coverImage ? String(doc.coverImage) : undefined,
+      techTags: Array.isArray(doc.techTags) ? doc.techTags : [],
+      featured: doc.featured,
+      readingTimeMinutes: doc.readingTimeMinutes,
+      contributorIds: (doc.contributors ?? []).map(String),
+    }),
   }),
 );

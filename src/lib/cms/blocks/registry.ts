@@ -11,6 +11,7 @@ import {
   Quote as QuoteIcon,
   SeparatorHorizontal,
   SquareCode,
+  Table as TableIcon,
   Text as TextIcon,
   TextQuote,
 } from "lucide-react";
@@ -168,6 +169,14 @@ export const BLOCK_TYPE_META: Record<BlockType, BlockTypeMeta> = {
     group: "Advanced",
     availableInColumn: true,
     createDefault: () => block("html", { html: "" }),
+  },
+  table: {
+    label: "Table",
+    description: "A simple data table with a horizontal-scroll fallback on small screens.",
+    icon: TableIcon,
+    group: "Data",
+    availableInColumn: true,
+    createDefault: () => block("table", { headers: ["", ""], rows: [["", ""]] }),
   },
 };
 

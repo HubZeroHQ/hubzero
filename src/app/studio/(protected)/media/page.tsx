@@ -20,7 +20,7 @@ export default async function MediaLibraryPage() {
         title="Media"
         description="Every uploaded file — referenced by image fields across every collection."
       />
-      <MediaLibrary canDelete={can(user, "delete", "media")} />
+      <MediaLibrary canDelete={can(user, "delete", "media")} canEdit={can(user, "edit", "media")} />
     </>
   );
 }

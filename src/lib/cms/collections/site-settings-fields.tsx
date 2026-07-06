@@ -1,8 +1,17 @@
 import { z } from "zod";
 
 import { objectIdField, optionalObjectIdField } from "@/lib/cms/collections/shared-validation";
+import { HOMEPAGE_RESOURCES } from "@/lib/cms/homepage-resources";
+import { jsonArray } from "@/lib/cms/json-field";
 import { emptyToUndefined } from "@/lib/utils";
 import type { FieldConfig } from "@/types/cms";
+
+const homepageItemSchema = z.object({
+  resource: z.enum(HOMEPAGE_RESOURCES),
+  id: objectIdField(),
+  visible: z.boolean(),
+  isHero: z.boolean(),
+});
 
 /**
  * Settings' Zod validation + form fields — kept Mongoose-import-free for the
@@ -24,7 +33,7 @@ export const siteSettingsSchema = z.object({
   socialsTwitter: z.preprocess(emptyToUndefined, z.url("Enter a valid URL.").optional()),
   socialsInstagram: z.preprocess(emptyToUndefined, z.url("Enter a valid URL.").optional()),
   footerText: z.preprocess(emptyToUndefined, z.string().trim().max(500).optional()),
-  featuredCaseStudyIds: z.array(objectIdField()).max(5).default([]),
+  homepageItems: jsonArray(homepageItemSchema, 20).default([]),
   seoDefaultTitle: z.string().trim().min(1, "Required.").max(160),
   seoDefaultDescription: z.string().trim().min(1, "Required.").max(300),
   ogImage: optionalObjectIdField("Choose a default OpenGraph image from the media library."),
@@ -50,13 +59,11 @@ export const siteSettingsFormFields: FieldConfig<SiteSettingsInput>[] = [
     description: "Short blurb shown in the site footer.",
   },
   {
-    name: "featuredCaseStudyIds",
-    label: "Featured case studies",
-    type: "referenceArray",
-    resource: "caseStudy",
-    labelField: "client",
+    name: "homepageItems",
+    label: "Homepage content",
+    type: "homepageItems",
     description:
-      "The homepage shows the first one here. Leave empty to feature the most recently published one automatically.",
+      "Feature Case Studies, Builds, Labs Projects, Blueprints, and Notes on the homepage. Order controls display order; mark exactly one item as hero for the large treatment. Leave empty to fall back to the most recently published, featured Case Study.",
   },
   { name: "seoDefaultTitle", label: "Default SEO title", type: "text", required: true },
   {

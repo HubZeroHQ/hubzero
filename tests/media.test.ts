@@ -8,6 +8,8 @@ import {
   deleteMedia,
   getMediaUsage,
   listMedia,
+  renameMedia,
+  replaceMedia,
   uploadMedia,
 } from "@/lib/cms/media";
 import { CaseStudy } from "@/models/case-study";
@@ -34,7 +36,7 @@ async function pngBuffer(color: { r: number; g: number; b: number }): Promise<Bu
 }
 
 describe("uploadMedia", () => {
-  it("uploads an image, generates variants, and records real metadata", async () => {
+  it("uploads an image via the storage adapter and records real metadata", async () => {
     const buffer = await pngBuffer({ r: 255, g: 0, b: 0 });
     const media = await uploadMedia({
       buffer,
@@ -48,9 +50,12 @@ describe("uploadMedia", () => {
     expect(media.alt).toBe("A solid red square");
     expect(media.mimeType).toBe("image/png");
     expect(media.width).toBe(20);
-    // A 20px-wide source image is smaller than every variant width
-    // (400/800/1600) — no variant should be generated for it.
-    expect(media.variants).toHaveLength(0);
+    expect(media.format).toBe("png");
+    expect(media.resourceType).toBe("image");
+    // No Cloudinary credentials in the test environment — falls back to
+    // local disk storage automatically (`lib/cms/storage/index.ts`).
+    expect(media.provider).toBe("local");
+    expect(media.secureUrl).toMatch(/^\/api\/media\//);
   });
 
   it("deduplicates identical bytes by content hash instead of storing a second copy", async () => {
@@ -176,5 +181,60 @@ describe("getMediaUsage / deleteMedia", () => {
 
     await CaseStudy.findByIdAndDelete(caseStudy._id);
     await expect(deleteMedia(media.id)).resolves.toBeUndefined();
+  });
+});
+
+describe("renameMedia / replaceMedia", () => {
+  it("updates alt/caption/originalName without changing the underlying asset", async () => {
+    const buffer = await pngBuffer({ r: 70, g: 80, b: 90 });
+    const media = await uploadMedia({
+      buffer,
+      originalName: "original-name.png",
+      mimeType: "image/png",
+      alt: "Original alt",
+      uploadedBy: uploaderId,
+    });
+
+    const renamed = await renameMedia(media.id, {
+      originalName: "renamed.png",
+      alt: "Updated alt",
+      caption: "A new caption",
+    });
+
+    expect(renamed.id).toBe(media.id);
+    expect(renamed.originalName).toBe("renamed.png");
+    expect(renamed.alt).toBe("Updated alt");
+    expect(renamed.caption).toBe("A new caption");
+    expect(renamed.publicId).toBe(media.publicId);
+  });
+
+  it("replaces the asset in place — same id, new bytes/metadata", async () => {
+    const original = await pngBuffer({ r: 100, g: 110, b: 120 });
+    const media = await uploadMedia({
+      buffer: original,
+      originalName: "before.png",
+      mimeType: "image/png",
+      alt: "Before replace",
+      uploadedBy: uploaderId,
+    });
+
+    const replacement = await sharp({
+      create: { width: 40, height: 40, channels: 3, background: { r: 5, g: 5, b: 5 } },
+    })
+      .png()
+      .toBuffer();
+
+    const replaced = await replaceMedia(media.id, {
+      buffer: replacement,
+      originalName: "after.png",
+      mimeType: "image/png",
+    });
+
+    expect(replaced.id).toBe(media.id);
+    expect(replaced.width).toBe(40);
+    expect(replaced.originalName).toBe("after.png");
+    // A different-sized image hashes to a different publicId — the document
+    // itself is reused (same `_id`), but it now points at a new asset.
+    expect(replaced.publicId).not.toBe(media.publicId);
   });
 });

@@ -24,6 +24,7 @@ import type {
   ParagraphBlockData,
   QuoteBlockData,
   SpacerBlockData,
+  TableBlockData,
   TimelineBlockData,
   TwoColumnBlockData,
   VideoBlockData,
@@ -76,6 +77,8 @@ export function BlockDataEditor({ block, onChange }: BlockDataEditorProps) {
       return <CodeEditor data={block.data} onChange={onChange} />;
     case "html":
       return <HtmlEditor data={block.data} onChange={onChange} />;
+    case "table":
+      return <TableEditor data={block.data} onChange={onChange} />;
     default: {
       // Exhaustiveness guard: a 16th `BlockType` that forgets a case here
       // fails the build instead of silently rendering no editor for it.
@@ -200,6 +203,12 @@ function CalloutEditor({
           { value: "warning", label: "Warning" },
         ]}
       />
+      <Input
+        label="Title (optional)"
+        placeholder="e.g. Heads up"
+        value={data.title ?? ""}
+        onChange={(event) => onChange({ ...data, title: event.target.value })}
+      />
       <Textarea
         label="Text"
         rows={3}
@@ -271,6 +280,17 @@ function GalleryEditor({
         value={data.media}
         onChange={(value) => onChange({ ...data, media: value })}
       />
+      <Select
+        label="Layout"
+        value={data.layout ?? "grid"}
+        onValueChange={(value) =>
+          onChange({ ...data, layout: value as GalleryBlockData["layout"] })
+        }
+        options={[
+          { value: "grid", label: "Even grid" },
+          { value: "masonry", label: "Masonry (natural aspect ratio)" },
+        ]}
+      />
       <Input
         label="Caption"
         value={data.caption ?? ""}
@@ -325,6 +345,28 @@ function SpacerEditor({
   );
 }
 
+/** The languages `lib/cms/blocks/syntax-highlight.ts` bundles a Shiki grammar for — kept in sync with that module's own list so a language chosen here always highlights. */
+const CODE_LANGUAGE_OPTIONS = [
+  { value: "plaintext", label: "Plain text" },
+  { value: "typescript", label: "TypeScript" },
+  { value: "tsx", label: "TSX" },
+  { value: "javascript", label: "JavaScript" },
+  { value: "jsx", label: "JSX" },
+  { value: "json", label: "JSON" },
+  { value: "python", label: "Python" },
+  { value: "bash", label: "Bash / Shell" },
+  { value: "css", label: "CSS" },
+  { value: "html", label: "HTML" },
+  { value: "markdown", label: "Markdown" },
+  { value: "yaml", label: "YAML" },
+  { value: "sql", label: "SQL" },
+  { value: "go", label: "Go" },
+  { value: "rust", label: "Rust" },
+  { value: "java", label: "Java" },
+  { value: "csharp", label: "C#" },
+  { value: "cpp", label: "C++" },
+];
+
 function CodeEditor({
   data,
   onChange,
@@ -335,11 +377,11 @@ function CodeEditor({
   return (
     <div className="flex flex-col gap-3">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <Input
+        <Select
           label="Language"
-          placeholder="e.g. tsx, python"
-          value={data.language ?? ""}
-          onChange={(event) => onChange({ ...data, language: event.target.value })}
+          value={data.language ?? "plaintext"}
+          onValueChange={(value) => onChange({ ...data, language: value })}
+          options={CODE_LANGUAGE_OPTIONS}
         />
         <Input
           label="Filename (optional)"
@@ -412,6 +454,22 @@ function MetricsEditor({
             placeholder="e.g. 64"
             value={item.value}
             onChange={(event) => updateItem(index, { value: event.target.value })}
+          />
+          <Select
+            label={index === 0 ? "Trend" : undefined}
+            value={item.trend ?? "none"}
+            onValueChange={(value) =>
+              updateItem(index, {
+                trend: value === "none" ? undefined : (value as "up" | "down" | "flat"),
+              })
+            }
+            options={[
+              { value: "none", label: "None" },
+              { value: "up", label: "Up" },
+              { value: "down", label: "Down" },
+              { value: "flat", label: "Flat" },
+            ]}
+            className="w-28"
           />
           <IconButton
             aria-label="Remove metric"
@@ -503,29 +561,161 @@ function TwoColumnEditor({
   onChange: (data: TwoColumnBlockData) => void;
 }) {
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-      <div>
-        <p className="text-caption text-text-muted mb-2 font-mono tracking-wide uppercase">
-          Left column
-        </p>
-        <BlockList
-          blocks={data.left as Block[]}
-          onChange={(blocks) => onChange({ ...data, left: blocks as TwoColumnBlockData["left"] })}
-          restrictToSimple
-          emptyLabel="Empty column."
-        />
+    <div className="flex flex-col gap-4">
+      <Select
+        label="Column widths"
+        value={data.ratio ?? "50-50"}
+        onValueChange={(value) =>
+          onChange({ ...data, ratio: value as TwoColumnBlockData["ratio"] })
+        }
+        options={[
+          { value: "50-50", label: "Even (50 / 50)" },
+          { value: "60-40", label: "Left wider (60 / 40)" },
+          { value: "40-60", label: "Right wider (40 / 60)" },
+          { value: "70-30", label: "Left much wider (70 / 30)" },
+          { value: "30-70", label: "Right much wider (30 / 70)" },
+        ]}
+        className="max-w-xs"
+      />
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div>
+          <p className="text-caption text-text-muted mb-2 font-mono tracking-wide uppercase">
+            Left column
+          </p>
+          <BlockList
+            blocks={data.left as Block[]}
+            onChange={(blocks) => onChange({ ...data, left: blocks as TwoColumnBlockData["left"] })}
+            restrictToSimple
+            emptyLabel="Empty column."
+          />
+        </div>
+        <div>
+          <p className="text-caption text-text-muted mb-2 font-mono tracking-wide uppercase">
+            Right column
+          </p>
+          <BlockList
+            blocks={data.right as Block[]}
+            onChange={(blocks) =>
+              onChange({ ...data, right: blocks as TwoColumnBlockData["right"] })
+            }
+            restrictToSimple
+            emptyLabel="Empty column."
+          />
+        </div>
       </div>
-      <div>
-        <p className="text-caption text-text-muted mb-2 font-mono tracking-wide uppercase">
-          Right column
-        </p>
-        <BlockList
-          blocks={data.right as Block[]}
-          onChange={(blocks) => onChange({ ...data, right: blocks as TwoColumnBlockData["right"] })}
-          restrictToSimple
-          emptyLabel="Empty column."
-        />
+    </div>
+  );
+}
+
+function TableEditor({
+  data,
+  onChange,
+}: {
+  data: TableBlockData;
+  onChange: (data: TableBlockData) => void;
+}) {
+  function updateHeader(index: number, value: string) {
+    const headers = [...data.headers];
+    headers[index] = value;
+    onChange({ ...data, headers });
+  }
+
+  function updateCell(rowIndex: number, colIndex: number, value: string) {
+    const rows = data.rows.map((row) => [...row]);
+    const row = rows[rowIndex];
+    if (!row) return;
+    row[colIndex] = value;
+    onChange({ ...data, rows });
+  }
+
+  function addColumn() {
+    onChange({
+      ...data,
+      headers: [...data.headers, ""],
+      rows: data.rows.map((row) => [...row, ""]),
+    });
+  }
+
+  function removeColumn(index: number) {
+    onChange({
+      ...data,
+      headers: data.headers.filter((_, i) => i !== index),
+      rows: data.rows.map((row) => row.filter((_, i) => i !== index)),
+    });
+  }
+
+  function addRow() {
+    onChange({ ...data, rows: [...data.rows, data.headers.map(() => "")] });
+  }
+
+  function removeRow(index: number) {
+    onChange({ ...data, rows: data.rows.filter((_, i) => i !== index) });
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse">
+          <thead>
+            <tr>
+              {data.headers.map((header, index) => (
+                <th key={index} className="p-1">
+                  <div className="flex items-center gap-1">
+                    <Input
+                      value={header}
+                      placeholder={`Column ${index + 1}`}
+                      onChange={(event) => updateHeader(index, event.target.value)}
+                    />
+                    <IconButton
+                      aria-label="Remove column"
+                      icon={<Trash2 className="size-4" />}
+                      size="sm"
+                      onClick={() => removeColumn(index)}
+                    />
+                  </div>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {data.rows.map((row, rowIndex) => (
+              <tr key={rowIndex}>
+                {data.headers.map((_, colIndex) => (
+                  <td key={colIndex} className="p-1">
+                    <Input
+                      value={row[colIndex] ?? ""}
+                      onChange={(event) => updateCell(rowIndex, colIndex, event.target.value)}
+                    />
+                  </td>
+                ))}
+                <td className="p-1">
+                  <IconButton
+                    aria-label="Remove row"
+                    icon={<Trash2 className="size-4" />}
+                    size="sm"
+                    onClick={() => removeRow(rowIndex)}
+                  />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
+      <div className="flex gap-2">
+        <Button type="button" variant="secondary" size="sm" onClick={addColumn}>
+          <Plus className="size-4" aria-hidden="true" />
+          Add column
+        </Button>
+        <Button type="button" variant="secondary" size="sm" onClick={addRow}>
+          <Plus className="size-4" aria-hidden="true" />
+          Add row
+        </Button>
+      </div>
+      <Input
+        label="Caption (optional)"
+        value={data.caption ?? ""}
+        onChange={(event) => onChange({ ...data, caption: event.target.value })}
+      />
     </div>
   );
 }

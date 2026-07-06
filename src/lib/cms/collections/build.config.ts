@@ -25,8 +25,20 @@ export const buildConfig = registerCollection(
     studioBasePath: "builds",
     recordLabel: (doc) => doc.title,
     computedFields: (input) => ({ readingTimeMinutes: computeReadingTimeMinutes(input.content) }),
-    // No public route exists for Builds yet (`ARCHITECTURE/18_ARCHITECTURE_CHANGELOG.md`'s
-    // Phase D entry) — nothing to revalidate until one ships.
-    revalidatesPaths: () => [],
+    // No public detail route exists for Builds yet
+    // (`ARCHITECTURE/18_ARCHITECTURE_CHANGELOG.md`'s Phase D entry) — "/" is
+    // still included since a Build can be a homepage-featured item
+    // (`publicCard` below, `href: null`), which does have a public page.
+    revalidatesPaths: () => ["/"],
+    publicCard: (doc) => ({
+      title: doc.title,
+      summary: doc.tagline,
+      href: null,
+      coverImageId: doc.coverImage ? String(doc.coverImage) : undefined,
+      techTags: Array.isArray(doc.techTags) ? doc.techTags : [],
+      featured: doc.featured,
+      readingTimeMinutes: doc.readingTimeMinutes,
+      contributorIds: (doc.contributors ?? []).map(String),
+    }),
   }),
 );

@@ -12,14 +12,27 @@ import type { NextConfig } from "next";
  * infrastructure with no other consumer yet, not a one-line config fix.
  * Tightening this further (nonces, or dropping `'unsafe-inline'` once no
  * inline script/style is needed) is future work, not a regression today.
+ *
+ * `img-src` allows `res.cloudinary.com` unconditionally rather than only when
+ * Cloudinary credentials are present at build time — this file has no access
+ * to that runtime check (`storage/index.ts`'s `isCloudinaryConfigured` reads
+ * `process.env` per-request, not at config-build time), and an always-present
+ * allowance is harmless when the app happens to be running against local
+ * fallback storage instead.
+ *
+ * `frame-src` is scoped to exactly the three providers the `video` block's
+ * `toEmbedUrl()` (`components/marketing/blocks/block-renderer.tsx`) ever
+ * builds an iframe `src` for — never a wildcard, so an author can't turn the
+ * video block into an arbitrary third-party iframe embed.
  */
 const contentSecurityPolicy = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline'",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data:",
+  "img-src 'self' data: https://res.cloudinary.com",
   "font-src 'self' data:",
   "connect-src 'self'",
+  "frame-src 'self' https://www.youtube-nocookie.com https://player.vimeo.com https://www.loom.com",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",
@@ -29,6 +42,14 @@ const contentSecurityPolicy = [
 // site-wide settings by omitting it (see ARCHITECTURE/08_TECHNICAL_ARCHITECTURE.md §7).
 const nextConfig: NextConfig = {
   output: "standalone",
+  // Covers every `next/image` usage that doesn't go through `<MediaImage>`/
+  // `<MediaThumbnail>`'s Cloudinary-aware custom `loader` (card grids, detail
+  // pages that render a resolved cover image directly) — without this,
+  // Next's built-in image optimizer refuses to fetch a remote host it
+  // doesn't recognize.
+  images: {
+    remotePatterns: [{ protocol: "https", hostname: "res.cloudinary.com" }],
+  },
   // `sharp`'s ESM build (`dist/utility.mjs`) has a self-reference bug when
   // Next's own bundler processes it via dynamic import — the same package
   // works correctly everywhere it's used directly (`lib/cms/media.ts`'s

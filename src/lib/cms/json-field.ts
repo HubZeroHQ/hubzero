@@ -12,8 +12,14 @@ import { z } from "zod";
  * since `CmsField`'s `json` case stringifies `value ?? null` for display —
  * the same as an empty array, not a validation error: a brand-new draft
  * with no skills/experience entered yet is valid, not broken.
+ *
+ * `maxItems` is applied to the array schema itself before the pipe, not
+ * chained after `jsonArray(...)` returns — the returned `ZodPipe` has no
+ * `.max()` of its own (only a plain `ZodArray` does), so a caller needing a
+ * cap (e.g. `SiteSettings.homepageItems`) passes it here instead.
  */
-export function jsonArray<Item extends z.ZodTypeAny>(itemSchema: Item) {
+export function jsonArray<Item extends z.ZodTypeAny>(itemSchema: Item, maxItems?: number) {
+  const arraySchema = maxItems ? z.array(itemSchema).max(maxItems) : z.array(itemSchema);
   return z
     .string()
     .transform((raw, ctx) => {
@@ -26,5 +32,5 @@ export function jsonArray<Item extends z.ZodTypeAny>(itemSchema: Item) {
       }
       return parsed ?? [];
     })
-    .pipe(z.array(itemSchema));
+    .pipe(arraySchema);
 }

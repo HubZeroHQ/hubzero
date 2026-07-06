@@ -55,8 +55,10 @@ const roleGrants: Record<UserRole, Partial<Record<Resource, Action[]>>> = {
     careerListing: ["view", "create", "edit", "publish", "delete"],
     // Anyone authoring content needs to upload/browse media; delete is
     // usage-guarded (`lib/cms/media.ts`'s `deleteMedia`), so granting it here
-    // can't create a dangling reference.
-    media: ["view", "create", "delete"],
+    // can't create a dangling reference. `edit` covers the Media Library's
+    // rename/replace-asset/move-to-folder actions — metadata and asset
+    // changes, never a second ownership model layered on `uploadedBy`.
+    media: ["view", "create", "edit", "delete"],
     // Personal content — Admin can author their own notes and approve/publish
     // Teammate submissions, but does not gain a blanket "edit" over every note.
     note: ["view", "create", "editOwn", "approve", "publish"],

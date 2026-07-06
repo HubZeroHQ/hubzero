@@ -79,7 +79,7 @@ export async function updateSiteSettings(
     seoDefaultTitle,
     seoDefaultDescription,
     ogImage,
-    featuredCaseStudyIds,
+    homepageItems,
     googleAnalyticsId,
     plausibleDomain,
     ...rest
@@ -92,10 +92,10 @@ export async function updateSiteSettings(
   // already replaces it wholesale — omitting `ogImage` from that object
   // already clears it, and `$unset`ting a child of a path this same update
   // also `$set`s (`seo.ogImage` under `seo`) is a MongoDB conflict error,
-  // not a no-op. `featuredCaseStudyId` (the deprecated singular field
-  // `featuredCaseStudyIds` superseded) is unconditionally `$unset` here —
-  // the lazy, one-document "migration on next write" `models/site-settings.ts`
-  // documents: the form no longer offers any way to set it, so every save
+  // not a no-op. `featuredCaseStudyId`/`featuredCaseStudyIds` (superseded by
+  // `homepageItems`) are unconditionally `$unset` here — the lazy,
+  // one-document "migration on next write" `models/site-settings.ts`
+  // documents: the form no longer offers any way to set them, so every save
   // from now on clears whatever a pre-this-change save left behind.
   try {
     await SiteSettings.findOneAndUpdate(
@@ -104,7 +104,10 @@ export async function updateSiteSettings(
         $set: {
           singletonKey: "default",
           ...rest,
-          featuredCaseStudyIds: featuredCaseStudyIds.map((id) => new Types.ObjectId(id)),
+          homepageItems: homepageItems.map((item) => ({
+            ...item,
+            id: new Types.ObjectId(item.id),
+          })),
           socials: {
             linkedin: socialsLinkedin,
             github: socialsGithub,
@@ -118,12 +121,12 @@ export async function updateSiteSettings(
           },
           analytics: { googleAnalyticsId, plausibleDomain },
         },
-        $unset: { featuredCaseStudyId: "" },
+        $unset: { featuredCaseStudyId: "", featuredCaseStudyIds: "" },
       },
       { upsert: true, returnDocument: "after", runValidators: true },
     );
     // The homepage feature system (`ARCHITECTURE/20_CONTENT_BLOCKS.md` §6)
-    // is the first public page reading `SiteSettings` — `featuredCaseStudyId`
+    // is the first public page reading `SiteSettings` — `homepageItems`
     // changing is the one field on this form the homepage's own ISR cache
     // needs to hear about immediately, so this is a narrow, deliberate
     // exception to this action's previous "nothing to revalidate" state, not

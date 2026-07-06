@@ -28,6 +28,8 @@ function simpleBlockText(block: SimpleBlock): string {
       return block.data.items.map((item) => `${item.label} ${item.value}`).join(" ");
     case "timeline":
       return block.data.items.map((item) => `${item.title} ${item.description ?? ""}`).join(" ");
+    case "table":
+      return block.data.caption ?? "";
     case "code":
     case "html":
     case "divider":
@@ -87,6 +89,8 @@ export function blockPreviewText(block: Block, maxLength = 80): string {
       return "Raw HTML";
     case "code":
       return block.data.filename || "Code snippet";
+    case "table":
+      return `${block.data.rows.length} row${block.data.rows.length === 1 ? "" : "s"} × ${block.data.headers.length} col${block.data.headers.length === 1 ? "" : "s"}`;
     default: {
       const text = simpleBlockText(block as SimpleBlock);
       return text ? truncate(text) : "Empty";

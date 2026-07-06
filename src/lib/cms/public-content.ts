@@ -1,5 +1,9 @@
 import { Types, type Model } from "mongoose";
 
+import "@/lib/cms/collections";
+
+import { getCollection, type PublicCard } from "@/lib/cms/collection-config";
+import { type HomepageResource, isHomepageResource } from "@/lib/cms/homepage-resources";
 import { getMediaById, getMediaByIds } from "@/lib/cms/media";
 import { serializeDocument } from "@/lib/cms/serialize";
 import { connectToDatabase } from "@/lib/db";
@@ -104,11 +108,10 @@ export async function resolveCoverImage(
   const media = await getMediaById(mediaId);
   if (!media) return null;
 
-  const largestVariant = [...media.variants].sort((a, b) => b.width - a.width)[0];
   return {
-    url: largestVariant?.url ?? media.url,
+    url: media.secureUrl,
     alt: media.alt,
-    width: largestVariant?.width ?? media.width,
+    width: media.width,
     height: media.height,
   };
 }
@@ -126,11 +129,10 @@ export async function resolveMediaMap(mediaIds: string[]): Promise<Record<string
   const media = await getMediaByIds(unique);
   const map: Record<string, ResolvedImage> = {};
   for (const item of media) {
-    const largestVariant = [...item.variants].sort((a, b) => b.width - a.width)[0];
     map[item.id] = {
-      url: largestVariant?.url ?? item.url,
+      url: item.secureUrl,
       alt: item.alt,
-      width: largestVariant?.width ?? item.width,
+      width: item.width,
       height: item.height,
     };
   }
@@ -152,48 +154,161 @@ function finalizeCaseStudy(doc: CaseStudyDocument): CaseStudyDocument {
   return withArrayDefault(withCardFieldDefaults(doc), "techTags");
 }
 
+/** One resolved homepage item, generic across every homepage-featurable collection (`lib/cms/homepage-resources.ts`) — the shape `<HomepageHero>`/`<HomepageFeaturedGrid>` render, never branching on `resource` themselves. */
+export interface HomepageContentItem {
+  resource: HomepageResource;
+  title: string;
+  summary: string;
+  href: string | null;
+  cover: ResolvedImage | null;
+  techTags: string[];
+  featured: boolean;
+  readingTimeMinutes: number;
+  contributors: PublicTeamMember[];
+}
+
+export interface HomepageContent {
+  hero: HomepageContentItem | null;
+  items: HomepageContentItem[];
+}
+
 /**
- * The homepage feature system (`ARCHITECTURE/20_CONTENT_BLOCKS.md` §6): the
- * first still-published entry in `SiteSettings.featuredCaseStudyIds` wins
- * (an ordered, founder-curated list — future-proofed for the homepage
- * showing more than one someday, even though today's design only ever reads
- * the first); otherwise the deprecated singular `featuredCaseStudyId`, for a
- * settings document that hasn't been re-saved since that field was
- * superseded (`models/site-settings.ts`); otherwise the most recently
- * published `featured: true` Case Study; otherwise the most recently
- * published Case Study of any kind — so the homepage always has something
- * honest to show, never a hardcoded slug.
+ * The homepage content configuration (`ARCHITECTURE/20_CONTENT_BLOCKS.md`
+ * §6): resolves `SiteSettings.homepageItems` — an ordered, cross-collection
+ * list an admin curates in Studio — into ready-to-render cards, generic over
+ * every homepage-featurable collection via each one's own `publicCard`
+ * (`collection-config.ts`). Invisible or since-unpublished items are silently
+ * skipped rather than surfaced as gaps; the item marked `isHero` (if any)
+ * becomes `hero`, and every other visible, still-published item becomes
+ * `items`, in configured order.
+ *
+ * Falls back to the pre-this-milestone behavior when nothing is configured
+ * yet (a fresh install, or one that hasn't touched the new homepage config)
+ * — the most recently published `featured: true` Case Study, then the most
+ * recently published Case Study of any kind — so the homepage is never left
+ * with nothing to show.
  */
-export async function getFeaturedCaseStudy(): Promise<CaseStudyDocument | null> {
+export async function getHomepageContent(): Promise<HomepageContent> {
   await connectToDatabase();
 
   const settings = await SiteSettings.findOne({ singletonKey: "default" }).lean<{
+    homepageItems?: { resource: string; id: Types.ObjectId; visible: boolean; isHero: boolean }[];
     featuredCaseStudyIds?: Types.ObjectId[];
     featuredCaseStudyId?: Types.ObjectId;
   }>();
 
+  const configured = (settings?.homepageItems ?? []).filter(
+    (item) => item.visible && isHomepageResource(item.resource),
+  );
+
+  interface PendingItem {
+    resource: HomepageResource;
+    card: PublicCard;
+    isHero: boolean;
+  }
+
+  const pending: PendingItem[] = [];
+  for (const configuredItem of configured) {
+    const resource = configuredItem.resource as HomepageResource;
+    const config = getCollection(resource);
+    if (!config?.publicCard) continue;
+
+    const doc = await config.model
+      .findOne({ _id: configuredItem.id, status: "published" })
+      .lean<Record<string, unknown>>();
+    if (!doc) continue;
+
+    pending.push({
+      resource,
+      card: config.publicCard(withCardFieldDefaults(doc)),
+      isHero: configuredItem.isHero,
+    });
+  }
+
+  if (pending.length > 0) {
+    const coverMap = await resolveMediaMap(
+      pending.map((item) => item.card.coverImageId).filter((id): id is string => Boolean(id)),
+    );
+    const contributors = await getPublicTeamMembers(
+      pending.flatMap((item) => item.card.contributorIds),
+    );
+    const contributorsById = new Map(contributors.map((member) => [member.id, member]));
+
+    const finalized: (HomepageContentItem & { isHero: boolean })[] = pending.map(
+      ({ resource, card, isHero }) => ({
+        resource,
+        title: card.title,
+        summary: card.summary,
+        href: card.href,
+        cover: card.coverImageId ? (coverMap[card.coverImageId] ?? null) : null,
+        techTags: card.techTags,
+        featured: card.featured,
+        readingTimeMinutes: card.readingTimeMinutes,
+        contributors: card.contributorIds
+          .map((id) => contributorsById.get(id))
+          .filter((member): member is PublicTeamMember => Boolean(member)),
+        isHero,
+      }),
+    );
+
+    const hero = finalized.find((item) => item.isHero) ?? null;
+    return { hero, items: finalized.filter((item) => item !== hero) };
+  }
+
+  // Legacy fallback (pre-homepage-config deployments).
   const candidateIds: Types.ObjectId[] = [
     ...(Array.isArray(settings?.featuredCaseStudyIds) ? settings.featuredCaseStudyIds : []),
     ...(settings?.featuredCaseStudyId ? [settings.featuredCaseStudyId] : []),
   ];
 
+  let legacyCaseStudy: CaseStudyDocument | null = null;
   for (const id of candidateIds) {
     const picked = await CaseStudy.findOne({
       _id: id,
       status: "published",
     }).lean<CaseStudyDocument>();
-    if (picked) return finalizeCaseStudy(serializeDocument(picked) as CaseStudyDocument);
+    if (picked) {
+      legacyCaseStudy = finalizeCaseStudy(serializeDocument(picked) as CaseStudyDocument);
+      break;
+    }
   }
+  if (!legacyCaseStudy) {
+    const featured = await CaseStudy.findOne({ status: "published", featured: true })
+      .sort({ publishedAt: -1 })
+      .lean<CaseStudyDocument>();
+    legacyCaseStudy = featured
+      ? finalizeCaseStudy(serializeDocument(featured) as CaseStudyDocument)
+      : null;
+  }
+  if (!legacyCaseStudy) {
+    const mostRecent = await CaseStudy.findOne({ status: "published" })
+      .sort({ publishedAt: -1 })
+      .lean<CaseStudyDocument>();
+    legacyCaseStudy = mostRecent
+      ? finalizeCaseStudy(serializeDocument(mostRecent) as CaseStudyDocument)
+      : null;
+  }
+  if (!legacyCaseStudy) return { hero: null, items: [] };
 
-  const featured = await CaseStudy.findOne({ status: "published", featured: true })
-    .sort({ publishedAt: -1 })
-    .lean<CaseStudyDocument>();
-  if (featured) return finalizeCaseStudy(serializeDocument(featured) as CaseStudyDocument);
+  const cover = await resolveCoverImage(
+    legacyCaseStudy.coverImage ? String(legacyCaseStudy.coverImage) : undefined,
+  );
+  const contributors = await getPublicTeamMembers((legacyCaseStudy.contributors ?? []).map(String));
 
-  const mostRecent = await CaseStudy.findOne({ status: "published" })
-    .sort({ publishedAt: -1 })
-    .lean<CaseStudyDocument>();
-  return mostRecent ? finalizeCaseStudy(serializeDocument(mostRecent) as CaseStudyDocument) : null;
+  return {
+    hero: {
+      resource: "caseStudy",
+      title: legacyCaseStudy.client,
+      summary: legacyCaseStudy.summary,
+      href: `/work/${legacyCaseStudy.slug}`,
+      cover,
+      techTags: legacyCaseStudy.techTags,
+      featured: legacyCaseStudy.featured,
+      readingTimeMinutes: legacyCaseStudy.readingTimeMinutes,
+      contributors,
+    },
+    items: [],
+  };
 }
 
 export interface PublicTeamMember {

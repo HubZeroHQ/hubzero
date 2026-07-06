@@ -11,6 +11,27 @@ import type {
 } from "@/types/cms";
 
 /**
+ * The generic shape the homepage's featured-content system
+ * (`lib/cms/public-content.ts`'s `resolveHomepageItem`) needs from one
+ * document, regardless of which collection it belongs to — title/summary
+ * field names differ per collection (`client` vs `title` vs `name`,
+ * `summary` vs `tagline`), so each collection's own config resolves its own
+ * document into this one shape rather than the homepage renderer branching
+ * on collection.
+ */
+export interface PublicCard {
+  title: string;
+  summary: string;
+  /** `null` for a collection with no public detail route yet (e.g. `Build`, Studio-only today) — rendered without a link, never a broken href. */
+  href: string | null;
+  coverImageId?: string;
+  techTags: string[];
+  featured: boolean;
+  readingTimeMinutes: number;
+  contributorIds: string[];
+}
+
+/**
  * One object per collection declaring everything generic about it
  * (`ARCHITECTURE/19_CMS_FOUNDATION.md` §5), consumed by `createCrudActions()`
  * (`crud-actions.ts`) and the generic `DataTable`/`CmsForm` components.
@@ -79,6 +100,16 @@ export interface CollectionConfig<
    * by collections nothing else references yet (e.g. Case Study, for now).
    */
   deleteGuard?: (id: string) => Promise<string | null>;
+  /**
+   * Resolves a document of this collection into the generic `PublicCard`
+   * shape the homepage's featured-content system needs — the sanctioned
+   * extension point for "what does one card look like" (mirrors
+   * `recordLabel`'s "what do we call this document" pattern above). Only
+   * collections eligible to be featured on the homepage define this; a
+   * collection that omits it (e.g. Team Member, Testimonial) simply can't be
+   * added to `SiteSettings.homepage`.
+   */
+  publicCard?: (doc: T) => PublicCard;
   /**
    * Which field `can()`'s `editOwn` check compares against the signed-in
    * user's id. Defaults to `createdBy` (whoever's Server Action call created
