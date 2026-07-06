@@ -19,6 +19,11 @@ import type { NextConfig } from "next";
  * `process.env` per-request, not at config-build time), and an always-present
  * allowance is harmless when the app happens to be running against local
  * fallback storage instead.
+ *
+ * `frame-src` is scoped to exactly the three providers the `video` block's
+ * `toEmbedUrl()` (`components/marketing/blocks/block-renderer.tsx`) ever
+ * builds an iframe `src` for — never a wildcard, so an author can't turn the
+ * video block into an arbitrary third-party iframe embed.
  */
 const contentSecurityPolicy = [
   "default-src 'self'",
@@ -27,6 +32,7 @@ const contentSecurityPolicy = [
   "img-src 'self' data: https://res.cloudinary.com",
   "font-src 'self' data:",
   "connect-src 'self'",
+  "frame-src 'self' https://www.youtube-nocookie.com https://player.vimeo.com https://www.loom.com",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",

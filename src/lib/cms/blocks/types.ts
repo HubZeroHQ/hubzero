@@ -30,7 +30,8 @@ export type BlockType =
   | "spacer"
   | "twoColumn"
   | "markdown"
-  | "html";
+  | "html"
+  | "table";
 
 export interface HeadingBlockData {
   level: 2 | 3;
@@ -53,9 +54,13 @@ export interface ImageBlockData {
   width: ImageWidth;
 }
 
+export type GalleryLayout = "grid" | "masonry";
+
 export interface GalleryBlockData {
   media: string[];
   caption?: string;
+  /** @default "grid" — an even grid; "masonry" packs images at their natural aspect ratio into CSS columns, which reads better once there's enough variety in the set. */
+  layout?: GalleryLayout;
 }
 
 export interface QuoteBlockData {
@@ -68,6 +73,8 @@ export type CalloutTone = "note" | "info" | "success" | "warning";
 
 export interface CalloutBlockData {
   tone: CalloutTone;
+  /** Optional — a short label rendered above the body text (e.g. "Heads up"), distinct from the tone icon. */
+  title?: string;
   text: string;
 }
 
@@ -79,9 +86,13 @@ export interface CodeBlockData {
 
 export type DividerBlockData = Record<string, never>;
 
+export type MetricTrend = "up" | "down" | "flat";
+
 export interface MetricItem {
   label: string;
   value: string;
+  /** Optional — renders a small directional indicator next to the value. */
+  trend?: MetricTrend;
 }
 
 export interface MetricsBlockData {
@@ -118,6 +129,13 @@ export interface HtmlBlockData {
   html: string;
 }
 
+/** A simple data table — headers plus rows of equal-length cells, all plain text (no nested blocks/markup, keeping the responsive-scroll renderer simple and the data JSON-safe). */
+export interface TableBlockData {
+  headers: string[];
+  rows: string[][];
+  caption?: string;
+}
+
 interface BlockOf<T extends BlockType, D> {
   id: string;
   type: T;
@@ -138,11 +156,16 @@ export type SimpleBlock =
   | BlockOf<"video", VideoBlockData>
   | BlockOf<"spacer", SpacerBlockData>
   | BlockOf<"markdown", MarkdownBlockData>
-  | BlockOf<"html", HtmlBlockData>;
+  | BlockOf<"html", HtmlBlockData>
+  | BlockOf<"table", TableBlockData>;
+
+export type TwoColumnRatio = "50-50" | "60-40" | "40-60" | "70-30" | "30-70";
 
 export interface TwoColumnBlockData {
   left: SimpleBlock[];
   right: SimpleBlock[];
+  /** @default "50-50" */
+  ratio?: TwoColumnRatio;
 }
 
 export type Block = SimpleBlock | BlockOf<"twoColumn", TwoColumnBlockData>;

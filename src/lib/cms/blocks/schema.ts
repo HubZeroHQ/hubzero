@@ -48,6 +48,7 @@ const galleryBlockSchema = z.object({
   data: z.object({
     media: z.array(mediaIdField).min(1, "Add at least one image.").max(24),
     caption: z.string().trim().max(400).optional(),
+    layout: z.enum(["grid", "masonry"]).optional(),
   }),
 });
 
@@ -66,6 +67,7 @@ const calloutBlockSchema = z.object({
   type: z.literal("callout"),
   data: z.object({
     tone: z.enum(["note", "info", "success", "warning"]),
+    title: z.string().trim().max(120).optional(),
     text: z.string().trim().min(1, "Add the callout text.").max(2000),
   }),
 });
@@ -95,6 +97,7 @@ const metricsBlockSchema = z.object({
         z.object({
           label: z.string().trim().min(1, "Required.").max(80),
           value: z.string().trim().min(1, "Required.").max(80),
+          trend: z.enum(["up", "down", "flat"]).optional(),
         }),
       )
       .min(1, "Add at least one metric.")
@@ -153,6 +156,24 @@ const htmlBlockSchema = z.object({
   }),
 });
 
+const tableBlockSchema = z.object({
+  id: idField,
+  type: z.literal("table"),
+  data: z
+    .object({
+      headers: z.array(z.string().trim().max(120)).min(1, "Add at least one column.").max(12),
+      rows: z
+        .array(z.array(z.string().trim().max(300)).max(12))
+        .min(1, "Add at least one row.")
+        .max(100),
+      caption: z.string().trim().max(400).optional(),
+    })
+    .refine((data) => data.rows.every((row) => row.length === data.headers.length), {
+      message: "Every row must have the same number of cells as there are columns.",
+      path: ["rows"],
+    }),
+});
+
 /** Every block type a two-column layout's own columns may contain — `twoColumn` is deliberately excluded, so nesting can't happen (`types.ts`'s header comment). */
 const simpleBlockSchema = z.discriminatedUnion("type", [
   headingBlockSchema,
@@ -169,6 +190,7 @@ const simpleBlockSchema = z.discriminatedUnion("type", [
   spacerBlockSchema,
   markdownBlockSchema,
   htmlBlockSchema,
+  tableBlockSchema,
 ]);
 
 const twoColumnBlockSchema = z.object({
@@ -177,6 +199,7 @@ const twoColumnBlockSchema = z.object({
   data: z.object({
     left: z.array(simpleBlockSchema).max(20),
     right: z.array(simpleBlockSchema).max(20),
+    ratio: z.enum(["50-50", "60-40", "40-60", "70-30", "30-70"]).optional(),
   }),
 });
 
@@ -196,6 +219,7 @@ export const blockSchema = z.discriminatedUnion("type", [
   twoColumnBlockSchema,
   markdownBlockSchema,
   htmlBlockSchema,
+  tableBlockSchema,
 ]);
 
 export const blocksArraySchema = z.array(blockSchema).min(1, "Add at least one block.").max(300);
