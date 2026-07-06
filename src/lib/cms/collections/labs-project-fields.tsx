@@ -56,13 +56,14 @@ export const labsProjectEmptyStateMessage =
   "No Labs projects yet — create the first one to get started.";
 
 export const labsProjectFormFields: FieldConfig<LabsProjectInput>[] = [
-  { name: "title", label: "Title", type: "text", required: true },
+  { name: "title", label: "Title", type: "text", required: true, group: "General" },
   {
     name: "slug",
     label: "Slug",
     type: "text",
     required: true,
     description: "Used in the public URL — lowercase, hyphenated.",
+    group: "General",
   },
   {
     name: "practiceArea",
@@ -70,20 +71,22 @@ export const labsProjectFormFields: FieldConfig<LabsProjectInput>[] = [
     type: "select",
     required: true,
     options: [...practiceAreaOptions],
+    group: "General",
   },
-  { name: "summary", label: "Card summary", type: "textarea", required: true },
-  { name: "content", label: "Content", type: "blocks", required: true },
-  { name: "techTags", label: "Tech tags", type: "multiselect" },
-  { name: "coverImage", label: "Cover image", type: "image" },
-  contributorsFormField(),
-  featuredFormField(),
+  { name: "summary", label: "Card summary", type: "textarea", required: true, group: "General" },
   {
     name: "stage",
     label: "Stage",
     type: "select",
     required: true,
     options: [...editableStageOptions],
+    group: "General",
   },
+  { name: "coverImage", label: "Cover image", type: "image", group: "Media" },
+  { name: "techTags", label: "Tech tags", type: "multiselect", group: "Card" },
+  contributorsFormField(),
+  featuredFormField(),
+  { name: "content", label: "Content", type: "blocks", required: true, group: "Content" },
 ];
 
 export const labsProjectListColumns: TableColumn<LabsProjectRow>[] = [

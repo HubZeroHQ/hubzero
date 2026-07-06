@@ -75,6 +75,53 @@ export function flattenZodErrors<TInput extends Record<string, unknown>>(
   return fieldErrors;
 }
 
+/**
+ * Guarantees every array-shaped (`blocks`/`multiselect`/`imageArray`/
+ * `referenceArray`) and boolean form field is the type its own field
+ * declaration promises, for a `.lean()`-read document that may predate that
+ * field's existence — the exact hazard `models/shared/card-fields.ts`'s
+ * `withCardFieldDefaults` closes for public reads, generalized here to any
+ * collection's own field config rather than a fixed list of field names,
+ * since `getOne`/`list` are generic over every collection, not just the
+ * five narrative ones. Driven entirely by `config.formFields`'s declared
+ * `type`, the same dispatch `rawFromFormData`/`checkBlocksPublishGuard`
+ * already use — a collection gets this for free from declaring its fields,
+ * never a per-collection normalizer to remember.
+ *
+ * `readingTimeMinutes` rides along with the `"blocks"` case rather than
+ * getting its own `FieldConfig` entry: it's computed (`config.computedFields`),
+ * never a form field an editor sets directly, so it would otherwise be
+ * invisible here — a legacy document missing it would render Studio's list
+ * column/edit header as literally "undefined min read" (never a crash, but
+ * the same missing-schema-default hazard this function exists to close for
+ * every field that *is* declared).
+ */
+function normalizeLeanDocument<T extends Record<string, unknown>>(
+  config: Pick<AnyCollectionConfig, "formFields">,
+  doc: T,
+): T {
+  const writable = doc as Record<string, unknown>;
+  for (const field of config.formFields) {
+    if (
+      field.type === "blocks" ||
+      field.type === "multiselect" ||
+      field.type === "imageArray" ||
+      field.type === "referenceArray"
+    ) {
+      if (!Array.isArray(writable[field.name])) writable[field.name] = [];
+      if (field.type === "blocks") {
+        const readingTime = writable.readingTimeMinutes;
+        if (typeof readingTime !== "number" || readingTime <= 0) {
+          writable.readingTimeMinutes = 1;
+        }
+      }
+    } else if (field.type === "boolean") {
+      if (typeof writable[field.name] !== "boolean") writable[field.name] = false;
+    }
+  }
+  return doc;
+}
+
 /** The one necessary escape hatch for setting workflow fields on a generically-typed document — see the module comment above `CrudDocument`. */
 function patchWorkflowFields(
   doc: CrudDocument,
@@ -276,8 +323,10 @@ export function createCrudActions<T extends CrudDocument, TInput extends Record<
     const nextCursor =
       hasNext && last ? encodeCursor(last, sortField, last._id as Types.ObjectId) : undefined;
 
+    const normalized = page.map((doc) => normalizeLeanDocument(config, doc));
+
     return {
-      items: serializeDocument(page) as unknown as ClientDocument<T>[],
+      items: serializeDocument(normalized) as unknown as ClientDocument<T>[],
       nextCursor,
       hasNext,
       hasPrev: Boolean(params.cursor),
@@ -289,8 +338,9 @@ export function createCrudActions<T extends CrudDocument, TInput extends Record<
     await requirePermission("view", config.resource);
     await connectToDatabase();
     if (!Types.ObjectId.isValid(id)) return null;
-    const doc = await config.model.findById(id).lean<T>();
-    return doc ? (serializeDocument(doc) as unknown as ClientDocument<T>) : null;
+    const doc = await config.model.findById(id).lean<Record<string, unknown>>();
+    if (!doc) return null;
+    return serializeDocument(normalizeLeanDocument(config, doc)) as unknown as ClientDocument<T>;
   }
 
   async function create(

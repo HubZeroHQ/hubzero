@@ -364,3 +364,58 @@ describe("createCrudActions — draft-review-publish workflow and restore (Case 
     expect(published.status).toBe("success");
   });
 });
+
+describe("createCrudActions — getOne/list normalize a legacy document (Case Study)", () => {
+  const { getOne, list } = createCrudActions(caseStudyConfig);
+
+  it("getOne never returns content/techTags/contributors/featured as anything but the schema-declared shape, even for a document written before those fields existed", async () => {
+    const adminId = await realUserId("admin");
+    loginAs({
+      id: adminId,
+      email: "admin3@example.com",
+      name: "Admin",
+      role: "admin",
+      dynamicPermissions: [],
+    });
+
+    // Bypasses Mongoose entirely (no schema defaults applied) — the same
+    // "document written before this field existed" shape `tests/blocks.test.ts`
+    // and `tests/public-content.test.ts` reproduce for the public read path;
+    // this is the Studio (`getOne`/`list`) counterpart of that hazard.
+    await caseStudyConfig.model.collection.insertOne({
+      slug: "legacy-studio-case",
+      client: "Legacy Studio Client",
+      industry: "Legacy",
+      practiceArea: "software",
+      summary: "A legacy document opened in the Studio editor.",
+      status: "draft",
+      version: 0,
+      createdBy: adminId,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    const inserted = await caseStudyConfig.model.findOne({ slug: "legacy-studio-case" }).lean();
+    const id = (inserted?._id as { toString(): string }).toString();
+
+    const doc = await getOne(id);
+    expect(doc).not.toBeNull();
+    expect(Array.isArray((doc as unknown as { content: unknown }).content)).toBe(true);
+    expect(Array.isArray((doc as unknown as { techTags: unknown }).techTags)).toBe(true);
+    expect(Array.isArray((doc as unknown as { contributors: unknown }).contributors)).toBe(true);
+    expect(typeof (doc as unknown as { featured: unknown }).featured).toBe("boolean");
+    // `readingTimeMinutes` is computed, not a form field, so it rides along
+    // with the "blocks" field's normalization rather than having its own
+    // `FieldConfig` entry — without that, the Studio's list column/edit
+    // header would literally render "undefined min read" for this document.
+    expect(typeof (doc as unknown as { readingTimeMinutes: unknown }).readingTimeMinutes).toBe(
+      "number",
+    );
+
+    const { items } = await list({ sort: "createdAt", dir: "desc" });
+    const listed = items.find(
+      (item) => (item as unknown as { slug: string }).slug === "legacy-studio-case",
+    );
+    expect(Array.isArray((listed as unknown as { content: unknown }).content)).toBe(true);
+  });
+});

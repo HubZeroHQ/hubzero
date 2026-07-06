@@ -65,14 +65,15 @@ export const caseStudyEmptyStateMessage =
   "No case studies yet — create the first one to get started.";
 
 export const caseStudyFormFields: FieldConfig<CaseStudyInput>[] = [
-  { name: "client", label: "Client", type: "text", required: true },
-  { name: "industry", label: "Industry", type: "text", required: true },
+  { name: "client", label: "Client", type: "text", required: true, group: "General" },
+  { name: "industry", label: "Industry", type: "text", required: true, group: "General" },
   {
     name: "slug",
     label: "Slug",
     type: "text",
     required: true,
     description: "Used in the public URL — lowercase, hyphenated.",
+    group: "General",
   },
   {
     name: "practiceArea",
@@ -80,6 +81,7 @@ export const caseStudyFormFields: FieldConfig<CaseStudyInput>[] = [
     type: "select",
     required: true,
     options: [...practiceAreaOptions],
+    group: "General",
   },
   {
     name: "summary",
@@ -87,14 +89,15 @@ export const caseStudyFormFields: FieldConfig<CaseStudyInput>[] = [
     type: "textarea",
     required: true,
     description: "Shown on /work and anywhere else this case study appears as a card.",
+    group: "General",
   },
-  { name: "content", label: "Content", type: "blocks", required: true },
-  { name: "techTags", label: "Tech tags", type: "multiselect" },
-  { name: "coverImage", label: "Cover image", type: "image" },
+  { name: "coverImage", label: "Cover image", type: "image", group: "Media" },
+  { name: "techTags", label: "Tech tags", type: "multiselect", group: "Card" },
   contributorsFormField("Team members who worked on this project."),
   featuredFormField(
     "Used as the default homepage feature when Site Settings doesn't pick one explicitly.",
   ),
+  { name: "content", label: "Content", type: "blocks", required: true, group: "Content" },
 ];
 
 export const caseStudyListColumns: TableColumn<CaseStudyRow>[] = [

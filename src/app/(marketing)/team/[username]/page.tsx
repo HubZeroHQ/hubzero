@@ -7,7 +7,12 @@ import "@/lib/cms/collections";
 import { JsonLd } from "@/components/seo/json-ld";
 import { Container } from "@/components/ui/container";
 import { Link } from "@/components/ui/link";
-import { findOnePublished, findPublished, resolveCoverImage } from "@/lib/cms/public-content";
+import {
+  findOnePublished,
+  findPublished,
+  getTeamMemberContributions,
+  resolveCoverImage,
+} from "@/lib/cms/public-content";
 import { absoluteUrl, pageMetadata } from "@/lib/seo";
 import { TeamMember, type TeamMemberDocument } from "@/models/team-member";
 
@@ -43,18 +48,22 @@ export async function generateMetadata({ params }: TeamMemberPageProps): Promise
 }
 
 /**
- * `ARCHITECTURE/06_PAGE_SPECIFICATIONS.md` Team detail — simplified bio,
- * role, skills, and contact/social links (deliberately no "2-3 featured
- * projects" section: `TeamMember` has no schema field linking a profile to
- * specific `CaseStudy`/`Build`/`Note` documents yet, and fabricating that
- * list rather than modeling it isn't this phase's call to make).
+ * `ARCHITECTURE/06_PAGE_SPECIFICATIONS.md` Team detail — bio, role, skills,
+ * contact/social links, and (`ARCHITECTURE/20_CONTENT_BLOCKS.md` §4) every
+ * published Case Study/Labs Project/Blueprint/Note/Build this person is
+ * credited on — queried live from each collection's own `contributors`/
+ * `authorId` relationship (`getTeamMemberContributions`), never a
+ * hand-maintained "featured work" list duplicating what's already stored.
  */
 export default async function TeamMemberPage({ params }: TeamMemberPageProps) {
   const { username } = await params;
   const doc = await getTeamMember(username);
   if (!doc) notFound();
 
-  const photo = await resolveCoverImage(doc.photo ? String(doc.photo) : undefined);
+  const [photo, contributions] = await Promise.all([
+    resolveCoverImage(doc.photo ? String(doc.photo) : undefined),
+    getTeamMemberContributions(String(doc._id)),
+  ]);
   const sameAs = [doc.socials.linkedin, doc.socials.github].filter((value): value is string =>
     Boolean(value),
   );
@@ -126,6 +135,34 @@ export default async function TeamMemberPage({ params }: TeamMemberPageProps) {
                 <p className="text-body text-text-muted mt-2">{group.items.join(", ")}</p>
               </div>
             ))}
+          </div>
+        )}
+
+        {contributions.length > 0 && (
+          <div className="mt-12 max-w-[var(--content-prose)]">
+            <h2 className="text-h3 text-text font-normal">Work</h2>
+            <ul className="mt-6 flex flex-col gap-5">
+              {contributions.map((item, index) => (
+                <li key={`${item.collectionLabel}-${item.title}-${index}`}>
+                  <p className="text-caption text-text-muted font-mono tracking-wide uppercase">
+                    {item.collectionLabel}
+                  </p>
+                  {item.href ? (
+                    <Link
+                      href={item.href}
+                      className="text-body text-text mt-1 inline-block font-medium no-underline hover:underline"
+                    >
+                      {item.title}
+                    </Link>
+                  ) : (
+                    <p className="text-body text-text mt-1 font-medium">{item.title}</p>
+                  )}
+                  {item.summary && (
+                    <p className="text-caption text-text-muted mt-1">{item.summary}</p>
+                  )}
+                </li>
+              ))}
+            </ul>
           </div>
         )}
 

@@ -2,11 +2,12 @@
 
 import { Reorder, useDragControls } from "motion/react";
 import { ChevronDown, ChevronUp, Copy, GripVertical, Trash2 } from "lucide-react";
-import type { ReactNode } from "react";
+import type { KeyboardEvent, ReactNode } from "react";
 
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { IconButton } from "@/components/ui/icon-button";
 import { BLOCK_TYPE_META } from "@/lib/cms/blocks/registry";
+import { blockPreviewText } from "@/lib/cms/blocks/text";
 import type { Block } from "@/lib/cms/blocks/types";
 import { cn } from "@/lib/utils";
 
@@ -43,30 +44,61 @@ export function BlockShell({
   const meta = BLOCK_TYPE_META[block.type];
   const Icon = meta.icon;
   const dragControls = useDragControls();
+  const preview = collapsed ? blockPreviewText(block) : "";
+
+  /**
+   * Duplicate/move/delete shortcuts, scoped to this block's own header bar
+   * rather than the whole block — a block's body is full of real text
+   * inputs and textareas that need every keystroke for themselves, so
+   * binding these to `onKeyDown` here (not on the `Reorder.Item` root) means
+   * they only fire when the header itself (or one of its buttons) has
+   * focus, never while typing in a field. Mirrors the up/down buttons
+   * already required as the keyboard-accessible path for reordering
+   * (`ARCHITECTURE/20_CONTENT_BLOCKS.md` §5) — same idea, a few more keys.
+   */
+  function handleHeaderKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    const isModifier = event.metaKey || event.ctrlKey;
+    if (!isModifier) return;
+    if (event.key === "d" || event.key === "D") {
+      event.preventDefault();
+      onDuplicate();
+    } else if (event.key === "ArrowUp" && onMoveUp) {
+      event.preventDefault();
+      onMoveUp();
+    } else if (event.key === "ArrowDown" && onMoveDown) {
+      event.preventDefault();
+      onMoveDown();
+    }
+  }
 
   return (
     <Reorder.Item
       value={block}
       dragListener={false}
       dragControls={dragControls}
-      className="border-border-muted bg-bg rounded-lg border"
+      className="border-border-muted bg-bg group rounded-lg border"
     >
-      <div className="flex items-center gap-2 px-3 py-2">
+      <div
+        className="bg-bg sticky top-2 z-10 flex items-center gap-2 rounded-t-lg px-3 py-2"
+        onKeyDown={handleHeaderKeyDown}
+      >
         <button
           type="button"
           aria-label="Drag to reorder"
           onPointerDown={(event) => dragControls.start(event)}
-          className="text-text-muted hover:text-text cursor-grab touch-none active:cursor-grabbing"
+          className="text-text-muted hover:text-text cursor-grab touch-none opacity-0 transition-opacity duration-150 group-hover:opacity-100 focus-visible:opacity-100 active:cursor-grabbing"
         >
           <GripVertical className="size-4" aria-hidden="true" />
         </button>
 
         <Icon className="text-text-muted size-4 shrink-0" aria-hidden="true" />
         <span className="text-caption text-text font-medium">{meta.label}</span>
+        {preview && <span className="text-caption text-text-muted truncate italic">{preview}</span>}
 
         <div className="ml-auto flex items-center gap-1">
           <IconButton
             aria-label="Move block up"
+            title="Move up (⌘/Ctrl+↑)"
             icon={<ChevronUp className="size-4" />}
             size="sm"
             onClick={onMoveUp}
@@ -74,6 +106,7 @@ export function BlockShell({
           />
           <IconButton
             aria-label="Move block down"
+            title="Move down (⌘/Ctrl+↓)"
             icon={<ChevronDown className="size-4" />}
             size="sm"
             onClick={onMoveDown}
@@ -81,6 +114,7 @@ export function BlockShell({
           />
           <IconButton
             aria-label="Duplicate block"
+            title="Duplicate (⌘/Ctrl+D)"
             icon={<Copy className="size-4" />}
             size="sm"
             onClick={onDuplicate}

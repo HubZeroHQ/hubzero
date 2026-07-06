@@ -66,6 +66,18 @@ interface BaseFieldConfig<TInput> {
   description?: string;
   placeholder?: string;
   required?: boolean;
+  /**
+   * Optional panel grouping for `CmsForm` (`ARCHITECTURE/20_CONTENT_BLOCKS.md`
+   * §9 — long forms like the five narrative collections' organized into
+   * General/Media/People/Card/SEO/Content rather than one flat list). Purely
+   * presentational and entirely opt-in: a collection that never sets this
+   * (`Testimonial`, `TeamMember`, `Media`, …) renders exactly as before, one
+   * flat list — `CmsForm` groups by whatever string each collection's own
+   * `*-fields.tsx` supplies, so the layout stays generic (no collection
+   * branches inside `CmsForm` itself) while each collection still controls
+   * its own grouping.
+   */
+  group?: string;
 }
 
 /**

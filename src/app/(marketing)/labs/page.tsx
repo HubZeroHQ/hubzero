@@ -6,7 +6,7 @@ import "@/lib/cms/collections";
 import { LabsGrid, type LabsGridItem } from "@/components/marketing/labs-grid";
 import { Container } from "@/components/ui/container";
 import { Link } from "@/components/ui/link";
-import { findPublished, resolveCoverImage } from "@/lib/cms/public-content";
+import { findPublishedWithCardMeta, resolveCoverImage } from "@/lib/cms/public-content";
 import { pageMetadata } from "@/lib/seo";
 import { LabsProject, type LabsProjectDocument } from "@/models/labs-project";
 
@@ -25,7 +25,10 @@ export const revalidate = 3600;
  * write-up (`scripts/migrate-content.ts`) rather than invented for this page.
  */
 export default async function LabsIndexPage() {
-  const projects = await findPublished<LabsProjectDocument>(LabsProject);
+  const { docs: projects, contributorsById } = await findPublishedWithCardMeta<LabsProjectDocument>(
+    LabsProject,
+    "techTags",
+  );
 
   const items: LabsGridItem[] = await Promise.all(
     projects.map(async (doc) => ({
@@ -35,6 +38,12 @@ export default async function LabsIndexPage() {
       practiceArea: doc.practiceArea,
       stage: doc.stage,
       cover: await resolveCoverImage(doc.coverImage ? String(doc.coverImage) : undefined),
+      techTags: doc.techTags,
+      featured: doc.featured,
+      readingTimeMinutes: doc.readingTimeMinutes,
+      contributors: doc.contributors
+        .map((id) => contributorsById.get(String(id)))
+        .filter((member): member is NonNullable<typeof member> => Boolean(member)),
     })),
   );
 

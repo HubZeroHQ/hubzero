@@ -35,3 +35,54 @@ export function readingTimeField() {
 export function contributorsField() {
   return { contributors: { type: [Schema.Types.ObjectId], ref: "TeamMember", default: [] } };
 }
+
+/**
+ * The runtime counterpart to this file's schema `default`s. Mongoose only
+ * applies a schema default when a *new* document is created — a document
+ * written before `content`/`contributors`/`featured`/`readingTimeMinutes`
+ * existed on this collection has none of those keys stored in MongoDB at
+ * all, and every read in this codebase uses `.lean()` (for performance —
+ * see `public-content.ts`'s header comment), which returns exactly what's
+ * stored, never a schema-defaulted value. `scripts/migrate-content-blocks.ts`
+ * closes this gap in the *data* (one-time, idempotent); this function closes
+ * it at the *read boundary* so a page can never crash on a document that
+ * predates that migration having run, or predates this field existing at
+ * all — the two are complementary, not redundant (`ARCHITECTURE/20_CONTENT_BLOCKS.md`
+ * §8). Every public/studio read of a narrative document should be passed
+ * through this before it reaches a renderer.
+ */
+export function withCardFieldDefaults<
+  T extends {
+    content?: unknown;
+    contributors?: unknown;
+    featured?: unknown;
+    readingTimeMinutes?: unknown;
+  },
+>(doc: T): T {
+  return {
+    ...doc,
+    content: Array.isArray(doc.content) ? doc.content : [],
+    contributors: Array.isArray(doc.contributors) ? doc.contributors : [],
+    featured: typeof doc.featured === "boolean" ? doc.featured : false,
+    readingTimeMinutes:
+      typeof doc.readingTimeMinutes === "number" && doc.readingTimeMinutes > 0
+        ? doc.readingTimeMinutes
+        : 1,
+  } as T;
+}
+
+/**
+ * Same hazard as `withCardFieldDefaults`, for the one array field each
+ * narrative collection declares itself rather than through a shared mixin
+ * (`CaseStudy`/`Build`/`LabsProject`'s `techTags`, `Blueprint`'s
+ * `techStack`, `Note`'s `tags`) — kept as a keyed helper rather than one
+ * more fixed field name in `withCardFieldDefaults` because the field name
+ * differs per collection.
+ */
+export function withArrayDefault<T extends Record<string, unknown>, K extends keyof T & string>(
+  doc: T,
+  key: K,
+): T {
+  if (Array.isArray(doc[key])) return doc;
+  return { ...doc, [key]: [] };
+}

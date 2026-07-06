@@ -55,6 +55,45 @@ export function extractPlainText(blocks: Block[] | undefined): string {
   return blocks.map(blockText).join(" ");
 }
 
+/**
+ * A one-line summary of a single block's content, used by the collapsed
+ * `BlockShell` in the admin editor so collapsing a block doesn't hide *what
+ * it is* along with its fields — e.g. a collapsed Heading shows its own
+ * text, a collapsed Metrics grid shows how many stats it holds. Falls back
+ * to a generic count/description for block types with no meaningful prose
+ * (`image`/`gallery`/`divider`/`spacer`), since `simpleBlockText` returns
+ * `""` for those.
+ */
+export function blockPreviewText(block: Block, maxLength = 80): string {
+  function truncate(text: string): string {
+    const trimmed = text.trim();
+    return trimmed.length > maxLength ? `${trimmed.slice(0, maxLength - 1).trimEnd()}…` : trimmed;
+  }
+
+  switch (block.type) {
+    case "image":
+      return block.data.caption ? truncate(block.data.caption) : "1 image";
+    case "gallery":
+      return `${block.data.media.length} image${block.data.media.length === 1 ? "" : "s"}`;
+    case "video":
+      return block.data.caption ? truncate(block.data.caption) : block.data.url || "No URL yet";
+    case "divider":
+      return "";
+    case "spacer":
+      return block.data.size;
+    case "twoColumn":
+      return `${block.data.left.length} left · ${block.data.right.length} right`;
+    case "html":
+      return "Raw HTML";
+    case "code":
+      return block.data.filename || "Code snippet";
+    default: {
+      const text = simpleBlockText(block as SimpleBlock);
+      return text ? truncate(text) : "Empty";
+    }
+  }
+}
+
 /** Standard 200-words-per-minute assumption (the same figure `Note.readingTimeMinutes` already used pre-blocks), rounded up so short content never reads as "0 minutes." */
 const WORDS_PER_MINUTE = 200;
 

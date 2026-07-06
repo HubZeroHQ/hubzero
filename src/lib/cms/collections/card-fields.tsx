@@ -32,6 +32,7 @@ export function contributorsFormField<TInput extends { contributors: string[] }>
     resource: "teamMember",
     labelField: "name",
     description: description ?? "Team members who worked on this.",
+    group: "People",
   };
 }
 
@@ -43,6 +44,7 @@ export function featuredFormField<TInput extends { featured: boolean }>(
     label: "Feature on homepage",
     type: "boolean",
     description,
+    group: "Card",
   };
 }
 

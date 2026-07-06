@@ -4,9 +4,16 @@ import { ArrowUpRight } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 
+import {
+  CardTags,
+  ContributorAvatars,
+  FeaturedBadge,
+  ReadingTimeLabel,
+} from "@/components/marketing/card-meta";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Link } from "@/components/ui/link";
+import type { PublicTeamMember } from "@/lib/cms/public-content";
 import { cn } from "@/lib/utils";
 
 export interface LabsGridItem {
@@ -16,6 +23,10 @@ export interface LabsGridItem {
   practiceArea: string;
   stage: string;
   cover: { url: string; alt: string; width?: number; height?: number } | null;
+  techTags: string[];
+  featured: boolean;
+  readingTimeMinutes: number;
+  contributors: PublicTeamMember[];
 }
 
 const practiceAreaLabels: Record<string, string> = {
@@ -108,16 +119,24 @@ export function LabsGrid({ items }: { items: LabsGridItem[] }) {
                 <Badge tone={item.stage === "active" ? "info" : "default"}>
                   {stageLabels[item.stage] ?? item.stage}
                 </Badge>
+                {item.featured && <FeaturedBadge />}
               </div>
               <h3 className="text-h2 text-text mt-3 font-normal">{item.title}</h3>
               <p className="text-body text-text-muted mt-3 max-w-md">{item.descriptionTeaser}</p>
-              <span className="text-text mt-6 inline-flex items-center gap-1.5">
-                Read the write-up
-                <ArrowUpRight
-                  className="size-4 transition-transform duration-150 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-                  aria-hidden="true"
-                />
-              </span>
+              <CardTags tags={item.techTags} />
+              <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2">
+                <span className="text-text inline-flex items-center gap-1.5">
+                  Read the write-up
+                  <ArrowUpRight
+                    className="size-4 transition-transform duration-150 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                    aria-hidden="true"
+                  />
+                </span>
+                <span className="text-caption text-text-muted">
+                  <ReadingTimeLabel minutes={item.readingTimeMinutes} />
+                </span>
+                <ContributorAvatars members={item.contributors} />
+              </div>
             </div>
           </Link>
         ))}

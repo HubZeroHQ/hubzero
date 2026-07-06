@@ -18,10 +18,13 @@ const practiceAreaLabels: Record<string, string> = {
  * one real case study, presented editorially. Previously a hand-written
  * component hardcoding "Bhatkal Time Luxe" — now CMS-driven
  * (`ARCHITECTURE/20_CONTENT_BLOCKS.md` §6): `getFeaturedCaseStudy()` reads
- * `SiteSettings.featuredCaseStudyId` when the founder has explicitly picked
- * one, falling back to the most recently published `featured: true` Case
- * Study, then to the most recently published Case Study of any kind. No
- * hardcoded slug/id anywhere in this file.
+ * the first still-published entry in `SiteSettings.featuredCaseStudyIds`
+ * when the founder has explicitly curated one (an ordered list, future-
+ * proofed for showing more than one without another schema change — this
+ * component still renders exactly one, unchanged), falling back to the most
+ * recently published `featured: true` Case Study, then to the most recently
+ * published Case Study of any kind. No hardcoded slug/id anywhere in this
+ * file.
  *
  * Renders nothing if no published Case Study exists yet — an honest empty
  * state (`ARCHITECTURE/17_COMPANY_STRUCTURE.md` §5's discipline applied

@@ -9,6 +9,7 @@ import {
 import { computeReadingTimeMinutes, extractPlainText } from "@/lib/cms/blocks/text";
 import {
   backfillCardFields,
+  backfillTagAndReadingTime,
   deriveSummary,
   migrateBlueprintContent,
   migrateCaseStudyContent,
@@ -246,6 +247,39 @@ describe("legacy-migration transforms (pure, DB-free)", () => {
     expect(backfillCardFields({ contributors: ["id1"], featured: true })).toEqual({
       contributors: ["id1"],
       featured: true,
+    });
+  });
+
+  describe("backfillTagAndReadingTime", () => {
+    it("defaults a missing tag field to [] and computes readingTimeMinutes when it's missing", () => {
+      const set: Record<string, unknown> = {};
+      const doc = {
+        content: [{ id: "b1", type: "markdown", data: { markdown: "word ".repeat(250) } }],
+      };
+      backfillTagAndReadingTime(set, doc, "techTags");
+      expect(set.techTags).toEqual([]);
+      expect(set.readingTimeMinutes).toBe(2); // 250 words / 200wpm, rounded up
+    });
+
+    it("leaves an already-correct tag array and readingTimeMinutes untouched when content didn't change", () => {
+      const set: Record<string, unknown> = {};
+      const doc = {
+        content: [{ id: "b1", type: "markdown", data: {} }],
+        techTags: ["Go"],
+        readingTimeMinutes: 7,
+      };
+      backfillTagAndReadingTime(set, doc, "techTags");
+      expect(set.techTags).toBeUndefined();
+      expect(set.readingTimeMinutes).toBeUndefined();
+    });
+
+    it("recomputes readingTimeMinutes when `set.content` was just written by a content migration, even if the old value looked valid", () => {
+      const set: Record<string, unknown> = {
+        content: [{ id: "b1", type: "markdown", data: { markdown: "word ".repeat(10) } }],
+      };
+      const doc = { content: [], readingTimeMinutes: 7 };
+      backfillTagAndReadingTime(set, doc, "tags");
+      expect(set.readingTimeMinutes).toBe(1);
     });
   });
 });

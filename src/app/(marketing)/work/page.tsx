@@ -6,7 +6,7 @@ import "@/lib/cms/collections";
 import { Container } from "@/components/ui/container";
 import { Link } from "@/components/ui/link";
 import { WorkGrid, type WorkGridItem } from "@/components/work/work-grid";
-import { findPublished, resolveCoverImage } from "@/lib/cms/public-content";
+import { findPublishedWithCardMeta, resolveCoverImage } from "@/lib/cms/public-content";
 import { pageMetadata } from "@/lib/seo";
 import { CaseStudy, type CaseStudyDocument } from "@/models/case-study";
 
@@ -30,7 +30,8 @@ export const revalidate = 3600;
  * flagged migration).
  */
 export default async function WorkPage() {
-  const caseStudies = await findPublished<CaseStudyDocument>(CaseStudy);
+  const { docs: caseStudies, contributorsById } =
+    await findPublishedWithCardMeta<CaseStudyDocument>(CaseStudy, "techTags");
 
   const items: WorkGridItem[] = await Promise.all(
     caseStudies.map(async (doc) => ({
@@ -39,6 +40,12 @@ export default async function WorkPage() {
       resultTeaser: doc.summary,
       practiceArea: doc.practiceArea,
       cover: await resolveCoverImage(doc.coverImage ? String(doc.coverImage) : undefined),
+      techTags: doc.techTags,
+      featured: doc.featured,
+      readingTimeMinutes: doc.readingTimeMinutes,
+      contributors: doc.contributors
+        .map((id) => contributorsById.get(String(id)))
+        .filter((member): member is NonNullable<typeof member> => Boolean(member)),
     })),
   );
 

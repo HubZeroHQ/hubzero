@@ -3,14 +3,14 @@ import Image from "next/image";
 
 import "@/lib/cms/collections";
 
+import { CardTags, ContributorAvatars, FeaturedBadge } from "@/components/marketing/card-meta";
 import { Container } from "@/components/ui/container";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Link } from "@/components/ui/link";
-import { findPublished, resolveCoverImage } from "@/lib/cms/public-content";
-import { connectToDatabase } from "@/lib/db";
+import { findPublished, getPublicTeamMembers, resolveCoverImage } from "@/lib/cms/public-content";
 import { pageMetadata } from "@/lib/seo";
 import { Note, type NoteDocument } from "@/models/note";
-import { TeamMember } from "@/models/team-member";
+import { withArrayDefault, withCardFieldDefaults } from "@/models/shared/card-fields";
 
 export const metadata: Metadata = {
   ...pageMetadata({
@@ -32,30 +32,36 @@ export const revalidate = 3600;
  * publishes into, with an honest empty state until they do.
  */
 export default async function NotesIndexPage() {
-  const notes = await findPublished<NoteDocument>(Note);
+  const rawNotes = await findPublished<NoteDocument>(Note);
+  const notes = rawNotes.map((doc) => withArrayDefault(withCardFieldDefaults(doc), "tags"));
 
-  await connectToDatabase();
-  const authorIds = [...new Set(notes.map((note) => String(note.authorId)))];
-  const authors =
-    authorIds.length > 0
-      ? await TeamMember.find({ _id: { $in: authorIds } })
-          .select("name")
-          .lean<{ _id: unknown; name: string }[]>()
-      : [];
-  const authorNames = Object.fromEntries(
-    authors.map((author) => [String(author._id), author.name]),
-  );
+  const peopleIds = [
+    ...new Set(notes.flatMap((doc) => [String(doc.authorId), ...doc.contributors.map(String)])),
+  ];
+  const people = await getPublicTeamMembers(peopleIds);
+  const peopleById = new Map(people.map((member) => [member.id, member]));
 
   const items = await Promise.all(
-    notes.map(async (doc) => ({
-      slug: doc.slug,
-      title: doc.title,
-      summary: doc.summary,
-      category: doc.category,
-      readingTimeMinutes: doc.readingTimeMinutes,
-      authorName: authorNames[String(doc.authorId)] ?? "HubZero",
-      cover: await resolveCoverImage(doc.coverImage ? String(doc.coverImage) : undefined),
-    })),
+    notes.map(async (doc) => {
+      const author = peopleById.get(String(doc.authorId));
+      const contributors = doc.contributors
+        .map((id) => peopleById.get(String(id)))
+        .filter((member): member is NonNullable<typeof member> => Boolean(member));
+      return {
+        slug: doc.slug,
+        title: doc.title,
+        summary: doc.summary,
+        category: doc.category,
+        tags: doc.tags,
+        featured: doc.featured,
+        readingTimeMinutes: doc.readingTimeMinutes,
+        authorName: author?.name ?? "HubZero",
+        // The byline is the author plus any additional contributors — never
+        // duplicated (the author never also appears in `contributors`).
+        people: author ? [author, ...contributors] : contributors,
+        cover: await resolveCoverImage(doc.coverImage ? String(doc.coverImage) : undefined),
+      };
+    }),
   );
 
   return (
@@ -100,13 +106,20 @@ export default async function NotesIndexPage() {
                   )}
                 </div>
                 <div className="sm:order-1 sm:col-span-8">
-                  <p className="text-caption text-text-muted font-mono tracking-wide uppercase">
-                    {note.category} <span aria-hidden="true">·</span> {note.readingTimeMinutes} min
-                    read
-                  </p>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <p className="text-caption text-text-muted font-mono tracking-wide uppercase">
+                      {note.category} <span aria-hidden="true">·</span> {note.readingTimeMinutes}{" "}
+                      min read
+                    </p>
+                    {note.featured && <FeaturedBadge />}
+                  </div>
                   <h2 className="text-h2 text-text mt-3 font-normal">{note.title}</h2>
                   <p className="text-body text-text-muted mt-3 max-w-lg">{note.summary}</p>
-                  <p className="text-caption text-text-muted mt-4">{note.authorName}</p>
+                  <CardTags tags={note.tags} />
+                  <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
+                    <p className="text-caption text-text-muted">{note.authorName}</p>
+                    <ContributorAvatars members={note.people} />
+                  </div>
                 </div>
               </Link>
             ))}

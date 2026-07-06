@@ -1,9 +1,14 @@
-import type { Model } from "mongoose";
+import { Types, type Model } from "mongoose";
 
 import { getMediaById, getMediaByIds } from "@/lib/cms/media";
 import { serializeDocument } from "@/lib/cms/serialize";
 import { connectToDatabase } from "@/lib/db";
+import { Blueprint } from "@/models/blueprint";
+import { Build } from "@/models/build";
 import { CaseStudy, type CaseStudyDocument } from "@/models/case-study";
+import { LabsProject } from "@/models/labs-project";
+import { Note } from "@/models/note";
+import { withArrayDefault, withCardFieldDefaults } from "@/models/shared/card-fields";
 import { SiteSettings } from "@/models/site-settings";
 import { TeamMember, type TeamMemberDocument } from "@/models/team-member";
 
@@ -40,6 +45,42 @@ export async function findOnePublished<T>(
   await connectToDatabase();
   const doc = await model.findOne({ ...filter, status: "published" }).lean();
   return doc ? (serializeDocument(doc) as T) : null;
+}
+
+interface CardDocument {
+  contributors?: unknown;
+  content?: unknown;
+  featured?: unknown;
+  readingTimeMinutes?: unknown;
+  [key: string]: unknown;
+}
+
+/**
+ * The shared body of every browsing-card list page (Work/Labs/Blueprints —
+ * Notes stays separate below since it also merges `authorId` into the same
+ * "people" batch, a shape the other three don't have): fetch the published
+ * documents, guarantee the card-metadata shape (`withCardFieldDefaults`/
+ * `withArrayDefault` — the same `.lean()`-bypasses-defaults hazard the
+ * detail pages guard against), then batch-resolve every contributor across
+ * every document in exactly one `getPublicTeamMembers` call, never one per
+ * card. Extracted once three collections' list pages needed the identical
+ * four-step sequence (`ARCHITECTURE/20_CONTENT_BLOCKS.md` §5's card-metadata
+ * additions), rather than left as three near-identical copies.
+ */
+export async function findPublishedWithCardMeta<T extends CardDocument>(
+  model: Model<T>,
+  tagField: keyof T & string,
+): Promise<{ docs: T[]; contributorsById: Map<string, PublicTeamMember> }> {
+  const raw = await findPublished<T>(model);
+  const docs = raw.map((doc) => withArrayDefault(withCardFieldDefaults(doc), tagField));
+
+  const contributorIds = [
+    ...new Set(docs.flatMap((doc) => (doc.contributors as unknown[]).map(String))),
+  ];
+  const contributors = await getPublicTeamMembers(contributorIds);
+  const contributorsById = new Map(contributors.map((member) => [member.id, member]));
+
+  return { docs, contributorsById };
 }
 
 export interface ResolvedImage {
@@ -97,36 +138,62 @@ export async function resolveMediaMap(mediaIds: string[]): Promise<Record<string
 }
 
 /**
- * The homepage feature system (`ARCHITECTURE/20_CONTENT_BLOCKS.md` §6):
- * an explicit `SiteSettings.featuredCaseStudyId` wins when set (and still
- * published); otherwise the most recently published `featured: true` Case
- * Study; otherwise the most recently published Case Study of any kind — so
- * the homepage always has something honest to show, never a hardcoded slug.
+ * Guarantees the shape every narrative document's public consumers rely on
+ * (`ContentRenderer`'s `Block[]`, `techTags.join`/`.length`, contributor
+ * chips) regardless of whether the document predates one of those fields or
+ * has yet to be touched by `scripts/migrate-content-blocks.ts` — see
+ * `withCardFieldDefaults`'s header comment for why this can't be left to
+ * schema defaults alone. Every public read of a Case Study/Blueprint/Labs
+ * Project/Note document should be passed through the matching
+ * `finalize*`/inline call, never handed to a page as the raw `.lean()`
+ * result.
+ */
+function finalizeCaseStudy(doc: CaseStudyDocument): CaseStudyDocument {
+  return withArrayDefault(withCardFieldDefaults(doc), "techTags");
+}
+
+/**
+ * The homepage feature system (`ARCHITECTURE/20_CONTENT_BLOCKS.md` §6): the
+ * first still-published entry in `SiteSettings.featuredCaseStudyIds` wins
+ * (an ordered, founder-curated list — future-proofed for the homepage
+ * showing more than one someday, even though today's design only ever reads
+ * the first); otherwise the deprecated singular `featuredCaseStudyId`, for a
+ * settings document that hasn't been re-saved since that field was
+ * superseded (`models/site-settings.ts`); otherwise the most recently
+ * published `featured: true` Case Study; otherwise the most recently
+ * published Case Study of any kind — so the homepage always has something
+ * honest to show, never a hardcoded slug.
  */
 export async function getFeaturedCaseStudy(): Promise<CaseStudyDocument | null> {
   await connectToDatabase();
 
   const settings = await SiteSettings.findOne({ singletonKey: "default" }).lean<{
-    featuredCaseStudyId?: unknown;
+    featuredCaseStudyIds?: Types.ObjectId[];
+    featuredCaseStudyId?: Types.ObjectId;
   }>();
 
-  if (settings?.featuredCaseStudyId) {
+  const candidateIds: Types.ObjectId[] = [
+    ...(Array.isArray(settings?.featuredCaseStudyIds) ? settings.featuredCaseStudyIds : []),
+    ...(settings?.featuredCaseStudyId ? [settings.featuredCaseStudyId] : []),
+  ];
+
+  for (const id of candidateIds) {
     const picked = await CaseStudy.findOne({
-      _id: settings.featuredCaseStudyId,
+      _id: id,
       status: "published",
     }).lean<CaseStudyDocument>();
-    if (picked) return serializeDocument(picked) as CaseStudyDocument;
+    if (picked) return finalizeCaseStudy(serializeDocument(picked) as CaseStudyDocument);
   }
 
   const featured = await CaseStudy.findOne({ status: "published", featured: true })
     .sort({ publishedAt: -1 })
     .lean<CaseStudyDocument>();
-  if (featured) return serializeDocument(featured) as CaseStudyDocument;
+  if (featured) return finalizeCaseStudy(serializeDocument(featured) as CaseStudyDocument);
 
   const mostRecent = await CaseStudy.findOne({ status: "published" })
     .sort({ publishedAt: -1 })
     .lean<CaseStudyDocument>();
-  return mostRecent ? (serializeDocument(mostRecent) as CaseStudyDocument) : null;
+  return mostRecent ? finalizeCaseStudy(serializeDocument(mostRecent) as CaseStudyDocument) : null;
 }
 
 export interface PublicTeamMember {
@@ -175,4 +242,109 @@ export async function getPublicTeamMembers(
     role: doc.role,
     photo: doc.photo ? (photoMap[String(doc.photo)] ?? null) : null,
   }));
+}
+
+export interface TeamMemberContribution {
+  collectionLabel: string;
+  title: string;
+  summary: string;
+  /** `null` when the collection has no public detail route yet (`Build` —
+   * see `ARCHITECTURE/20_CONTENT_BLOCKS.md` §4's note that it's Studio-only
+   * today) — rendered as plain text rather than a broken link. */
+  href: string | null;
+  publishedAt: Date | null;
+}
+
+/**
+ * The reverse of `contributors`/`authorId`: everything a `TeamMember` is
+ * credited on, queried live from the same relationship every narrative
+ * collection already stores — never a second, duplicated "featured work"
+ * list an editor has to keep in sync by hand (`ARCHITECTURE/20_CONTENT_BLOCKS.md`
+ * §4's "a real relationship, never free text" applies in both directions).
+ * One query per collection (five total, run in parallel) rather than an
+ * aggregation across models Mongoose can't natively join across — cheap at
+ * this scale, and each collection's own shape stays untouched.
+ */
+export async function getTeamMemberContributions(
+  teamMemberId: string,
+): Promise<TeamMemberContribution[]> {
+  await connectToDatabase();
+
+  // Capped per collection — a founder/core member credited on nearly
+  // everything shouldn't turn their own profile page into an unbounded
+  // fetch-and-render of the entire catalog; the page shows recent
+  // highlights, not a complete archive.
+  const PER_COLLECTION_LIMIT = 25;
+
+  const [caseStudies, builds, labsProjects, blueprints, notes] = await Promise.all([
+    CaseStudy.find({ status: "published", contributors: teamMemberId })
+      .select("client slug summary publishedAt")
+      .sort({ publishedAt: -1 })
+      .limit(PER_COLLECTION_LIMIT)
+      .lean(),
+    Build.find({ status: "published", contributors: teamMemberId })
+      .select("title slug tagline publishedAt")
+      .sort({ publishedAt: -1 })
+      .limit(PER_COLLECTION_LIMIT)
+      .lean(),
+    LabsProject.find({ status: "published", contributors: teamMemberId })
+      .select("title slug summary publishedAt")
+      .sort({ publishedAt: -1 })
+      .limit(PER_COLLECTION_LIMIT)
+      .lean(),
+    Blueprint.find({ status: "published", contributors: teamMemberId })
+      .select("name slug summary publishedAt")
+      .sort({ publishedAt: -1 })
+      .limit(PER_COLLECTION_LIMIT)
+      .lean(),
+    Note.find({
+      status: "published",
+      $or: [{ contributors: teamMemberId }, { authorId: teamMemberId }],
+    })
+      .select("title slug summary publishedAt")
+      .sort({ publishedAt: -1 })
+      .limit(PER_COLLECTION_LIMIT)
+      .lean(),
+  ]);
+
+  const contributions: TeamMemberContribution[] = [
+    ...caseStudies.map((doc) => ({
+      collectionLabel: "Case Studies",
+      title: doc.client,
+      summary: doc.summary,
+      href: `/work/${doc.slug}`,
+      publishedAt: doc.publishedAt ?? null,
+    })),
+    ...builds.map((doc) => ({
+      collectionLabel: "Builds",
+      title: doc.title,
+      summary: doc.tagline,
+      href: null,
+      publishedAt: doc.publishedAt ?? null,
+    })),
+    ...labsProjects.map((doc) => ({
+      collectionLabel: "Labs",
+      title: doc.title,
+      summary: doc.summary,
+      href: `/labs/${doc.slug}`,
+      publishedAt: doc.publishedAt ?? null,
+    })),
+    ...blueprints.map((doc) => ({
+      collectionLabel: "Blueprints",
+      title: doc.name,
+      summary: doc.summary,
+      href: `/blueprints/${doc.slug}`,
+      publishedAt: doc.publishedAt ?? null,
+    })),
+    ...notes.map((doc) => ({
+      collectionLabel: "Notes",
+      title: doc.title,
+      summary: doc.summary,
+      href: `/notes/${doc.slug}`,
+      publishedAt: doc.publishedAt ?? null,
+    })),
+  ];
+
+  contributions.sort((a, b) => (b.publishedAt?.getTime() ?? 0) - (a.publishedAt?.getTime() ?? 0));
+  return serializeDocument(contributions);
 }
