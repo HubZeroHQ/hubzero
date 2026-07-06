@@ -87,6 +87,14 @@ export function flattenZodErrors<TInput extends Record<string, unknown>>(
  * `type`, the same dispatch `rawFromFormData`/`checkBlocksPublishGuard`
  * already use — a collection gets this for free from declaring its fields,
  * never a per-collection normalizer to remember.
+ *
+ * `readingTimeMinutes` rides along with the `"blocks"` case rather than
+ * getting its own `FieldConfig` entry: it's computed (`config.computedFields`),
+ * never a form field an editor sets directly, so it would otherwise be
+ * invisible here — a legacy document missing it would render Studio's list
+ * column/edit header as literally "undefined min read" (never a crash, but
+ * the same missing-schema-default hazard this function exists to close for
+ * every field that *is* declared).
  */
 function normalizeLeanDocument<T extends Record<string, unknown>>(
   config: Pick<AnyCollectionConfig, "formFields">,
@@ -101,6 +109,12 @@ function normalizeLeanDocument<T extends Record<string, unknown>>(
       field.type === "referenceArray"
     ) {
       if (!Array.isArray(writable[field.name])) writable[field.name] = [];
+      if (field.type === "blocks") {
+        const readingTime = writable.readingTimeMinutes;
+        if (typeof readingTime !== "number" || readingTime <= 0) {
+          writable.readingTimeMinutes = 1;
+        }
+      }
     } else if (field.type === "boolean") {
       if (typeof writable[field.name] !== "boolean") writable[field.name] = false;
     }

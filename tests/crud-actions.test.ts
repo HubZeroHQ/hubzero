@@ -404,6 +404,13 @@ describe("createCrudActions — getOne/list normalize a legacy document (Case St
     expect(Array.isArray((doc as unknown as { techTags: unknown }).techTags)).toBe(true);
     expect(Array.isArray((doc as unknown as { contributors: unknown }).contributors)).toBe(true);
     expect(typeof (doc as unknown as { featured: unknown }).featured).toBe("boolean");
+    // `readingTimeMinutes` is computed, not a form field, so it rides along
+    // with the "blocks" field's normalization rather than having its own
+    // `FieldConfig` entry — without that, the Studio's list column/edit
+    // header would literally render "undefined min read" for this document.
+    expect(typeof (doc as unknown as { readingTimeMinutes: unknown }).readingTimeMinutes).toBe(
+      "number",
+    );
 
     const { items } = await list({ sort: "createdAt", dir: "desc" });
     const listed = items.find(

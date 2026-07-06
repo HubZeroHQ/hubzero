@@ -6,10 +6,9 @@ import "@/lib/cms/collections";
 import { Container } from "@/components/ui/container";
 import { Link } from "@/components/ui/link";
 import { WorkGrid, type WorkGridItem } from "@/components/work/work-grid";
-import { findPublished, getPublicTeamMembers, resolveCoverImage } from "@/lib/cms/public-content";
+import { findPublishedWithCardMeta, resolveCoverImage } from "@/lib/cms/public-content";
 import { pageMetadata } from "@/lib/seo";
 import { CaseStudy, type CaseStudyDocument } from "@/models/case-study";
-import { withArrayDefault, withCardFieldDefaults } from "@/models/shared/card-fields";
 
 export const metadata: Metadata = pageMetadata({
   title: "Work",
@@ -31,14 +30,8 @@ export const revalidate = 3600;
  * flagged migration).
  */
 export default async function WorkPage() {
-  const rawCaseStudies = await findPublished<CaseStudyDocument>(CaseStudy);
-  const caseStudies = rawCaseStudies.map((doc) =>
-    withArrayDefault(withCardFieldDefaults(doc), "techTags"),
-  );
-
-  const contributorIds = [...new Set(caseStudies.flatMap((doc) => doc.contributors.map(String)))];
-  const contributors = await getPublicTeamMembers(contributorIds);
-  const contributorsById = new Map(contributors.map((member) => [member.id, member]));
+  const { docs: caseStudies, contributorsById } =
+    await findPublishedWithCardMeta<CaseStudyDocument>(CaseStudy, "techTags");
 
   const items: WorkGridItem[] = await Promise.all(
     caseStudies.map(async (doc) => ({

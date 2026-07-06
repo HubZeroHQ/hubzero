@@ -47,6 +47,42 @@ export async function findOnePublished<T>(
   return doc ? (serializeDocument(doc) as T) : null;
 }
 
+interface CardDocument {
+  contributors?: unknown;
+  content?: unknown;
+  featured?: unknown;
+  readingTimeMinutes?: unknown;
+  [key: string]: unknown;
+}
+
+/**
+ * The shared body of every browsing-card list page (Work/Labs/Blueprints —
+ * Notes stays separate below since it also merges `authorId` into the same
+ * "people" batch, a shape the other three don't have): fetch the published
+ * documents, guarantee the card-metadata shape (`withCardFieldDefaults`/
+ * `withArrayDefault` — the same `.lean()`-bypasses-defaults hazard the
+ * detail pages guard against), then batch-resolve every contributor across
+ * every document in exactly one `getPublicTeamMembers` call, never one per
+ * card. Extracted once three collections' list pages needed the identical
+ * four-step sequence (`ARCHITECTURE/20_CONTENT_BLOCKS.md` §5's card-metadata
+ * additions), rather than left as three near-identical copies.
+ */
+export async function findPublishedWithCardMeta<T extends CardDocument>(
+  model: Model<T>,
+  tagField: keyof T & string,
+): Promise<{ docs: T[]; contributorsById: Map<string, PublicTeamMember> }> {
+  const raw = await findPublished<T>(model);
+  const docs = raw.map((doc) => withArrayDefault(withCardFieldDefaults(doc), tagField));
+
+  const contributorIds = [
+    ...new Set(docs.flatMap((doc) => (doc.contributors as unknown[]).map(String))),
+  ];
+  const contributors = await getPublicTeamMembers(contributorIds);
+  const contributorsById = new Map(contributors.map((member) => [member.id, member]));
+
+  return { docs, contributorsById };
+}
+
 export interface ResolvedImage {
   url: string;
   alt: string;
@@ -234,22 +270,32 @@ export async function getTeamMemberContributions(
 ): Promise<TeamMemberContribution[]> {
   await connectToDatabase();
 
+  // Capped per collection — a founder/core member credited on nearly
+  // everything shouldn't turn their own profile page into an unbounded
+  // fetch-and-render of the entire catalog; the page shows recent
+  // highlights, not a complete archive.
+  const PER_COLLECTION_LIMIT = 25;
+
   const [caseStudies, builds, labsProjects, blueprints, notes] = await Promise.all([
     CaseStudy.find({ status: "published", contributors: teamMemberId })
       .select("client slug summary publishedAt")
       .sort({ publishedAt: -1 })
+      .limit(PER_COLLECTION_LIMIT)
       .lean(),
     Build.find({ status: "published", contributors: teamMemberId })
       .select("title slug tagline publishedAt")
       .sort({ publishedAt: -1 })
+      .limit(PER_COLLECTION_LIMIT)
       .lean(),
     LabsProject.find({ status: "published", contributors: teamMemberId })
       .select("title slug summary publishedAt")
       .sort({ publishedAt: -1 })
+      .limit(PER_COLLECTION_LIMIT)
       .lean(),
     Blueprint.find({ status: "published", contributors: teamMemberId })
       .select("name slug summary publishedAt")
       .sort({ publishedAt: -1 })
+      .limit(PER_COLLECTION_LIMIT)
       .lean(),
     Note.find({
       status: "published",
@@ -257,6 +303,7 @@ export async function getTeamMemberContributions(
     })
       .select("title slug summary publishedAt")
       .sort({ publishedAt: -1 })
+      .limit(PER_COLLECTION_LIMIT)
       .lean(),
   ]);
 

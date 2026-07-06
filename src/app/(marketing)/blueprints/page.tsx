@@ -6,10 +6,9 @@ import "@/lib/cms/collections";
 import { BlueprintsGrid, type BlueprintsGridItem } from "@/components/marketing/blueprints-grid";
 import { Container } from "@/components/ui/container";
 import { Link } from "@/components/ui/link";
-import { findPublished, getPublicTeamMembers, resolveCoverImage } from "@/lib/cms/public-content";
+import { findPublishedWithCardMeta, resolveCoverImage } from "@/lib/cms/public-content";
 import { pageMetadata } from "@/lib/seo";
 import { Blueprint, type BlueprintDocument } from "@/models/blueprint";
-import { withArrayDefault, withCardFieldDefaults } from "@/models/shared/card-fields";
 
 export const metadata: Metadata = pageMetadata({
   title: "Blueprints",
@@ -29,14 +28,10 @@ export const revalidate = 3600;
  * closed at the publish boundary, not re-checked here.
  */
 export default async function BlueprintsIndexPage() {
-  const rawBlueprints = await findPublished<BlueprintDocument>(Blueprint);
-  const blueprints = rawBlueprints.map((doc) =>
-    withArrayDefault(withCardFieldDefaults(doc), "techStack"),
+  const { docs: blueprints, contributorsById } = await findPublishedWithCardMeta<BlueprintDocument>(
+    Blueprint,
+    "techStack",
   );
-
-  const contributorIds = [...new Set(blueprints.flatMap((doc) => doc.contributors.map(String)))];
-  const contributors = await getPublicTeamMembers(contributorIds);
-  const contributorsById = new Map(contributors.map((member) => [member.id, member]));
 
   const items: BlueprintsGridItem[] = await Promise.all(
     blueprints.map(async (doc) => ({

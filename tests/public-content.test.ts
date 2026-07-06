@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   findOnePublished,
+  findPublishedWithCardMeta,
   getFeaturedCaseStudy,
   getPublicTeamMembers,
   getTeamMemberContributions,
@@ -215,6 +216,75 @@ describe("getPublicTeamMembers — already-guarded contributors read", () => {
   it("returns an empty list for an empty/undefined id list without throwing", async () => {
     await expect(getPublicTeamMembers([])).resolves.toEqual([]);
     await expect(getPublicTeamMembers([undefined, undefined])).resolves.toEqual([]);
+  });
+});
+
+describe("findPublishedWithCardMeta — the shared list-page helper", () => {
+  it("normalizes legacy documents and batch-resolves contributors in one call, not one per document", async () => {
+    const user = await User.create({
+      email: "card-meta-author@example.com",
+      name: "Card Meta Author",
+      passwordHash: "unused-in-tests",
+      role: "admin",
+      sessionVersion: 0,
+    });
+
+    const member = await TeamMember.create({
+      username: "card-meta-member",
+      name: "Card Meta Member",
+      role: "Engineer",
+      bio: "Bio.",
+      socials: { email: "member@example.com" },
+      linkedUserId: user._id,
+      status: "published",
+      profileVisible: true,
+      createdBy: user._id,
+    });
+
+    await CaseStudy.create({
+      slug: "normal-case-study",
+      client: "Normal Client",
+      industry: "Testing",
+      practiceArea: "software",
+      summary: "A normally-shaped document.",
+      content: [{ id: "b1", type: "markdown", data: { markdown: "Body." } }],
+      techTags: ["Go"],
+      contributors: [member._id],
+      status: "published",
+      publishedAt: new Date("2026-01-01"),
+      createdBy: user._id,
+    });
+
+    // Bypasses Mongoose — a legacy document missing content/techTags/
+    // contributors entirely, exactly like `insertLegacyCaseStudy` above.
+    await CaseStudy.collection.insertOne({
+      slug: "legacy-for-card-meta",
+      client: "Legacy For Card Meta",
+      industry: "Testing",
+      practiceArea: "software",
+      summary: "A legacy document.",
+      status: "published",
+      publishedAt: new Date("2026-02-01"),
+      version: 0,
+      createdBy: user._id,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    const { docs, contributorsById } = await findPublishedWithCardMeta<CaseStudyDocument>(
+      CaseStudy,
+      "techTags",
+    );
+
+    expect(docs).toHaveLength(2);
+    const legacy = docs.find((doc) => doc.slug === "legacy-for-card-meta");
+    expect(legacy?.content).toEqual([]);
+    expect(legacy?.techTags).toEqual([]);
+    expect(legacy?.contributors).toEqual([]);
+
+    const normal = docs.find((doc) => doc.slug === "normal-case-study");
+    expect(normal?.techTags).toEqual(["Go"]);
+    expect(contributorsById.get(member._id.toString())?.name).toBe("Card Meta Member");
   });
 });
 
