@@ -4,6 +4,7 @@ import { getMediaById, getMediaByIds } from "@/lib/cms/media";
 import { serializeDocument } from "@/lib/cms/serialize";
 import { connectToDatabase } from "@/lib/db";
 import { CaseStudy, type CaseStudyDocument } from "@/models/case-study";
+import { withArrayDefault, withCardFieldDefaults } from "@/models/shared/card-fields";
 import { SiteSettings } from "@/models/site-settings";
 import { TeamMember, type TeamMemberDocument } from "@/models/team-member";
 
@@ -97,6 +98,21 @@ export async function resolveMediaMap(mediaIds: string[]): Promise<Record<string
 }
 
 /**
+ * Guarantees the shape every narrative document's public consumers rely on
+ * (`ContentRenderer`'s `Block[]`, `techTags.join`/`.length`, contributor
+ * chips) regardless of whether the document predates one of those fields or
+ * has yet to be touched by `scripts/migrate-content-blocks.ts` — see
+ * `withCardFieldDefaults`'s header comment for why this can't be left to
+ * schema defaults alone. Every public read of a Case Study/Blueprint/Labs
+ * Project/Note document should be passed through the matching
+ * `finalize*`/inline call, never handed to a page as the raw `.lean()`
+ * result.
+ */
+function finalizeCaseStudy(doc: CaseStudyDocument): CaseStudyDocument {
+  return withArrayDefault(withCardFieldDefaults(doc), "techTags");
+}
+
+/**
  * The homepage feature system (`ARCHITECTURE/20_CONTENT_BLOCKS.md` §6):
  * an explicit `SiteSettings.featuredCaseStudyId` wins when set (and still
  * published); otherwise the most recently published `featured: true` Case
@@ -115,18 +131,18 @@ export async function getFeaturedCaseStudy(): Promise<CaseStudyDocument | null> 
       _id: settings.featuredCaseStudyId,
       status: "published",
     }).lean<CaseStudyDocument>();
-    if (picked) return serializeDocument(picked) as CaseStudyDocument;
+    if (picked) return finalizeCaseStudy(serializeDocument(picked) as CaseStudyDocument);
   }
 
   const featured = await CaseStudy.findOne({ status: "published", featured: true })
     .sort({ publishedAt: -1 })
     .lean<CaseStudyDocument>();
-  if (featured) return serializeDocument(featured) as CaseStudyDocument;
+  if (featured) return finalizeCaseStudy(serializeDocument(featured) as CaseStudyDocument);
 
   const mostRecent = await CaseStudy.findOne({ status: "published" })
     .sort({ publishedAt: -1 })
     .lean<CaseStudyDocument>();
-  return mostRecent ? (serializeDocument(mostRecent) as CaseStudyDocument) : null;
+  return mostRecent ? finalizeCaseStudy(serializeDocument(mostRecent) as CaseStudyDocument) : null;
 }
 
 export interface PublicTeamMember {

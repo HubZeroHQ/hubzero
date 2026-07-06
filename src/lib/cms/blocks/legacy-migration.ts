@@ -1,4 +1,5 @@
 import { newBlockId } from "@/lib/cms/blocks/registry";
+import { computeReadingTimeMinutes } from "@/lib/cms/blocks/text";
 import type { Block } from "@/lib/cms/blocks/types";
 
 /**
@@ -104,4 +105,33 @@ export function backfillCardFields(doc: { contributors?: unknown; featured?: unk
     contributors: Array.isArray(doc.contributors) ? doc.contributors : [],
     featured: typeof doc.featured === "boolean" ? doc.featured : false,
   };
+}
+
+/**
+ * Backfills the one array field every collection declares under its own
+ * name (`CaseStudy`/`Build`/`LabsProject`'s `techTags`, `Blueprint`'s
+ * `techStack`, `Note`'s `tags`) plus `readingTimeMinutes`, for a document
+ * that predates either — the same "`.lean()` returns exactly what's stored,
+ * schema defaults never apply retroactively" hazard `backfillCardFields`
+ * closes for `contributors`/`featured`, kept as its own function only
+ * because the tag field's *name* differs per collection while
+ * `readingTimeMinutes` is universal. Recomputes `readingTimeMinutes`
+ * whenever `content` itself changed (a content migration just ran, or the
+ * document had `content` from an earlier run but never had this field) —
+ * always cheap and always correct, never leaves a stale word count behind.
+ */
+export function backfillTagAndReadingTime(
+  set: Record<string, unknown>,
+  doc: { content?: unknown; readingTimeMinutes?: unknown; [key: string]: unknown },
+  tagField: string,
+): void {
+  if (!Array.isArray(doc[tagField])) set[tagField] = [];
+  const finalContent = (set.content as Block[] | undefined) ?? (doc.content as Block[] | undefined);
+  if (
+    typeof doc.readingTimeMinutes !== "number" ||
+    doc.readingTimeMinutes <= 0 ||
+    set.content !== undefined
+  ) {
+    set.readingTimeMinutes = computeReadingTimeMinutes(finalContent);
+  }
 }

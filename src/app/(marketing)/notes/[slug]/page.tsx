@@ -17,6 +17,7 @@ import {
 } from "@/lib/cms/public-content";
 import { absoluteUrl, pageMetadata } from "@/lib/seo";
 import { Note, type NoteDocument } from "@/models/note";
+import { withArrayDefault, withCardFieldDefaults } from "@/models/shared/card-fields";
 import { TeamMember } from "@/models/team-member";
 
 interface NotePageProps {
@@ -26,7 +27,10 @@ interface NotePageProps {
 export const revalidate = 3600;
 
 async function getNote(slug: string) {
-  return findOnePublished<NoteDocument>(Note, { slug });
+  const doc = await findOnePublished<NoteDocument>(Note, { slug });
+  // See `work/[slug]/page.tsx`'s `getCaseStudy` — same `.lean()`-bypasses-
+  // defaults hazard, applied to Note's own array fields.
+  return doc && withArrayDefault(withCardFieldDefaults(doc), "tags");
 }
 
 export async function generateStaticParams() {

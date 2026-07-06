@@ -19,6 +19,7 @@ import {
 } from "@/lib/cms/public-content";
 import { absoluteUrl, pageMetadata } from "@/lib/seo";
 import { LabsProject, type LabsProjectDocument } from "@/models/labs-project";
+import { withArrayDefault, withCardFieldDefaults } from "@/models/shared/card-fields";
 
 interface LabsProjectPageProps {
   params: Promise<{ slug: string }>;
@@ -33,7 +34,10 @@ const stageLabels: Record<string, string> = {
 export const revalidate = 3600;
 
 async function getLabsProject(slug: string) {
-  return findOnePublished<LabsProjectDocument>(LabsProject, { slug });
+  const doc = await findOnePublished<LabsProjectDocument>(LabsProject, { slug });
+  // See `work/[slug]/page.tsx`'s `getCaseStudy` — same `.lean()`-bypasses-
+  // defaults hazard, applied to LabsProject's own array fields.
+  return doc && withArrayDefault(withCardFieldDefaults(doc), "techTags");
 }
 
 export async function generateStaticParams() {

@@ -2,9 +2,10 @@ import { Types } from "mongoose";
 
 import "@/lib/cms/collections";
 import { connectToDatabase } from "@/lib/db";
-import { computeReadingTimeMinutes } from "@/lib/cms/blocks/text";
+import { extractPlainText } from "@/lib/cms/blocks/text";
 import {
   backfillCardFields,
+  backfillTagAndReadingTime,
   deriveSummary,
   migrateBlueprintContent,
   migrateCaseStudyContent,
@@ -75,12 +76,17 @@ async function migrateCaseStudies() {
         typeof doc.summary === "string" && doc.summary.trim()
           ? doc.summary
           : deriveSummary(problem || result);
-      set.readingTimeMinutes = computeReadingTimeMinutes(content);
       unset.problem = "";
       unset.approach = "";
       unset.result = "";
       migrated += 1;
+    } else if (typeof doc.summary !== "string" || !doc.summary.trim()) {
+      // `content` was already migrated by a previous run, but `summary`
+      // predates even that — no legacy free text survives to derive it
+      // from, so fall back to the migrated content itself.
+      set.summary = deriveSummary(extractPlainText(doc.content as Block[] | undefined));
     }
+    backfillTagAndReadingTime(set, doc, "techTags");
 
     await CaseStudy.updateOne(
       { _id: doc._id },
@@ -99,12 +105,11 @@ async function migrateBuilds() {
 
     if (needsContentMigration(doc)) {
       const description = String(doc.description ?? "");
-      const content = migrateSingleFieldContent(description);
-      set.content = content;
-      set.readingTimeMinutes = computeReadingTimeMinutes(content);
+      set.content = migrateSingleFieldContent(description);
       unset.description = "";
       migrated += 1;
     }
+    backfillTagAndReadingTime(set, doc, "techTags");
 
     await Build.updateOne(
       { _id: doc._id },
@@ -123,16 +128,17 @@ async function migrateLabsProjects() {
 
     if (needsContentMigration(doc)) {
       const description = String(doc.description ?? "");
-      const content = migrateSingleFieldContent(description);
-      set.content = content;
+      set.content = migrateSingleFieldContent(description);
       set.summary =
         typeof doc.summary === "string" && doc.summary.trim()
           ? doc.summary
           : deriveSummary(description);
-      set.readingTimeMinutes = computeReadingTimeMinutes(content);
       unset.description = "";
       migrated += 1;
+    } else if (typeof doc.summary !== "string" || !doc.summary.trim()) {
+      set.summary = deriveSummary(extractPlainText(doc.content as Block[] | undefined));
     }
+    backfillTagAndReadingTime(set, doc, "techTags");
 
     await LabsProject.updateOne(
       { _id: doc._id },
@@ -153,17 +159,18 @@ async function migrateBlueprints() {
       const description = String(doc.description ?? "");
       const customizationNotes =
         typeof doc.customizationNotes === "string" ? doc.customizationNotes : undefined;
-      const content = migrateBlueprintContent({ description, customizationNotes });
-      set.content = content;
+      set.content = migrateBlueprintContent({ description, customizationNotes });
       set.summary =
         typeof doc.summary === "string" && doc.summary.trim()
           ? doc.summary
           : deriveSummary(description);
-      set.readingTimeMinutes = computeReadingTimeMinutes(content);
       unset.description = "";
       unset.customizationNotes = "";
       migrated += 1;
+    } else if (typeof doc.summary !== "string" || !doc.summary.trim()) {
+      set.summary = deriveSummary(extractPlainText(doc.content as Block[] | undefined));
     }
+    backfillTagAndReadingTime(set, doc, "techStack");
 
     await Blueprint.updateOne(
       { _id: doc._id },
@@ -182,12 +189,11 @@ async function migrateNotes() {
 
     if (needsContentMigration(doc)) {
       const body = String(doc.body ?? "");
-      const content = migrateSingleFieldContent(body);
-      set.content = content;
-      set.readingTimeMinutes = computeReadingTimeMinutes(content);
+      set.content = migrateSingleFieldContent(body);
       unset.body = "";
       migrated += 1;
     }
+    backfillTagAndReadingTime(set, doc, "tags");
 
     await Note.updateOne(
       { _id: doc._id },

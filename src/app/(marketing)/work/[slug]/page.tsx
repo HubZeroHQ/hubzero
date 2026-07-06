@@ -18,6 +18,7 @@ import {
 } from "@/lib/cms/public-content";
 import { absoluteUrl, pageMetadata } from "@/lib/seo";
 import { CaseStudy, type CaseStudyDocument } from "@/models/case-study";
+import { withArrayDefault, withCardFieldDefaults } from "@/models/shared/card-fields";
 
 interface CaseStudyPageProps {
   params: Promise<{ slug: string }>;
@@ -37,7 +38,13 @@ const practiceAreaLabels: Record<string, string> = {
 export const revalidate = 3600;
 
 async function getCaseStudy(slug: string) {
-  return findOnePublished<CaseStudyDocument>(CaseStudy, { slug });
+  const doc = await findOnePublished<CaseStudyDocument>(CaseStudy, { slug });
+  // Guarantees `content`/`contributors`/`featured`/`readingTimeMinutes`/
+  // `techTags` are always the array/boolean/number shape this page (and
+  // `ContentRenderer`) assume — necessary because `.lean()` bypasses schema
+  // defaults for any document written before one of these fields existed
+  // (`models/shared/card-fields.ts`'s `withCardFieldDefaults`).
+  return doc && withArrayDefault(withCardFieldDefaults(doc), "techTags");
 }
 
 /** Pre-renders every published case study at build time — the rest of ISR's `revalidate`/`revalidatePath` machinery only has a static page to invalidate once this exists. */
