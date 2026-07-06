@@ -428,7 +428,7 @@ function MetricsEditor({
         className="self-start"
         onClick={() => onChange({ items: [...data.items, { label: "", value: "" }] })}
       >
-        <Plus className="mr-1.5 size-4" aria-hidden="true" />
+        <Plus className="size-4" aria-hidden="true" />
         Add metric
       </Button>
     </div>
@@ -488,7 +488,7 @@ function TimelineEditor({
         className="self-start"
         onClick={() => onChange({ items: [...data.items, { date: "", title: "" }] })}
       >
-        <Plus className="mr-1.5 size-4" aria-hidden="true" />
+        <Plus className="size-4" aria-hidden="true" />
         Add entry
       </Button>
     </div>

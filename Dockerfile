@@ -30,4 +30,18 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
+# Uploaded media (`lib/cms/storage/local-adapter.ts`) is written to
+# /app/storage/media on the container's own filesystem — nothing in this
+# image persists it. Without a host bind mount or named volume at this path,
+# every redeploy silently orphans previously-uploaded files: their `Media`
+# documents remain in MongoDB (a separate, durable service), but the bytes
+# are gone, which is exactly the "Media record exists, file 404s" failure
+# mode this app already degrades gracefully for
+# (`components/admin/media/media-thumbnail.tsx`). Declaring the mount point
+# here doesn't create persistence by itself — the deployment's `docker run
+# -v`/compose/orchestrator config still has to actually mount something
+# durable here — but it documents the requirement in the image itself
+# instead of only in a doc someone might not read before their first deploy.
+VOLUME ["/app/storage"]
+
 CMD ["node", "server.js"]

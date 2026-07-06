@@ -1,12 +1,12 @@
 import { ArrowUpRight } from "lucide-react";
 import type { Metadata } from "next";
-import Image from "next/image";
 import { notFound } from "next/navigation";
 
 import "@/lib/cms/collections";
 
 import { ContentRenderer } from "@/components/marketing/blocks/content-renderer";
 import { ContributorChips } from "@/components/marketing/blocks/contributor-chips";
+import { MediaImage } from "@/components/marketing/media-image";
 import { JsonLd } from "@/components/seo/json-ld";
 import { Container } from "@/components/ui/container";
 import { Link } from "@/components/ui/link";
@@ -119,7 +119,7 @@ export default async function CaseStudyPage({ params }: CaseStudyPageProps) {
         {cover && (
           <Container size="full" className="mt-14 sm:mt-16 lg:mt-20">
             <div className="mx-auto w-full max-w-6xl">
-              <Image
+              <MediaImage
                 src={cover.url}
                 alt={cover.alt}
                 width={cover.width ?? 1600}

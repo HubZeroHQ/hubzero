@@ -101,7 +101,8 @@ export function BlockList({
       )}
 
       {blocks.length > 1 && (
-        <div className="bg-bg sticky top-0 z-20 flex justify-end">
+        <div className="bg-bg border-border-muted z-sticky sticky top-0 flex h-10 shrink-0 items-center justify-between border-b px-1">
+          <span className="text-caption text-text-muted">{blocks.length} blocks</span>
           <Button
             type="button"
             variant="ghost"
@@ -110,12 +111,12 @@ export function BlockList({
           >
             {allCollapsed ? (
               <>
-                <ChevronsUpDown className="mr-1.5 size-4" aria-hidden="true" />
+                <ChevronsUpDown className="size-4" aria-hidden="true" />
                 Expand all
               </>
             ) : (
               <>
-                <ChevronsDownUp className="mr-1.5 size-4" aria-hidden="true" />
+                <ChevronsDownUp className="size-4" aria-hidden="true" />
                 Collapse all
               </>
             )}
@@ -155,7 +156,7 @@ export function BlockList({
         onInsert={(block) => insertBlock(block)}
         trigger={
           <Button type="button" variant="secondary" size="sm" className="self-start">
-            <Plus className="mr-1.5 size-4" aria-hidden="true" />
+            <Plus className="size-4" aria-hidden="true" />
             Browse all block types
           </Button>
         }

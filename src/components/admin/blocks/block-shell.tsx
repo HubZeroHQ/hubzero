@@ -79,7 +79,7 @@ export function BlockShell({
       className="border-border-muted bg-bg group rounded-lg border"
     >
       <div
-        className="bg-bg sticky top-2 z-10 flex items-center gap-2 rounded-t-lg px-3 py-2"
+        className="bg-bg z-sticky sticky top-10 flex items-center gap-2 rounded-t-lg px-3 py-2"
         onKeyDown={handleHeaderKeyDown}
       >
         <button

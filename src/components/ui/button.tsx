@@ -50,7 +50,14 @@ export function Button({
   const content = (
     <>
       {isLoading && <Spinner size="sm" label={null} />}
-      <span className={isLoading ? "opacity-70" : undefined}>{children}</span>
+      <span
+        className={cn(
+          "inline-flex items-center gap-1.5 whitespace-nowrap",
+          isLoading && "opacity-70",
+        )}
+      >
+        {children}
+      </span>
     </>
   );
 

@@ -115,12 +115,36 @@
   --content-marketing: 75rem; /* 1200px — default marketing page content width */
   --content-prose: 46.25rem; /* 740px  — long-form reading (notes, case studies) */
 
-  /* Layering scale — plain vars (z-index isn't a themeable Tailwind namespace). */
+  /*
+   * Layering scale — plain vars, since Tailwind v4 only auto-generates `z-*`
+   * utilities from a `--z-index-*` namespace, not `--z-*`. The `@utility`
+   * rules below (outside `@theme`, per Tailwind v4's custom-utility syntax)
+   * are what actually turn these into usable `z-dropdown`/`z-sticky`/
+   * `z-overlay`/`z-modal`/`z-toast` classes — every call site across the app
+   * already assumed these classes worked; without the rules below they
+   * silently resolved to `z-index: auto`.
+   */
   --z-dropdown: 1000;
   --z-sticky: 1100;
   --z-overlay: 1200;
   --z-modal: 1300;
   --z-toast: 1400;
+}
+
+@utility z-dropdown {
+  z-index: var(--z-dropdown);
+}
+@utility z-sticky {
+  z-index: var(--z-sticky);
+}
+@utility z-overlay {
+  z-index: var(--z-overlay);
+}
+@utility z-modal {
+  z-index: var(--z-modal);
+}
+@utility z-toast {
+  z-index: var(--z-toast);
 }
 
 body {
