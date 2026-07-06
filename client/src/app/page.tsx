@@ -1,11 +1,11 @@
-import Home from '@/components/Home';
+import ComingSoon from '@/components/ComingSoon';
 
 export const metadata = {
-  title: "HubZero | Home",
-  description: "HubZero is a creative community delivering high-quality software, branding, and design.",
+  title: "HubZero | Launching Soon",
+  description: "HubZero is rebuilding from the ground up. HubZero v2 is in active development — launching soon.",
   openGraph: {
-    title: "HubZero | Home",
-    description: "Join the creative collective of developers and designers at HubZero.",
+    title: "HubZero | Launching Soon",
+    description: "HubZero is rebuilding from the ground up. HubZero v2 is in active development — launching soon.",
     url: "https://hubzero.in/",
     siteName: "HubZero",
     images: [
@@ -20,13 +20,13 @@ export const metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "HubZero | Home",
-    description: "Creative development, design, and tech at HubZero.",
+    title: "HubZero | Launching Soon",
+    description: "HubZero is rebuilding from the ground up. HubZero v2 is in active development — launching soon.",
     images: ["/og-image.png"],
   },
 };
 
 
 export default function HomePage() {
-  return <Home />;
+  return <ComingSoon />;
 }
