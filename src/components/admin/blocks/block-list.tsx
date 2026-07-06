@@ -1,12 +1,13 @@
 "use client";
 
 import { Reorder } from "motion/react";
-import { Plus } from "lucide-react";
+import { ChevronsDownUp, ChevronsUpDown, Plus } from "lucide-react";
 import { useState } from "react";
 
 import { AddBlockDialog } from "@/components/admin/blocks/add-block-dialog";
 import { BlockDataEditor } from "@/components/admin/blocks/block-data-editor";
 import { BlockShell } from "@/components/admin/blocks/block-shell";
+import { InsertBlockPoint } from "@/components/admin/blocks/insert-block-point";
 import { Button } from "@/components/ui/button";
 import { newBlockId } from "@/lib/cms/blocks/registry";
 import type { Block } from "@/lib/cms/blocks/types";
@@ -75,9 +76,21 @@ export function BlockList({
     onChange(blocks.filter((_, i) => i !== index));
   }
 
-  function insertBlock(block: Block) {
-    onChange([...blocks, block]);
+  function insertBlock(block: Block, atIndex: number = blocks.length) {
+    const next = [...blocks];
+    next.splice(atIndex, 0, block);
+    onChange(next);
   }
+
+  function collapseAll() {
+    setCollapsedIds(new Set(blocks.map((block) => block.id)));
+  }
+
+  function expandAll() {
+    setCollapsedIds(new Set());
+  }
+
+  const allCollapsed = blocks.length > 0 && blocks.every((block) => collapsedIds.has(block.id));
 
   return (
     <div className="flex flex-col gap-3">
@@ -87,30 +100,63 @@ export function BlockList({
         </p>
       )}
 
+      {blocks.length > 1 && (
+        <div className="bg-bg sticky top-0 z-20 flex justify-end">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={allCollapsed ? expandAll : collapseAll}
+          >
+            {allCollapsed ? (
+              <>
+                <ChevronsUpDown className="mr-1.5 size-4" aria-hidden="true" />
+                Expand all
+              </>
+            ) : (
+              <>
+                <ChevronsDownUp className="mr-1.5 size-4" aria-hidden="true" />
+                Collapse all
+              </>
+            )}
+          </Button>
+        </div>
+      )}
+
+      <InsertBlockPoint
+        restrictToSimple={restrictToSimple}
+        onInsert={(block) => insertBlock(block, 0)}
+      />
+
       <Reorder.Group axis="y" values={blocks} onReorder={onChange} className="flex flex-col gap-3">
         {blocks.map((block, index) => (
-          <BlockShell
-            key={block.id}
-            block={block}
-            collapsed={collapsedIds.has(block.id)}
-            onToggleCollapsed={() => toggleCollapsed(block.id)}
-            onMoveUp={index > 0 ? () => moveBlock(index, -1) : undefined}
-            onMoveDown={index < blocks.length - 1 ? () => moveBlock(index, 1) : undefined}
-            onDuplicate={() => duplicateBlock(index)}
-            onDelete={() => deleteBlock(index)}
-          >
-            <BlockDataEditor block={block} onChange={(data) => updateBlockData(index, data)} />
-          </BlockShell>
+          <div key={block.id}>
+            <BlockShell
+              block={block}
+              collapsed={collapsedIds.has(block.id)}
+              onToggleCollapsed={() => toggleCollapsed(block.id)}
+              onMoveUp={index > 0 ? () => moveBlock(index, -1) : undefined}
+              onMoveDown={index < blocks.length - 1 ? () => moveBlock(index, 1) : undefined}
+              onDuplicate={() => duplicateBlock(index)}
+              onDelete={() => deleteBlock(index)}
+            >
+              <BlockDataEditor block={block} onChange={(data) => updateBlockData(index, data)} />
+            </BlockShell>
+            <InsertBlockPoint
+              restrictToSimple={restrictToSimple}
+              onInsert={(newBlock) => insertBlock(newBlock, index + 1)}
+            />
+          </div>
         ))}
       </Reorder.Group>
 
       <AddBlockDialog
         restrictToSimple={restrictToSimple}
-        onInsert={insertBlock}
+        onInsert={(block) => insertBlock(block)}
         trigger={
           <Button type="button" variant="secondary" size="sm" className="self-start">
             <Plus className="mr-1.5 size-4" aria-hidden="true" />
-            Add block
+            Browse all block types
           </Button>
         }
       />

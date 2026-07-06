@@ -45,13 +45,14 @@ export type BuildInput = z.infer<typeof buildSchema>;
 export const buildEmptyStateMessage = "No Builds yet — create the first one to get started.";
 
 export const buildFormFields: FieldConfig<BuildInput>[] = [
-  { name: "title", label: "Title", type: "text", required: true },
+  { name: "title", label: "Title", type: "text", required: true, group: "General" },
   {
     name: "tagline",
     label: "Tagline",
     type: "text",
     required: true,
     description: "The card blurb.",
+    group: "General",
   },
   {
     name: "slug",
@@ -59,6 +60,7 @@ export const buildFormFields: FieldConfig<BuildInput>[] = [
     type: "text",
     required: true,
     description: "Used in the public URL — lowercase, hyphenated.",
+    group: "General",
   },
   {
     name: "practiceArea",
@@ -66,15 +68,16 @@ export const buildFormFields: FieldConfig<BuildInput>[] = [
     type: "select",
     required: true,
     options: [...practiceAreaOptions],
+    group: "General",
   },
-  { name: "content", label: "Content", type: "blocks", required: true },
-  { name: "techTags", label: "Tech tags", type: "multiselect" },
-  { name: "coverImage", label: "Cover image", type: "image" },
+  { name: "launchDate", label: "Launch date", type: "date", required: true, group: "General" },
+  { name: "liveUrl", label: "Live URL", type: "url", group: "General" },
+  { name: "repoUrl", label: "Repo URL", type: "url", group: "General" },
+  { name: "coverImage", label: "Cover image", type: "image", group: "Media" },
+  { name: "techTags", label: "Tech tags", type: "multiselect", group: "Card" },
   contributorsFormField("Team members who worked on this build."),
   featuredFormField(),
-  { name: "launchDate", label: "Launch date", type: "date", required: true },
-  { name: "liveUrl", label: "Live URL", type: "url" },
-  { name: "repoUrl", label: "Repo URL", type: "url" },
+  { name: "content", label: "Content", type: "blocks", required: true, group: "Content" },
 ];
 
 export const buildListColumns: TableColumn<BuildRow>[] = [

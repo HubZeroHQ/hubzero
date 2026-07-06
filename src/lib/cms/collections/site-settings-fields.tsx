@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { optionalObjectIdField } from "@/lib/cms/collections/shared-validation";
+import { objectIdField, optionalObjectIdField } from "@/lib/cms/collections/shared-validation";
 import { emptyToUndefined } from "@/lib/utils";
 import type { FieldConfig } from "@/types/cms";
 
@@ -24,7 +24,7 @@ export const siteSettingsSchema = z.object({
   socialsTwitter: z.preprocess(emptyToUndefined, z.url("Enter a valid URL.").optional()),
   socialsInstagram: z.preprocess(emptyToUndefined, z.url("Enter a valid URL.").optional()),
   footerText: z.preprocess(emptyToUndefined, z.string().trim().max(500).optional()),
-  featuredCaseStudyId: optionalObjectIdField("Choose a Case Study to feature on the homepage."),
+  featuredCaseStudyIds: z.array(objectIdField()).max(5).default([]),
   seoDefaultTitle: z.string().trim().min(1, "Required.").max(160),
   seoDefaultDescription: z.string().trim().min(1, "Required.").max(300),
   ogImage: optionalObjectIdField("Choose a default OpenGraph image from the media library."),
@@ -50,12 +50,13 @@ export const siteSettingsFormFields: FieldConfig<SiteSettingsInput>[] = [
     description: "Short blurb shown in the site footer.",
   },
   {
-    name: "featuredCaseStudyId",
-    label: "Featured case study",
-    type: "reference",
+    name: "featuredCaseStudyIds",
+    label: "Featured case studies",
+    type: "referenceArray",
     resource: "caseStudy",
     labelField: "client",
-    description: "Shown on the homepage. Leave unset to feature the most recently published one.",
+    description:
+      "The homepage shows the first one here. Leave empty to feature the most recently published one automatically.",
   },
   { name: "seoDefaultTitle", label: "Default SEO title", type: "text", required: true },
   {

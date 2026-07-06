@@ -4,9 +4,14 @@ import {
   findOnePublished,
   getFeaturedCaseStudy,
   getPublicTeamMembers,
+  getTeamMemberContributions,
 } from "@/lib/cms/public-content";
 import { withArrayDefault, withCardFieldDefaults } from "@/models/shared/card-fields";
+import { Build } from "@/models/build";
 import { CaseStudy, type CaseStudyDocument } from "@/models/case-study";
+import { Note } from "@/models/note";
+import { SiteSettings } from "@/models/site-settings";
+import { TeamMember } from "@/models/team-member";
 import { User } from "@/models/user";
 
 /**
@@ -124,11 +129,176 @@ describe("getFeaturedCaseStudy — homepage read path", () => {
     const doc = await getFeaturedCaseStudy();
     expect(doc).toBeNull();
   });
+
+  it("prefers the first still-published entry in SiteSettings.featuredCaseStudyIds over featured:true/most-recent", async () => {
+    const user = await User.create({
+      email: "settings-author@example.com",
+      name: "Settings Author",
+      passwordHash: "unused-in-tests",
+      role: "admin",
+      sessionVersion: 0,
+    });
+
+    const picked = await CaseStudy.create({
+      slug: "explicitly-picked",
+      client: "Explicitly Picked",
+      industry: "Testing",
+      practiceArea: "software",
+      summary: "The founder's explicit pick.",
+      content: [{ id: "b1", type: "markdown", data: { markdown: "Body." } }],
+      status: "published",
+      publishedAt: new Date("2026-01-01"),
+      featured: false,
+      createdBy: user._id,
+    });
+
+    await CaseStudy.create({
+      slug: "more-recent-but-not-picked",
+      client: "More Recent",
+      industry: "Testing",
+      practiceArea: "software",
+      summary: "Published more recently but not the explicit pick.",
+      content: [{ id: "b1", type: "markdown", data: { markdown: "Body." } }],
+      status: "published",
+      publishedAt: new Date("2026-06-01"),
+      featured: true,
+      createdBy: user._id,
+    });
+
+    await SiteSettings.create({
+      singletonKey: "default",
+      companyName: "Test Co",
+      seo: { defaultTitle: "Test", defaultDescription: "Test" },
+      featuredCaseStudyIds: [picked._id],
+    });
+
+    const doc = await getFeaturedCaseStudy();
+    expect(doc?.slug).toBe("explicitly-picked");
+  });
+
+  it("falls back to the deprecated singular featuredCaseStudyId when featuredCaseStudyIds is empty", async () => {
+    const user = await User.create({
+      email: "legacy-settings-author@example.com",
+      name: "Legacy Settings Author",
+      passwordHash: "unused-in-tests",
+      role: "admin",
+      sessionVersion: 0,
+    });
+
+    const picked = await CaseStudy.create({
+      slug: "legacy-singular-pick",
+      client: "Legacy Singular Pick",
+      industry: "Testing",
+      practiceArea: "software",
+      summary: "Picked via the old singular field.",
+      content: [{ id: "b1", type: "markdown", data: { markdown: "Body." } }],
+      status: "published",
+      publishedAt: new Date("2026-01-01"),
+      createdBy: user._id,
+    });
+
+    // Bypasses Mongoose (no schema defaults) — a settings document saved
+    // before `featuredCaseStudyIds` existed, still carrying the old field.
+    await SiteSettings.collection.insertOne({
+      singletonKey: "default",
+      companyName: "Test Co",
+      seo: { defaultTitle: "Test", defaultDescription: "Test" },
+      featuredCaseStudyId: picked._id,
+    });
+
+    const doc = await getFeaturedCaseStudy();
+    expect(doc?.slug).toBe("legacy-singular-pick");
+  });
 });
 
 describe("getPublicTeamMembers — already-guarded contributors read", () => {
   it("returns an empty list for an empty/undefined id list without throwing", async () => {
     await expect(getPublicTeamMembers([])).resolves.toEqual([]);
     await expect(getPublicTeamMembers([undefined, undefined])).resolves.toEqual([]);
+  });
+});
+
+describe("getTeamMemberContributions — the reverse of contributors/authorId", () => {
+  it("surfaces every published Case Study/Build/Note that credits this person, across collections, with no duplicated data", async () => {
+    const user = await User.create({
+      email: "linked-user@example.com",
+      name: "Linked User",
+      passwordHash: "unused-in-tests",
+      role: "teammate",
+      sessionVersion: 0,
+    });
+
+    const member = await TeamMember.create({
+      username: "jane-doe",
+      name: "Jane Doe",
+      role: "Engineer",
+      bio: "Bio text.",
+      socials: { email: "jane@example.com" },
+      linkedUserId: user._id,
+      status: "published",
+      profileVisible: true,
+      createdBy: user._id,
+    });
+    const memberId = member._id.toString();
+
+    await CaseStudy.create({
+      slug: "credited-case-study",
+      client: "Credited Client",
+      industry: "Testing",
+      practiceArea: "software",
+      summary: "A case study crediting Jane.",
+      content: [{ id: "b1", type: "markdown", data: { markdown: "Body." } }],
+      contributors: [memberId],
+      status: "published",
+      publishedAt: new Date("2026-01-01"),
+      createdBy: user._id,
+    });
+
+    // A Build has no public detail route yet — still surfaced, but with
+    // `href: null` rather than a fabricated URL.
+    await Build.create({
+      slug: "credited-build",
+      title: "Credited Build",
+      tagline: "A build crediting Jane.",
+      practiceArea: "software",
+      content: [{ id: "b1", type: "markdown", data: { markdown: "Body." } }],
+      contributors: [memberId],
+      launchDate: "2026-01-01",
+      status: "published",
+      publishedAt: new Date("2026-02-01"),
+      createdBy: user._id,
+    });
+
+    // Note credits via `authorId`, not `contributors` — both must surface.
+    await Note.create({
+      slug: "credited-note",
+      title: "Credited Note",
+      summary: "A note authored by Jane.",
+      content: [{ id: "b1", type: "markdown", data: { markdown: "Body." } }],
+      authorId: memberId,
+      category: "Engineering",
+      status: "published",
+      publishedAt: new Date("2026-03-01"),
+      createdBy: user._id,
+    });
+
+    const contributions = await getTeamMemberContributions(memberId);
+
+    expect(contributions).toHaveLength(3);
+    // Sorted most-recent-first.
+    expect(contributions.map((c) => c.title)).toEqual([
+      "Credited Note",
+      "Credited Build",
+      "Credited Client",
+    ]);
+
+    const build = contributions.find((c) => c.title === "Credited Build");
+    expect(build?.href).toBeNull();
+    const caseStudy = contributions.find((c) => c.title === "Credited Client");
+    expect(caseStudy?.href).toBe("/work/credited-case-study");
+  });
+
+  it("returns an empty list for a Team Member with no credited work", async () => {
+    await expect(getTeamMemberContributions("507f1f77bcf86cd799439011")).resolves.toEqual([]);
   });
 });

@@ -56,8 +56,14 @@ export async function updateSiteSettings(
 
   const raw: Record<string, unknown> = {};
   for (const field of siteSettingsFormFields) {
-    const value = formData.get(field.name);
-    raw[field.name] = typeof value === "string" ? value : undefined;
+    if (field.type === "referenceArray" || field.type === "multiselect") {
+      raw[field.name] = formData
+        .getAll(field.name)
+        .filter((value) => typeof value === "string" && value.length > 0);
+    } else {
+      const value = formData.get(field.name);
+      raw[field.name] = typeof value === "string" ? value : undefined;
+    }
   }
 
   const parsed = siteSettingsSchema.safeParse(raw);
@@ -73,7 +79,7 @@ export async function updateSiteSettings(
     seoDefaultTitle,
     seoDefaultDescription,
     ogImage,
-    featuredCaseStudyId,
+    featuredCaseStudyIds,
     googleAnalyticsId,
     plausibleDomain,
     ...rest
@@ -81,18 +87,16 @@ export async function updateSiteSettings(
 
   // A plain-object `findOneAndUpdate` silently drops any key whose value is
   // `undefined` before it reaches MongoDB — it does *not* unset a
-  // previously-stored value. `featuredCaseStudyId` is a top-level optional
-  // reference an editor can legitimately clear back to "unset," so clearing
-  // it needs an explicit `$unset`, not a `$set` to `undefined` (which would
-  // silently leave the old reference in place). `ogImage` doesn't need the
-  // same treatment: it lives inside `seo`, and `$set`ting the whole `seo`
-  // object below already replaces it wholesale — omitting `ogImage` from
-  // that object already clears it, and `$unset`ting a child of a path this
-  // same update also `$set`s (`seo.ogImage` under `seo`) is a MongoDB
-  // conflict error, not a no-op.
-  const unset: Record<string, ""> = {};
-  if (!featuredCaseStudyId) unset.featuredCaseStudyId = "";
-
+  // previously-stored value. `ogImage` doesn't need an explicit `$unset`:
+  // it lives inside `seo`, and `$set`ting the whole `seo` object below
+  // already replaces it wholesale — omitting `ogImage` from that object
+  // already clears it, and `$unset`ting a child of a path this same update
+  // also `$set`s (`seo.ogImage` under `seo`) is a MongoDB conflict error,
+  // not a no-op. `featuredCaseStudyId` (the deprecated singular field
+  // `featuredCaseStudyIds` superseded) is unconditionally `$unset` here —
+  // the lazy, one-document "migration on next write" `models/site-settings.ts`
+  // documents: the form no longer offers any way to set it, so every save
+  // from now on clears whatever a pre-this-change save left behind.
   try {
     await SiteSettings.findOneAndUpdate(
       { singletonKey: "default" },
@@ -100,9 +104,7 @@ export async function updateSiteSettings(
         $set: {
           singletonKey: "default",
           ...rest,
-          ...(featuredCaseStudyId
-            ? { featuredCaseStudyId: new Types.ObjectId(featuredCaseStudyId) }
-            : {}),
+          featuredCaseStudyIds: featuredCaseStudyIds.map((id) => new Types.ObjectId(id)),
           socials: {
             linkedin: socialsLinkedin,
             github: socialsGithub,
@@ -116,7 +118,7 @@ export async function updateSiteSettings(
           },
           analytics: { googleAnalyticsId, plausibleDomain },
         },
-        ...(Object.keys(unset).length > 0 ? { $unset: unset } : {}),
+        $unset: { featuredCaseStudyId: "" },
       },
       { upsert: true, new: true, runValidators: true },
     );

@@ -51,24 +51,24 @@ export const blueprintEmptyStateMessage =
   "No Blueprints yet — create the first one to get started.";
 
 export const blueprintFormFields: FieldConfig<BlueprintInput>[] = [
-  { name: "name", label: "Name", type: "text", required: true },
-  { name: "blueprintId", label: "Blueprint ID", type: "text", required: true },
+  { name: "name", label: "Name", type: "text", required: true, group: "General" },
+  { name: "blueprintId", label: "Blueprint ID", type: "text", required: true, group: "General" },
   {
     name: "slug",
     label: "Slug",
     type: "text",
     required: true,
     description: "Used in the public URL — lowercase, hyphenated.",
+    group: "General",
   },
-  { name: "category", label: "Category", type: "text", required: true },
-  { name: "summary", label: "Card summary", type: "textarea", required: true },
-  { name: "content", label: "Content", type: "blocks", required: true },
-  { name: "techStack", label: "Tech stack", type: "multiselect" },
-  { name: "coverImage", label: "Cover image", type: "image" },
+  { name: "category", label: "Category", type: "text", required: true, group: "General" },
+  { name: "summary", label: "Card summary", type: "textarea", required: true, group: "General" },
+  { name: "coverImage", label: "Cover image", type: "image", group: "Media" },
+  { name: "techStack", label: "Tech stack", type: "multiselect", group: "Card" },
   contributorsFormField(),
   featuredFormField(),
-  { name: "previewUrl", label: "Preview URL", type: "url" },
-  { name: "demoDeploymentUrl", label: "Demo deployment URL", type: "url" },
+  { name: "previewUrl", label: "Preview URL", type: "url", group: "Demo" },
+  { name: "demoDeploymentUrl", label: "Demo deployment URL", type: "url", group: "Demo" },
   {
     name: "demoStatus",
     label: "Demo status",
@@ -76,7 +76,9 @@ export const blueprintFormFields: FieldConfig<BlueprintInput>[] = [
     required: true,
     options: [...demoStatusOptions],
     description: 'Publishing is blocked unless this is "Live".',
+    group: "Demo",
   },
+  { name: "content", label: "Content", type: "blocks", required: true, group: "Content" },
 ];
 
 export const blueprintListColumns: TableColumn<BlueprintRow>[] = [
