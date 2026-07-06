@@ -35,6 +35,9 @@ interface CrudDocument {
   // `Date | undefined` — a document freshly loaded from the DB can hold an
   // explicit `null`, not merely "the key is absent."
   publishedAt?: Date | null;
+  scheduledPublishAt?: Date | null;
+  scheduledUnpublishAt?: Date | null;
+  archivedAt?: Date | null;
 }
 
 type SimpleResult = { status: "success" } | { status: "error"; message: string };
@@ -125,7 +128,17 @@ function normalizeLeanDocument<T extends Record<string, unknown>>(
 /** The one necessary escape hatch for setting workflow fields on a generically-typed document — see the module comment above `CrudDocument`. */
 function patchWorkflowFields(
   doc: CrudDocument,
-  patch: Partial<Pick<CrudDocument, "status" | "version" | "publishedAt">>,
+  patch: Partial<
+    Pick<
+      CrudDocument,
+      | "status"
+      | "version"
+      | "publishedAt"
+      | "scheduledPublishAt"
+      | "scheduledUnpublishAt"
+      | "archivedAt"
+    >
+  >,
 ): void {
   Object.assign(doc as unknown as Record<string, unknown>, patch);
 }
@@ -233,6 +246,90 @@ export async function restoreVersion(
     );
     return { status: "error", message: "Something went wrong while restoring. Please try again." };
   }
+}
+
+/**
+ * Fires one due `schedulePublish()` (Phase B) — called only by the scheduler
+ * (`lib/cms/scheduler.ts`, itself invoked by `app/api/cron/process-schedule/route.ts`),
+ * never as a user-facing Server Action, so there's no signed-in user to gate
+ * against with `requirePermission()`. That permission check already ran once,
+ * for real, when a human called `schedulePublish()` to get here — this only
+ * re-checks `config.publishGuard` (content-based, e.g. Blueprint's
+ * `demoStatus`), since that can change between scheduling and the scheduled
+ * moment, unlike the Raw-HTML-block role gate (`checkBlocksPublishGuard`),
+ * which depends on who's signed in right now — nobody is, so it isn't
+ * re-checked here; the content and its author don't change while a publish
+ * waits to fire.
+ */
+export async function runScheduledPublish(
+  config: AnyCollectionConfig,
+  id: string,
+): Promise<SimpleResult> {
+  await connectToDatabase();
+  if (!Types.ObjectId.isValid(id)) return { status: "error", message: "Not found." };
+
+  const doc = await config.model.findById(id);
+  if (!doc) return { status: "error", message: "Not found." };
+
+  const record = doc as unknown as CrudDocument;
+  if (record.status !== "scheduled") {
+    return { status: "error", message: "This item is no longer scheduled to publish." };
+  }
+
+  const snapshot = doc.toObject() as Record<string, unknown>;
+  const guardError = config.publishGuard?.(snapshot);
+  if (guardError) return { status: "error", message: guardError };
+
+  const actorId = record.createdBy?.toString();
+  if (!actorId) return { status: "error", message: "This item has no author to publish as." };
+
+  await snapshotVersion(config.resource, snapshot, actorId);
+
+  patchWorkflowFields(record, {
+    status: "published",
+    publishedAt: new Date(),
+    version: (record.version ?? 0) + 1,
+    scheduledPublishAt: null,
+    scheduledUnpublishAt: null,
+  });
+  await doc.save();
+
+  const saved = doc.toObject() as Record<string, unknown>;
+  for (const path of config.revalidatesPaths?.(saved) ?? []) revalidatePath(path);
+  return { status: "success" };
+}
+
+/**
+ * Fires one due `scheduleUnpublish()` (Phase B) — the scheduler-only
+ * counterpart to `runScheduledPublish` above, same reasoning for skipping
+ * `requirePermission()`. Never snapshots (archiving isn't a publish).
+ */
+export async function runScheduledArchive(
+  config: AnyCollectionConfig,
+  id: string,
+): Promise<SimpleResult> {
+  await connectToDatabase();
+  if (!Types.ObjectId.isValid(id)) return { status: "error", message: "Not found." };
+
+  const doc = await config.model.findById(id);
+  if (!doc) return { status: "error", message: "Not found." };
+
+  const record = doc as unknown as CrudDocument;
+  if (record.status !== "published") {
+    return { status: "error", message: "This item is no longer published." };
+  }
+
+  patchWorkflowFields(record, {
+    status: "archived",
+    archivedAt: new Date(),
+    scheduledPublishAt: null,
+    scheduledUnpublishAt: null,
+  });
+  await doc.save();
+
+  const saved = doc.toObject() as Record<string, unknown>;
+  for (const path of config.revalidatesPaths?.(saved) ?? []) revalidatePath(path);
+  return { status: "success" };
 }
 
 /**
@@ -474,7 +571,162 @@ export function createCrudActions<T extends CrudDocument, TInput extends Record<
       status: "published",
       publishedAt: new Date(),
       version: (doc.version ?? 0) + 1,
+      // A publish — whether triggered directly or by the scheduler
+      // (`app/api/cron/process-schedule/route.ts`) reaching a due
+      // `scheduledPublishAt` — always clears any pending schedule of either
+      // direction, so a document never carries stale scheduling state past
+      // the moment it actually publishes.
+      scheduledPublishAt: null,
+      scheduledUnpublishAt: null,
     });
+    await doc.save();
+
+    for (const path of config.revalidatesPaths?.(doc.toObject() as T) ?? []) revalidatePath(path);
+    return { status: "success" };
+  }
+
+  /**
+   * Publish at a future moment instead of immediately (Phase B). Deliberately
+   * mirrors `publish()`'s own laxity about current status (no "must be in
+   * review first" gate) rather than adding a stricter check this engine
+   * doesn't otherwise enforce. Does **not** snapshot to `VersionHistory` —
+   * only an actual `publish()` call does that (the scheduler's own call when
+   * `scheduledPublishAt` comes due), so nothing is versioned until the
+   * content is genuinely live.
+   */
+  async function schedulePublish(id: string, at: Date): Promise<SimpleResult> {
+    if (config.workflow === "none") {
+      throw new Error(`${config.resource} has no publish workflow.`);
+    }
+    await connectToDatabase();
+    if (!Types.ObjectId.isValid(id)) return { status: "error", message: "Not found." };
+
+    const doc = await config.model.findById(id);
+    if (!doc) return { status: "error", message: "Not found." };
+
+    const user = await requirePermission("publish", config.resource, ownerTarget(doc, config));
+
+    const blocksGuardError = checkBlocksPublishGuard(
+      config,
+      doc.toObject() as unknown as Record<string, unknown>,
+      user.role,
+    );
+    if (blocksGuardError) return { status: "error", message: blocksGuardError };
+
+    const guardError = config.publishGuard?.(doc.toObject() as T);
+    if (guardError) return { status: "error", message: guardError };
+
+    patchWorkflowFields(doc, {
+      status: "scheduled",
+      scheduledPublishAt: at,
+      scheduledUnpublishAt: null,
+    });
+    await doc.save();
+    return { status: "success" };
+  }
+
+  /**
+   * Schedule an already-`"published"` document to leave the public site at a
+   * future moment (Phase B) — status stays `"published"` (and the public page
+   * keeps rendering) until the scheduled moment, when the scheduler calls
+   * `archive()`. This mirrors `scheduledPublishAt`'s "nothing happens until
+   * the scheduler acts" shape, just for the opposite direction.
+   */
+  async function scheduleUnpublish(id: string, at: Date): Promise<SimpleResult> {
+    if (config.workflow === "none") {
+      throw new Error(`${config.resource} has no publish workflow.`);
+    }
+    await connectToDatabase();
+    if (!Types.ObjectId.isValid(id)) return { status: "error", message: "Not found." };
+
+    const doc = await config.model.findById(id);
+    if (!doc) return { status: "error", message: "Not found." };
+
+    await requirePermission("publish", config.resource, ownerTarget(doc, config));
+
+    patchWorkflowFields(doc, { scheduledUnpublishAt: at, scheduledPublishAt: null });
+    await doc.save();
+    return { status: "success" };
+  }
+
+  /**
+   * Cancels a pending `schedulePublish`/`scheduleUnpublish` (Phase B) without
+   * waiting for the scheduled moment. A `"scheduled"` document reverts to
+   * `"draft"` (the same "must re-earn publish" posture `restoreVersion` uses,
+   * rather than silently leaving it in a state with no scheduled action
+   * pending); a `"published"` document with a pending unpublish simply keeps
+   * publishing.
+   */
+  async function cancelSchedule(id: string): Promise<SimpleResult> {
+    await connectToDatabase();
+    if (!Types.ObjectId.isValid(id)) return { status: "error", message: "Not found." };
+
+    const doc = await config.model.findById(id);
+    if (!doc) return { status: "error", message: "Not found." };
+
+    await requirePermission("publish", config.resource, ownerTarget(doc, config));
+
+    patchWorkflowFields(doc, {
+      status: doc.status === "scheduled" ? "draft" : doc.status,
+      scheduledPublishAt: null,
+      scheduledUnpublishAt: null,
+    });
+    await doc.save();
+    return { status: "success" };
+  }
+
+  /**
+   * Removes a document from the public site without deleting it (Phase B) —
+   * the "unpublish" half of scheduling, also callable directly. Revalidates
+   * the same paths `publish()` does, since an archived document must stop
+   * rendering at whatever public route it previously occupied.
+   */
+  async function archive(id: string): Promise<SimpleResult> {
+    if (config.workflow === "none") {
+      throw new Error(`${config.resource} has no publish workflow.`);
+    }
+    await connectToDatabase();
+    if (!Types.ObjectId.isValid(id)) return { status: "error", message: "Not found." };
+
+    const doc = await config.model.findById(id);
+    if (!doc) return { status: "error", message: "Not found." };
+
+    await requirePermission("publish", config.resource, ownerTarget(doc, config));
+
+    patchWorkflowFields(doc, {
+      status: "archived",
+      archivedAt: new Date(),
+      scheduledPublishAt: null,
+      scheduledUnpublishAt: null,
+    });
+    await doc.save();
+
+    for (const path of config.revalidatesPaths?.(doc.toObject() as T) ?? []) revalidatePath(path);
+    return { status: "success" };
+  }
+
+  /**
+   * Brings an archived document back as a draft (Phase B) — never straight
+   * back to `"published"`, the identical "restoring reads as one click but
+   * underneath is a new draft that must re-earn publish/approval" rule
+   * `restoreVersion` documents above. Gated on `"edit"` rather than
+   * `"publish"` for the same reason `restoreVersion` is: this produces a
+   * draft, not a live change.
+   */
+  async function restoreArchive(id: string): Promise<SimpleResult> {
+    await connectToDatabase();
+    if (!Types.ObjectId.isValid(id)) return { status: "error", message: "Not found." };
+
+    const doc = await config.model.findById(id);
+    if (!doc) return { status: "error", message: "Not found." };
+
+    await requirePermission("edit", config.resource, ownerTarget(doc, config));
+
+    if (doc.status !== "archived") {
+      return { status: "error", message: "Only an archived item can be restored." };
+    }
+
+    patchWorkflowFields(doc, { status: "draft", archivedAt: null });
     await doc.save();
 
     for (const path of config.revalidatesPaths?.(doc.toObject() as T) ?? []) revalidatePath(path);
@@ -574,5 +826,10 @@ export function createCrudActions<T extends CrudDocument, TInput extends Record<
     bulkPublish,
     restoreVersion: (id: string, versionHistoryId: string) =>
       restoreVersion(config as unknown as AnyCollectionConfig, id, versionHistoryId),
+    schedulePublish,
+    scheduleUnpublish,
+    cancelSchedule,
+    archive,
+    restoreArchive,
   };
 }

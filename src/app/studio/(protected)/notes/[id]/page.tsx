@@ -1,7 +1,17 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 
-import { getOne, publish, remove, submitForReview } from "@/actions/studio/notes";
+import {
+  archive,
+  cancelSchedule,
+  getOne,
+  publish,
+  remove,
+  restoreArchive,
+  schedulePublish,
+  scheduleUnpublish,
+  submitForReview,
+} from "@/actions/studio/notes";
 import { EditNoteForm } from "@/app/studio/(protected)/notes/[id]/edit-note-form";
 import { PageHeader } from "@/components/admin/page-header";
 import { WorkflowActions } from "@/components/admin/workflow-actions";
@@ -76,6 +86,13 @@ export default async function EditNotePage({ params }: EditNotePageProps) {
           remove={remove}
           listHref="/studio/notes"
           itemLabel="note"
+          scheduledPublishAt={doc.scheduledPublishAt}
+          scheduledUnpublishAt={doc.scheduledUnpublishAt}
+          schedulePublish={schedulePublish}
+          scheduleUnpublish={scheduleUnpublish}
+          cancelSchedule={cancelSchedule}
+          archive={archive}
+          restoreArchive={restoreArchive}
         />
       </div>
 

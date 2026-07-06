@@ -1,5 +1,6 @@
 import {
   AlertTriangle,
+  CalendarClock,
   ClipboardCheck,
   FolderKanban,
   HardDrive,
@@ -22,6 +23,7 @@ import { projectTypeOptions } from "@/lib/lead-schema";
 import { findBrokenMediaReferences, getStorageUsageSummary, listMedia } from "@/lib/cms/media";
 import { can } from "@/lib/cms/permissions";
 import { roleMeetsMinimum } from "@/lib/cms/roles";
+import { listUpcomingPublishes, listUpcomingUnpublishes } from "@/lib/cms/scheduler";
 import { requireSessionUser } from "@/lib/cms/session";
 import { listRecentActivity } from "@/lib/cms/version-history";
 import { formatBytes } from "@/lib/utils";
@@ -68,6 +70,8 @@ export default async function StudioDashboardPage() {
     recentUploads,
     storageUsage,
     brokenMedia,
+    upcomingPublishes,
+    upcomingUnpublishes,
   ] = await Promise.all([
     canViewLeads ? Lead.countDocuments({ status: "new" }) : Promise.resolve(0),
     canViewLeads ? Lead.find().sort({ createdAt: -1 }).limit(5) : Promise.resolve([]),
@@ -78,7 +82,19 @@ export default async function StudioDashboardPage() {
     canViewMedia ? listMedia({ sort: "newest", page: 1 }) : Promise.resolve(null),
     canViewMedia ? getStorageUsageSummary() : Promise.resolve(null),
     canViewMedia ? findBrokenMediaReferences() : Promise.resolve([]),
+    listUpcomingPublishes(5),
+    listUpcomingUnpublishes(5),
   ]);
+
+  // Same "no second permission model" filtering `visibleActivity` below
+  // already applies, extended to the two scheduling cards — a document's
+  // resource might not be one the signed-in user holds a `view` grant on.
+  const visibleUpcomingPublishes = upcomingPublishes.filter((row) =>
+    can(user, "view", row.resource),
+  );
+  const visibleUpcomingUnpublishes = upcomingUnpublishes.filter((row) =>
+    can(user, "view", row.resource),
+  );
 
   // `listRecentActivity` reads across every collection; only surface entries
   // for a collection the signed-in user actually holds a `view` grant on —
@@ -349,6 +365,62 @@ export default async function StudioDashboardPage() {
                   </li>
                 );
               })}
+            </ul>
+          )}
+        </DashboardCard>
+
+        <DashboardCard title="Upcoming publishes" icon={CalendarClock}>
+          {visibleUpcomingPublishes.length === 0 ? (
+            <EmptyState
+              title="Nothing scheduled"
+              description="Documents scheduled to publish in the future show up here."
+            />
+          ) : (
+            <ul className="divide-border-muted -mt-1 divide-y">
+              {visibleUpcomingPublishes.map((row) => (
+                <li
+                  key={`${row.resource}-${row.documentId}`}
+                  className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0"
+                >
+                  <div>
+                    <Text weight="medium">{row.recordLabel}</Text>
+                    <Text size="caption" tone="muted">
+                      {row.label} · publishes {new Date(row.at).toLocaleString()}
+                    </Text>
+                  </div>
+                  {row.studioBasePath && (
+                    <Link href={`/studio/${row.studioBasePath}/${row.documentId}`}>Open →</Link>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </DashboardCard>
+
+        <DashboardCard title="Scheduled changes" icon={CalendarClock}>
+          {visibleUpcomingUnpublishes.length === 0 ? (
+            <EmptyState
+              title="Nothing scheduled"
+              description="Published documents scheduled to unpublish in the future show up here."
+            />
+          ) : (
+            <ul className="divide-border-muted -mt-1 divide-y">
+              {visibleUpcomingUnpublishes.map((row) => (
+                <li
+                  key={`${row.resource}-${row.documentId}`}
+                  className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0"
+                >
+                  <div>
+                    <Text weight="medium">{row.recordLabel}</Text>
+                    <Text size="caption" tone="muted">
+                      {row.label} · unpublishes {new Date(row.at).toLocaleString()}
+                    </Text>
+                  </div>
+                  {row.studioBasePath && (
+                    <Link href={`/studio/${row.studioBasePath}/${row.documentId}`}>Open →</Link>
+                  )}
+                </li>
+              ))}
             </ul>
           )}
         </DashboardCard>

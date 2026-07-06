@@ -1,7 +1,16 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 
-import { getOne, publish, remove } from "@/actions/studio/team-members";
+import {
+  archive,
+  cancelSchedule,
+  getOne,
+  publish,
+  remove,
+  restoreArchive,
+  schedulePublish,
+  scheduleUnpublish,
+} from "@/actions/studio/team-members";
 import { EditTeamMemberForm } from "@/app/studio/(protected)/team/[id]/edit-team-member-form";
 import { PageHeader } from "@/components/admin/page-header";
 import { WorkflowActions } from "@/components/admin/workflow-actions";
@@ -89,6 +98,13 @@ export default async function EditTeamMemberPage({ params }: EditTeamMemberPageP
           remove={remove}
           listHref="/studio/team"
           itemLabel="team member"
+          scheduledPublishAt={doc.scheduledPublishAt}
+          scheduledUnpublishAt={doc.scheduledUnpublishAt}
+          schedulePublish={schedulePublish}
+          scheduleUnpublish={scheduleUnpublish}
+          cancelSchedule={cancelSchedule}
+          archive={archive}
+          restoreArchive={restoreArchive}
         />
       </div>
 

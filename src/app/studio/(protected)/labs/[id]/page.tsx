@@ -1,7 +1,16 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 
-import { getOne, publish, remove } from "@/actions/studio/labs-projects";
+import {
+  archive,
+  cancelSchedule,
+  getOne,
+  publish,
+  remove,
+  restoreArchive,
+  schedulePublish,
+  scheduleUnpublish,
+} from "@/actions/studio/labs-projects";
 import { EditLabsProjectForm } from "@/app/studio/(protected)/labs/[id]/edit-labs-project-form";
 import { GraduateToBuildForm } from "@/app/studio/(protected)/labs/[id]/graduate-to-build-form";
 import { PageHeader } from "@/components/admin/page-header";
@@ -73,6 +82,13 @@ export default async function EditLabsProjectPage({ params }: EditLabsProjectPag
           remove={remove}
           listHref="/studio/labs"
           itemLabel="Labs project"
+          scheduledPublishAt={doc.scheduledPublishAt}
+          scheduledUnpublishAt={doc.scheduledUnpublishAt}
+          schedulePublish={schedulePublish}
+          scheduleUnpublish={scheduleUnpublish}
+          cancelSchedule={cancelSchedule}
+          archive={archive}
+          restoreArchive={restoreArchive}
         />
         {canEdit && doc.stage !== "graduated" && <GraduateToBuildForm labsProjectId={id} />}
         {doc.stage === "graduated" && (

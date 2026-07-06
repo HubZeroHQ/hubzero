@@ -180,13 +180,23 @@ export interface TableSearchParams {
  */
 export type ClientDocument<T> = Omit<
   T,
-  "_id" | "createdBy" | "publishedAt" | "createdAt" | "updatedAt"
+  | "_id"
+  | "createdBy"
+  | "publishedAt"
+  | "createdAt"
+  | "updatedAt"
+  | "scheduledPublishAt"
+  | "scheduledUnpublishAt"
+  | "archivedAt"
 > & {
   _id: string;
   createdBy?: string;
   publishedAt?: string;
   createdAt?: string;
   updatedAt?: string;
+  scheduledPublishAt?: string;
+  scheduledUnpublishAt?: string;
+  archivedAt?: string;
 };
 
 /** `crud-actions.ts`'s generic `list()` result — cursor-paginated, never a total count. */

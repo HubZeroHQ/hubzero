@@ -1,15 +1,19 @@
 import { Badge } from "@/components/ui/badge";
 
-const toneByStatus: Record<string, "default" | "warning" | "success"> = {
+const toneByStatus: Record<string, "default" | "warning" | "success" | "info" | "danger"> = {
   draft: "default",
   review: "warning",
   published: "success",
+  scheduled: "info",
+  archived: "danger",
 };
 
 const labelByStatus: Record<string, string> = {
   draft: "Draft",
   review: "In review",
   published: "Published",
+  scheduled: "Scheduled",
+  archived: "Archived",
 };
 
 export interface WorkflowStatusBadgeProps {

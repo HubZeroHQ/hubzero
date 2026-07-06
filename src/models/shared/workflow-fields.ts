@@ -7,8 +7,22 @@ import { Schema, type Types } from "mongoose";
  * mixin — that collection keeps its own unrelated status enum (a triage
  * state, not a publish-lifecycle state).
  */
-export const draftPublishStatusValues = ["draft", "published"] as const;
-export const draftReviewPublishStatusValues = ["draft", "review", "published"] as const;
+/**
+ * `"scheduled"`/`"archived"` (Phase B — scheduling) are additive to both
+ * tiers: a document reaches `"scheduled"` only via `schedulePublish()` and
+ * `"archived"` only via `archive()` (`lib/cms/crud-actions.ts`) — every
+ * existing query/status check written against the original two/three values
+ * keeps working unchanged, since those two are simply never produced by any
+ * existing code path.
+ */
+export const draftPublishStatusValues = ["draft", "published", "scheduled", "archived"] as const;
+export const draftReviewPublishStatusValues = [
+  "draft",
+  "review",
+  "published",
+  "scheduled",
+  "archived",
+] as const;
 
 export type DraftPublishStatus = (typeof draftPublishStatusValues)[number];
 export type DraftReviewPublishStatus = (typeof draftReviewPublishStatusValues)[number];
@@ -17,12 +31,22 @@ export type DraftReviewPublishStatus = (typeof draftReviewPublishStatusValues)[n
  * The shape every workflow-participating document has, regardless of
  * collection — what `lib/cms/crud-actions.ts` is written against so it never
  * needs to know a specific collection's field set beyond this.
+ *
+ * `scheduledPublishAt`/`scheduledUnpublishAt`/`archivedAt` back Phase B's
+ * scheduling actions — a document can hold at most one of
+ * `scheduledPublishAt` (while `status === "scheduled"`) or
+ * `scheduledUnpublishAt` (set on an already-`"published"` document, status
+ * unchanged until the scheduled moment arrives), never both at once
+ * (`schedulePublish`/`scheduleUnpublish` each clear the other).
  */
 export interface WorkflowFields<S extends string = string> {
   status: S;
   version: number;
   publishedAt?: Date;
   createdBy: Types.ObjectId;
+  scheduledPublishAt?: Date;
+  scheduledUnpublishAt?: Date;
+  archivedAt?: Date;
 }
 
 /**
@@ -50,5 +74,8 @@ export function workflowFields<S extends readonly [string, ...string[]]>(statusV
     version: { type: Number, required: true, default: 0 },
     publishedAt: { type: Date },
     createdBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    scheduledPublishAt: { type: Date },
+    scheduledUnpublishAt: { type: Date },
+    archivedAt: { type: Date },
   };
 }
