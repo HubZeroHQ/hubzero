@@ -46,6 +46,14 @@ export async function GET(_request: Request, { params }: RouteParams) {
 
   const data = await getStorageAdapter().read(filename);
   if (!data) {
+    // Distinct from the malformed-key 404s above: the key is well-formed and
+    // presumably still referenced by a `Media` document, but the storage
+    // adapter has no bytes for it — local disk storage isn't shared across
+    // environments or deploys (`storage/local-adapter.ts`), so a `Media` row
+    // written elsewhere (another machine, a wiped container) reliably 404s
+    // here. Logged so this reads as "expected given the storage model," not
+    // an unexplained one-off — see `ARCHITECTURE` notes on the local adapter.
+    console.warn(`[media route] No file for key "${filename}" — Media record may be stale.`);
     return NextResponse.json({ error: "Not found." }, { status: 404 });
   }
 

@@ -1,6 +1,6 @@
 import { ArrowUpRight } from "lucide-react";
-import Image from "next/image";
 
+import { MediaImage } from "@/components/marketing/media-image";
 import { Reveal } from "@/components/marketing/reveal";
 import { Container } from "@/components/ui/container";
 import { Link } from "@/components/ui/link";
@@ -60,7 +60,7 @@ export async function CaseStudy() {
                 viewport, per the anchoring rule in ARCHITECTURE/16 §10) so
                 the offset holds steady at every width. */}
             <div className="ml-auto w-full max-w-5xl">
-              <Image
+              <MediaImage
                 src={cover.url}
                 alt={cover.alt}
                 width={cover.width ?? 2557}

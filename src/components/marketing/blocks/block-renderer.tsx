@@ -1,9 +1,9 @@
 import { AlertTriangle, ArrowUpRight, CheckCircle2, Info, Pin } from "lucide-react";
-import Image from "next/image";
 import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { Container } from "@/components/ui/container";
+import { MediaImage } from "@/components/marketing/media-image";
 import { RichText } from "@/components/marketing/rich-text";
 import type { ResolvedImage } from "@/lib/cms/public-content";
 import type { Block, CalloutTone, ImageWidth, SimpleBlock } from "@/lib/cms/blocks/types";
@@ -168,7 +168,7 @@ export function BlockRenderer({ block, media, bare }: BlockRendererProps) {
       return (
         <Wrap size={bare ? "prose" : containerSizeForWidth[block.data.width]} bare={bare}>
           <figure className={cn("w-full", block.data.width !== "full" && alignClass)}>
-            <Image
+            <MediaImage
               src={resolved.url}
               alt={resolved.alt}
               width={resolved.width ?? 1600}
@@ -200,7 +200,7 @@ export function BlockRenderer({ block, media, bare }: BlockRendererProps) {
           <div className={cn("grid grid-cols-1 gap-4", gridColsClass)}>
             {images.map((image, index) => (
               <div key={`${image.url}-${index}`} className="overflow-hidden rounded-lg">
-                <Image
+                <MediaImage
                   src={image.url}
                   alt={image.alt}
                   width={image.width ?? 1200}
