@@ -40,6 +40,16 @@ export default async function SiteSettingsPage() {
         socialsTwitter: doc.socials?.twitter ?? undefined,
         socialsInstagram: doc.socials?.instagram ?? undefined,
         footerText: doc.footerText ?? undefined,
+        // `serializeDocument` (`getSiteSettings`) already turned every
+        // nested `ObjectId` into a plain string at runtime — `ClientDocument`
+        // doesn't recurse its type-level remapping into a subdocument array,
+        // though, so `item.id` still types as `Types.ObjectId` here; `String()`
+        // aligns the type with `HomepageItem.id: string` without doing any
+        // real runtime conversion.
+        homepageItems: (doc.homepageItems ?? []).map((item) => ({
+          ...item,
+          id: String(item.id),
+        })),
         seoDefaultTitle: doc.seo?.defaultTitle ?? siteConfig.title,
         seoDefaultDescription: doc.seo?.defaultDescription ?? siteConfig.description,
         ogImage: doc.seo?.ogImage ? String(doc.seo.ogImage) : undefined,

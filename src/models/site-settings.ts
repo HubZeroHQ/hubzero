@@ -1,5 +1,6 @@
 import { Schema, type InferSchemaType, type Types } from "mongoose";
 
+import { HOMEPAGE_RESOURCES } from "@/lib/cms/homepage-resources";
 import { defineModel } from "@/models/shared/define-model";
 
 /**
@@ -34,27 +35,45 @@ const siteSettingsSchema = new Schema(
     },
     footerText: { type: String, trim: true, maxlength: 500 },
     /**
-     * @deprecated Superseded by `featuredCaseStudyIds` below — kept in the
-     * schema (never `$unset` en masse) only so a document saved before this
-     * field existed still reads back correctly; `getFeaturedCaseStudy()`
-     * falls back to it when `featuredCaseStudyIds` is empty.
-     * `actions/studio/site-settings.ts` clears it the next time this
-     * singleton is saved (a lazy, one-document "migration on next write" —
-     * no script needed for a document there's only ever one of).
+     * @deprecated Superseded by `homepageItems` below — kept in the schema
+     * (never `$unset` en masse) only so a document saved before this field
+     * existed still reads back correctly; `getHomepageContent()`
+     * (`lib/cms/public-content.ts`) falls back to these when `homepageItems`
+     * is empty. `actions/studio/site-settings.ts` clears both the next time
+     * this singleton is saved (a lazy, one-document "migration on next
+     * write" — no script needed for a document there's only ever one of).
      */
     featuredCaseStudyId: { type: Schema.Types.ObjectId, ref: "CaseStudy" },
-    /**
-     * The homepage feature system (`ARCHITECTURE/20_CONTENT_BLOCKS.md` §6):
-     * an explicit, founder-editable, ordered pick of which Case Studies the
-     * homepage may show — an array so the data model doesn't have to change
-     * again the day the homepage grows a second featured slot, even though
-     * today's design (`getFeaturedCaseStudy()`) only ever reads the first
-     * valid, published entry. Optional/empty is fine: the homepage falls
-     * back to the most recently published `featured: true` Case Study, then
-     * to the most recently published Case Study of any kind, so it's never
-     * left with nothing to show just because no one has picked one yet.
-     */
+    /** @deprecated Superseded by `homepageItems` below — see that field's comment. */
     featuredCaseStudyIds: { type: [Schema.Types.ObjectId], ref: "CaseStudy", default: [] },
+    /**
+     * The homepage content configuration (`ARCHITECTURE/20_CONTENT_BLOCKS.md`
+     * §6): an explicit, founder-editable, ordered, cross-collection list of
+     * featured items — any of the five homepage-featurable collections
+     * (`lib/cms/homepage-resources.ts`), not only Case Studies. Array order
+     * is display order; `isHero` marks which single item (if any) gets the
+     * homepage's large hero treatment (`getHomepageContent()`). No `ref` here
+     * (each item can reference a different model, and this codebase resolves
+     * references manually rather than via Mongoose `populate` everywhere
+     * else too) — `id` is validated as a real ObjectId string by
+     * `site-settings-fields.tsx`'s Zod schema, not by the Mongoose schema
+     * itself. Optional/empty is fine: `getHomepageContent()` falls back to
+     * the most recently published `featured: true` Case Study, then the most
+     * recently published Case Study of any kind, so the homepage is never
+     * left with nothing to show just because no one has configured this yet.
+     */
+    homepageItems: {
+      type: [
+        {
+          _id: false,
+          resource: { type: String, required: true, enum: HOMEPAGE_RESOURCES },
+          id: { type: Schema.Types.ObjectId, required: true },
+          visible: { type: Boolean, required: true, default: true },
+          isHero: { type: Boolean, required: true, default: false },
+        },
+      ],
+      default: [],
+    },
     seo: {
       defaultTitle: { type: String, required: true, trim: true, maxlength: 160 },
       defaultDescription: { type: String, required: true, trim: true, maxlength: 300 },

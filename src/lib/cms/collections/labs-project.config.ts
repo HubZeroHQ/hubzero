@@ -32,6 +32,18 @@ export const labsProjectConfig = registerCollection(
       isClientWork: false,
       readingTimeMinutes: computeReadingTimeMinutes(input.content),
     }),
-    revalidatesPaths: (doc) => ["/labs", `/labs/${doc.slug}`],
+    // "/" is included since a Labs Project can be a homepage-featured item
+    // (`publicCard` below).
+    revalidatesPaths: (doc) => ["/", "/labs", `/labs/${doc.slug}`],
+    publicCard: (doc) => ({
+      title: doc.title,
+      summary: doc.summary,
+      href: `/labs/${doc.slug}`,
+      coverImageId: doc.coverImage ? String(doc.coverImage) : undefined,
+      techTags: Array.isArray(doc.techTags) ? doc.techTags : [],
+      featured: doc.featured,
+      readingTimeMinutes: doc.readingTimeMinutes,
+      contributorIds: (doc.contributors ?? []).map(String),
+    }),
   }),
 );

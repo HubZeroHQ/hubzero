@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 
+import "@/lib/cms/collections";
+
 import {
   findOnePublished,
   findPublishedWithCardMeta,
-  getFeaturedCaseStudy,
+  getHomepageContent,
   getPublicTeamMembers,
   getTeamMemberContributions,
 } from "@/lib/cms/public-content";
@@ -114,24 +116,23 @@ describe("withCardFieldDefaults / withArrayDefault — the fix", () => {
   });
 });
 
-describe("getFeaturedCaseStudy — homepage read path", () => {
-  it("returns a normalized document even when the only published Case Study is a legacy one", async () => {
+describe("getHomepageContent — homepage read path", () => {
+  it("returns a normalized hero even when the only published Case Study is a legacy one (legacy fallback)", async () => {
     await insertLegacyCaseStudy({ featured: true });
 
-    const doc = await getFeaturedCaseStudy();
+    const { hero } = await getHomepageContent();
 
-    expect(doc).not.toBeNull();
-    expect(doc?.content).toEqual([]);
-    expect(doc?.techTags).toEqual([]);
-    expect(() => doc?.content.map((b) => b)).not.toThrow();
+    expect(hero).not.toBeNull();
+    expect(hero?.techTags).toEqual([]);
   });
 
-  it("returns null gracefully when no Case Study is published yet — no hardcoded fallback", async () => {
-    const doc = await getFeaturedCaseStudy();
-    expect(doc).toBeNull();
+  it("returns an empty homepage gracefully when nothing is published yet — no hardcoded fallback", async () => {
+    const { hero, items } = await getHomepageContent();
+    expect(hero).toBeNull();
+    expect(items).toEqual([]);
   });
 
-  it("prefers the first still-published entry in SiteSettings.featuredCaseStudyIds over featured:true/most-recent", async () => {
+  it("resolves the configured hero item generically, regardless of featured:true/most-recent on other documents", async () => {
     const user = await User.create({
       email: "settings-author@example.com",
       name: "Settings Author",
@@ -170,14 +171,74 @@ describe("getFeaturedCaseStudy — homepage read path", () => {
       singletonKey: "default",
       companyName: "Test Co",
       seo: { defaultTitle: "Test", defaultDescription: "Test" },
-      featuredCaseStudyIds: [picked._id],
+      homepageItems: [{ resource: "caseStudy", id: picked._id, visible: true, isHero: true }],
     });
 
-    const doc = await getFeaturedCaseStudy();
-    expect(doc?.slug).toBe("explicitly-picked");
+    const { hero, items } = await getHomepageContent();
+    expect(hero?.title).toBe("Explicitly Picked");
+    expect(items).toEqual([]);
   });
 
-  it("falls back to the deprecated singular featuredCaseStudyId when featuredCaseStudyIds is empty", async () => {
+  it("resolves a non-hero visible item into `items`, and skips an invisible one", async () => {
+    const user = await User.create({
+      email: "grid-author@example.com",
+      name: "Grid Author",
+      passwordHash: "unused-in-tests",
+      role: "admin",
+      sessionVersion: 0,
+    });
+
+    const hero = await CaseStudy.create({
+      slug: "hero-pick",
+      client: "Hero Pick",
+      industry: "Testing",
+      practiceArea: "software",
+      summary: "The hero.",
+      content: [{ id: "b1", type: "markdown", data: { markdown: "Body." } }],
+      status: "published",
+      createdBy: user._id,
+    });
+
+    const gridItem = await CaseStudy.create({
+      slug: "grid-pick",
+      client: "Grid Pick",
+      industry: "Testing",
+      practiceArea: "software",
+      summary: "In the featured grid.",
+      content: [{ id: "b1", type: "markdown", data: { markdown: "Body." } }],
+      status: "published",
+      createdBy: user._id,
+    });
+
+    const hiddenItem = await CaseStudy.create({
+      slug: "hidden-pick",
+      client: "Hidden Pick",
+      industry: "Testing",
+      practiceArea: "software",
+      summary: "Configured but not visible.",
+      content: [{ id: "b1", type: "markdown", data: { markdown: "Body." } }],
+      status: "published",
+      createdBy: user._id,
+    });
+
+    await SiteSettings.create({
+      singletonKey: "default",
+      companyName: "Test Co",
+      seo: { defaultTitle: "Test", defaultDescription: "Test" },
+      homepageItems: [
+        { resource: "caseStudy", id: hero._id, visible: true, isHero: true },
+        { resource: "caseStudy", id: gridItem._id, visible: true, isHero: false },
+        { resource: "caseStudy", id: hiddenItem._id, visible: false, isHero: false },
+      ],
+    });
+
+    const result = await getHomepageContent();
+    expect(result.hero?.title).toBe("Hero Pick");
+    expect(result.items).toHaveLength(1);
+    expect(result.items[0]?.title).toBe("Grid Pick");
+  });
+
+  it("falls back to the deprecated featuredCaseStudyId when homepageItems is empty", async () => {
     const user = await User.create({
       email: "legacy-settings-author@example.com",
       name: "Legacy Settings Author",
@@ -199,7 +260,7 @@ describe("getFeaturedCaseStudy — homepage read path", () => {
     });
 
     // Bypasses Mongoose (no schema defaults) — a settings document saved
-    // before `featuredCaseStudyIds` existed, still carrying the old field.
+    // before `homepageItems` existed, still carrying the old singular field.
     await SiteSettings.collection.insertOne({
       singletonKey: "default",
       companyName: "Test Co",
@@ -207,8 +268,8 @@ describe("getFeaturedCaseStudy — homepage read path", () => {
       featuredCaseStudyId: picked._id,
     });
 
-    const doc = await getFeaturedCaseStudy();
-    expect(doc?.slug).toBe("legacy-singular-pick");
+    const { hero } = await getHomepageContent();
+    expect(hero?.title).toBe("Legacy Singular Pick");
   });
 });
 

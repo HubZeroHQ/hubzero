@@ -5,6 +5,10 @@ import { Select } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { BlockEditor } from "@/components/admin/blocks/block-editor";
+import {
+  HomepageItemsEditor,
+  type HomepageItem,
+} from "@/components/admin/form/homepage-items-editor";
 import { ReferencePicker } from "@/components/admin/form/reference-picker";
 import { ReferencePickerList } from "@/components/admin/form/reference-picker-list";
 import { TagsInput } from "@/components/admin/form/tags-input";
@@ -207,6 +211,18 @@ export function CmsField<TInput extends Record<string, unknown>>({
           required={field.required}
           error={error}
           value={Array.isArray(value) ? (value as Block[]) : []}
+          onChange={onChange}
+        />
+      );
+
+    case "homepageItems":
+      return (
+        <HomepageItemsEditor
+          name={field.name}
+          label={field.label}
+          hint={field.description}
+          error={error}
+          value={Array.isArray(value) ? (value as HomepageItem[]) : []}
           onChange={onChange}
         />
       );

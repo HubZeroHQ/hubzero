@@ -128,7 +128,17 @@ export type FieldConfig<TInput = Record<string, unknown>> =
   | (BaseFieldConfig<TInput> & { type: "reference"; resource: Resource; labelField: string })
   | (BaseFieldConfig<TInput> & { type: "referenceArray"; resource: Resource; labelField: string })
   | (BaseFieldConfig<TInput> & { type: "status" })
-  | (BaseFieldConfig<TInput> & { type: "blocks" });
+  | (BaseFieldConfig<TInput> & { type: "blocks" })
+  /**
+   * `SiteSettings.homepage`'s control (`ARCHITECTURE/20_CONTENT_BLOCKS.md`
+   * §6) — an ordered, cross-collection list of `{resource, id, visible,
+   * isHero}` (`components/admin/form/homepage-items-editor.tsx`'s
+   * `HomepageItem`). Unlike `reference`/`referenceArray`, one item may point
+   * at any of the five homepage-featurable collections
+   * (`lib/cms/homepage-resources.ts`), not one fixed `resource` — so this
+   * doesn't declare a `resource` the way those do.
+   */
+  | (BaseFieldConfig<TInput> & { type: "homepageItems" });
 
 /** One column in a collection's `DataTable` — `ARCHITECTURE/19_CMS_FOUNDATION.md` §7. */
 export interface TableColumn<T> {

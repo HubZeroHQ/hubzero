@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
 
-import { CaseStudy } from "@/components/marketing/case-study";
 import { CtaClose } from "@/components/marketing/cta-close";
 import { HeroSection } from "@/components/marketing/hero-section";
+import { HomepageFeaturedGrid } from "@/components/marketing/homepage-featured-grid";
+import { HomepageHero } from "@/components/marketing/homepage-hero";
 import { HowWeWork } from "@/components/marketing/how-we-work";
 import { WhatWeDo } from "@/components/marketing/what-we-do";
 import { JsonLd } from "@/components/seo/json-ld";
 import { brandAssets } from "@/config/brand";
 import { siteConfig } from "@/config/site";
+import { getHomepageContent } from "@/lib/cms/public-content";
 import { pageMetadata } from "@/lib/seo";
 
 // `siteConfig.title` is already `"HubZero — [positioning line]"`
@@ -21,7 +23,9 @@ export const metadata: Metadata = pageMetadata({
   path: "/",
 });
 
-export default function HomePage() {
+export default async function HomePage() {
+  const { hero, items } = await getHomepageContent();
+
   return (
     <>
       <JsonLd
@@ -36,7 +40,8 @@ export default function HomePage() {
       />
       <HeroSection />
       <WhatWeDo />
-      <CaseStudy />
+      {hero && <HomepageHero item={hero} />}
+      <HomepageFeaturedGrid items={items} />
       <HowWeWork />
       <CtaClose />
     </>

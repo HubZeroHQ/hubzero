@@ -34,7 +34,19 @@ export const blueprintConfig = registerCollection(
         ? null
         : 'This Blueprint can only be published while its demo status is "Live".',
     // `/blueprints` and `/blueprints/[slug]` are real public pages as of this
-    // change — same ISR-on-publish wiring as CaseStudy/LabsProject/Note.
-    revalidatesPaths: (doc) => ["/blueprints", `/blueprints/${doc.slug}`],
+    // change — same ISR-on-publish wiring as CaseStudy/LabsProject/Note. "/"
+    // is included since a Blueprint can be a homepage-featured item
+    // (`publicCard` below).
+    revalidatesPaths: (doc) => ["/", "/blueprints", `/blueprints/${doc.slug}`],
+    publicCard: (doc) => ({
+      title: doc.name,
+      summary: doc.summary,
+      href: `/blueprints/${doc.slug}`,
+      coverImageId: doc.coverImage ? String(doc.coverImage) : undefined,
+      techTags: Array.isArray(doc.techStack) ? doc.techStack : [],
+      featured: doc.featured,
+      readingTimeMinutes: doc.readingTimeMinutes,
+      contributorIds: (doc.contributors ?? []).map(String),
+    }),
   }),
 );

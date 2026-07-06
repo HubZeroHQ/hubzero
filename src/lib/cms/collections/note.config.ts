@@ -27,6 +27,21 @@ export const noteConfig = registerCollection(
     // "Computed on save, not author-entered" (`ARCHITECTURE/11_DATABASE_ARCHITECTURE.md`
     // §1) — the sanctioned `computedFields` hook, not a bespoke code path.
     computedFields: (input) => ({ readingTimeMinutes: computeReadingTimeMinutes(input.content) }),
-    revalidatesPaths: (doc) => ["/notes", `/notes/${doc.slug}`],
+    // "/" is included since a Note can be a homepage-featured item
+    // (`publicCard` below).
+    revalidatesPaths: (doc) => ["/", "/notes", `/notes/${doc.slug}`],
+    publicCard: (doc) => ({
+      title: doc.title,
+      summary: doc.summary,
+      href: `/notes/${doc.slug}`,
+      coverImageId: doc.coverImage ? String(doc.coverImage) : undefined,
+      techTags: Array.isArray(doc.tags) ? doc.tags : [],
+      featured: doc.featured,
+      readingTimeMinutes: doc.readingTimeMinutes,
+      // The primary author is included alongside any additional contributors
+      // — a Note's homepage card credits the same people its own detail page
+      // does (`ARCHITECTURE/20_CONTENT_BLOCKS.md` §4), not just `contributors`.
+      contributorIds: [doc.authorId, ...(doc.contributors ?? [])].filter(Boolean).map(String),
+    }),
   }),
 );
