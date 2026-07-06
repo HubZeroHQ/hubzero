@@ -104,11 +104,10 @@ export async function resolveCoverImage(
   const media = await getMediaById(mediaId);
   if (!media) return null;
 
-  const largestVariant = [...media.variants].sort((a, b) => b.width - a.width)[0];
   return {
-    url: largestVariant?.url ?? media.url,
+    url: media.secureUrl,
     alt: media.alt,
-    width: largestVariant?.width ?? media.width,
+    width: media.width,
     height: media.height,
   };
 }
@@ -126,11 +125,10 @@ export async function resolveMediaMap(mediaIds: string[]): Promise<Record<string
   const media = await getMediaByIds(unique);
   const map: Record<string, ResolvedImage> = {};
   for (const item of media) {
-    const largestVariant = [...item.variants].sort((a, b) => b.width - a.width)[0];
     map[item.id] = {
-      url: largestVariant?.url ?? item.url,
+      url: item.secureUrl,
       alt: item.alt,
-      width: largestVariant?.width ?? item.width,
+      width: item.width,
       height: item.height,
     };
   }

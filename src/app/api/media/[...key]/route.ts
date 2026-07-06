@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
 
-import { getStorageAdapter } from "@/lib/cms/storage";
+import { localStorageAdapter } from "@/lib/cms/storage/local-adapter";
 
 /**
- * Streams a media file from the storage adapter (`ARCHITECTURE/19_CMS_FOUNDATION.md`
- * §8) — files live outside `public/`, so this Route Handler is the only path
- * that ever serves them, which is what lets access be gated or the storage
- * moved behind a CDN later without changing the URL scheme
- * `Media.url`/`Media.variants[].url` already reference.
+ * Streams a media file from local disk — the fallback-only serving path used
+ * when Cloudinary isn't configured (`lib/cms/storage/index.ts`). Cloudinary-
+ * backed `Media` documents are served directly from `secureUrl` (Cloudinary's
+ * own CDN) and never touch this route; this imports `localStorageAdapter`
+ * directly rather than `getStorageAdapter()` because this route is inherently
+ * local-storage infrastructure, not a generic media-serving path.
  *
  * Content-hash-derived filenames (`lib/cms/media.ts`) never change once
  * written, so a long, immutable cache lifetime is correct — a re-upload of
@@ -44,7 +45,7 @@ export async function GET(_request: Request, { params }: RouteParams) {
     return NextResponse.json({ error: "Not found." }, { status: 404 });
   }
 
-  const data = await getStorageAdapter().read(filename);
+  const data = await localStorageAdapter.read(filename);
   if (!data) {
     // Distinct from the malformed-key 404s above: the key is well-formed and
     // presumably still referenced by a `Media` document, but the storage

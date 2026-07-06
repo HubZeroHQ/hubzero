@@ -9,34 +9,35 @@ import { defineModel } from "@/models/shared/define-model";
  * image" is a real query (`lib/cms/media.ts`'s `getMediaUsage`), not a manual
  * audit.
  *
+ * Stores only remote-storage metadata (`publicId`/`assetId`/`secureUrl`/
+ * `width`/`height`/`bytes`/`format`/`folder`/`resourceType`) — no bytes, no
+ * generated variants. Cloudinary (or the local fallback adapter, `provider`)
+ * is the source of truth for the actual file; this document is a pointer plus
+ * editorial metadata (`alt`/`caption`) plus dedup bookkeeping (`hash`).
+ *
  * `hash` (sha256 of the file's bytes, truncated) is what makes re-uploading
  * the identical file a no-op (`lib/cms/media.ts`'s `uploadMedia` looks up by
- * hash before ever writing a new file) — it is intentionally a separate,
- * indexed field from `key` (the on-disk/storage-adapter filename derived
- * from that same hash) so the lookup doesn't depend on reconstructing the
- * filename convention.
+ * hash before ever uploading again) — a separate, indexed field from
+ * `publicId` (which is *derived* from that same hash, but the lookup
+ * shouldn't depend on reconstructing that convention).
  */
-const mediaVariantSchema = new Schema(
-  {
-    width: { type: Number, required: true },
-    url: { type: String, required: true, trim: true },
-  },
-  { _id: false },
-);
-
 const mediaSchema = new Schema(
   {
-    key: { type: String, required: true, unique: true, trim: true },
-    url: { type: String, required: true, trim: true },
+    provider: { type: String, enum: ["cloudinary", "local"], required: true },
+    publicId: { type: String, required: true, unique: true, trim: true },
+    assetId: { type: String, trim: true },
+    secureUrl: { type: String, required: true, trim: true },
     hash: { type: String, required: true, unique: true, trim: true },
     originalName: { type: String, required: true, trim: true, maxlength: 255 },
     mimeType: { type: String, required: true, trim: true },
-    size: { type: Number, required: true },
+    bytes: { type: Number, required: true },
+    format: { type: String, required: true, trim: true },
+    resourceType: { type: String, enum: ["image", "video", "raw"], required: true },
+    folder: { type: String, trim: true, maxlength: 200 },
     width: { type: Number },
     height: { type: Number },
     alt: { type: String, required: true, trim: true, maxlength: 300 },
     caption: { type: String, trim: true, maxlength: 500 },
-    variants: { type: [mediaVariantSchema], default: [] },
     uploadedBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
     // Soft-delete only (`ARCHITECTURE/19_CMS_FOUNDATION.md` §8) — the file is
     // retained and the record hidden from the picker; a scheduled hard-delete
@@ -48,6 +49,7 @@ const mediaSchema = new Schema(
 
 mediaSchema.index({ createdAt: -1 });
 mediaSchema.index({ deletedAt: 1 });
+mediaSchema.index({ folder: 1 });
 
 export type MediaDocument = InferSchemaType<typeof mediaSchema> & { _id: Types.ObjectId };
 

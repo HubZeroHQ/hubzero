@@ -10,6 +10,8 @@ import type { ClientMedia } from "@/lib/cms/media";
 
 export interface MediaUploadFormProps {
   onUploaded: (media: ClientMedia) => void;
+  /** Pre-fills the folder field (e.g. the library page's currently-active folder filter) — still editable, never silently overridden. */
+  defaultFolder?: string;
 }
 
 const initialState: MediaUploadActionState = { status: "idle" };
@@ -21,7 +23,7 @@ const initialState: MediaUploadActionState = { status: "idle" };
  * caller (which selects it) rather than requiring a second "now find it in
  * the grid" step.
  */
-export function MediaUploadForm({ onUploaded }: MediaUploadFormProps) {
+export function MediaUploadForm({ onUploaded, defaultFolder }: MediaUploadFormProps) {
   const [state, formAction, isPending] = useActionState(uploadMediaAction, initialState);
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -52,6 +54,12 @@ export function MediaUploadForm({ onUploaded }: MediaUploadFormProps) {
         error={state.fieldErrors?.alt}
       />
       <Input name="caption" label="Caption" hint="Optional." />
+      <Input
+        name="folder"
+        label="Folder"
+        hint="Optional — groups this file in the Media Library."
+        defaultValue={defaultFolder}
+      />
 
       {state.formError && <Alert variant="danger">{state.formError}</Alert>}
 

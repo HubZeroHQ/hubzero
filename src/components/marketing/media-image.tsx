@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useState } from "react";
 import type { ComponentProps } from "react";
 
+import { cloudinaryImageLoader, isCloudinaryUrl } from "@/lib/cms/media-url";
 import { cn } from "@/lib/utils";
 
 export type MediaImageProps = ComponentProps<typeof Image>;
@@ -37,9 +38,12 @@ export function MediaImage({ className, style, alt, width, height, ...props }: M
     );
   }
 
+  const cloudinarySource = typeof props.src === "string" && isCloudinaryUrl(props.src);
+
   return (
     <Image
       {...props}
+      loader={cloudinarySource ? cloudinaryImageLoader : undefined}
       width={width}
       height={height}
       alt={alt}
