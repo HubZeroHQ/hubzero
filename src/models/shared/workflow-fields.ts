@@ -16,9 +16,23 @@ import { Schema, type Types } from "mongoose";
  * existing code path.
  */
 export const draftPublishStatusValues = ["draft", "published", "scheduled", "archived"] as const;
+/**
+ * `"changes_requested"`/`"approved"` (Phase C — the review system) are
+ * additive here too, `"draft-review-publish"`-only: `draft → review →
+ * changes_requested → approved → published`, with `review → draft` (reject)
+ * and `changes_requested → review` (resubmit) as the two ways back into the
+ * pipeline (`lib/cms/crud-actions.ts`'s `requestChanges`/`reject`/`approve`/
+ * `submitForReview`). `publish()` itself still has no status precondition
+ * (`ARCHITECTURE/19_CMS_FOUNDATION.md`'s existing, deliberate laxity — an
+ * Admin/Head Admin's `publish` grant already lets them bypass review
+ * entirely, unchanged by this addition), so `"approved"` is the *expected*
+ * pre-publish state, not an *enforced* one.
+ */
 export const draftReviewPublishStatusValues = [
   "draft",
   "review",
+  "changes_requested",
+  "approved",
   "published",
   "scheduled",
   "archived",

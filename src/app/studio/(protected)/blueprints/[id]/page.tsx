@@ -2,22 +2,28 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 
 import {
+  approve,
   archive,
   cancelSchedule,
   getOne,
   publish,
+  reject,
   remove,
+  requestChanges,
   restoreArchive,
   schedulePublish,
   scheduleUnpublish,
   submitForReview,
 } from "@/actions/studio/blueprints";
 import { EditBlueprintForm } from "@/app/studio/(protected)/blueprints/[id]/edit-blueprint-form";
+import { CommentList } from "@/components/admin/comment-list";
 import { PageHeader } from "@/components/admin/page-header";
+import { ReviewActions } from "@/components/admin/review-actions";
 import { WorkflowActions } from "@/components/admin/workflow-actions";
 import { WorkflowStatusBadge } from "@/components/admin/workflow-status-badge";
-import { Link, Text } from "@/components/ui";
+import { Heading, Link, Text } from "@/components/ui";
 import type { BlueprintInput } from "@/lib/cms/collections/blueprint-fields";
+import { listComments } from "@/lib/cms/comments";
 import { can } from "@/lib/cms/permissions";
 import { requireSessionUser } from "@/lib/cms/session";
 
@@ -42,6 +48,10 @@ export default async function EditBlueprintPage({ params }: EditBlueprintPagePro
   const canEdit = can(user, "edit", "blueprint", target);
   const canPublish = can(user, "publish", "blueprint", target);
   const canDelete = can(user, "delete", "blueprint", target);
+  const canReview = can(user, "approve", "blueprint", target);
+  const reviewComments = (await listComments("blueprint", id)).filter(
+    (comment) => comment.type === "review",
+  );
 
   const initialValues: Partial<BlueprintInput> = {
     blueprintId: doc.blueprintId,
@@ -97,6 +107,27 @@ export default async function EditBlueprintPage({ params }: EditBlueprintPagePro
           restoreArchive={restoreArchive}
         />
       </div>
+
+      <div className="mb-6">
+        <ReviewActions
+          id={id}
+          status={doc.status}
+          canReview={canReview}
+          approve={approve}
+          requestChanges={requestChanges}
+          reject={reject}
+          itemLabel="Blueprint"
+        />
+      </div>
+
+      {reviewComments.length > 0 && (
+        <div className="mb-6">
+          <Heading level={3} className="mb-3">
+            Review comments
+          </Heading>
+          <CommentList comments={reviewComments} emptyMessage="No review comments yet." />
+        </div>
+      )}
 
       {canEdit ? (
         <EditBlueprintForm id={id} initialValues={initialValues} isDraft={doc.status === "draft"} />

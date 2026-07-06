@@ -2,22 +2,28 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 
 import {
+  approve,
   archive,
   cancelSchedule,
   getOne,
   publish,
+  reject,
   remove,
+  requestChanges,
   restoreArchive,
   schedulePublish,
   scheduleUnpublish,
   submitForReview,
 } from "@/actions/studio/notes";
 import { EditNoteForm } from "@/app/studio/(protected)/notes/[id]/edit-note-form";
+import { CommentList } from "@/components/admin/comment-list";
 import { PageHeader } from "@/components/admin/page-header";
+import { ReviewActions } from "@/components/admin/review-actions";
 import { WorkflowActions } from "@/components/admin/workflow-actions";
 import { WorkflowStatusBadge } from "@/components/admin/workflow-status-badge";
-import { Link, Text } from "@/components/ui";
+import { Heading, Link, Text } from "@/components/ui";
 import type { NoteInput } from "@/lib/cms/collections/note-fields";
+import { listComments } from "@/lib/cms/comments";
 import { can } from "@/lib/cms/permissions";
 import { requireSessionUser } from "@/lib/cms/session";
 
@@ -42,6 +48,10 @@ export default async function EditNotePage({ params }: EditNotePageProps) {
   const canEdit = can(user, "edit", "note", target);
   const canPublish = can(user, "publish", "note", target);
   const canDelete = can(user, "delete", "note", target);
+  const canReview = can(user, "approve", "note", target);
+  const reviewComments = (await listComments("note", id)).filter(
+    (comment) => comment.type === "review",
+  );
 
   const initialValues: Partial<NoteInput> = {
     slug: doc.slug,
@@ -95,6 +105,27 @@ export default async function EditNotePage({ params }: EditNotePageProps) {
           restoreArchive={restoreArchive}
         />
       </div>
+
+      <div className="mb-6">
+        <ReviewActions
+          id={id}
+          status={doc.status}
+          canReview={canReview}
+          approve={approve}
+          requestChanges={requestChanges}
+          reject={reject}
+          itemLabel="note"
+        />
+      </div>
+
+      {reviewComments.length > 0 && (
+        <div className="mb-6">
+          <Heading level={3} className="mb-3">
+            Review comments
+          </Heading>
+          <CommentList comments={reviewComments} emptyMessage="No review comments yet." />
+        </div>
+      )}
 
       {canEdit ? (
         <EditNoteForm id={id} initialValues={initialValues} isDraft={doc.status === "draft"} />

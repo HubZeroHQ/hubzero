@@ -5,6 +5,7 @@ import type { ZodError } from "zod";
 import type { AnyCollectionConfig, CollectionConfig } from "@/lib/cms/collection-config";
 import { connectToDatabase } from "@/lib/db";
 import { checkHtmlBlockPublishGuard } from "@/lib/cms/blocks/guard";
+import { createComment } from "@/lib/cms/comments";
 import { requirePermission } from "@/lib/cms/permissions";
 import { serializeDocument } from "@/lib/cms/serialize";
 import { getVersionEntry, omitManagedFields, snapshotVersion } from "@/lib/cms/version-history";
@@ -522,7 +523,11 @@ export function createCrudActions<T extends CrudDocument, TInput extends Record<
 
     await requirePermission("edit", config.resource, ownerTarget(doc, config));
 
-    if (doc.status !== "draft") {
+    // A document can enter review from a fresh draft, or be resubmitted
+    // after a reviewer's `requestChanges()` sent it to `"changes_requested"`
+    // (Phase C) — both are "the author thinks this is ready," so both route
+    // through the identical review-entry transition.
+    if (doc.status !== "draft" && doc.status !== "changes_requested") {
       return {
         status: "error",
         message: `Only a draft can be submitted for review (current status: "${doc.status}").`,
@@ -531,6 +536,99 @@ export function createCrudActions<T extends CrudDocument, TInput extends Record<
 
     patchWorkflowFields(doc, { status: "review" });
     await doc.save();
+    return { status: "success" };
+  }
+
+  /**
+   * Approve, request changes, or reject a document currently in `"review"`
+   * (Phase C) — three sanctioned reviewer decisions, all gated on the
+   * `"approve"` permission action (already declared in `permissions.ts` for
+   * every `draft-review-publish` collection, anticipated but unwired until
+   * now). None of these three ever snapshots to `VersionHistory` — that
+   * still only happens on an actual `publish()`.
+   */
+  async function approve(id: string): Promise<SimpleResult> {
+    if (config.workflow !== "draft-review-publish") {
+      throw new Error(`${config.resource} has no review step (workflow: "${config.workflow}").`);
+    }
+    await connectToDatabase();
+    if (!Types.ObjectId.isValid(id)) return { status: "error", message: "Not found." };
+
+    const doc = await config.model.findById(id);
+    if (!doc) return { status: "error", message: "Not found." };
+
+    await requirePermission("approve", config.resource, ownerTarget(doc, config));
+
+    if (doc.status !== "review") {
+      return { status: "error", message: `Only an item in review can be approved.` };
+    }
+
+    patchWorkflowFields(doc, { status: "approved" });
+    await doc.save();
+    return { status: "success" };
+  }
+
+  /** Sends a document in review back to its author for more work, with a required comment explaining what's needed — the comment is what makes this actionable rather than a silent status flip. */
+  async function requestChanges(id: string, message: string): Promise<SimpleResult> {
+    if (config.workflow !== "draft-review-publish") {
+      throw new Error(`${config.resource} has no review step (workflow: "${config.workflow}").`);
+    }
+    const trimmed = message.trim();
+    if (!trimmed) return { status: "error", message: "Explain what needs to change." };
+
+    await connectToDatabase();
+    if (!Types.ObjectId.isValid(id)) return { status: "error", message: "Not found." };
+
+    const doc = await config.model.findById(id);
+    if (!doc) return { status: "error", message: "Not found." };
+
+    const reviewer = await requirePermission("approve", config.resource, ownerTarget(doc, config));
+
+    if (doc.status !== "review") {
+      return { status: "error", message: `Only an item in review can have changes requested.` };
+    }
+
+    patchWorkflowFields(doc, { status: "changes_requested" });
+    await doc.save();
+    await createComment({
+      resource: config.resource,
+      documentId: id,
+      authorId: reviewer.id,
+      body: trimmed,
+      type: "review",
+    });
+    return { status: "success" };
+  }
+
+  /** Bounces a document in review straight back to `"draft"` — a harder rejection than `requestChanges`, for content that needs to be substantially reworked rather than lightly revised. Also requires a comment. */
+  async function reject(id: string, message: string): Promise<SimpleResult> {
+    if (config.workflow !== "draft-review-publish") {
+      throw new Error(`${config.resource} has no review step (workflow: "${config.workflow}").`);
+    }
+    const trimmed = message.trim();
+    if (!trimmed) return { status: "error", message: "Explain why this was rejected." };
+
+    await connectToDatabase();
+    if (!Types.ObjectId.isValid(id)) return { status: "error", message: "Not found." };
+
+    const doc = await config.model.findById(id);
+    if (!doc) return { status: "error", message: "Not found." };
+
+    const reviewer = await requirePermission("approve", config.resource, ownerTarget(doc, config));
+
+    if (doc.status !== "review") {
+      return { status: "error", message: `Only an item in review can be rejected.` };
+    }
+
+    patchWorkflowFields(doc, { status: "draft" });
+    await doc.save();
+    await createComment({
+      resource: config.resource,
+      documentId: id,
+      authorId: reviewer.id,
+      body: trimmed,
+      type: "review",
+    });
     return { status: "success" };
   }
 
@@ -831,5 +929,8 @@ export function createCrudActions<T extends CrudDocument, TInput extends Record<
     cancelSchedule,
     archive,
     restoreArchive,
+    approve,
+    requestChanges,
+    reject,
   };
 }

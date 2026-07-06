@@ -20,4 +20,7 @@ export const {
   cancelSchedule,
   archive,
   restoreArchive,
+  approve,
+  requestChanges,
+  reject,
 } = createCrudActions(noteConfig);
