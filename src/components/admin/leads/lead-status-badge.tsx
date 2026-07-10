@@ -1,15 +1,17 @@
 import { Badge } from "@/components/ui/badge";
 
-const toneByStatus: Record<string, "info" | "warning" | "success"> = {
+const toneByStatus: Record<string, "info" | "warning" | "success" | "danger"> = {
   new: "info",
   contacted: "warning",
   closed: "success",
+  archived: "danger",
 };
 
 const labelByStatus: Record<string, string> = {
   new: "New",
   contacted: "Contacted",
   closed: "Closed",
+  archived: "Archived",
 };
 
 export interface LeadStatusBadgeProps {
