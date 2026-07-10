@@ -126,3 +126,60 @@ export function getQuickCreateActions(user: SessionUser): QuickCreateAction[] {
 
   return actions;
 }
+
+/**
+ * The public website's search (Phase G) — reuses this same engine's shape
+ * (`SearchResultGroup`) and regex-match approach as `globalSearch` above,
+ * but is a genuinely different query: published documents only, no
+ * permission check (there's no signed-in user on the public site), and
+ * scoped to `listCollections()`'s `publicRoute` field rather than
+ * `studioBasePath` — the registry-driven signal for "this collection has a
+ * real public page to link a result to." Build is registered but has no
+ * `publicRoute` (no public detail page exists yet, `publicCard`'s own
+ * `href: null` precedent), so it's correctly excluded here rather than
+ * producing a search result with nowhere to go.
+ */
+export async function publicSearch(query: string): Promise<SearchResultGroup[]> {
+  const q = query.trim();
+  if (!q) return [];
+
+  await connectToDatabase();
+
+  const collections = listCollections().filter(
+    (config) => config.publicRoute && config.searchableFields.length > 0,
+  );
+
+  const groups = await Promise.all(
+    collections.map(async (config): Promise<SearchResultGroup | null> => {
+      const filter = {
+        $and: [
+          { status: "published" },
+          {
+            $or: config.searchableFields.map((field) => ({
+              [field]: { $regex: escapeRegExp(q), $options: "i" },
+            })),
+          },
+        ],
+      };
+      const docs = await config.model
+        .find(filter)
+        .limit(RESULTS_PER_GROUP)
+        .lean<Record<string, unknown>[]>();
+      if (docs.length === 0) return null;
+
+      const { prefix, slugField } = config.publicRoute!;
+      return {
+        resource: config.resource,
+        label: config.label,
+        items: docs.map((doc) => ({
+          id: String(doc._id),
+          label: getRecordLabel(config, doc),
+          sublabel: config.label,
+          href: `/${prefix}/${doc[slugField]}`,
+        })),
+      };
+    }),
+  );
+
+  return groups.filter((group): group is SearchResultGroup => group !== null);
+}

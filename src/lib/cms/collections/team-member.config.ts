@@ -24,6 +24,7 @@ export const teamMemberConfig = registerCollection(
     emptyStateMessage: teamMemberEmptyStateMessage,
     studioBasePath: "team",
     quickCreateLabel: "New Team Member",
+    publicRoute: { prefix: "team", slugField: "username" },
     recordLabel: (doc) => doc.name,
     computedFields: computeTeamMemberFields,
     // "Own content" for a profile means whose profile it is, not who created

@@ -62,6 +62,14 @@ export function MobileNav({ items, cta }: MobileNavProps) {
           </div>
 
           <nav aria-label="Mobile" className="flex flex-col gap-1">
+            <Link
+              href="/search"
+              tone="muted"
+              onClick={() => setOpen(false)}
+              className="text-h2 hover:bg-bg rounded-md px-3 py-3 font-serif no-underline hover:no-underline"
+            >
+              Search
+            </Link>
             {items.map((item) => {
               const active = pathname === item.href;
               return (
