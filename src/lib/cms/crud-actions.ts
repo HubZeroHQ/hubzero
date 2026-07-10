@@ -2,10 +2,12 @@ import { revalidatePath } from "next/cache";
 import { Types } from "mongoose";
 import type { ZodError } from "zod";
 
+import { getRecordLabel } from "@/lib/cms/collection-config";
 import type { AnyCollectionConfig, CollectionConfig } from "@/lib/cms/collection-config";
 import { connectToDatabase } from "@/lib/db";
 import { checkHtmlBlockPublishGuard } from "@/lib/cms/blocks/guard";
 import { createComment } from "@/lib/cms/comments";
+import { getUsersWithPermission, notify, notifyMany } from "@/lib/cms/notifications";
 import { requirePermission } from "@/lib/cms/permissions";
 import { serializeDocument } from "@/lib/cms/serialize";
 import { getVersionEntry, omitManagedFields, snapshotVersion } from "@/lib/cms/version-history";
@@ -536,6 +538,16 @@ export function createCrudActions<T extends CrudDocument, TInput extends Record<
 
     patchWorkflowFields(doc, { status: "review" });
     await doc.save();
+
+    const reviewerIds = await getUsersWithPermission("approve", config.resource);
+    await notifyMany(reviewerIds, {
+      event: "review_requested",
+      title: `${getRecordLabel(config as unknown as AnyCollectionConfig, doc.toObject() as unknown as Record<string, unknown>)} was submitted for review`,
+      link: config.studioBasePath ? `/studio/${config.studioBasePath}/${id}` : undefined,
+      sourceCollection: config.resource,
+      sourceDocumentId: id,
+    });
+
     return { status: "success" };
   }
 
@@ -557,7 +569,7 @@ export function createCrudActions<T extends CrudDocument, TInput extends Record<
     const doc = await config.model.findById(id);
     if (!doc) return { status: "error", message: "Not found." };
 
-    await requirePermission("approve", config.resource, ownerTarget(doc, config));
+    const reviewer = await requirePermission("approve", config.resource, ownerTarget(doc, config));
 
     if (doc.status !== "review") {
       return { status: "error", message: `Only an item in review can be approved.` };
@@ -565,6 +577,18 @@ export function createCrudActions<T extends CrudDocument, TInput extends Record<
 
     patchWorkflowFields(doc, { status: "approved" });
     await doc.save();
+
+    const authorId = doc.createdBy?.toString();
+    if (authorId && authorId !== reviewer.id) {
+      await notify({
+        userId: authorId,
+        event: "document_approved",
+        title: `${getRecordLabel(config as unknown as AnyCollectionConfig, doc.toObject() as unknown as Record<string, unknown>)} was approved`,
+        link: config.studioBasePath ? `/studio/${config.studioBasePath}/${id}` : undefined,
+        sourceCollection: config.resource,
+        sourceDocumentId: id,
+      });
+    }
     return { status: "success" };
   }
 
@@ -680,6 +704,18 @@ export function createCrudActions<T extends CrudDocument, TInput extends Record<
     await doc.save();
 
     for (const path of config.revalidatesPaths?.(doc.toObject() as T) ?? []) revalidatePath(path);
+
+    const authorId = doc.createdBy?.toString();
+    if (authorId && authorId !== user.id) {
+      await notify({
+        userId: authorId,
+        event: "publish_completed",
+        title: `${getRecordLabel(config as unknown as AnyCollectionConfig, doc.toObject() as unknown as Record<string, unknown>)} was published`,
+        link: config.studioBasePath ? `/studio/${config.studioBasePath}/${id}` : undefined,
+        sourceCollection: config.resource,
+        sourceDocumentId: id,
+      });
+    }
     return { status: "success" };
   }
 

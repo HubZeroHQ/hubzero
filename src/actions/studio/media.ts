@@ -2,7 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 
+import { notify } from "@/lib/cms/notifications";
 import { requirePermission } from "@/lib/cms/permissions";
+import { Media } from "@/models/media";
 import {
   type BrokenMediaReference,
   type ClientMedia,
@@ -145,9 +147,21 @@ export async function getMediaByIdsAction(ids: string[]): Promise<ClientMedia[]>
 export type DeleteMediaResult = { status: "success" } | { status: "error"; message: string };
 
 export async function deleteMediaAction(id: string): Promise<DeleteMediaResult> {
-  await requirePermission("delete", "media");
+  const actor = await requirePermission("delete", "media");
   try {
+    const existing = await Media.findById(id).select("uploadedBy");
     await deleteMedia(id);
+    const uploaderId = existing?.uploadedBy?.toString();
+    if (uploaderId && uploaderId !== actor.id) {
+      await notify({
+        userId: uploaderId,
+        event: "media_deleted",
+        title: "A file you uploaded was deleted",
+        link: "/studio/media",
+        sourceCollection: "media",
+        sourceDocumentId: id,
+      });
+    }
     return { status: "success" };
   } catch (error) {
     if (error instanceof MediaInUseError) {

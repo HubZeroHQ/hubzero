@@ -4,6 +4,7 @@ import { Types } from "mongoose";
 
 import { leadConfig } from "@/lib/cms/collections/lead.config";
 import { createCrudActions } from "@/lib/cms/crud-actions";
+import { notify } from "@/lib/cms/notifications";
 import { requirePermission } from "@/lib/cms/permissions";
 import { connectToDatabase } from "@/lib/db";
 import { Lead } from "@/models/lead";
@@ -88,6 +89,16 @@ export async function assignLead(id: string, assigneeId: string | null): Promise
 
   try {
     await doc.save();
+    if (assigneeId && assigneeId !== user.id) {
+      await notify({
+        userId: assigneeId,
+        event: "lead_assigned",
+        title: `You were assigned the lead from ${doc.name}`,
+        link: `/studio/leads/${id}`,
+        sourceCollection: "lead",
+        sourceDocumentId: id,
+      });
+    }
     return { status: "success" };
   } catch (error) {
     console.error(`Failed to assign lead ${id}:`, error);
@@ -100,7 +111,8 @@ export async function addLeadNote(id: string, message: string): Promise<SimpleRe
 
   const trimmed = message.trim();
   if (!trimmed) return { status: "error", message: "Write a note before saving." };
-  if (trimmed.length > 2000) return { status: "error", message: "Keep notes under 2,000 characters." };
+  if (trimmed.length > 2000)
+    return { status: "error", message: "Keep notes under 2,000 characters." };
 
   await connectToDatabase();
   if (!Types.ObjectId.isValid(id)) return { status: "error", message: "Not found." };

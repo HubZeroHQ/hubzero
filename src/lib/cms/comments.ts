@@ -1,6 +1,8 @@
 import { Types } from "mongoose";
 
+import { getCollection } from "@/lib/cms/collection-config";
 import { connectToDatabase } from "@/lib/db";
+import { notifyMany } from "@/lib/cms/notifications";
 import { Comment } from "@/models/comment";
 import type { Resource } from "@/types/cms";
 
@@ -42,6 +44,19 @@ export async function createComment(input: CreateCommentInput): Promise<void> {
     parentId: input.parentId ? new Types.ObjectId(input.parentId) : undefined,
     mentions: (input.mentions ?? []).map((id) => new Types.ObjectId(id)),
   });
+
+  const mentions = (input.mentions ?? []).filter((userId) => userId !== input.authorId);
+  if (mentions.length > 0) {
+    const studioBasePath = getCollection(input.resource)?.studioBasePath;
+    await notifyMany(mentions, {
+      event: "comment_mention",
+      title: "You were mentioned in a comment",
+      body: input.body,
+      link: studioBasePath ? `/studio/${studioBasePath}/${input.documentId}` : undefined,
+      sourceCollection: input.resource,
+      sourceDocumentId: input.documentId,
+    });
+  }
 }
 
 /**
