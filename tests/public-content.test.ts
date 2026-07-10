@@ -7,7 +7,7 @@ import {
   findPublishedWithCardMeta,
   getHomepageContent,
   getPublicTeamMembers,
-  getTeamMemberContributions,
+  getTeamMemberProfileData,
 } from "@/lib/cms/public-content";
 import { withArrayDefault, withCardFieldDefaults } from "@/models/shared/card-fields";
 import { Build } from "@/models/build";
@@ -380,6 +380,7 @@ describe("getTeamMemberContributions — the reverse of contributors/authorId", 
       summary: "A case study crediting Jane.",
       content: [{ id: "b1", type: "markdown", data: { markdown: "Body." } }],
       contributors: [memberId],
+      techTags: ["TypeScript", "Go"],
       status: "published",
       publishedAt: new Date("2026-01-01"),
       createdBy: user._id,
@@ -394,6 +395,7 @@ describe("getTeamMemberContributions — the reverse of contributors/authorId", 
       practiceArea: "software",
       content: [{ id: "b1", type: "markdown", data: { markdown: "Body." } }],
       contributors: [memberId],
+      techTags: ["TypeScript", "Rust"],
       launchDate: "2026-01-01",
       status: "published",
       publishedAt: new Date("2026-02-01"),
@@ -408,12 +410,13 @@ describe("getTeamMemberContributions — the reverse of contributors/authorId", 
       content: [{ id: "b1", type: "markdown", data: { markdown: "Body." } }],
       authorId: memberId,
       category: "Engineering",
+      tags: ["Go"],
       status: "published",
       publishedAt: new Date("2026-03-01"),
       createdBy: user._id,
     });
 
-    const contributions = await getTeamMemberContributions(memberId);
+    const { contributions, techStack } = await getTeamMemberProfileData(memberId);
 
     expect(contributions).toHaveLength(3);
     // Sorted most-recent-first.
@@ -427,9 +430,16 @@ describe("getTeamMemberContributions — the reverse of contributors/authorId", 
     expect(build?.href).toBeNull();
     const caseStudy = contributions.find((c) => c.title === "Credited Client");
     expect(caseStudy?.href).toBe("/work/credited-case-study");
+
+    // Deduped and sorted, aggregated across all three collections'
+    // `techTags`/`tags` fields — "Go" appears twice in the source docs but
+    // once here.
+    expect(techStack).toEqual(["Go", "Rust", "TypeScript"]);
   });
 
-  it("returns an empty list for a Team Member with no credited work", async () => {
-    await expect(getTeamMemberContributions("507f1f77bcf86cd799439011")).resolves.toEqual([]);
+  it("returns an empty list and empty tech stack for a Team Member with no credited work", async () => {
+    const result = await getTeamMemberProfileData("507f1f77bcf86cd799439011");
+    expect(result.contributions).toEqual([]);
+    expect(result.techStack).toEqual([]);
   });
 });
