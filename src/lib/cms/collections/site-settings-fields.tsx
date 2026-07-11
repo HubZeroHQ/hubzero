@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { objectIdField, optionalObjectIdField } from "@/lib/cms/collections/shared-validation";
+import { optionalBlocksField } from "@/lib/cms/blocks/schema";
 import { HOMEPAGE_RESOURCES } from "@/lib/cms/homepage-resources";
 import { jsonArray } from "@/lib/cms/json-field";
 import { emptyToUndefined } from "@/lib/utils";
@@ -39,6 +40,8 @@ export const siteSettingsSchema = z.object({
   ogImage: optionalObjectIdField("Choose a default OpenGraph image from the media library."),
   googleAnalyticsId: z.preprocess(emptyToUndefined, z.string().trim().max(40).optional()),
   plausibleDomain: z.preprocess(emptyToUndefined, z.string().trim().max(200).optional()),
+  privacyContent: optionalBlocksField(),
+  termsContent: optionalBlocksField(),
 });
 
 export type SiteSettingsInput = z.infer<typeof siteSettingsSchema>;
@@ -84,5 +87,19 @@ export const siteSettingsFormFields: FieldConfig<SiteSettingsInput>[] = [
     label: "Plausible domain",
     type: "text",
     description: "e.g. hubzero.dev. Leave blank to disable.",
+  },
+  {
+    name: "privacyContent",
+    label: "Privacy Policy",
+    type: "blocks",
+    group: "Legal pages",
+    description: 'Renders at /privacy. Leave empty to show a "coming soon" placeholder.',
+  },
+  {
+    name: "termsContent",
+    label: "Terms of Service",
+    type: "blocks",
+    group: "Legal pages",
+    description: 'Renders at /terms. Leave empty to show a "coming soon" placeholder.',
   },
 ];

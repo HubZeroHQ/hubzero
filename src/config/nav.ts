@@ -63,5 +63,12 @@ export const footerNav: {
     { label: "Work / Case Studies", href: "/work" },
     { label: "Labs", href: "/labs" },
   ],
-  legal: [],
+  // Privacy/Terms pages now exist (`/privacy`, `/terms`) — same "page
+  // exists" bar as Team/Careers/Notes above, even before an admin has
+  // authored real legal copy in Settings → Legal pages (they render an
+  // honest "coming soon" state until then, not a broken link).
+  legal: [
+    { label: "Privacy", href: "/privacy" },
+    { label: "Terms", href: "/terms" },
+  ],
 };

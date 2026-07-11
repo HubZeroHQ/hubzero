@@ -23,6 +23,8 @@ const staticRoutes = [
   "/about",
   "/contact",
   "/careers",
+  "/privacy",
+  "/terms",
 ];
 
 function lastModifiedOf(doc: {

@@ -224,6 +224,19 @@ export const blockSchema = z.discriminatedUnion("type", [
 
 export const blocksArraySchema = z.array(blockSchema).min(1, "Add at least one block.").max(300);
 
+/** Same shape, no minimum — for a `"blocks"` field that's legitimately allowed to be empty (e.g. a Site Settings legal page not yet authored), unlike every narrative collection's `content`, which always needs at least one block. */
+export const optionalBlocksArraySchema = z.array(blockSchema).max(300).default([]);
+
+function parseBlocksJson(value: unknown): unknown {
+  if (typeof value !== "string") return value;
+  if (value.trim() === "") return [];
+  try {
+    return JSON.parse(value) as unknown;
+  } catch {
+    return value;
+  }
+}
+
 /**
  * The wire-format adapter every collection's `content` field composes.
  * `CmsField`'s `"blocks"` case (`components/admin/blocks/block-editor.tsx`)
@@ -234,13 +247,10 @@ export const blocksArraySchema = z.array(blockSchema).min(1, "Add at least one b
  * all, it already falls through to reading a single string value.
  */
 export function blocksField() {
-  return z.preprocess((value) => {
-    if (typeof value !== "string") return value;
-    if (value.trim() === "") return [];
-    try {
-      return JSON.parse(value) as unknown;
-    } catch {
-      return value;
-    }
-  }, blocksArraySchema);
+  return z.preprocess(parseBlocksJson, blocksArraySchema);
+}
+
+/** Same wire format as `blocksField()`, validated against `optionalBlocksArraySchema` instead. */
+export function optionalBlocksField() {
+  return z.preprocess(parseBlocksJson, optionalBlocksArraySchema);
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { blocksArraySchema, blocksField } from "@/lib/cms/blocks/schema";
+import { blocksArraySchema, blocksField, optionalBlocksField } from "@/lib/cms/blocks/schema";
 import {
   collectBlockMediaIds,
   checkHtmlBlockPublishGuard,
@@ -116,6 +116,31 @@ describe("blocksField() — the FormData wire adapter", () => {
     const blocks = [{ id: "1", type: "markdown", data: { markdown: "hi" } }];
     const result = field.safeParse(blocks);
     expect(result.success).toBe(true);
+  });
+});
+
+describe("optionalBlocksField() — Site Settings' legal pages, which may be empty", () => {
+  const field = optionalBlocksField();
+
+  it("accepts an empty string (unauthored yet) as an empty array", () => {
+    const result = field.safeParse("");
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data).toEqual([]);
+  });
+
+  it("accepts an empty JSON array", () => {
+    const result = field.safeParse("[]");
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data).toEqual([]);
+  });
+
+  it("still validates well-formed non-empty content the same way blocksField does", () => {
+    const value = JSON.stringify([{ id: "1", type: "markdown", data: { markdown: "hi" } }]);
+    expect(field.safeParse(value).success).toBe(true);
+  });
+
+  it("fails validation on malformed JSON rather than throwing", () => {
+    expect(field.safeParse("{not valid json").success).toBe(false);
   });
 });
 

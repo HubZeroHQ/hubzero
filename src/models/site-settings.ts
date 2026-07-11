@@ -1,5 +1,6 @@
 import { Schema, type InferSchemaType, type Types } from "mongoose";
 
+import type { Block } from "@/lib/cms/blocks/types";
 import { HOMEPAGE_RESOURCES } from "@/lib/cms/homepage-resources";
 import { defineModel } from "@/models/shared/define-model";
 
@@ -83,12 +84,31 @@ const siteSettingsSchema = new Schema(
       googleAnalyticsId: { type: String, trim: true, maxlength: 40 },
       plausibleDomain: { type: String, trim: true, maxlength: 200 },
     },
+    /**
+     * The Privacy Policy and Terms of Service pages (`/privacy`, `/terms`),
+     * authored the same way every narrative collection's `content` is — an
+     * ordered `Block[]` rendered through the same `<ContentRenderer>` — since
+     * this codebase already has one block editor and one block renderer,
+     * never a second "simple rich text" system for legal copy. Unlike a
+     * narrative collection's `content`, these are allowed to be empty (no
+     * `.min(1)` at the Zod layer, `site-settings-fields.tsx`): a legal page
+     * with nothing authored yet renders an honest "coming soon" empty state
+     * rather than blocking every other Settings save until someone writes
+     * one.
+     */
+    privacyContent: { type: [Schema.Types.Mixed], default: [] },
+    termsContent: { type: [Schema.Types.Mixed], default: [] },
   },
   { timestamps: true },
 );
 
-export type SiteSettingsDocument = InferSchemaType<typeof siteSettingsSchema> & {
+export type SiteSettingsDocument = Omit<
+  InferSchemaType<typeof siteSettingsSchema>,
+  "privacyContent" | "termsContent"
+> & {
   _id: Types.ObjectId;
+  privacyContent: Block[];
+  termsContent: Block[];
 };
 
 export const SiteSettings = defineModel<SiteSettingsDocument>("SiteSettings", siteSettingsSchema);

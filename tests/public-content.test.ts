@@ -6,6 +6,7 @@ import {
   findOnePublished,
   findPublishedWithCardMeta,
   getHomepageContent,
+  getLegalPageContent,
   getPublicTeamMembers,
   getTeamMemberProfileData,
 } from "@/lib/cms/public-content";
@@ -441,5 +442,39 @@ describe("getTeamMemberContributions — the reverse of contributors/authorId", 
     const result = await getTeamMemberProfileData("507f1f77bcf86cd799439011");
     expect(result.contributions).toEqual([]);
     expect(result.techStack).toEqual([]);
+  });
+});
+
+describe("getLegalPageContent — /privacy and /terms' data source", () => {
+  it("returns an empty array when no SiteSettings document exists yet", async () => {
+    await expect(getLegalPageContent("privacy")).resolves.toEqual([]);
+    await expect(getLegalPageContent("terms")).resolves.toEqual([]);
+  });
+
+  it("returns each page's own blocks, not the other page's", async () => {
+    await SiteSettings.create({
+      singletonKey: "default",
+      companyName: "Test Co",
+      seo: { defaultTitle: "Test", defaultDescription: "Test" },
+      privacyContent: [{ id: "p1", type: "markdown", data: { markdown: "Privacy body." } }],
+      termsContent: [{ id: "t1", type: "markdown", data: { markdown: "Terms body." } }],
+    });
+
+    const privacy = await getLegalPageContent("privacy");
+    const terms = await getLegalPageContent("terms");
+    expect(privacy).toEqual([{ id: "p1", type: "markdown", data: { markdown: "Privacy body." } }]);
+    expect(terms).toEqual([{ id: "t1", type: "markdown", data: { markdown: "Terms body." } }]);
+  });
+
+  it("returns an empty array for a page that hasn't been authored while the other has", async () => {
+    await SiteSettings.create({
+      singletonKey: "default",
+      companyName: "Test Co",
+      seo: { defaultTitle: "Test", defaultDescription: "Test" },
+      termsContent: [{ id: "t1", type: "markdown", data: { markdown: "Terms only." } }],
+    });
+
+    expect(await getLegalPageContent("privacy")).toEqual([]);
+    expect(await getLegalPageContent("terms")).toHaveLength(1);
   });
 });

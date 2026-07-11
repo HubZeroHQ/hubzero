@@ -2,6 +2,7 @@ import { Types, type Model } from "mongoose";
 
 import "@/lib/cms/collections";
 
+import type { Block } from "@/lib/cms/blocks/types";
 import { getCollection, type PublicCard } from "@/lib/cms/collection-config";
 import { type HomepageResource, isHomepageResource } from "@/lib/cms/homepage-resources";
 import { getMediaById, getMediaByIds } from "@/lib/cms/media";
@@ -486,4 +487,26 @@ export async function getTeamMemberProfileData(
   ).sort((a, b) => a.localeCompare(b));
 
   return serializeDocument({ contributions, techStack });
+}
+
+/**
+ * `/privacy` and `/terms`' only data dependency — the `SiteSettings`
+ * singleton's `privacyContent`/`termsContent`, the same `Block[]` shape and
+ * `<ContentRenderer>` every narrative collection's detail page already uses.
+ * No permission check (mirrors `getHomepageContent()` just above): this is
+ * public marketing content, read by an unauthenticated visitor, not a Studio
+ * screen. An empty array (nothing authored yet) is a legitimate, expected
+ * state — the caller renders an honest "coming soon" empty state for it,
+ * never a 404, since these pages are always linked from the footer once they
+ * exist in the route table.
+ */
+export async function getLegalPageContent(page: "privacy" | "terms"): Promise<Block[]> {
+  await connectToDatabase();
+
+  const settings = await SiteSettings.findOne({ singletonKey: "default" })
+    .select("privacyContent termsContent")
+    .lean<{ privacyContent?: unknown[]; termsContent?: unknown[] }>();
+
+  const blocks = page === "privacy" ? settings?.privacyContent : settings?.termsContent;
+  return serializeDocument(blocks ?? []) as Block[];
 }
