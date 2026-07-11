@@ -27,6 +27,10 @@ v3 exists because the company's _ambition_ has changed since v2 was scoped. v2 w
 
 Every document after `00_EXPLORATION.md` assumes its recommendation (Direction — **Working Blueprint**, a hybrid of the Blueprint, Signal & Copper, and Typographic Monolith directions) as settled. If a future team disagrees with that recommendation, `00_EXPLORATION.md` is the document to re-open — not a quiet override buried in a later file.
 
+## Status: under adversarial review
+
+**`CRITIQUE_01_REVIEW_BOARD.md`** is a deliberately adversarial review of `00`–`10` — an eight-seat panel (Creative Director, Brand Designer, Senior Product Designer, Design Systems Lead, Frontend Engineer, Motion Designer, Editorial Designer, UX Researcher) trying to break this blueprint rather than defend it. Its verdict is **not approved as a five-year constitution in its current form** — six specific, ranked items must be resolved first, the most severe being that no document in this folder addresses the actual brand mark (the existing logo is still the electric-blue asset every other document argues against retiring). Read `CRITIQUE_01_REVIEW_BOARD.md` alongside `00`–`10`, not after them — several of its findings (the logomark gap, whether "one accent" is honestly true once drafting cyan exists, whether copper repeats blue's original justification error for software/AI) should be resolved before treating any recommendation here as final.
+
 ## What this folder deliberately does not do
 
 - It does not modify any React component, page, or config file.
