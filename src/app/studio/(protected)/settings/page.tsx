@@ -55,6 +55,8 @@ export default async function SiteSettingsPage() {
         ogImage: doc.seo?.ogImage ? String(doc.seo.ogImage) : undefined,
         googleAnalyticsId: doc.analytics?.googleAnalyticsId ?? undefined,
         plausibleDomain: doc.analytics?.plausibleDomain ?? undefined,
+        privacyContent: doc.privacyContent ?? [],
+        termsContent: doc.termsContent ?? [],
       }
     : {
         // No document has been saved yet — pre-fill from the facts already
@@ -63,6 +65,8 @@ export default async function SiteSettingsPage() {
         companyName: siteConfig.name,
         seoDefaultTitle: siteConfig.title,
         seoDefaultDescription: siteConfig.description,
+        privacyContent: [],
+        termsContent: [],
       };
 
   return (

@@ -5,7 +5,17 @@ import { defineModel } from "@/models/shared/define-model";
 
 const projectTypeValues = projectTypeOptions.map((option) => option.value);
 const budgetRangeValues = budgetRangeOptions.map((option) => option.value);
-const leadStatusValues = ["new", "contacted", "closed"] as const;
+/**
+ * `"archived"` (Phase F — better leads) reuses this same triage-status field
+ * rather than a parallel `archivedAt` flag, mirroring `workflow-fields.ts`'s
+ * `"archived"` status for authored content — `archiveLead`/`restoreLead`
+ * (`actions/studio/leads.ts`) are both just `updateLeadStatus` calls, the
+ * identical "restoring lands on a sensible default state, not whatever it
+ * was before" rule `restoreArchive` already established for documents,
+ * applied here (restore always lands on `"new"`).
+ */
+const leadStatusValues = ["new", "contacted", "closed", "archived"] as const;
+const leadPriorityValues = ["low", "medium", "high"] as const;
 
 /**
  * `type: "note"` entries are authored directly by an editor; `"status_change"`
@@ -59,6 +69,13 @@ const leadSchema = new Schema(
     status: { type: String, required: true, enum: leadStatusValues, default: "new" },
     assignedTo: { type: Schema.Types.ObjectId, ref: "User", default: null },
     timeline: { type: [leadActivitySchema], default: [] },
+    // Phase F additions — internal triage metadata, never submitted through
+    // the public contact form (`lib/lead-schema.ts` deliberately doesn't
+    // grow these fields; they exist only from `/studio` onward).
+    priority: { type: String, enum: leadPriorityValues, default: "medium" },
+    internalLabels: { type: [String], default: [] },
+    reminderAt: { type: Date, default: null },
+    estimatedValue: { type: Number, default: null },
   },
   { timestamps: { createdAt: true, updatedAt: true } },
 );

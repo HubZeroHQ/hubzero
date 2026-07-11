@@ -47,28 +47,40 @@ export default async function ReviewQueuePage() {
     (config) => config.workflow === "draft-review-publish" && can(user, "view", config.resource),
   );
 
-  const groups: ReviewQueueGroup[] = await Promise.all(
-    collections.map(async (config) => {
-      const rawDocs = await config.model.find({ status: "review" }).sort({ updatedAt: -1 }).lean();
-      const docs = serializeDocument(rawDocs) as Record<string, unknown>[];
+  async function loadGroups(status: string): Promise<ReviewQueueGroup[]> {
+    return Promise.all(
+      collections.map(async (config) => {
+        const rawDocs = await config.model.find({ status }).sort({ updatedAt: -1 }).lean();
+        const docs = serializeDocument(rawDocs) as Record<string, unknown>[];
 
-      return {
-        resource: config.resource,
-        label: config.label,
-        items: docs.map((doc) => ({
-          id: String(doc._id),
-          label: getRecordLabel(config, doc),
-          updatedAt: typeof doc.updatedAt === "string" ? doc.updatedAt : undefined,
-          href: config.studioBasePath
-            ? `/studio/${config.studioBasePath}/${doc._id}`
-            : `/studio/history/${config.resource}/${doc._id}`,
-        })),
-      };
-    }),
-  );
+        return {
+          resource: config.resource,
+          label: config.label,
+          items: docs.map((doc) => ({
+            id: String(doc._id),
+            label: getRecordLabel(config, doc),
+            updatedAt: typeof doc.updatedAt === "string" ? doc.updatedAt : undefined,
+            href: config.studioBasePath
+              ? `/studio/${config.studioBasePath}/${doc._id}`
+              : `/studio/history/${config.resource}/${doc._id}`,
+          })),
+        };
+      }),
+    );
+  }
+
+  // "Awaiting review" needs a reviewer's decision (approve/reject/request
+  // changes); "Approved" (Phase C) needs a publisher's — a different person,
+  // a different action, so a distinct section rather than one merged list.
+  const [groups, approvedGroups] = await Promise.all([
+    loadGroups("review"),
+    loadGroups("approved"),
+  ]);
 
   const nonEmptyGroups = groups.filter((group) => group.items.length > 0);
   const totalCount = nonEmptyGroups.reduce((sum, group) => sum + group.items.length, 0);
+  const nonEmptyApprovedGroups = approvedGroups.filter((group) => group.items.length > 0);
+  const approvedCount = nonEmptyApprovedGroups.reduce((sum, group) => sum + group.items.length, 0);
 
   return (
     <>
@@ -98,6 +110,40 @@ export default async function ReviewQueuePage() {
                     <Link href={item.href}>{item.label}</Link>
                     <div className="flex items-center gap-3">
                       <WorkflowStatusBadge status="review" />
+                      {item.updatedAt && (
+                        <Text size="caption" tone="muted">
+                          {new Date(item.updatedAt).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                          })}
+                        </Text>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))}
+        </div>
+      )}
+
+      {approvedCount > 0 && (
+        <div className="mt-10 flex flex-col gap-8">
+          <Heading level={2}>Approved — ready to publish</Heading>
+          {nonEmptyApprovedGroups.map((group) => (
+            <section key={group.resource}>
+              <Heading level={3} className="mb-3">
+                {group.label}{" "}
+                <Text as="span" tone="muted" size="body">
+                  ({group.items.length})
+                </Text>
+              </Heading>
+              <ul className="divide-border-muted divide-y">
+                {group.items.map((item) => (
+                  <li key={item.id} className="flex items-center justify-between gap-4 py-3">
+                    <Link href={item.href}>{item.label}</Link>
+                    <div className="flex items-center gap-3">
+                      <WorkflowStatusBadge status="approved" />
                       {item.updatedAt && (
                         <Text size="caption" tone="muted">
                           {new Date(item.updatedAt).toLocaleDateString("en-US", {

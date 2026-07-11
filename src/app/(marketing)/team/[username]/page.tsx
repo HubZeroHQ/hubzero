@@ -10,7 +10,7 @@ import { Link } from "@/components/ui/link";
 import {
   findOnePublished,
   findPublished,
-  getTeamMemberContributions,
+  getTeamMemberProfileData,
   resolveCoverImage,
 } from "@/lib/cms/public-content";
 import { absoluteUrl, pageMetadata } from "@/lib/seo";
@@ -52,17 +52,20 @@ export async function generateMetadata({ params }: TeamMemberPageProps): Promise
  * contact/social links, and (`ARCHITECTURE/20_CONTENT_BLOCKS.md` §4) every
  * published Case Study/Labs Project/Blueprint/Note/Build this person is
  * credited on — queried live from each collection's own `contributors`/
- * `authorId` relationship (`getTeamMemberContributions`), never a
+ * `authorId` relationship (`getTeamMemberProfileData`), never a
  * hand-maintained "featured work" list duplicating what's already stored.
+ * The "Technology stack" section below is likewise computed from that same
+ * query (deduped `techTags`/`techStack`/`tags` across contributed docs) —
+ * distinct from the self-reported "Skills" section, which stays author-entered.
  */
 export default async function TeamMemberPage({ params }: TeamMemberPageProps) {
   const { username } = await params;
   const doc = await getTeamMember(username);
   if (!doc) notFound();
 
-  const [photo, contributions] = await Promise.all([
+  const [photo, { contributions, techStack }] = await Promise.all([
     resolveCoverImage(doc.photo ? String(doc.photo) : undefined),
-    getTeamMemberContributions(String(doc._id)),
+    getTeamMemberProfileData(String(doc._id)),
   ]);
   const sameAs = [doc.socials.linkedin, doc.socials.github].filter((value): value is string =>
     Boolean(value),
@@ -135,6 +138,25 @@ export default async function TeamMemberPage({ params }: TeamMemberPageProps) {
                 <p className="text-body text-text-muted mt-2">{group.items.join(", ")}</p>
               </div>
             ))}
+          </div>
+        )}
+
+        {techStack.length > 0 && (
+          <div className="mt-12 max-w-[var(--content-prose)]">
+            <h2 className="text-h3 text-text font-normal">Technology stack</h2>
+            <p className="text-caption text-text-muted mt-1">
+              Drawn from published work {doc.name.split(" ")[0]} has contributed to.
+            </p>
+            <ul className="mt-4 flex flex-wrap gap-2">
+              {techStack.map((tech) => (
+                <li
+                  key={tech}
+                  className="text-caption text-text-muted border-border-muted rounded-full border px-3 py-1 font-mono"
+                >
+                  {tech}
+                </li>
+              ))}
+            </ul>
           </div>
         )}
 

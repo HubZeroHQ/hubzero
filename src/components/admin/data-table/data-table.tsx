@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import type { ReactNode } from "react";
 
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { Alert } from "@/components/ui/alert";
@@ -77,6 +78,9 @@ export interface DataTableProps<T extends { _id: string }> {
   rowHref?: (doc: T) => string;
   bulkDelete?: (ids: string[]) => Promise<BulkActionResult>;
   bulkPublish?: (ids: string[]) => Promise<BulkActionResult>;
+  bulkArchive?: (ids: string[]) => Promise<BulkActionResult>;
+  /** An extension point for a collection-specific bulk action that needs more than a single confirm click (e.g. Leads' bulk-assign, which needs an assignee picker) — rendered inline in the same bulk-action bar, given the current selection and a callback to clear it once done. */
+  extraBulkActions?: (selectedIds: string[], onDone: () => void) => ReactNode;
 }
 
 /**
@@ -99,6 +103,8 @@ export function DataTable<T extends { _id: string }>({
   rowHref,
   bulkDelete,
   bulkPublish,
+  bulkArchive,
+  extraBulkActions,
 }: DataTableProps<T>) {
   const router = useRouter();
   const { state, setParams, toggleSort, goToPreviousPage, isPending } = useCmsTable();
@@ -203,8 +209,8 @@ export function DataTable<T extends { _id: string }>({
 
       {bulkError && <Alert variant="danger">{bulkError}</Alert>}
 
-      {selected.size > 0 && (bulkDelete || bulkPublish) && (
-        <div className="bg-bg-light border-border-muted flex items-center gap-3 rounded-md border p-3">
+      {selected.size > 0 && (bulkDelete || bulkPublish || bulkArchive || extraBulkActions) && (
+        <div className="bg-bg-light border-border-muted flex flex-wrap items-center gap-3 rounded-md border p-3">
           <span className="text-body text-text">{selected.size} selected</span>
           {bulkPublish && (
             <Button
@@ -216,6 +222,20 @@ export function DataTable<T extends { _id: string }>({
               Publish
             </Button>
           )}
+          {bulkArchive && (
+            <ConfirmDialog
+              trigger={
+                <Button size="sm" variant="secondary">
+                  Archive
+                </Button>
+              }
+              title={`Archive ${selected.size} item${selected.size === 1 ? "" : "s"}?`}
+              description="Each one is removed from its default view but not deleted."
+              confirmLabel="Archive"
+              onConfirm={() => runBulk(bulkArchive)}
+            />
+          )}
+          {extraBulkActions?.([...selected], () => setSelected(new Set()))}
           {bulkDelete && (
             <ConfirmDialog
               trigger={

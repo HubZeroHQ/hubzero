@@ -1,12 +1,22 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 
-import { getOne, publish, remove } from "@/actions/studio/faqs";
+import {
+  archive,
+  cancelSchedule,
+  getOne,
+  publish,
+  remove,
+  restoreArchive,
+  schedulePublish,
+  scheduleUnpublish,
+} from "@/actions/studio/faqs";
 import { EditFaqForm } from "@/app/studio/(protected)/faqs/[id]/edit-faq-form";
+import { CommentThread } from "@/components/admin/comment-thread";
 import { PageHeader } from "@/components/admin/page-header";
 import { WorkflowActions } from "@/components/admin/workflow-actions";
 import { WorkflowStatusBadge } from "@/components/admin/workflow-status-badge";
-import { Link, Text } from "@/components/ui";
+import { Heading, Link, Text } from "@/components/ui";
 import type { FaqInput } from "@/lib/cms/collections/faq-fields";
 import { can } from "@/lib/cms/permissions";
 import { requireSessionUser } from "@/lib/cms/session";
@@ -66,6 +76,13 @@ export default async function EditFaqPage({ params }: EditFaqPageProps) {
           remove={remove}
           listHref="/studio/faqs"
           itemLabel="FAQ"
+          scheduledPublishAt={doc.scheduledPublishAt}
+          scheduledUnpublishAt={doc.scheduledUnpublishAt}
+          schedulePublish={schedulePublish}
+          scheduleUnpublish={scheduleUnpublish}
+          cancelSchedule={cancelSchedule}
+          archive={archive}
+          restoreArchive={restoreArchive}
         />
       </div>
 
@@ -74,6 +91,13 @@ export default async function EditFaqPage({ params }: EditFaqPageProps) {
       ) : (
         <Text tone="muted">You don&apos;t have permission to edit this FAQ.</Text>
       )}
+
+      <div className="mt-8">
+        <Heading level={3} className="mb-3">
+          Comments
+        </Heading>
+        <CommentThread resource="faq" documentId={id} />
+      </div>
     </>
   );
 }

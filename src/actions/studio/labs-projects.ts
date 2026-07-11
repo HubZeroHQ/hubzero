@@ -20,6 +20,11 @@ export const {
   bulkRemove,
   bulkPublish,
   restoreVersion,
+  schedulePublish,
+  scheduleUnpublish,
+  cancelSchedule,
+  archive,
+  restoreArchive,
 } = createCrudActions(labsProjectConfig);
 
 type SimpleResult = { status: "success" } | { status: "error"; message: string };

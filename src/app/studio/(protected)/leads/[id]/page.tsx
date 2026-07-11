@@ -2,9 +2,20 @@ import type { Metadata } from "next";
 import { Types } from "mongoose";
 import { notFound, redirect } from "next/navigation";
 
-import { addLeadNote, assignLead, getAssignableUsers, getOne, remove, updateLeadStatus } from "@/actions/studio/leads";
+import {
+  addLeadNote,
+  assignLead,
+  getAssignableUsers,
+  getOne,
+  remove,
+  updateLeadDetails,
+  updateLeadStatus,
+  type LeadDetailsInput,
+} from "@/actions/studio/leads";
+import { LeadArchiveButton } from "@/app/studio/(protected)/leads/[id]/lead-archive-button";
 import { LeadAssignForm } from "@/app/studio/(protected)/leads/[id]/lead-assign-form";
 import { LeadDeleteButton } from "@/app/studio/(protected)/leads/[id]/lead-delete-button";
+import { LeadDetailsForm } from "@/app/studio/(protected)/leads/[id]/lead-details-form";
 import { LeadNoteForm } from "@/app/studio/(protected)/leads/[id]/lead-note-form";
 import { LeadStatusForm } from "@/app/studio/(protected)/leads/[id]/lead-status-form";
 import { LeadStatusBadge } from "@/components/admin/leads/lead-status-badge";
@@ -80,6 +91,16 @@ export default async function LeadDetailPage({ params }: LeadDetailPageProps) {
     at: String(entry.at),
   }));
 
+  // `priority`/`internalLabels`/`reminderAt`/`estimatedValue` aren't in
+  // `ClientDocument`'s fixed date-field whitelist — same treatment as
+  // `doc.timeline`'s own fields above.
+  const detailsInitialValues: LeadDetailsInput = {
+    priority: (doc.priority ?? "medium") as LeadDetailsInput["priority"],
+    internalLabels: doc.internalLabels ?? [],
+    reminderAt: doc.reminderAt ? String(doc.reminderAt) : null,
+    estimatedValue: (doc.estimatedValue as number | null) ?? null,
+  };
+
   return (
     <>
       <PageHeader
@@ -97,7 +118,9 @@ export default async function LeadDetailPage({ params }: LeadDetailPageProps) {
             </Heading>
             <dl className="space-y-3">
               <Row label="Company">{doc.company ?? "—"}</Row>
-              <Row label="Project type">{projectTypeLabels[doc.projectType] ?? doc.projectType}</Row>
+              <Row label="Project type">
+                {projectTypeLabels[doc.projectType] ?? doc.projectType}
+              </Row>
               <Row label="Budget range">
                 {doc.budgetRange ? (budgetRangeLabels[doc.budgetRange] ?? doc.budgetRange) : "—"}
               </Row>
@@ -143,6 +166,28 @@ export default async function LeadDetailPage({ params }: LeadDetailPageProps) {
                 assignableUsers={assignableUsers}
                 assignLead={assignLead}
               />
+            </Card>
+          )}
+
+          {canEdit && (
+            <Card>
+              <Heading level={3} className="mb-4">
+                Details
+              </Heading>
+              <LeadDetailsForm
+                id={id}
+                initialValues={detailsInitialValues}
+                updateDetails={updateLeadDetails}
+              />
+            </Card>
+          )}
+
+          {canEdit && (
+            <Card>
+              <Heading level={3} className="mb-4">
+                Archive
+              </Heading>
+              <LeadArchiveButton id={id} status={doc.status} updateStatus={updateLeadStatus} />
             </Card>
           )}
 

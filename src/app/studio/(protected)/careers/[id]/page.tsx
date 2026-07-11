@@ -1,12 +1,22 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 
-import { getOne, publish, remove } from "@/actions/studio/career-listings";
+import {
+  archive,
+  cancelSchedule,
+  getOne,
+  publish,
+  remove,
+  restoreArchive,
+  schedulePublish,
+  scheduleUnpublish,
+} from "@/actions/studio/career-listings";
 import { EditCareerListingForm } from "@/app/studio/(protected)/careers/[id]/edit-career-listing-form";
+import { CommentThread } from "@/components/admin/comment-thread";
 import { PageHeader } from "@/components/admin/page-header";
 import { WorkflowActions } from "@/components/admin/workflow-actions";
 import { WorkflowStatusBadge } from "@/components/admin/workflow-status-badge";
-import { Link, Text } from "@/components/ui";
+import { Heading, Link, Text } from "@/components/ui";
 import type { CareerListingInput } from "@/lib/cms/collections/career-listing-fields";
 import { can } from "@/lib/cms/permissions";
 import { requireSessionUser } from "@/lib/cms/session";
@@ -65,6 +75,13 @@ export default async function EditCareerListingPage({ params }: EditCareerListin
           remove={remove}
           listHref="/studio/careers"
           itemLabel="career listing"
+          scheduledPublishAt={doc.scheduledPublishAt}
+          scheduledUnpublishAt={doc.scheduledUnpublishAt}
+          schedulePublish={schedulePublish}
+          scheduleUnpublish={scheduleUnpublish}
+          cancelSchedule={cancelSchedule}
+          archive={archive}
+          restoreArchive={restoreArchive}
         />
       </div>
 
@@ -77,6 +94,13 @@ export default async function EditCareerListingPage({ params }: EditCareerListin
       ) : (
         <Text tone="muted">You don&apos;t have permission to edit this listing.</Text>
       )}
+
+      <div className="mt-8">
+        <Heading level={3} className="mb-3">
+          Comments
+        </Heading>
+        <CommentThread resource="careerListing" documentId={id} />
+      </div>
     </>
   );
 }

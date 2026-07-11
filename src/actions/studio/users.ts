@@ -12,6 +12,7 @@ import {
 import { userConfig } from "@/lib/cms/collections/user.config";
 import { createCrudActions, flattenZodErrors } from "@/lib/cms/crud-actions";
 import { connectToDatabase } from "@/lib/db";
+import { notify } from "@/lib/cms/notifications";
 import { PASSWORD_HASH_COST, passwordSchema } from "@/lib/cms/password";
 import { requirePermission } from "@/lib/cms/permissions";
 import { User } from "@/models/user";
@@ -194,6 +195,12 @@ export async function resetUserPassword(id: string, password: string): Promise<S
     // immediately, not just be blocked on its next silent refresh.
     existing.sessionVersion += 1;
     await existing.save();
+    await notify({
+      userId: id,
+      event: "password_reset",
+      title: "Your password was reset",
+      body: "If you didn't expect this, contact a Head Admin immediately.",
+    });
     return { status: "success" };
   } catch (error) {
     console.error(`Failed to reset password for user ${id}:`, error);

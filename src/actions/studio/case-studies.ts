@@ -21,4 +21,12 @@ export const {
   bulkRemove,
   bulkPublish,
   restoreVersion,
+  schedulePublish,
+  scheduleUnpublish,
+  cancelSchedule,
+  archive,
+  restoreArchive,
+  approve,
+  requestChanges,
+  reject,
 } = createCrudActions(caseStudyConfig);

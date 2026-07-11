@@ -23,6 +23,8 @@ export const blueprintConfig = registerCollection(
     searchableFields: ["name", "slug", "blueprintId", "category"],
     emptyStateMessage: blueprintEmptyStateMessage,
     studioBasePath: "blueprints",
+    quickCreateLabel: "New Blueprint",
+    publicRoute: { prefix: "blueprints", slugField: "slug" },
     recordLabel: (doc) => doc.name,
     computedFields: (input) => ({ readingTimeMinutes: computeReadingTimeMinutes(input.content) }),
     // `09_CMS_ARCHITECTURE.md` §2 / `ARCHITECTURE/19_CMS_FOUNDATION.md` §11:

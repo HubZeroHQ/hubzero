@@ -1,6 +1,8 @@
 import { LogOut } from "lucide-react";
 
+import { CommandPalette } from "@/components/admin/command-palette/command-palette";
 import { StudioMobileNav } from "@/components/admin/layout/studio-mobile-nav";
+import { NotificationBell } from "@/components/admin/notification-bell";
 import { Text } from "@/components/ui";
 import { logout } from "@/lib/cms/logout-action";
 import type { SessionUser } from "@/types/cms";
@@ -21,7 +23,10 @@ export function Topbar({ user }: TopbarProps) {
     <header className="border-border-muted flex items-center justify-between gap-4 border-b px-6 py-4 md:px-8">
       <StudioMobileNav user={user} />
 
+      <CommandPalette user={user} />
+
       <div className="ml-auto flex items-center gap-4">
+        <NotificationBell />
         <div className="hidden text-right sm:block">
           <Text size="caption" weight="medium">
             {user.name}

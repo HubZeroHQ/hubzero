@@ -3,7 +3,8 @@ import { redirect } from "next/navigation";
 
 import "@/lib/cms/collections";
 
-import { list } from "@/actions/studio/leads";
+import { exportLeadsCsv, getAssignableUsers, list } from "@/actions/studio/leads";
+import { LeadExportButton } from "@/app/studio/(protected)/leads/lead-export-button";
 import { LeadsTable } from "@/app/studio/(protected)/leads/leads-table";
 import { PageHeader } from "@/components/admin/page-header";
 import { leadFilters } from "@/lib/cms/collections/lead-fields";
@@ -35,13 +36,18 @@ export default async function LeadsListPage({ searchParams }: LeadsPageProps) {
   const params = parseTableSearchParams(rawSearchParams, FILTER_KEYS);
   const isFiltered = Boolean(params.q) || Object.keys(params.filters ?? {}).length > 0;
 
-  const result = await list(params);
+  const canEdit = can(user, "edit", "lead");
+  const [result, assignableUsers] = await Promise.all([
+    list(params),
+    canEdit ? getAssignableUsers() : Promise.resolve([]),
+  ]);
 
   return (
     <>
       <PageHeader
         title="Leads"
         description="Contact form submissions — search, filter, triage, and assign."
+        actions={<LeadExportButton exportCsv={exportLeadsCsv} />}
       />
       <LeadsTable
         items={result.items}
@@ -50,6 +56,8 @@ export default async function LeadsListPage({ searchParams }: LeadsPageProps) {
         nextCursor={result.nextCursor}
         isFiltered={isFiltered}
         canDelete={can(user, "delete", "lead")}
+        canEdit={canEdit}
+        assignableUsers={assignableUsers}
       />
     </>
   );

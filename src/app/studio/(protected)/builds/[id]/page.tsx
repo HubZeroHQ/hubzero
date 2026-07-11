@@ -1,13 +1,30 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 
-import { getOne, publish, remove, submitForReview } from "@/actions/studio/builds";
+import {
+  approve,
+  archive,
+  cancelSchedule,
+  getOne,
+  publish,
+  reject,
+  remove,
+  requestChanges,
+  restoreArchive,
+  schedulePublish,
+  scheduleUnpublish,
+  submitForReview,
+} from "@/actions/studio/builds";
 import { EditBuildForm } from "@/app/studio/(protected)/builds/[id]/edit-build-form";
+import { CommentList } from "@/components/admin/comment-list";
+import { CommentThread } from "@/components/admin/comment-thread";
 import { PageHeader } from "@/components/admin/page-header";
+import { ReviewActions } from "@/components/admin/review-actions";
 import { WorkflowActions } from "@/components/admin/workflow-actions";
 import { WorkflowStatusBadge } from "@/components/admin/workflow-status-badge";
-import { Link, Text } from "@/components/ui";
+import { Heading, Link, Text } from "@/components/ui";
 import type { BuildInput } from "@/lib/cms/collections/build-fields";
+import { listComments } from "@/lib/cms/comments";
 import { can } from "@/lib/cms/permissions";
 import { requireSessionUser } from "@/lib/cms/session";
 
@@ -32,6 +49,10 @@ export default async function EditBuildPage({ params }: EditBuildPageProps) {
   const canEdit = can(user, "edit", "build", target);
   const canPublish = can(user, "publish", "build", target);
   const canDelete = can(user, "delete", "build", target);
+  const canReview = can(user, "approve", "build", target);
+  const reviewComments = (await listComments("build", id)).filter(
+    (comment) => comment.type === "review",
+  );
 
   const initialValues: Partial<BuildInput> = {
     slug: doc.slug,
@@ -80,6 +101,13 @@ export default async function EditBuildPage({ params }: EditBuildPageProps) {
           remove={remove}
           listHref="/studio/builds"
           itemLabel="Build"
+          scheduledPublishAt={doc.scheduledPublishAt}
+          scheduledUnpublishAt={doc.scheduledUnpublishAt}
+          schedulePublish={schedulePublish}
+          scheduleUnpublish={scheduleUnpublish}
+          cancelSchedule={cancelSchedule}
+          archive={archive}
+          restoreArchive={restoreArchive}
         />
         {doc.graduatedFromLabsId && (
           <Text size="caption" tone="muted">
@@ -89,11 +117,39 @@ export default async function EditBuildPage({ params }: EditBuildPageProps) {
         )}
       </div>
 
+      <div className="mb-6">
+        <ReviewActions
+          id={id}
+          status={doc.status}
+          canReview={canReview}
+          approve={approve}
+          requestChanges={requestChanges}
+          reject={reject}
+          itemLabel="Build"
+        />
+      </div>
+
+      {reviewComments.length > 0 && (
+        <div className="mb-6">
+          <Heading level={3} className="mb-3">
+            Review comments
+          </Heading>
+          <CommentList comments={reviewComments} emptyMessage="No review comments yet." />
+        </div>
+      )}
+
       {canEdit ? (
         <EditBuildForm id={id} initialValues={initialValues} isDraft={doc.status === "draft"} />
       ) : (
         <Text tone="muted">You don&apos;t have permission to edit this Build.</Text>
       )}
+
+      <div className="mt-8">
+        <Heading level={3} className="mb-3">
+          Comments
+        </Heading>
+        <CommentThread resource="build" documentId={id} />
+      </div>
     </>
   );
 }

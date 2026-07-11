@@ -2,6 +2,7 @@ import { Types, type Model } from "mongoose";
 
 import "@/lib/cms/collections";
 
+import type { Block } from "@/lib/cms/blocks/types";
 import { getCollection, type PublicCard } from "@/lib/cms/collection-config";
 import { type HomepageResource, isHomepageResource } from "@/lib/cms/homepage-resources";
 import { getMediaById, getMediaByIds } from "@/lib/cms/media";
@@ -370,6 +371,17 @@ export interface TeamMemberContribution {
   publishedAt: Date | null;
 }
 
+export interface TeamMemberProfileData {
+  contributions: TeamMemberContribution[];
+  /**
+   * Deduped `techTags`/`techStack`/`tags` pulled from the same contributed
+   * docs above — computed, not stored, so it can never drift from the
+   * self-reported `TeamMember.skills` field it's deliberately kept separate
+   * from (one is "what I claim," the other is "what I've actually shipped").
+   */
+  techStack: string[];
+}
+
 /**
  * The reverse of `contributors`/`authorId`: everything a `TeamMember` is
  * credited on, queried live from the same relationship every narrative
@@ -380,9 +392,9 @@ export interface TeamMemberContribution {
  * aggregation across models Mongoose can't natively join across — cheap at
  * this scale, and each collection's own shape stays untouched.
  */
-export async function getTeamMemberContributions(
+export async function getTeamMemberProfileData(
   teamMemberId: string,
-): Promise<TeamMemberContribution[]> {
+): Promise<TeamMemberProfileData> {
   await connectToDatabase();
 
   // Capped per collection — a founder/core member credited on nearly
@@ -393,22 +405,22 @@ export async function getTeamMemberContributions(
 
   const [caseStudies, builds, labsProjects, blueprints, notes] = await Promise.all([
     CaseStudy.find({ status: "published", contributors: teamMemberId })
-      .select("client slug summary publishedAt")
+      .select("client slug summary publishedAt techTags")
       .sort({ publishedAt: -1 })
       .limit(PER_COLLECTION_LIMIT)
       .lean(),
     Build.find({ status: "published", contributors: teamMemberId })
-      .select("title slug tagline publishedAt")
+      .select("title slug tagline publishedAt techTags")
       .sort({ publishedAt: -1 })
       .limit(PER_COLLECTION_LIMIT)
       .lean(),
     LabsProject.find({ status: "published", contributors: teamMemberId })
-      .select("title slug summary publishedAt")
+      .select("title slug summary publishedAt techTags")
       .sort({ publishedAt: -1 })
       .limit(PER_COLLECTION_LIMIT)
       .lean(),
     Blueprint.find({ status: "published", contributors: teamMemberId })
-      .select("name slug summary publishedAt")
+      .select("name slug summary publishedAt techStack")
       .sort({ publishedAt: -1 })
       .limit(PER_COLLECTION_LIMIT)
       .lean(),
@@ -416,7 +428,7 @@ export async function getTeamMemberContributions(
       status: "published",
       $or: [{ contributors: teamMemberId }, { authorId: teamMemberId }],
     })
-      .select("title slug summary publishedAt")
+      .select("title slug summary publishedAt tags")
       .sort({ publishedAt: -1 })
       .limit(PER_COLLECTION_LIMIT)
       .lean(),
@@ -461,5 +473,40 @@ export async function getTeamMemberContributions(
   ];
 
   contributions.sort((a, b) => (b.publishedAt?.getTime() ?? 0) - (a.publishedAt?.getTime() ?? 0));
-  return serializeDocument(contributions);
+
+  const techStack = Array.from(
+    new Set(
+      [
+        ...caseStudies.flatMap((doc) => doc.techTags ?? []),
+        ...builds.flatMap((doc) => doc.techTags ?? []),
+        ...labsProjects.flatMap((doc) => doc.techTags ?? []),
+        ...blueprints.flatMap((doc) => doc.techStack ?? []),
+        ...notes.flatMap((doc) => doc.tags ?? []),
+      ].filter((tag): tag is string => Boolean(tag)),
+    ),
+  ).sort((a, b) => a.localeCompare(b));
+
+  return serializeDocument({ contributions, techStack });
+}
+
+/**
+ * `/privacy` and `/terms`' only data dependency — the `SiteSettings`
+ * singleton's `privacyContent`/`termsContent`, the same `Block[]` shape and
+ * `<ContentRenderer>` every narrative collection's detail page already uses.
+ * No permission check (mirrors `getHomepageContent()` just above): this is
+ * public marketing content, read by an unauthenticated visitor, not a Studio
+ * screen. An empty array (nothing authored yet) is a legitimate, expected
+ * state — the caller renders an honest "coming soon" empty state for it,
+ * never a 404, since these pages are always linked from the footer once they
+ * exist in the route table.
+ */
+export async function getLegalPageContent(page: "privacy" | "terms"): Promise<Block[]> {
+  await connectToDatabase();
+
+  const settings = await SiteSettings.findOne({ singletonKey: "default" })
+    .select("privacyContent termsContent")
+    .lean<{ privacyContent?: unknown[]; termsContent?: unknown[] }>();
+
+  const blocks = page === "privacy" ? settings?.privacyContent : settings?.termsContent;
+  return serializeDocument(blocks ?? []) as Block[];
 }

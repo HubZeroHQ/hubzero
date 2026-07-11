@@ -1,12 +1,22 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 
-import { getOne, publish, remove } from "@/actions/studio/testimonials";
+import {
+  archive,
+  cancelSchedule,
+  getOne,
+  publish,
+  remove,
+  restoreArchive,
+  schedulePublish,
+  scheduleUnpublish,
+} from "@/actions/studio/testimonials";
 import { EditTestimonialForm } from "@/app/studio/(protected)/testimonials/[id]/edit-testimonial-form";
+import { CommentThread } from "@/components/admin/comment-thread";
 import { PageHeader } from "@/components/admin/page-header";
 import { WorkflowActions } from "@/components/admin/workflow-actions";
 import { WorkflowStatusBadge } from "@/components/admin/workflow-status-badge";
-import { Link, Text } from "@/components/ui";
+import { Heading, Link, Text } from "@/components/ui";
 import type { TestimonialInput } from "@/lib/cms/collections/testimonial-fields";
 import { can } from "@/lib/cms/permissions";
 import { requireSessionUser } from "@/lib/cms/session";
@@ -67,6 +77,13 @@ export default async function EditTestimonialPage({ params }: EditTestimonialPag
           remove={remove}
           listHref="/studio/testimonials"
           itemLabel="testimonial"
+          scheduledPublishAt={doc.scheduledPublishAt}
+          scheduledUnpublishAt={doc.scheduledUnpublishAt}
+          schedulePublish={schedulePublish}
+          scheduleUnpublish={scheduleUnpublish}
+          cancelSchedule={cancelSchedule}
+          archive={archive}
+          restoreArchive={restoreArchive}
         />
       </div>
 
@@ -79,6 +96,13 @@ export default async function EditTestimonialPage({ params }: EditTestimonialPag
       ) : (
         <Text tone="muted">You don&apos;t have permission to edit this testimonial.</Text>
       )}
+
+      <div className="mt-8">
+        <Heading level={3} className="mb-3">
+          Comments
+        </Heading>
+        <CommentThread resource="testimonial" documentId={id} />
+      </div>
     </>
   );
 }

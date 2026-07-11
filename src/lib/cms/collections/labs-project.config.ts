@@ -23,6 +23,7 @@ export const labsProjectConfig = registerCollection(
     searchableFields: ["title", "slug"],
     emptyStateMessage: labsProjectEmptyStateMessage,
     studioBasePath: "labs",
+    publicRoute: { prefix: "labs", slugField: "slug" },
     recordLabel: (doc) => doc.title,
     // `isClientWork` is always `false` (`models/labs-project.ts`) — not a
     // form field, injected on every create/update, alongside the same

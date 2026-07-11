@@ -23,6 +23,8 @@ export const noteConfig = registerCollection(
     searchableFields: ["title", "slug", "category"],
     emptyStateMessage: noteEmptyStateMessage,
     studioBasePath: "notes",
+    quickCreateLabel: "New Note",
+    publicRoute: { prefix: "notes", slugField: "slug" },
     recordLabel: (doc) => doc.title,
     // "Computed on save, not author-entered" (`ARCHITECTURE/11_DATABASE_ARCHITECTURE.md`
     // §1) — the sanctioned `computedFields` hook, not a bespoke code path.

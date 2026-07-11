@@ -1,3 +1,4 @@
+import { LeadPriorityBadge } from "@/components/admin/leads/lead-priority-badge";
 import { LeadStatusBadge } from "@/components/admin/leads/lead-status-badge";
 import { budgetRangeOptions, leadSchema, projectTypeOptions } from "@/lib/lead-schema";
 import type { LeadInput } from "@/lib/lead-schema";
@@ -46,9 +47,15 @@ export const leadListColumns: TableColumn<LeadRow>[] = [
   {
     key: "budgetRange",
     label: "Budget",
-    render: (doc) => (doc.budgetRange ? (budgetRangeLabels[doc.budgetRange] ?? doc.budgetRange) : "—"),
+    render: (doc) =>
+      doc.budgetRange ? (budgetRangeLabels[doc.budgetRange] ?? doc.budgetRange) : "—",
   },
   { key: "status", label: "Status", render: (doc) => <LeadStatusBadge status={doc.status} /> },
+  {
+    key: "priority",
+    label: "Priority",
+    render: (doc) => <LeadPriorityBadge priority={doc.priority} />,
+  },
   {
     key: "createdAt",
     label: "Submitted",
@@ -66,6 +73,17 @@ export const leadFilters: FilterConfig<LeadRow>[] = [
       { value: "new", label: "New" },
       { value: "contacted", label: "Contacted" },
       { value: "closed", label: "Closed" },
+      { value: "archived", label: "Archived" },
+    ],
+  },
+  {
+    name: "priority",
+    label: "Priority",
+    type: "select",
+    options: [
+      { value: "low", label: "Low" },
+      { value: "medium", label: "Medium" },
+      { value: "high", label: "High" },
     ],
   },
   {

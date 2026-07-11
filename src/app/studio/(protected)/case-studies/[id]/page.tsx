@@ -1,13 +1,30 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 
-import { getOne, publish, remove, submitForReview } from "@/actions/studio/case-studies";
+import {
+  approve,
+  archive,
+  cancelSchedule,
+  getOne,
+  publish,
+  reject,
+  remove,
+  requestChanges,
+  restoreArchive,
+  schedulePublish,
+  scheduleUnpublish,
+  submitForReview,
+} from "@/actions/studio/case-studies";
 import { EditCaseStudyForm } from "@/app/studio/(protected)/case-studies/[id]/edit-case-study-form";
+import { CommentList } from "@/components/admin/comment-list";
+import { CommentThread } from "@/components/admin/comment-thread";
 import { PageHeader } from "@/components/admin/page-header";
+import { ReviewActions } from "@/components/admin/review-actions";
 import { WorkflowActions } from "@/components/admin/workflow-actions";
 import { WorkflowStatusBadge } from "@/components/admin/workflow-status-badge";
-import { Link, Text } from "@/components/ui";
+import { Heading, Link, Text } from "@/components/ui";
 import type { CaseStudyInput } from "@/lib/cms/collections/case-study-fields";
+import { listComments } from "@/lib/cms/comments";
 import { can } from "@/lib/cms/permissions";
 import { requireSessionUser } from "@/lib/cms/session";
 
@@ -32,6 +49,10 @@ export default async function EditCaseStudyPage({ params }: EditCaseStudyPagePro
   const canEdit = can(user, "edit", "caseStudy", target);
   const canPublish = can(user, "publish", "caseStudy", target);
   const canDelete = can(user, "delete", "caseStudy", target);
+  const canReview = can(user, "approve", "caseStudy", target);
+  const reviewComments = (await listComments("caseStudy", id)).filter(
+    (comment) => comment.type === "review",
+  );
 
   const initialValues: Partial<CaseStudyInput> = {
     slug: doc.slug,
@@ -81,8 +102,36 @@ export default async function EditCaseStudyPage({ params }: EditCaseStudyPagePro
           itemLabel="case study"
           publishDescription="It goes live at /work immediately."
           republishDescription="This records the current live content as a new version, then updates /work immediately."
+          scheduledPublishAt={doc.scheduledPublishAt}
+          scheduledUnpublishAt={doc.scheduledUnpublishAt}
+          schedulePublish={schedulePublish}
+          scheduleUnpublish={scheduleUnpublish}
+          cancelSchedule={cancelSchedule}
+          archive={archive}
+          restoreArchive={restoreArchive}
         />
       </div>
+
+      <div className="mb-6">
+        <ReviewActions
+          id={id}
+          status={doc.status}
+          canReview={canReview}
+          approve={approve}
+          requestChanges={requestChanges}
+          reject={reject}
+          itemLabel="case study"
+        />
+      </div>
+
+      {reviewComments.length > 0 && (
+        <div className="mb-6">
+          <Heading level={3} className="mb-3">
+            Review comments
+          </Heading>
+          <CommentList comments={reviewComments} emptyMessage="No review comments yet." />
+        </div>
+      )}
 
       {canEdit ? (
         <EditCaseStudyForm
@@ -94,6 +143,13 @@ export default async function EditCaseStudyPage({ params }: EditCaseStudyPagePro
       ) : (
         <Text tone="muted">You don&apos;t have permission to edit this case study.</Text>
       )}
+
+      <div className="mt-8">
+        <Heading level={3} className="mb-3">
+          Comments
+        </Heading>
+        <CommentThread resource="caseStudy" documentId={id} />
+      </div>
     </>
   );
 }

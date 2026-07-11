@@ -23,6 +23,7 @@ export const buildConfig = registerCollection(
     searchableFields: ["title", "slug", "tagline"],
     emptyStateMessage: buildEmptyStateMessage,
     studioBasePath: "builds",
+    quickCreateLabel: "New Build",
     recordLabel: (doc) => doc.title,
     computedFields: (input) => ({ readingTimeMinutes: computeReadingTimeMinutes(input.content) }),
     // No public detail route exists for Builds yet
