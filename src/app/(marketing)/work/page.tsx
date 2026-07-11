@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 
 import "@/lib/cms/collections";
 
+import { PageHeader } from "@/components/marketing/page-header";
 import { Container } from "@/components/ui/container";
 import { Link } from "@/components/ui/link";
 import { WorkGrid, type WorkGridItem } from "@/components/work/work-grid";
@@ -52,14 +53,11 @@ export default async function WorkPage() {
   return (
     <div className="pt-16 pb-28 sm:pt-20 lg:pt-24">
       <Container>
-        <p className="text-caption text-text-muted font-mono tracking-wide uppercase">Work</p>
-        <h1 className="text-text mt-4 max-w-2xl text-[clamp(2rem,1rem+4vw,3.5rem)] leading-[1.1] font-normal tracking-tight">
-          Every project here was worth doing.
-        </h1>
-        <p className="text-body text-text-muted mt-6 max-w-xl">
-          HubZero is selective about the work it takes on. What follows isn&apos;t a high-volume
-          portfolio — it&apos;s the real, completed engineering behind it.
-        </p>
+        <PageHeader
+          eyebrow="Work"
+          headline="Every project here was worth doing."
+          description="HubZero is selective about the work it takes on. What follows isn't a high-volume portfolio — it's the real, completed engineering behind it."
+        />
       </Container>
 
       <Container className="mt-16 lg:mt-20">

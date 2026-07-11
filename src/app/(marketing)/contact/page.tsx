@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { ContactForm } from "@/components/marketing/contact-form";
+import { PageHeader } from "@/components/marketing/page-header";
 import { Container } from "@/components/ui/container";
 import { pageMetadata } from "@/lib/seo";
 
@@ -53,15 +54,12 @@ export default function ContactPage() {
           widths, reading as one dense block instead of two chapters. */}
       <div className="pt-20 pb-20 sm:pt-24 sm:pb-24 lg:pt-28 lg:pb-28">
         <Container>
-          <p className="text-caption text-text-muted font-mono tracking-wide uppercase">Contact</p>
-          <h1 className="text-text mt-6 max-w-2xl text-[clamp(2.25rem,1rem+4.5vw,4.5rem)] leading-[1.08] font-normal tracking-tight">
-            This starts as a conversation, not a commitment.
-          </h1>
-          <p className="text-body text-text-muted mt-6 max-w-xl">
-            Tell us what you&apos;re building — the practice area, the rough shape of the problem,
-            whatever you already know. We&apos;ll tell you honestly whether it&apos;s a fit before
-            anything else happens.
-          </p>
+          <PageHeader
+            eyebrow="Contact"
+            headline="This starts as a conversation, not a commitment."
+            size="large"
+            description="Tell us what you're building — the practice area, the rough shape of the problem, whatever you already know. We'll tell you honestly whether it's a fit before anything else happens."
+          />
         </Container>
       </div>
 

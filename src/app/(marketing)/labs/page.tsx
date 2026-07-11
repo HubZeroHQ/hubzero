@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import "@/lib/cms/collections";
 
 import { LabsGrid, type LabsGridItem } from "@/components/marketing/labs-grid";
+import { PageHeader } from "@/components/marketing/page-header";
 import { Container } from "@/components/ui/container";
 import { Link } from "@/components/ui/link";
 import { findPublishedWithCardMeta, resolveCoverImage } from "@/lib/cms/public-content";
@@ -50,16 +51,11 @@ export default async function LabsIndexPage() {
   return (
     <div className="pt-16 pb-28 sm:pt-20 lg:pt-24">
       <Container>
-        <p className="text-caption text-text-muted font-mono tracking-wide uppercase">
-          HubZero Labs
-        </p>
-        <h1 className="text-text mt-4 max-w-2xl text-[clamp(2rem,1rem+4vw,3.5rem)] leading-[1.1] font-normal tracking-tight">
-          What we build with no client watching.
-        </h1>
-        <p className="text-body text-text-muted mt-6 max-w-xl">
-          Internal R&amp;D across software, hardware, and AI — real projects, allowed to look
-          in-progress, tested here before a pattern ever reaches client work.
-        </p>
+        <PageHeader
+          eyebrow="HubZero Labs"
+          headline="What we build with no client watching."
+          description="Internal R&D across software, hardware, and AI — real projects, allowed to look in-progress, tested here before a pattern ever reaches client work."
+        />
       </Container>
 
       <Container className="mt-16 lg:mt-20">

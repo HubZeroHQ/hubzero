@@ -3,6 +3,7 @@ import Image from "next/image";
 
 import "@/lib/cms/collections";
 
+import { PageHeader } from "@/components/marketing/page-header";
 import { Container } from "@/components/ui/container";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Link } from "@/components/ui/link";
@@ -44,10 +45,7 @@ export default async function TeamIndexPage() {
   return (
     <div className="pt-16 pb-28 sm:pt-20 lg:pt-24">
       <Container>
-        <p className="text-caption text-text-muted font-mono tracking-wide uppercase">Team</p>
-        <h1 className="text-text mt-4 max-w-2xl text-[clamp(2rem,1rem+4vw,3.5rem)] leading-[1.1] font-normal tracking-tight">
-          The people you&apos;d actually be working with.
-        </h1>
+        <PageHeader eyebrow="Team" headline="The people you'd actually be working with." />
       </Container>
 
       <Container className="mt-16 lg:mt-20">

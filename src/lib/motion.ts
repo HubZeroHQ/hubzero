@@ -18,9 +18,11 @@
  * sequencing); Motion owns *state* (hover/focus/modal, page transitions,
  * shared-layout animation — already in use for the current hero); Anime.js
  * owns *small, self-contained draws* (SVG trace-path/line-drawing,
- * counters, icon-level interactions). No library is installed yet beyond
- * `motion` — GSAP/Anime.js land with the page work that first needs them
- * (10_IMPLEMENTATION_ROADMAP.md Phase 2/3), not speculatively here.
+ * counters, icon-level interactions). All three libraries are installed
+ * (`gsap` incl. `ScrollTrigger`, `animejs` v4, `motion`) — every call site
+ * still names which of the three owns a given moment before reaching for
+ * it (principle 5), rather than defaulting to whichever is already imported
+ * nearby.
  */
 
 export const duration = {

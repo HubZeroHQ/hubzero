@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { ContentRenderer } from "@/components/marketing/blocks/content-renderer";
+import { PageHeader } from "@/components/marketing/page-header";
 import { Container } from "@/components/ui/container";
 import { EmptyState } from "@/components/ui/empty-state";
 import { getLegalPageContent } from "@/lib/cms/public-content";
@@ -26,10 +27,7 @@ export default async function TermsPage() {
     <div className="pb-28 sm:pb-32 lg:pb-40">
       <div className="pt-20 pb-16 sm:pt-24 lg:pt-28">
         <Container>
-          <p className="text-caption text-text-muted font-mono tracking-wide uppercase">Legal</p>
-          <h1 className="text-text mt-6 max-w-2xl text-[clamp(2.25rem,1rem+4.5vw,4.5rem)] leading-[1.08] font-normal tracking-tight">
-            Terms of Service
-          </h1>
+          <PageHeader eyebrow="Legal" headline="Terms of Service" size="large" />
         </Container>
       </div>
 

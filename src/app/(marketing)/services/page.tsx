@@ -2,6 +2,7 @@ import { ArrowUpRight } from "lucide-react";
 import type { Metadata } from "next";
 
 import { CtaPanel } from "@/components/marketing/cta-panel";
+import { PageHeader } from "@/components/marketing/page-header";
 import { Reveal } from "@/components/marketing/reveal";
 import { Container } from "@/components/ui/container";
 import { Link } from "@/components/ui/link";
@@ -43,18 +44,12 @@ export default function ServicesPage() {
       <div className="pt-20 pb-20 sm:pt-24 sm:pb-24 lg:pt-28 lg:pb-28">
         <Container>
           <Reveal>
-            <p className="text-caption text-text-muted font-mono tracking-wide uppercase">
-              Services
-            </p>
-            <h1 className="text-text mt-6 max-w-2xl text-[clamp(2.25rem,1rem+4.5vw,4.5rem)] leading-[1.08] font-normal tracking-tight">
-              Software, and the hardware it runs on, treated as one problem.
-            </h1>
-            <p className="text-body text-text-muted mt-6 max-w-xl">
-              Most engineering studios stop at the software&apos;s edge and call in someone else for
-              the rest. HubZero doesn&apos;t split the problem that way — the team that designs an
-              interface is the same one that can put a sensor behind it, because the projects worth
-              doing rarely stay on one side of that line for long.
-            </p>
+            <PageHeader
+              eyebrow="Services"
+              headline="Software, and the hardware it runs on, treated as one problem."
+              size="large"
+              description="Most engineering studios stop at the software's edge and call in someone else for the rest. HubZero doesn't split the problem that way — the team that designs an interface is the same one that can put a sensor behind it, because the projects worth doing rarely stay on one side of that line for long."
+            />
           </Reveal>
         </Container>
       </div>

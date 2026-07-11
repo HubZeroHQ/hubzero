@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 
 import { CtaPanel } from "@/components/marketing/cta-panel";
+import { PageHeader } from "@/components/marketing/page-header";
 import { Reveal } from "@/components/marketing/reveal";
 import { JsonLd } from "@/components/seo/json-ld";
 import { Container } from "@/components/ui/container";
@@ -65,17 +66,13 @@ export default function SoftwareEngineeringPage() {
       <div className="pt-20 pb-20 sm:pt-24 sm:pb-24 lg:pt-28 lg:pb-28">
         <Container>
           <Reveal>
-            <p className="text-caption text-text-muted font-mono tracking-wide uppercase">
-              Software Engineering
-            </p>
-            <h1 className="text-text mt-6 max-w-3xl text-[clamp(2.25rem,1rem+4.5vw,4.5rem)] leading-[1.08] font-normal tracking-tight">
-              The interface, the system behind it, and the parts that run without anyone watching.
-            </h1>
-            <p className="text-body text-text-muted mt-6 max-w-xl">
-              Software engineering at HubZero, in the order it actually gets built — what a visitor
-              sees first, what decides what they see, and what keeps running after everyone&apos;s
-              gone home.
-            </p>
+            <PageHeader
+              eyebrow="Software Engineering"
+              headline="The interface, the system behind it, and the parts that run without anyone watching."
+              size="large"
+              maxWidth="3xl"
+              description="Software engineering at HubZero, in the order it actually gets built — what a visitor sees first, what decides what they see, and what keeps running after everyone's gone home."
+            />
           </Reveal>
         </Container>
       </div>

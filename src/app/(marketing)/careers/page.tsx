@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import "@/lib/cms/collections";
 
+import { PageHeader } from "@/components/marketing/page-header";
 import { RichText } from "@/components/marketing/rich-text";
 import { Container } from "@/components/ui/container";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -32,17 +33,15 @@ export default async function CareersPage() {
   return (
     <div className="pt-16 pb-28 sm:pt-20 lg:pt-24">
       <Container>
-        <p className="text-caption text-text-muted font-mono tracking-wide uppercase">Careers</p>
-        <h1 className="text-text mt-4 max-w-2xl text-[clamp(2rem,1rem+4vw,3.5rem)] leading-[1.1] font-normal tracking-tight">
-          Open roles at HubZero.
-        </h1>
-        <p className="text-body text-text-muted mt-6 max-w-xl">
-          Meet the team on the{" "}
-          <Link href="/team" className="text-text underline underline-offset-2">
-            Team page
-          </Link>
-          . To apply, or to ask about a role that isn&apos;t listed, reach out directly.
-        </p>
+        <PageHeader eyebrow="Careers" headline="Open roles at HubZero.">
+          <p className="text-body text-text-muted mt-6 max-w-xl">
+            Meet the team on the{" "}
+            <Link href="/team" className="text-text underline underline-offset-2">
+              Team page
+            </Link>
+            . To apply, or to ask about a role that isn&apos;t listed, reach out directly.
+          </p>
+        </PageHeader>
       </Container>
 
       <Container className="mt-16 lg:mt-20">
