@@ -81,7 +81,7 @@ export function MobileNav({ items, cta }: MobileNavProps) {
                   onClick={() => setOpen(false)}
                   className={cn(
                     "text-h2 hover:bg-bg rounded-md px-3 py-3 font-serif no-underline hover:no-underline",
-                    active && "text-accent",
+                    active && "text-accent-text",
                   )}
                 >
                   {item.label}

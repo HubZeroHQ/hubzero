@@ -144,7 +144,7 @@ export function HeroSection() {
           >
             <Link
               href="/contact"
-              className="text-accent text-h2 inline-flex items-center gap-2 font-serif italic no-underline hover:no-underline hover:opacity-80"
+              className="text-accent-text text-h2 inline-flex items-center gap-2 font-serif italic no-underline hover:no-underline hover:opacity-80"
             >
               Start a project
               <ArrowUpRight className="size-5 not-italic" aria-hidden="true" />

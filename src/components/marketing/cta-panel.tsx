@@ -29,7 +29,7 @@ export function CtaPanel({ heading, primaryLabel, primaryHref, secondary }: CtaP
           <p className="text-h3 text-text font-normal">{heading}</p>
           <Link
             href={primaryHref}
-            className="text-accent text-h2 mt-4 inline-flex items-center gap-2 font-serif italic no-underline hover:no-underline hover:opacity-80"
+            className="text-accent-text text-h2 mt-4 inline-flex items-center gap-2 font-serif italic no-underline hover:no-underline hover:opacity-80"
           >
             {primaryLabel}
             <ArrowUpRight className="size-5 not-italic" aria-hidden="true" />

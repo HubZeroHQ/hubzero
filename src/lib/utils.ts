@@ -6,7 +6,7 @@ import { extendTailwindMerge } from "tailwind-merge";
  * custom @theme font-size tokens (globals.css) — text-display/h1/h2/h3/body/
  * caption — aren't in that list, so plain twMerge misclassifies them as
  * text-color utilities (both are "text-*") and silently drops them whenever
- * they're merged alongside a real color class like text-text/text-accent.
+ * they're merged alongside a real color class like text-text/text-accent-text.
  * Registering them under the font-size group fixes that.
  */
 const twMerge = extendTailwindMerge({

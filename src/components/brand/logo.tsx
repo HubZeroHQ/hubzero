@@ -42,7 +42,7 @@ export function Logo({ variant = "full", className }: LogoProps) {
       {variant === "full" && (
         <span className="text-h3 text-text tracking-tight">
           <span className="font-semibold">Hub</span>
-          <span className="text-accent font-serif italic">Zero</span>
+          <span className="text-accent-text font-serif italic">Zero</span>
         </span>
       )}
     </span>

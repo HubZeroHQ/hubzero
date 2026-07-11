@@ -1,30 +1,75 @@
 @import "tailwindcss";
 
 /*
- * Design tokens per ARCHITECTURE/07_DESIGN_SYSTEM.md.
- * Dark is the default palette (§2); `.light` overrides the same custom
- * properties so next-themes can toggle by swapping the class on <html>.
+ * Design tokens per DESIGN/V3 (Working Blueprint) — the seven-stop layered
+ * palette in DESIGN/V3/11_COLOR_PHILOSOPHY_AMENDMENT.md §2, re-deriving the
+ * studio's existing HZ-monogram blue instead of retiring it. Dark
+ * ("solder mask") is the default palette; `.light` ("drafting paper")
+ * overrides the same custom properties so next-themes can toggle by
+ * swapping the class on <html>. Superseded from the old
+ * ARCHITECTURE/07_DESIGN_SYSTEM.md §2 neutral-gray/electric-blue system —
+ * token *names* are kept unchanged for backwards compatibility with every
+ * existing `bg-*`/`text-*`/`border-*` call site; only the values evolve.
  */
 @theme {
-  --color-bg: oklch(0.15 0.005 264);
-  --color-bg-dark: oklch(0.1 0.005 264);
-  --color-bg-light: oklch(0.2 0.005 264);
-  --color-text: oklch(0.96 0.01 264);
-  --color-text-muted: oklch(0.76 0.01 264);
-  --color-border: oklch(0.4 0.01 264);
-  --color-border-muted: oklch(0.3 0.01 264);
-  --color-highlight: oklch(0.5 0.01 264);
-  --color-accent: oklch(0.7595 0.1442 235.31);
+  /* Background — deep structure, the base substrate (Amendment §2). */
+  --color-bg: #030b17;
+  --color-bg-dark: #01030a;
+  /* Structural Blue — engineered surfaces, panels, secondary surfaces. */
+  --color-bg-light: #123257;
+  --color-text: #edf3f7;
+  --color-text-muted: #9aa7b0;
+  /* Real load-bearing boundary (inputs, active states) — calibrated to
+     clear WCAG 2.1 non-text 3:1 against --color-bg (DESIGN/V3/12 §1). */
+  --color-border: #546577;
+  /* Quiet panel/card hairline — deliberately subtler than --color-border;
+     grouping here is carried by spacing/position (the drafting-sheet
+     "unpopulated substrate" logic, 02_VISUAL_LANGUAGE.md §4) as much as by
+     the line itself, per 12_ACCESSIBILITY.md §1's decorative-linework
+     allowance. */
+  --color-border-muted: #364452;
+  --color-highlight: #485765;
+  /* Brand Blue — the core signal, "act here": fills, borders, focus rings,
+     the mark. Exact stop from the Amendment; passes WCAG non-text 3:1
+     against both theme bases (fills/borders/focus), which is all this
+     token is used for — see --color-accent-text for text-sized use. */
+  --color-accent: #0174d5;
   /*
-   * Accent stays bright/light in both themes (unlike bg/text, which invert),
-   * so its "printed on" text color doesn't need a .light override — a single
-   * dark value keeps WCAG AA contrast against --color-accent either way.
+   * Brand Blue itself (#0174d5) clears the 3:1 non-text minimum against
+   * both theme bases but falls just short of the 4.5:1 *text* minimum
+   * (12_ACCESSIBILITY.md §1) when set directly as small/body-scale text on
+   * the page background — the common case for `Link` and inline emphasis.
+   * Per 12_ACCESSIBILITY.md §2 and the Amendment §8 invariant 1, the fix is
+   * a lightness/chroma calibration within the same hue family (253°), not
+   * a different hue — this token is that calibration, reserved for
+   * text-colored-directly-on-background contexts. Fills keep literal Brand
+   * Blue (--color-accent) since the button pairs it with a chosen
+   * foreground color, not the page background.
    */
-  --color-accent-foreground: oklch(0.15 0.02 264);
+  --color-accent-text: #1c81e3;
+  /*
+   * Foreground printed on an --color-accent fill (buttons, active tabs).
+   * Brand Blue is identical in both themes, so one value covers both —
+   * verified ≥4.5:1 against #0174d5.
+   */
+  --color-accent-foreground: #f5f8fc;
+  /* Electric Sky — precision highlight: hover/active/energized states. */
+  --color-electric-sky: #1495ed;
+  /* Ice Blue — the technical-diagram register only. Never interactive,
+     never a fill/border/link color (DESIGN/V3/11 §6). */
+  --color-ice-blue: #62cefb;
+  /* Pale Cyan — rare precision-glint highlight, tight budget (Amendment §7). */
+  --color-pale-cyan: #9ce2f6;
+  /* Neutral Silver — light-mode base surface; chrome/hardware-adjacent
+     borders and trim in dark mode. */
+  --color-neutral-silver: #d9dcdd;
+  /* Status hues re-tuned against the new base (04_COLOR.md §4); info's hue
+     moved 260→300 so it stays distinguishable from the Brand Blue family
+     (217–253°) under CVD simulation, per 12_ACCESSIBILITY.md §2. */
   --color-danger: oklch(0.7 0.05 30);
   --color-warning: oklch(0.7 0.05 100);
   --color-success: oklch(0.7 0.05 160);
-  --color-info: oklch(0.7 0.05 260);
+  --color-info: oklch(0.7 0.05 300);
 
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
@@ -80,32 +125,52 @@
 
 .light {
   color-scheme: light;
-  --color-bg: oklch(0.96 0.005 264);
-  --color-bg-dark: oklch(0.92 0.005 264);
-  --color-bg-light: oklch(1 0.005 264);
-  --color-text: oklch(0.15 0.01 264);
-  --color-text-muted: oklch(0.4 0.01 264);
-  --color-border: oklch(0.8 0.01 264);
-  --color-border-muted: oklch(0.88 0.01 264);
-  --color-highlight: oklch(0.7 0.01 264);
-  --color-accent: oklch(0.7985 0.1271 229.93);
+  /* Neutral Silver is the Amendment's own named "light-mode base surface"
+     (§2) — used literally as --color-bg rather than an invented off-white,
+     so light mode draws from the same seven fixed stops as dark mode. */
+  --color-bg: #d9dcdd;
+  --color-bg-dark: #c0c5c7;
+  /* Elevated "paper" surface — brighter/whiter than the Silver base, the
+     drafting-paper analogue of dark mode's Structural Blue panel. */
+  --color-bg-light: #fafbfc;
+  --color-text: #0b121a;
+  --color-text-muted: #444e58;
+  --color-border: #57626b;
+  --color-border-muted: #7e888e;
+  --color-highlight: #68737d;
+  /* Brand Blue is one fixed stop, unchanged across themes (Amendment §2) —
+     it already clears non-text 3:1 against Neutral Silver. */
+  --color-accent: #0174d5;
+  /* Calibrated text-on-background variant (see dark-mode comment above),
+     darkened rather than lightened here since it now sits on a light base. */
+  --color-accent-text: #0049a5;
   --color-danger: oklch(0.5 0.05 30);
   --color-warning: oklch(0.5 0.05 100);
   --color-success: oklch(0.5 0.05 160);
-  --color-info: oklch(0.5 0.05 260);
+  --color-info: oklch(0.5 0.05 300);
 
   /* Light-mode shadows: lower opacity, tighter spread — dark shadows read as dirt on light surfaces. */
-  --shadow-xs: 0 1px 2px 0 oklch(0.4 0.01 264 / 0.08);
-  --shadow-sm: 0 1px 3px 0 oklch(0.4 0.01 264 / 0.1), 0 1px 2px -1px oklch(0.4 0.01 264 / 0.08);
-  --shadow-md: 0 4px 8px -2px oklch(0.4 0.01 264 / 0.12), 0 2px 4px -2px oklch(0.4 0.01 264 / 0.08);
+  --shadow-xs: 0 1px 2px 0 oklch(0.4 0.01 245 / 0.08);
+  --shadow-sm: 0 1px 3px 0 oklch(0.4 0.01 245 / 0.1), 0 1px 2px -1px oklch(0.4 0.01 245 / 0.08);
+  --shadow-md: 0 4px 8px -2px oklch(0.4 0.01 245 / 0.12), 0 2px 4px -2px oklch(0.4 0.01 245 / 0.08);
   --shadow-lg:
-    0 12px 24px -6px oklch(0.4 0.01 264 / 0.14), 0 4px 8px -4px oklch(0.4 0.01 264 / 0.08);
-  --shadow-xl: 0 24px 48px -12px oklch(0.4 0.01 264 / 0.16);
+    0 12px 24px -6px oklch(0.4 0.01 245 / 0.14), 0 4px 8px -4px oklch(0.4 0.01 245 / 0.08);
+  --shadow-xl: 0 24px 48px -12px oklch(0.4 0.01 245 / 0.16);
 }
 
 :root {
-  /* One named gradient token (§2) — hero text / primary CTA only, never a section background. */
-  --brand-gradient: linear-gradient(90deg, #3abeff, #665dcd, #d2ab67);
+  /*
+   * One named gradient token — hero text / primary CTA only, never a
+   * section background. The old blue→violet→gold multi-hue sweep is
+   * retired (DESIGN/V3/04_COLOR.md §5): a gradient sweeping through
+   * unrelated hues reads as "this brand has a spectrum of colors," which
+   * contradicts the one-signature-accent discipline. This is a
+   * single-hue-family value gradient instead — Brand Blue shifting only in
+   * lightness across its own ramp (Amendment §2's Brand Blue → Electric
+   * Sky → Ice Blue stops) — the visual effect of light catching an angled
+   * metal surface, not a second, third, and fourth brand color.
+   */
+  --brand-gradient: linear-gradient(90deg, #0174d5, #1495ed, #62cefb);
 
   /*
    * Content-width tokens (§3). Not run through Tailwind's @theme namespace —
@@ -190,7 +255,7 @@ body {
 
 ::selection {
   background-color: var(--color-accent);
-  color: var(--color-bg-dark);
+  color: var(--color-accent-foreground);
 }
 
 /*

@@ -111,7 +111,7 @@ export function CircuitMotif({ className }: { className?: string }) {
       className={className}
       preserveAspectRatio="xMidYMid meet"
     >
-      <g className="text-accent" stroke="currentColor" strokeWidth="1.5" opacity="0.65">
+      <g className="text-accent-text" stroke="currentColor" strokeWidth="1.5" opacity="0.65">
         {traces.map((d, i) => (
           <path
             key={d}
@@ -124,7 +124,7 @@ export function CircuitMotif({ className }: { className?: string }) {
           />
         ))}
       </g>
-      <g className="text-accent" fill="currentColor">
+      <g className="text-accent-text" fill="currentColor">
         {nodes.map((n, i) => (
           <circle
             key={`${n.cx}-${n.cy}`}
@@ -142,7 +142,7 @@ export function CircuitMotif({ className }: { className?: string }) {
           a deliberate stamp rather than another trace. */}
       <path
         d={signatureTriangle}
-        className="text-accent"
+        className="text-accent-text"
         fill="currentColor"
         style={{
           opacity: revealed || reducedMotion ? 1 : 0,
@@ -173,7 +173,7 @@ export function CircuitSignatureMark({ className }: { className?: string }) {
     <svg viewBox="0 0 100 40" fill="none" aria-hidden="true" className={className}>
       <path
         d="M 0 20 L 60 20"
-        className="text-accent"
+        className="text-accent-text"
         stroke="currentColor"
         strokeWidth="1.5"
         opacity="0.65"
@@ -185,7 +185,7 @@ export function CircuitSignatureMark({ className }: { className?: string }) {
       />
       <path
         d="M 68 9 L 88 20 L 68 31 Z"
-        className="text-accent"
+        className="text-accent-text"
         fill="currentColor"
         style={{
           opacity: revealed || reducedMotion ? 1 : 0,
@@ -247,7 +247,7 @@ export function CircuitConnector({ className }: { className?: string }) {
       >
         <path
           d={trace}
-          className="text-accent"
+          className="text-accent-text"
           stroke="currentColor"
           strokeWidth="1.5"
           opacity="0.55"
@@ -258,7 +258,7 @@ export function CircuitConnector({ className }: { className?: string }) {
             transition: `stroke-dashoffset ${drawDuration}s cubic-bezier(0.16,1,0.3,1)`,
           }}
         />
-        <g className="text-accent" fill="currentColor">
+        <g className="text-accent-text" fill="currentColor">
           {nodes.map((n, i) => (
             <circle
               key={`${n.cx}-${n.cy}`}
@@ -274,7 +274,7 @@ export function CircuitConnector({ className }: { className?: string }) {
         </g>
         <path
           d={signatureTriangle}
-          className="text-accent"
+          className="text-accent-text"
           fill="currentColor"
           style={{
             opacity: drawn ? 1 : 0,

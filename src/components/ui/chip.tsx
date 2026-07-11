@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 
 const tones = {
   default: "bg-bg-light text-text border-border-muted",
-  accent: "bg-accent/15 text-accent border-accent/30",
+  accent: "bg-accent/15 text-accent-text border-accent/30",
 } as const;
 
 export interface ChipProps extends ComponentPropsWithoutRef<"span"> {

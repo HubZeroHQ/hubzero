@@ -311,7 +311,7 @@ export function DataTable<T extends { _id: string }>({
                       return (
                         <td key={column.key} className="text-body text-text px-4 py-3">
                           {rowHref && columnIndex === 0 ? (
-                            <Link href={rowHref(item)} className="hover:text-accent">
+                            <Link href={rowHref(item)} className="hover:text-accent-text">
                               {content}
                             </Link>
                           ) : (
@@ -336,7 +336,7 @@ export function DataTable<T extends { _id: string }>({
                     aria-label="Select"
                   />
                   {rowHref && (
-                    <Link href={rowHref(item)} className="text-accent text-caption">
+                    <Link href={rowHref(item)} className="text-accent-text text-caption">
                       Open
                     </Link>
                   )}

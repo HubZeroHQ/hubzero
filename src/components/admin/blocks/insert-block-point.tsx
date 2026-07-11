@@ -84,7 +84,7 @@ export function InsertBlockPoint({ restrictToSimple = false, onInsert }: InsertB
             setOpen(true);
             requestAnimationFrame(() => inputRef.current?.focus());
           }}
-          className="border-border-muted text-text-muted hover:border-accent hover:text-accent bg-bg relative z-10 flex size-5 scale-90 items-center justify-center rounded-full border opacity-0 transition-all duration-150 group-hover/insert:scale-100 group-hover/insert:opacity-100 focus-visible:scale-100 focus-visible:opacity-100"
+          className="border-border-muted text-text-muted hover:border-accent hover:text-accent-text bg-bg relative z-10 flex size-5 scale-90 items-center justify-center rounded-full border opacity-0 transition-all duration-150 group-hover/insert:scale-100 group-hover/insert:opacity-100 focus-visible:scale-100 focus-visible:opacity-100"
         >
           <Plus className="size-3.5" aria-hidden="true" />
         </button>
@@ -125,7 +125,7 @@ export function InsertBlockPoint({ restrictToSimple = false, onInsert }: InsertB
                 onMouseEnter={() => setHighlighted(index)}
                 className={cn(
                   "flex items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors duration-100",
-                  index === highlighted ? "bg-accent/10 text-accent" : "text-text hover:bg-bg",
+                  index === highlighted ? "bg-accent/10 text-accent-text" : "text-text hover:bg-bg",
                 )}
               >
                 <Icon className="size-4 shrink-0" aria-hidden="true" />

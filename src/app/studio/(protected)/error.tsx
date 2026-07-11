@@ -31,7 +31,7 @@ export default function StudioError({
         <button
           type="button"
           onClick={reset}
-          className="border-border text-body text-text hover:border-accent hover:text-accent rounded-full border px-5 py-2 transition-colors"
+          className="border-border text-body text-text hover:border-accent hover:text-accent-text rounded-full border px-5 py-2 transition-colors"
         >
           Try again
         </button>

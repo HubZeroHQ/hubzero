@@ -204,7 +204,7 @@ function HomepageItemRow({
           onClick={onSetHero}
           className={
             item.isHero
-              ? "text-accent text-caption inline-flex items-center gap-1.5 font-medium"
+              ? "text-accent-text text-caption inline-flex items-center gap-1.5 font-medium"
               : "text-text-muted text-caption hover:text-text inline-flex items-center gap-1.5"
           }
         >

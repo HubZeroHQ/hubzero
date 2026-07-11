@@ -5,7 +5,7 @@ import { isExternalHref } from "@/lib/is-external-link";
 import { cn } from "@/lib/utils";
 
 const tones = {
-  default: "text-accent",
+  default: "text-accent-text",
   muted: "text-text-muted hover:text-text",
 } as const;
 

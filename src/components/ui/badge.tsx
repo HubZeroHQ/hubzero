@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 const tones = {
   default: "bg-bg-light text-text-muted border-border-muted",
-  accent: "bg-accent/15 text-accent border-accent/30",
+  accent: "bg-accent/15 text-accent-text border-accent/30",
   success: "bg-success/15 text-success border-success/30",
   warning: "bg-warning/15 text-warning border-warning/30",
   danger: "bg-danger/15 text-danger border-danger/30",

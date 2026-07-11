@@ -91,7 +91,7 @@ export function Select({
                   value={option.value}
                   disabled={option.disabled}
                   className={cn(
-                    "text-body text-text data-[highlighted]:bg-accent/15 data-[highlighted]:text-accent",
+                    "text-body text-text data-[highlighted]:bg-accent/15 data-[highlighted]:text-accent-text",
                     "flex cursor-default items-center justify-between rounded-sm px-3 py-2 outline-none",
                     "data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
                   )}
