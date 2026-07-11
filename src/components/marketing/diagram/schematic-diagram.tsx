@@ -87,120 +87,142 @@ export function SchematicDiagram({
   progress,
 }: SchematicDiagramProps) {
   const nodesById = new Map(nodes.map((node) => [node.id, node]));
+  const nodeLabel = (id: string) => nodesById.get(id)?.label ?? id;
 
   return (
-    <svg
-      viewBox={`0 0 ${viewBox.width} ${viewBox.height}`}
-      className={cn("h-auto w-full", className)}
-      role="img"
-      aria-label={`Schematic diagram: ${nodes.map((node) => node.label).join(", ")}, connected as ${connections.map((c) => `${nodesById.get(c.from)?.label ?? c.from} to ${nodesById.get(c.to)?.label ?? c.to}`).join("; ")}.`}
-    >
-      <defs>
-        <marker
-          id="schematic-arrow"
-          viewBox="0 0 8 8"
-          refX="7"
-          refY="4"
-          markerWidth="6"
-          markerHeight="6"
-          orient="auto-start-reverse"
-        >
-          <path d="M0 0 L8 4 L0 8 Z" fill="var(--color-ice-blue)" />
-        </marker>
-      </defs>
+    <>
+      {/* The SVG is presentational — `role="img"` would flatten every
+          descendant `<text>` (connection labels, annotations) into one
+          opaque picture, and a single computed `aria-label` has no room for
+          annotation text at all. The `sr-only` paragraph below is the real
+          text alternative instead: always in the DOM, never gated behind
+          hover, and it's the one place every connection label and
+          annotation actually gets read (12_ACCESSIBILITY.md §3). */}
+      <svg
+        viewBox={`0 0 ${viewBox.width} ${viewBox.height}`}
+        className={cn("h-auto w-full", className)}
+        aria-hidden="true"
+      >
+        <defs>
+          <marker
+            id="schematic-arrow"
+            viewBox="0 0 8 8"
+            refX="7"
+            refY="4"
+            markerWidth="6"
+            markerHeight="6"
+            orient="auto-start-reverse"
+          >
+            <path d="M0 0 L8 4 L0 8 Z" fill="var(--color-ice-blue)" />
+          </marker>
+        </defs>
 
-      <g fill="none" stroke="var(--color-ice-blue)" strokeWidth="var(--stroke-diagram)">
-        {connections.map((connection) => {
-          const from = nodesById.get(connection.from);
-          const to = nodesById.get(connection.to);
-          if (!from || !to) return null;
-          const key = connectionKey(connection);
-          const drawn = progress?.[key] ?? 1;
-          const path = elbowPath(from, to);
+        <g fill="none" stroke="var(--color-ice-blue)" strokeWidth="var(--stroke-diagram)">
+          {connections.map((connection) => {
+            const from = nodesById.get(connection.from);
+            const to = nodesById.get(connection.to);
+            if (!from || !to) return null;
+            const key = connectionKey(connection);
+            const drawn = progress?.[key] ?? 1;
+            const path = elbowPath(from, to);
+            return (
+              <g key={key} data-connection={key}>
+                <path
+                  d={path}
+                  markerEnd="url(#schematic-arrow)"
+                  pathLength={1}
+                  style={{
+                    strokeDasharray: 1,
+                    strokeDashoffset: 1 - drawn,
+                    opacity: drawn > 0 ? 1 : 0,
+                  }}
+                />
+                {connection.label && drawn > 0.5 && (
+                  <text
+                    x={(from.x + to.x) / 2}
+                    y={(from.y + to.y) / 2 - 6}
+                    textAnchor="middle"
+                    className="fill-text-muted font-mono text-[9px] uppercase"
+                    stroke="none"
+                  >
+                    {connection.label}
+                  </text>
+                )}
+              </g>
+            );
+          })}
+        </g>
+
+        {nodes.map((node) => {
+          const width = node.width ?? 128;
+          const height = node.height ?? 48;
+          const shape = node.shape ?? "box";
           return (
-            <g key={key} data-connection={key}>
-              <path
-                d={path}
-                markerEnd="url(#schematic-arrow)"
-                pathLength={1}
-                style={{
-                  strokeDasharray: 1,
-                  strokeDashoffset: 1 - drawn,
-                  opacity: drawn > 0 ? 1 : 0,
-                }}
-              />
-              {connection.label && drawn > 0.5 && (
-                <text
-                  x={(from.x + to.x) / 2}
-                  y={(from.y + to.y) / 2 - 6}
-                  textAnchor="middle"
-                  className="fill-text-muted font-mono text-[9px] uppercase"
-                  stroke="none"
-                >
-                  {connection.label}
-                </text>
+            <g key={node.id} data-node={node.id}>
+              {shape === "diamond" ? (
+                <polygon
+                  points={`${node.x},${node.y - height / 2} ${node.x + width / 2},${node.y} ${node.x},${node.y + height / 2} ${node.x - width / 2},${node.y}`}
+                  fill="var(--color-bg-light)"
+                  stroke="var(--color-ice-blue)"
+                  strokeWidth="var(--stroke-diagram)"
+                />
+              ) : (
+                <rect
+                  x={node.x - width / 2}
+                  y={node.y - height / 2}
+                  width={width}
+                  height={height}
+                  fill="var(--color-bg-light)"
+                  stroke="var(--color-ice-blue)"
+                  strokeWidth="var(--stroke-diagram)"
+                />
               )}
+              <text
+                x={node.x}
+                y={node.y}
+                textAnchor="middle"
+                dominantBaseline="middle"
+                className="fill-text font-mono text-[10px] tracking-wide uppercase"
+              >
+                {node.label}
+              </text>
             </g>
           );
         })}
-      </g>
 
-      {nodes.map((node) => {
-        const width = node.width ?? 128;
-        const height = node.height ?? 48;
-        const shape = node.shape ?? "box";
-        return (
-          <g key={node.id} data-node={node.id}>
-            {shape === "diamond" ? (
-              <polygon
-                points={`${node.x},${node.y - height / 2} ${node.x + width / 2},${node.y} ${node.x},${node.y + height / 2} ${node.x - width / 2},${node.y}`}
-                fill="var(--color-bg-light)"
-                stroke="var(--color-ice-blue)"
-                strokeWidth="var(--stroke-diagram)"
-              />
-            ) : (
-              <rect
-                x={node.x - width / 2}
-                y={node.y - height / 2}
-                width={width}
-                height={height}
-                fill="var(--color-bg-light)"
-                stroke="var(--color-ice-blue)"
-                strokeWidth="var(--stroke-diagram)"
-              />
-            )}
+        {annotations?.map((annotation, index) => (
+          <g key={index}>
+            <line
+              x1={annotation.x}
+              y1={annotation.y}
+              x2={annotation.x + 16}
+              y2={annotation.y - 16}
+              stroke="var(--color-border)"
+              strokeWidth="1"
+            />
             <text
-              x={node.x}
-              y={node.y}
-              textAnchor="middle"
-              dominantBaseline="middle"
-              className="fill-text font-mono text-[10px] tracking-wide uppercase"
+              x={annotation.x + 20}
+              y={annotation.y - 18}
+              className="fill-text-muted font-mono text-[9px]"
             >
-              {node.label}
+              {annotation.text}
             </text>
           </g>
-        );
-      })}
-
-      {annotations?.map((annotation, index) => (
-        <g key={index}>
-          <line
-            x1={annotation.x}
-            y1={annotation.y}
-            x2={annotation.x + 16}
-            y2={annotation.y - 16}
-            stroke="var(--color-border)"
-            strokeWidth="1"
-          />
-          <text
-            x={annotation.x + 20}
-            y={annotation.y - 18}
-            className="fill-text-muted font-mono text-[9px]"
-          >
-            {annotation.text}
-          </text>
-        </g>
-      ))}
-    </svg>
+        ))}
+      </svg>
+      <p className="sr-only">
+        {`Schematic diagram. Components: ${nodes.map((node) => node.label).join(", ")}. `}
+        {`Connections: ${connections
+          .map((connection) => {
+            const from = nodeLabel(connection.from);
+            const to = nodeLabel(connection.to);
+            return connection.label ? `${from} to ${to} (${connection.label})` : `${from} to ${to}`;
+          })
+          .join("; ")}.`}
+        {annotations && annotations.length > 0
+          ? ` Notes: ${annotations.map((annotation) => annotation.text).join("; ")}.`
+          : ""}
+      </p>
+    </>
   );
 }

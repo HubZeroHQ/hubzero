@@ -1,16 +1,9 @@
-import {
-  AlertTriangle,
-  ArrowUpRight,
-  CheckCircle2,
-  Info,
-  Pin,
-  TrendingDown,
-  TrendingUp,
-} from "lucide-react";
+import { ArrowUpRight, TrendingDown, TrendingUp } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { Container } from "@/components/ui/container";
+import { SuccessIcon, WarningIcon, type IconProps } from "@/components/ui/icons";
 import { Lightbox } from "@/components/marketing/blocks/lightbox";
 import { MediaImage } from "@/components/marketing/media-image";
 import { RichText } from "@/components/marketing/rich-text";
@@ -70,12 +63,15 @@ const calloutToneLabels: Record<CalloutTone, string> = {
   warning: "Warning",
 };
 
-/** Matches `components/ui/alert.tsx`'s tone→icon convention — color is never the only signal here either. */
-const calloutToneIcons: Record<CalloutTone, LucideIcon> = {
-  note: Pin,
-  info: Info,
-  success: CheckCircle2,
-  warning: AlertTriangle,
+// Only `success`/`warning` have an approved shape in the trace-geometry icon
+// set's minimum vocabulary (14_VISUAL_TOKENS.md §6 — "Success/error/warning")
+// — `note`/`info` render without an icon rather than reaching for a
+// lucide-react circle the geometric icon language explicitly excludes
+// ("no curves, no circles as primitives"). Color is never the only signal
+// either way — the mono tag label above always names the tone.
+const calloutToneIcons: Partial<Record<CalloutTone, (props: IconProps) => ReactNode>> = {
+  success: SuccessIcon,
+  warning: WarningIcon,
 };
 
 const spacerHeight: Record<string, string> = {
@@ -181,8 +177,10 @@ export async function BlockRenderer({ block, media, bare }: BlockRendererProps) 
         <Wrap size="prose" bare={bare}>
           {/* No decorative oversized quotation-mark glyph
               (DESIGN/V3/06_COMPONENT_LANGUAGE.md §10) — the hairline rule and
-              the serif italic line carry "this is a quote" on their own. */}
-          <blockquote className="border-accent relative border-l-2 py-1 pl-8">
+              the serif italic line carry "this is a quote" on their own.
+              1px, not 2px — 2px is reserved for focus rings alone
+              (14_VISUAL_TOKENS.md §4). */}
+          <blockquote className="border-accent relative border-l py-1 pl-8">
             <p className="text-h2 text-text relative font-serif leading-tight italic">
               {block.data.text}
             </p>
@@ -204,9 +202,11 @@ export async function BlockRenderer({ block, media, bare }: BlockRendererProps) 
       const ToneIcon = calloutToneIcons[block.data.tone];
       return (
         <Wrap size="prose" bare={bare}>
-          <div className={cn("border-l-2 py-1 pl-6", calloutToneClasses[block.data.tone])}>
+          {/* 1px hairline, not 2px — 2px is reserved for focus rings alone
+              (14_VISUAL_TOKENS.md §4). */}
+          <div className={cn("border-l py-1 pl-6", calloutToneClasses[block.data.tone])}>
             <div className="flex items-center gap-2">
-              <ToneIcon className="size-3.5" aria-hidden="true" />
+              {ToneIcon && <ToneIcon className="size-3.5" aria-hidden="true" />}
               <span className="text-caption font-mono tracking-wide uppercase">
                 {calloutToneLabels[block.data.tone]}
               </span>
@@ -412,7 +412,9 @@ export async function BlockRenderer({ block, media, bare }: BlockRendererProps) 
         <Wrap size="prose" bare={bare}>
           <ol className="flex flex-col gap-8">
             {block.data.items.map((item, index) => (
-              <li key={index} className="border-border-muted relative border-l-2 pl-6">
+              // 1px connector, not 2px — 2px is reserved for focus rings
+              // alone (14_VISUAL_TOKENS.md §4).
+              <li key={index} className="border-border-muted relative border-l pl-6">
                 {/* A filled square node, echoing a schematic junction — not a
                     round dot on a smooth line (06_COMPONENT_LANGUAGE.md §12). */}
                 <span

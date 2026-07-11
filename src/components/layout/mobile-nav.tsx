@@ -1,13 +1,13 @@
 "use client";
 
 import * as Dialog from "@radix-ui/react-dialog";
-import { Menu, X } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
+import { CloseIcon, MenuIcon } from "@/components/ui/icons";
 import { Link } from "@/components/ui/link";
 import type { NavItem } from "@/config/nav";
 import { duration, ease } from "@/lib/motion";
@@ -63,7 +63,7 @@ export function MobileNav({ items, cta }: MobileNavProps) {
     <Dialog.Root open={open} onOpenChange={setOpen}>
       <Dialog.Trigger asChild>
         <IconButton
-          icon={<Menu className="size-5" />}
+          icon={<MenuIcon className="size-5" />}
           aria-label="Open menu"
           className="md:hidden"
         />
@@ -95,7 +95,7 @@ export function MobileNav({ items, cta }: MobileNavProps) {
 
                 <div className="mb-6 flex items-center justify-end">
                   <Dialog.Close asChild>
-                    <IconButton icon={<X className="size-5" />} aria-label="Close menu" />
+                    <IconButton icon={<CloseIcon className="size-5" />} aria-label="Close menu" />
                   </Dialog.Close>
                 </div>
 

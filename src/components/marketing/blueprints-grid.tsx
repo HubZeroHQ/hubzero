@@ -6,6 +6,7 @@ import { FeaturedBadge } from "@/components/marketing/card-meta";
 import { EntryRow } from "@/components/marketing/entry-row";
 import { FilterChip } from "@/components/marketing/filter-chip";
 import { EmptyState } from "@/components/ui/empty-state";
+import { StatusIndicatorIcon } from "@/components/ui/icons";
 import type { PublicTeamMember } from "@/lib/cms/public-content";
 
 export interface BlueprintsGridItem {
@@ -71,7 +72,10 @@ export function BlueprintsGrid({ items }: { items: BlueprintsGridItem[] }) {
                 </p>
                 {item.hasLiveDemo && (
                   <span className="text-caption text-success inline-flex items-center gap-1">
-                    <span className="bg-success size-1.5 rounded-full" aria-hidden="true" />
+                    {/* Filled square, not a circle — a status dot is a
+                        square/diamond primitive, never a circle
+                        (14_VISUAL_TOKENS.md §6). */}
+                    <StatusIndicatorIcon className="text-success size-2" aria-hidden="true" />
                     Live demo
                   </span>
                 )}

@@ -66,8 +66,13 @@ export function EntryRow({
     >
       <div className={cn("sm:order-2", spanClasses[imageSpan])}>
         {/* Index thumbnails: 4:3, consistent whether or not a real cover
-            exists (DESIGN/V3/14_VISUAL_TOKENS.md §7). */}
-        <div className="bg-bg-light aspect-[4/3] w-full overflow-hidden">
+            exists (DESIGN/V3/14_VISUAL_TOKENS.md §7). `aria-hidden` only
+            when there's no real image underneath — a real cover keeps its
+            own accessible `alt`, never hidden. */}
+        <div
+          className="bg-bg-light aspect-[4/3] w-full overflow-hidden"
+          aria-hidden={cover ? undefined : true}
+        >
           {cover && (
             <Image
               src={cover.url}
