@@ -2,7 +2,7 @@
 
 > Assumes `00`–`09`. This document does not implement anything — it sequences how a future engineering/design pass should turn this blueprint into code, ranked by value, risk, and dependency, the same way `ARCHITECTURE/14_IMPLEMENTATION_ROADMAP.md` sequenced v2's build without writing v2's code.
 >
-> **Amended — three additions to existing phases, no new phase, no resequencing.** Phase 1 (§3) gains the brand-asset work `13_BRAND_SYSTEM.md` §11 requires alongside it (the logomark, favicon/app-icon set, and wordmark serif migration must not ship after the token migration, per that document's own restatement of this roadmap's sequencing principle 3) and the CVD/contrast audit scope `12_ACCESSIBILITY.md` §7 adds to the WCAG pass this phase already commits to. Phase 7 (§9) gains the CMS-side `diagram` block type `15_DIAGRAM_SYSTEM.md` §7 specifies alongside the reusable engineering-diagram component that phase already scopes.
+> **Amended — three additions to existing phases, no new phase, no resequencing.** Phase 1 (§3) gains the brand-asset work `13_BRAND_SYSTEM.md` §11 specifies alongside it — producing the missing canonical (flat, reproducible) register for the favicon/app-icon set and migrating the wordmark's serif, additive work alongside the existing expressive mark rather than a replacement with a hard cutover — plus the CVD/contrast audit scope `12_ACCESSIBILITY.md` §7 adds to the WCAG pass this phase already commits to, now run against the seven-stop palette in `11_COLOR_PHILOSOPHY_AMENDMENT.md` §2. Phase 7 (§9) gains the CMS-side `diagram` block type `15_DIAGRAM_SYSTEM.md` §7 specifies alongside the reusable engineering-diagram component that phase already scopes.
 
 ## 1. Sequencing principles
 
