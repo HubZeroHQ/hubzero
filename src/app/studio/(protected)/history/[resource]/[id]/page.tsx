@@ -9,7 +9,8 @@ import { DiffView } from "@/components/admin/version-history/diff-view";
 import { PageHeader } from "@/components/admin/page-header";
 import { EmptyState, Heading, Link, Text } from "@/components/ui";
 import { getCollection, getRecordLabel } from "@/lib/cms/collection-config";
-import { diffObjects } from "@/lib/cms/diff";
+import { collectDiffMediaIds, diffObjects } from "@/lib/cms/diff";
+import { getMediaByIds } from "@/lib/cms/media";
 import { can } from "@/lib/cms/permissions";
 import { requireSessionUser } from "@/lib/cms/session";
 import { serializeDocument } from "@/lib/cms/serialize";
@@ -64,13 +65,26 @@ export default async function VersionHistoryPage({ params }: VersionHistoryPageP
     createdBy: typeof ownerValue === "string" ? ownerValue : undefined,
   });
 
-  const fieldLabels = Object.fromEntries(
-    config.formFields.map((field) => [field.name, field.label]),
-  );
   const editHref = config.studioBasePath
     ? `/studio/${config.studioBasePath}/${id}`
     : `/studio/history/${resource}/${id}`;
   const recordLabel = getRecordLabel(config, liveDoc);
+
+  const unpublishedDiffs = diffObjects(versions[0]?.snapshot ?? null, liveDoc, config.formFields);
+  const versionDiffs = versions.map((entry, index) =>
+    diffObjects(versions[index + 1]?.snapshot ?? null, entry.snapshot, config.formFields),
+  );
+
+  // One batched media lookup for every diff on the page (the "unpublished
+  // changes" section plus every version row) rather than each row resolving
+  // its own image/gallery thumbnails — avoids an N+1 waterfall down a long
+  // version history.
+  const mediaIds = new Set([
+    ...collectDiffMediaIds(unpublishedDiffs),
+    ...versionDiffs.flatMap(collectDiffMediaIds),
+  ]);
+  const media = mediaIds.size > 0 ? await getMediaByIds([...mediaIds]) : [];
+  const mediaMap = Object.fromEntries(media.map((item) => [item.id, item]));
 
   return (
     <>
@@ -95,7 +109,7 @@ export default async function VersionHistoryPage({ params }: VersionHistoryPageP
             <Text size="caption" tone="muted" className="mb-3">
               How the current document differs from the last published version.
             </Text>
-            <DiffView diffs={diffObjects(versions[0]?.snapshot ?? null, liveDoc, fieldLabels)} />
+            <DiffView diffs={unpublishedDiffs} mediaMap={mediaMap} />
           </section>
 
           <section>
@@ -107,8 +121,8 @@ export default async function VersionHistoryPage({ params }: VersionHistoryPageP
                 <VersionEntryCard
                   key={entry.id}
                   entry={entry}
-                  previousSnapshot={versions[index + 1]?.snapshot ?? null}
-                  fieldLabels={fieldLabels}
+                  diffs={versionDiffs[index]!}
+                  mediaMap={mediaMap}
                   resource={resource}
                   documentId={id}
                   canRestore={canRestore}
