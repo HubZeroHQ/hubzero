@@ -134,7 +134,7 @@ export default async function LabsProjectPage({ params }: LabsProjectPageProps) 
           <p className="text-h3 text-text font-normal">Curious how this connects to client work?</p>
           <Link
             href="/contact"
-            className="text-accent-text text-h2 mt-6 inline-flex items-center gap-2 font-serif italic no-underline hover:no-underline hover:opacity-80"
+            className="text-accent-text text-h2 mt-6 inline-flex items-center gap-2 font-serif no-underline hover:no-underline hover:opacity-80"
           >
             Start a project
             <ArrowUpRight className="size-5 not-italic" aria-hidden="true" />

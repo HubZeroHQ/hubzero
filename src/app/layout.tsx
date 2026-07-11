@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
+import { Geist, Geist_Mono, IBM_Plex_Serif } from "next/font/google";
 
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { brandAssets } from "@/config/brand";
@@ -19,14 +19,21 @@ const geistMono = Geist_Mono({
 });
 
 /**
- * Display serif (ARCHITECTURE/15_HOMEPAGE_DESIGN.md §1) — one weight, both
- * cuts. Used sparingly at named moments only (hero headline, case-study pull
- * line), never as a default heading treatment — see that doc for the rule.
+ * Display serif (DESIGN/V3/03_TYPOGRAPHY.md §3, §6) — retired Instrument
+ * Serif in favor of IBM Plex Serif: a family with real engineering-
+ * organization pedigree, meaningfully less trend-saturated in the specific
+ * "editorial AI-assisted design" genre Instrument Serif had become a
+ * default signal for. Used upright by default (Text/Regular for pull
+ * quotes, Medium for firmer emphasis) — italic is loaded as a secondary
+ * emphasis available *within* a Plex Serif moment, not the default
+ * posture the way Instrument Serif's italic-by-default was. Still a rare,
+ * named slow-down device only (at most one moment per page, two on the
+ * homepage) — never a default heading treatment.
  */
-const instrumentSerif = Instrument_Serif({
-  variable: "--font-instrument-serif",
+const ibmPlexSerif = IBM_Plex_Serif({
+  variable: "--font-plex-serif",
   subsets: ["latin"],
-  weight: "400",
+  weight: ["400", "500"],
   style: ["normal", "italic"],
 });
 
@@ -63,7 +70,7 @@ export default function RootLayout({ children }: Readonly<WithChildren>) {
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable}`}
+      className={`${geistSans.variable} ${geistMono.variable} ${ibmPlexSerif.variable}`}
     >
       {/*
         Font variables live on <html>, not <body>: Tailwind's --font-sans/

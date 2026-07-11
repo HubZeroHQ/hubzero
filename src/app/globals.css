@@ -74,11 +74,13 @@
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
   /*
-   * Display serif (ARCHITECTURE/15_HOMEPAGE_DESIGN.md §1) — pacing device,
-   * not a default heading font. Reach for `font-serif` only at the specific
-   * named moments that doc calls out.
+   * Display serif (DESIGN/V3/03_TYPOGRAPHY.md §3, §6) — IBM Plex Serif,
+   * replacing Instrument Serif. A rare pacing device, not a default heading
+   * font, and used upright by default (not italic-by-default) — reach for
+   * `font-serif` only at the specific named moments that doc calls out,
+   * and add `italic` explicitly where a secondary emphasis is warranted.
    */
-  --font-serif: var(--font-instrument-serif), ui-serif, Georgia, serif;
+  --font-serif: var(--font-plex-serif), ui-serif, Georgia, serif;
 
   /* Modular type scale, 4px base unit (§1). */
   --text-display: 4rem;
