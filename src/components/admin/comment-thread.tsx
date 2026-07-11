@@ -156,6 +156,7 @@ function CommentRow({
         <button
           type="button"
           onClick={() => onToggleResolved(comment.id)}
+          aria-pressed={comment.resolved}
           className="text-caption text-text-muted hover:text-text"
         >
           {comment.resolved ? "Reopen" : "Resolve"}
@@ -163,6 +164,7 @@ function CommentRow({
         <button
           type="button"
           onClick={() => onReply(activeReplyId === comment.id ? null : comment.id)}
+          aria-expanded={activeReplyId === comment.id}
           className="text-caption text-text-muted hover:text-text"
         >
           Reply

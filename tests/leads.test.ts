@@ -373,4 +373,47 @@ describe("Lead bespoke Server Actions", () => {
     });
     await expect(exportLeadsCsv()).rejects.toThrow(ForbiddenError);
   });
+
+  it("denies assignLead, addLeadNote, updateLeadDetails, and both bulk actions to a role with no edit grant on lead", async () => {
+    const id = await createLead();
+    const admin = await User.create({
+      email: "admin11@example.com",
+      name: "Admin Eleven",
+      passwordHash: "unused",
+      role: "admin",
+      sessionVersion: 0,
+    });
+
+    loginAs({
+      id: "t1",
+      email: "t@example.com",
+      name: "T",
+      role: "teammate",
+      dynamicPermissions: [],
+    });
+
+    await expect(assignLead(id, admin._id.toString())).rejects.toThrow(ForbiddenError);
+    await expect(addLeadNote(id, "A note")).rejects.toThrow(ForbiddenError);
+    await expect(
+      updateLeadDetails(id, {
+        priority: "high",
+        internalLabels: [],
+        reminderAt: null,
+        estimatedValue: null,
+      }),
+    ).rejects.toThrow(ForbiddenError);
+    await expect(bulkAssignLeads([id], admin._id.toString())).rejects.toThrow(ForbiddenError);
+    await expect(bulkArchiveLeads([id])).rejects.toThrow(ForbiddenError);
+  });
+
+  it("denies getAssignableUsers to a role with no view grant on lead", async () => {
+    loginAs({
+      id: "t1",
+      email: "t@example.com",
+      name: "T",
+      role: "teammate",
+      dynamicPermissions: [],
+    });
+    await expect(getAssignableUsers()).rejects.toThrow(ForbiddenError);
+  });
 });

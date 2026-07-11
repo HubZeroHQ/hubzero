@@ -28,6 +28,7 @@ export function NotificationBell() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifications, setNotifications] = useState<ClientNotification[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     getMyUnreadNotificationCount().then(setUnreadCount);
@@ -53,6 +54,14 @@ export function NotificationBell() {
       document.removeEventListener("keydown", handleEscape);
     };
   }, []);
+
+  // Moves focus into the panel on open, matching the command palette's
+  // `onOpenAutoFocus` — otherwise a keyboard user has no way to reach the
+  // panel's contents except tabbing past whatever follows the bell in the
+  // topbar.
+  useEffect(() => {
+    if (open) panelRef.current?.focus();
+  }, [open]);
 
   function handleOpenChange(next: boolean) {
     setOpen(next);
@@ -82,6 +91,8 @@ export function NotificationBell() {
         type="button"
         onClick={() => handleOpenChange(!open)}
         aria-label={unreadCount > 0 ? `Notifications (${unreadCount} unread)` : "Notifications"}
+        aria-haspopup="menu"
+        aria-expanded={open}
         className="text-text-muted hover:text-text relative inline-flex size-8 items-center justify-center rounded-md"
       >
         <Bell className="size-5" aria-hidden="true" />
@@ -93,7 +104,13 @@ export function NotificationBell() {
       </button>
 
       {open && (
-        <div className="bg-bg-light border-border-muted z-modal absolute right-0 mt-2 w-[min(22rem,90vw)] rounded-lg border shadow-xl">
+        <div
+          ref={panelRef}
+          role="menu"
+          aria-label="Notifications"
+          tabIndex={-1}
+          className="bg-bg-light border-border-muted z-modal absolute right-0 mt-2 w-[min(22rem,90vw)] rounded-lg border shadow-xl focus:outline-none"
+        >
           <div className="border-border-muted flex items-center justify-between border-b px-4 py-3">
             <Text weight="medium">Notifications</Text>
             {unreadCount > 0 && (
@@ -114,9 +131,10 @@ export function NotificationBell() {
             ) : (
               <ul>
                 {notifications.map((notification) => (
-                  <li key={notification.id}>
+                  <li key={notification.id} role="none">
                     <button
                       type="button"
+                      role="menuitem"
                       onClick={() => handleSelect(notification)}
                       className={cn(
                         "flex w-full flex-col gap-0.5 px-4 py-3 text-left",

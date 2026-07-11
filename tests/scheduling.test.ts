@@ -10,11 +10,12 @@ vi.mock("@/lib/cms/session", () => ({
 import { getSessionUser } from "@/lib/cms/session";
 import { createCrudActions } from "@/lib/cms/crud-actions";
 import { testimonialConfig } from "@/lib/cms/collections/testimonial.config";
+import { ForbiddenError } from "@/lib/cms/permissions";
 import { runDueSchedules } from "@/lib/cms/scheduler";
 import { VersionHistory } from "@/models/version-history";
 import { User } from "@/models/user";
 import type { SessionUser } from "@/types/cms";
-import { toFormData } from "./helpers";
+import { fakeObjectId, toFormData } from "./helpers";
 
 function loginAs(user: SessionUser | null) {
   vi.mocked(getSessionUser).mockResolvedValue(user);
@@ -133,6 +134,33 @@ describe("scheduling — schedulePublish/cancelSchedule/archive/restoreArchive",
       .lean<{ status: string; scheduledUnpublishAt: unknown }>();
     expect(doc?.status).toBe("published");
     expect(doc?.scheduledUnpublishAt).toBeTruthy();
+  });
+
+  it("a teammate without a publish grant cannot schedule, cancel, archive, or restore", async () => {
+    const adminId = await realUserId("admin");
+    loginAs({ id: adminId, email: "a@b.com", name: "A", role: "admin", dynamicPermissions: [] });
+    const created = await create(
+      { status: "idle" },
+      toFormData({ quote: "Q", name: "N", title: "T" }),
+    );
+    await publish(created.id as string);
+
+    loginAs({
+      id: fakeObjectId(),
+      email: "t@example.com",
+      name: "Teammate",
+      role: "teammate",
+      dynamicPermissions: [],
+    });
+
+    const futureDate = new Date(Date.now() + 60_000);
+    await expect(schedulePublish(created.id as string, futureDate)).rejects.toThrow(ForbiddenError);
+    await expect(scheduleUnpublish(created.id as string, futureDate)).rejects.toThrow(
+      ForbiddenError,
+    );
+    await expect(cancelSchedule(created.id as string)).rejects.toThrow(ForbiddenError);
+    await expect(archive(created.id as string)).rejects.toThrow(ForbiddenError);
+    await expect(restoreArchive(created.id as string)).rejects.toThrow(ForbiddenError);
   });
 });
 

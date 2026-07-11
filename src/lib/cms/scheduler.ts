@@ -33,33 +33,45 @@ export async function runDueSchedules(now: Date = new Date()): Promise<ScheduleR
       .find({ status: "scheduled", scheduledPublishAt: { $lte: now } })
       .select("_id")
       .lean<{ _id: unknown }[]>();
-    for (const { _id } of duePublishes) {
-      const documentId = String(_id);
-      const result = await runScheduledPublish(config, documentId);
-      results.push({
-        resource: config.resource,
-        documentId,
-        action: "publish",
-        status: result.status,
-        message: result.status === "error" ? result.message : undefined,
-      });
-    }
+    // Each due document is an independent mutation (its own `snapshotVersion`/
+    // `notify` side effects, no shared state) — run the batch concurrently
+    // rather than one-at-a-time, so a cron tick with many due items isn't
+    // serialized into N sequential round-trips.
+    results.push(
+      ...(await Promise.all(
+        duePublishes.map(async ({ _id }) => {
+          const documentId = String(_id);
+          const result = await runScheduledPublish(config, documentId);
+          return {
+            resource: config.resource,
+            documentId,
+            action: "publish" as const,
+            status: result.status,
+            message: result.status === "error" ? result.message : undefined,
+          };
+        }),
+      )),
+    );
 
     const dueUnpublishes = await config.model
       .find({ status: "published", scheduledUnpublishAt: { $lte: now } })
       .select("_id")
       .lean<{ _id: unknown }[]>();
-    for (const { _id } of dueUnpublishes) {
-      const documentId = String(_id);
-      const result = await runScheduledArchive(config, documentId);
-      results.push({
-        resource: config.resource,
-        documentId,
-        action: "archive",
-        status: result.status,
-        message: result.status === "error" ? result.message : undefined,
-      });
-    }
+    results.push(
+      ...(await Promise.all(
+        dueUnpublishes.map(async ({ _id }) => {
+          const documentId = String(_id);
+          const result = await runScheduledArchive(config, documentId);
+          return {
+            resource: config.resource,
+            documentId,
+            action: "archive" as const,
+            status: result.status,
+            message: result.status === "error" ? result.message : undefined,
+          };
+        }),
+      )),
+    );
   }
 
   return results;
