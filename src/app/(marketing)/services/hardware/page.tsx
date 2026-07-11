@@ -165,7 +165,9 @@ export default function HardwareEngineeringPage() {
           <div className="mt-6 max-w-[var(--content-prose)]">
             <div className="flex flex-wrap items-center gap-3">
               <h2 className="text-h3 text-text font-normal">IoT Sensor Dashboard</h2>
-              <Badge>Internal R&amp;D — not client work</Badge>
+              <Badge className="tracking-normal normal-case">
+                Internal R&amp;D — not client work
+              </Badge>
             </div>
             <p className="text-body text-text-muted mt-5">
               A real-time environmental monitoring system built internally, end to end, by

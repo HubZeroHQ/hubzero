@@ -4,9 +4,13 @@ import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { IconButton } from "@/components/ui/icon-button";
 import { cn } from "@/lib/utils";
 
+// Hairline-bordered, no filled background — a real component-designator
+// label ("R1", "U3") rather than a social-app hashtag chip. Active/selected
+// state is carried by the accent border, never a filled wash
+// (DESIGN/V3/06_COMPONENT_LANGUAGE.md §7).
 const tones = {
-  default: "bg-bg-light text-text border-border-muted",
-  accent: "bg-accent/15 text-accent-text border-accent/30",
+  default: "text-text border-border-muted",
+  accent: "text-accent-text border-accent",
 } as const;
 
 export interface ChipProps extends ComponentPropsWithoutRef<"span"> {
@@ -17,12 +21,15 @@ export interface ChipProps extends ComponentPropsWithoutRef<"span"> {
   children: ReactNode;
 }
 
-/** Tag/filter pill — optionally removable. For a static status indicator, see Badge. */
+/** Tag/filter — optionally removable. For a static status indicator, see Badge. */
 export function Chip({ tone = "default", onRemove, className, children, ...props }: ChipProps) {
   return (
     <span
       className={cn(
-        "text-caption inline-flex items-center gap-1.5 rounded-full border py-1 pl-3 font-medium",
+        // Square corners (0px, not the sitewide 4px) and the technical-label
+        // register (Geist Mono, wide tracking) — tags read as data labels,
+        // not UI affordances (14_VISUAL_TOKENS.md §3, 03_TYPOGRAPHY.md §7).
+        "text-caption inline-flex items-center gap-1.5 rounded-none border py-1 pl-3 font-mono tracking-wide uppercase",
         onRemove ? "pr-1" : "pr-3",
         tones[tone],
         className,

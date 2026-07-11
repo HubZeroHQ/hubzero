@@ -222,7 +222,9 @@ export default function AboutPage() {
               <h2 className="text-h2 text-text font-normal">
                 An IoT sensor dashboard, built for no client.
               </h2>
-              <Badge>Internal R&amp;D &mdash; not client work</Badge>
+              <Badge className="tracking-normal normal-case">
+                Internal R&amp;D &mdash; not client work
+              </Badge>
             </div>
           </Reveal>
           <Reveal delayMs={60} className="mt-5 space-y-5">

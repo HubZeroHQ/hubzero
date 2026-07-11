@@ -37,7 +37,9 @@ export function IconButton({
     <button
       type={type}
       className={cn(
-        "inline-flex items-center justify-center rounded-full",
+        // Same rectangle-not-pill geometry as Button (§1) — an icon-only
+        // control is still a button.
+        "inline-flex items-center justify-center rounded-sm",
         "transition-colors duration-150 disabled:pointer-events-none",
         variants[variant],
         sizes[size],

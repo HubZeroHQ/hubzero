@@ -89,7 +89,9 @@ export default async function LabsProjectPage({ params }: LabsProjectPageProps) 
             <h1 className="text-text max-w-3xl text-[clamp(2.25rem,1rem+4.5vw,4.5rem)] leading-[1.08] font-normal tracking-tight">
               {doc.title}
             </h1>
-            <Badge>Internal R&amp;D — not client work</Badge>
+            <Badge className="tracking-normal normal-case">
+              Internal R&amp;D — not client work
+            </Badge>
           </div>
           <p className="text-caption text-text-muted mt-8 font-mono">
             {stageLabels[doc.stage] ?? doc.stage}
