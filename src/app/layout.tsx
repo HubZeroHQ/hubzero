@@ -50,19 +50,31 @@ export const metadata: Metadata = {
     title: siteConfig.title,
     description: siteConfig.description,
     url: siteConfig.url,
-    images: [{ url: brandAssets.ogImage }],
+    images: [
+      {
+        url: "/images/og/hubzero-og.png",
+        width: 1200,
+        height: 630,
+        alt: "HubZero",
+      },
+    ],
   },
+
   twitter: {
     card: "summary_large_image",
     title: siteConfig.title,
     description: siteConfig.description,
-    images: [brandAssets.ogImage],
+    images: ["/images/og/hubzero-og.png"],
   },
   icons: {
     icon: brandAssets.favicon,
     apple: brandAssets.appleTouchIcon,
   },
   manifest: brandAssets.manifest,
+
+  appleWebApp: {
+    title: "Hub Zero",
+  },
 };
 
 export default function RootLayout({ children }: Readonly<WithChildren>) {
