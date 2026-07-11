@@ -3,6 +3,22 @@
  * repo-root `assets/` folder (never served, never modified — see
  * `ARCHITECTURE/07_DESIGN_SYSTEM.md`); everything below is the public-facing
  * copy under `public/`. Reference this config instead of hardcoding a path.
+ *
+ * Known gap, DESIGN/V3/13_BRAND_SYSTEM.md §2, §6, §11: every asset below is
+ * the mark's *expressive* register (rich, dimensional, glossy) — correct
+ * for hero/launch-scale use, but there is no *canonical* register yet (a
+ * flat, single-tone redraw of the same H/Z geometry, per §2's "solid" and
+ * "linework" treatments) for the contexts that actually need one —
+ * `favicon.ico`, `apple-touch-icon.png`, the `android-chrome-*` sizes, and
+ * the GitHub org avatar all lose the expressive render's fine gradient
+ * detail at the small/single-color scale they're actually seen at (§1
+ * invariant 4's Favicon Test). Producing that flat register is real,
+ * separate asset-production work (§11) — accurately tracing the existing
+ * 3D geometry into a flat vector needs real design tooling, not a blind
+ * hand-coded approximation, so it isn't attempted here. `theme_color`/
+ * `background_color` in `site.webmanifest` are updated to the Amendment's
+ * Brand Blue/Background stops as a values-only change that doesn't depend
+ * on the canonical-asset gap being closed first.
  */
 export const brandAssets = {
   favicon: "/favicon.ico",

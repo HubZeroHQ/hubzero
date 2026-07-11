@@ -3,8 +3,8 @@
   "short_name": "HubZero",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#000000",
-  "theme_color": "#3ABEFF",
+  "background_color": "#030b17",
+  "theme_color": "#0174d5",
   "icons": [
     {
       "src": "/android-chrome-192x192.png",
