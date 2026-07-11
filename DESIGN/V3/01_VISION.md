@@ -1,6 +1,8 @@
 # 01 — Vision
 
 > Assumes `00_EXPLORATION.md`'s recommendation (**Working Blueprint**) as settled. This document is the philosophy layer everything else answers to — read it before `02`–`10`, and return to it whenever a later, more tactical decision seems to need a tie-breaker.
+>
+> **Amended.** §4's "one signature interactive accent" should be read as "one signature _interactive_ color" — `11_COLOR_PHILOSOPHY_AMENDMENT.md` §5 owns drafting cyan as a second, explicitly named brand color rather than leaving it as an unacknowledged exception. §8's Recognition Test gains a concrete, falsifiable sibling for the brand mark specifically — `13_BRAND_SYSTEM.md` §1's Favicon Test. `16_SIGNATURE_MOMENTS.md` names five specific, worked interactions (not one per pillar) that give this document's "would a reader remember this tomorrow" test (§3) concrete, buildable answers rather than a standard with no worked example.
 
 ## 1. What HubZero is becoming
 

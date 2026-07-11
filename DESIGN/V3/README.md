@@ -24,12 +24,24 @@ v3 exists because the company's _ambition_ has changed since v2 was scoped. v2 w
 4. **`06_COMPONENT_LANGUAGE.md`** → **`08_MOTION_SYSTEM.md`** — how the system behaves: components, imagery, motion.
 5. **`09_PAGE_ARCHETYPES.md`** — the system applied to every real page in the sitemap.
 6. **`10_IMPLEMENTATION_ROADMAP.md`** — how a future team should sequence turning this into code.
+7. **`11`–`16`** — amendments and foundational additions written in direct response to `CRITIQUE_01_REVIEW_BOARD.md` (see "Status" below). Read alongside `00`–`10`, not as a later, optional appendix — several of them correct or supersede specific claims in the original ten documents, and a pointer note sits at the top of every document they touch.
 
 Every document after `00_EXPLORATION.md` assumes its recommendation (Direction — **Working Blueprint**, a hybrid of the Blueprint, Signal & Copper, and Typographic Monolith directions) as settled. If a future team disagrees with that recommendation, `00_EXPLORATION.md` is the document to re-open — not a quiet override buried in a later file.
 
-## Status: under adversarial review
+## Status: critique answered, implementation-ready
 
-**`CRITIQUE_01_REVIEW_BOARD.md`** is a deliberately adversarial review of `00`–`10` — an eight-seat panel (Creative Director, Brand Designer, Senior Product Designer, Design Systems Lead, Frontend Engineer, Motion Designer, Editorial Designer, UX Researcher) trying to break this blueprint rather than defend it. Its verdict is **not approved as a five-year constitution in its current form** — six specific, ranked items must be resolved first, the most severe being that no document in this folder addresses the actual brand mark (the existing logo is still the electric-blue asset every other document argues against retiring). Read `CRITIQUE_01_REVIEW_BOARD.md` alongside `00`–`10`, not after them — several of its findings (the logomark gap, whether "one accent" is honestly true once drafting cyan exists, whether copper repeats blue's original justification error for software/AI) should be resolved before treating any recommendation here as final.
+**`CRITIQUE_01_REVIEW_BOARD.md`** is a deliberately adversarial review of `00`–`10` — an eight-seat panel (Creative Director, Brand Designer, Senior Product Designer, Design Systems Lead, Frontend Engineer, Motion Designer, Editorial Designer, UX Researcher) trying to break this blueprint rather than defend it. Its verdict was **not approved as a five-year constitution in its original form** — six specific, ranked items had to be resolved first. `11`–`16` are the direct response to that verdict, each one written to resolve a specific ranked item rather than to defend the original documents:
+
+| Critique finding                                                                                                                                | Resolved by                        |
+| ----------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
+| No document addresses the actual brand mark; the existing logo is still the electric-blue 3D asset every other document argues against retiring | `13_BRAND_SYSTEM.md`               |
+| Whether "one accent" is honestly true once drafting cyan exists; whether copper repeats blue's original justification error for software/AI     | `11_COLOR_PHILOSOPHY_AMENDMENT.md` |
+| No accessibility document gathers CVD testing, diagram legibility, motion/vestibular safety, and keyboard/ARIA into one owned place             | `12_ACCESSIBILITY.md`              |
+| `05_LAYOUT_SYSTEM.md`'s spacing scale and grid have no concrete numbers; `02_VISUAL_LANGUAGE.md` §12's iconography has no actual icon set       | `14_VISUAL_TOKENS.md`              |
+| No document says how a diagram gets authored, or how that reconciles with the CMS's fifteen-block content model                                 | `15_DIAGRAM_SYSTEM.md`             |
+| The GSAP diagram-sequencing "signature" is described by rule with no flagship, fully-worked example                                             | `16_SIGNATURE_MOMENTS.md`          |
+
+Two items from the critique's ranked list are addressed as corrections within the table above rather than as separate documents: design capacity/resourcing for per-page bespoke differentiation (`CRITIQUE_01_REVIEW_BOARD.md` Part 7, ranked item 4) and gathering primary evidence before further revision (ranked item 6) remain open, unresolved founder-level questions this folder cannot answer on its own — named here rather than silently dropped.
 
 ## What this folder deliberately does not do
 

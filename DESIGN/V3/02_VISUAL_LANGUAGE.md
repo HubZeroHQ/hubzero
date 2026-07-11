@@ -1,6 +1,8 @@
 # 02 — Visual Language
 
 > Assumes `01_VISION.md`'s Working Blueprint direction. This document defines the complete visual language — the vocabulary `03`–`08` apply to type, color, layout, components, imagery, and motion respectively.
+>
+> **Amended.** §12's iconography section is deliberately conceptual and has no bearing on implementation without a concrete icon set — `14_VISUAL_TOKENS.md` §6 specifies the actual minimum icon set, construction rule, and per-icon accessible names this section describes only in principle. §9's diagram conventions gain an authoring-mechanism answer this document never addressed — `15_DIAGRAM_SYSTEM.md` distinguishes CMS-editable editorial diagrams from hand-built engineering diagrams. §5, §9 gain accessibility requirements (legibility with color removed, real text alternatives) in `12_ACCESSIBILITY.md` §2–3.
 
 ## 1. Composition
 

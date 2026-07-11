@@ -1,6 +1,8 @@
 # 04 — Color
 
 > Assumes `01_VISION.md` and `00_EXPLORATION.md`'s Working Blueprint recommendation. Values below are directional (approximate OKLCH lightness/chroma/hue targets), not final hex tokens — final calibration against real screens and WCAG contrast testing is implementation work for `10_IMPLEMENTATION_ROADMAP.md`, one level below what a system-level document should lock in, exactly as `ARCHITECTURE/07_DESIGN_SYSTEM.md` specified ranges rather than final values for v2.
+>
+> **Amended — read alongside `11_COLOR_PHILOSOPHY_AMENDMENT.md`.** §3's justification for copper (a material metaphor extended from hardware to software and AI) does not survive adversarial review — `11_COLOR_PHILOSOPHY_AMENDMENT.md` §3–4 re-derives the accent's justification on purely functional grounds and renames it **signal gold**, shifting its hue range warmer-toward-gold (§4) for CVD-safety and association reasons. §4's "one signature accent" framing is corrected to explicitly own drafting cyan as a second, real brand color (§5 of that amendment). The neutral base (§2), gradient/glow/shadow discipline (§5–7), and the operational case for having an accent at all (§3) are unchanged.
 
 ## 1. Reviewing the existing palette
 

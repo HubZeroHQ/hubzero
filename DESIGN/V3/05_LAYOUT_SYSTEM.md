@@ -1,6 +1,8 @@
 # 05 — Layout System
 
 > Assumes `02`–`04`. This document defines the layout language — the spatial rules `06`–`09` apply to real components and pages.
+>
+> **Amended.** §2's spacing scale and grid are stated as ranges with no starting value, step count, or column count — the highest-probability source of real implementation divergence `CRITIQUE_01_REVIEW_BOARD.md` Part 7 found in this folder. `14_VISUAL_TOKENS.md` §1–2 commits to the actual base unit, nine-step scale, and 12-column grid this document's ranges describe only in principle.
 
 ## 1. Page widths
 
