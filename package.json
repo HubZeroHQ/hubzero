@@ -48,6 +48,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
+    "@hubzero/core": "^3.0.0",
     "@tailwindcss/postcss": "^4.3.2",
     "@types/node": "^26.0.1",
     "@types/react": "^19.2.17",
