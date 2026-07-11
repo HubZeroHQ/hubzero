@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import "@/lib/cms/collections";
 
+import { PageHeader } from "@/components/marketing/page-header";
 import { SearchBox } from "@/components/search/search-box";
 import { SearchResults } from "@/components/search/search-results";
 import { Container } from "@/components/ui/container";
@@ -32,14 +33,11 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   return (
     <div className="pt-16 pb-28 sm:pt-20 lg:pt-24">
       <Container>
-        <p className="text-caption text-text-muted font-mono tracking-wide uppercase">Search</p>
-        <h1 className="text-text mt-4 max-w-2xl text-[clamp(2rem,1rem+4vw,3.5rem)] leading-[1.1] font-normal tracking-tight">
-          Find work, blueprints, and people.
-        </h1>
-
-        <div className="mt-10 max-w-2xl">
-          <SearchBox initialQuery={q} />
-        </div>
+        <PageHeader eyebrow="Search" headline="Find work, blueprints, and people.">
+          <div className="mt-10 max-w-2xl">
+            <SearchBox initialQuery={q} />
+          </div>
+        </PageHeader>
 
         <div className="mt-12">
           <SearchResults query={q} groups={groups} />

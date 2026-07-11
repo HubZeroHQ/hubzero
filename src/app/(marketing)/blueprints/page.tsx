@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import "@/lib/cms/collections";
 
 import { BlueprintsGrid, type BlueprintsGridItem } from "@/components/marketing/blueprints-grid";
+import { PageHeader } from "@/components/marketing/page-header";
 import { Container } from "@/components/ui/container";
 import { Link } from "@/components/ui/link";
 import { findPublishedWithCardMeta, resolveCoverImage } from "@/lib/cms/public-content";
@@ -53,15 +54,11 @@ export default async function BlueprintsIndexPage() {
   return (
     <div className="pt-16 pb-28 sm:pt-20 lg:pt-24">
       <Container>
-        <p className="text-caption text-text-muted font-mono tracking-wide uppercase">Blueprints</p>
-        <h1 className="text-text mt-4 max-w-2xl text-[clamp(2rem,1rem+4vw,3.5rem)] leading-[1.1] font-normal tracking-tight">
-          Real foundations, not templates.
-        </h1>
-        <p className="text-body text-text-muted mt-6 max-w-xl">
-          A Blueprint is a working starting point built from real client and Labs experience —
-          customizable, not a theme you drop a logo onto. Every one shown here has a live demo you
-          can actually try, not a screenshot.
-        </p>
+        <PageHeader
+          eyebrow="Blueprints"
+          headline="Real foundations, not templates."
+          description="A Blueprint is a working starting point built from real client and Labs experience — customizable, not a theme you drop a logo onto. Every one shown here has a live demo you can actually try, not a screenshot."
+        />
       </Container>
 
       <Container className="mt-16 lg:mt-20">

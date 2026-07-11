@@ -2,6 +2,7 @@ import { ArrowUpRight } from "lucide-react";
 import type { Metadata } from "next";
 
 import { CtaPanel } from "@/components/marketing/cta-panel";
+import { PageHeader } from "@/components/marketing/page-header";
 import { Reveal } from "@/components/marketing/reveal";
 import { JsonLd } from "@/components/seo/json-ld";
 import { Badge } from "@/components/ui/badge";
@@ -86,18 +87,13 @@ export default function HardwareEngineeringPage() {
       <div className="pt-20 pb-20 sm:pt-24 sm:pb-24 lg:pt-28 lg:pb-28">
         <Container>
           <Reveal>
-            <p className="text-caption text-text-muted font-mono tracking-wide uppercase">
-              Hardware &amp; Embedded
-            </p>
-            <h1 className="text-text mt-6 max-w-3xl text-[clamp(2.25rem,1rem+4.5vw,4.5rem)] leading-[1.08] font-normal tracking-tight">
-              A sensor reading isn&apos;t information until an engineered system decides what it
-              means.
-            </h1>
-            <p className="text-body text-text-muted mt-6 max-w-xl">
-              Firmware, the protocols that carry a reading off a board, and the software that turns
-              it into something someone can act on — engineered as one system, by one team, not
-              handed between a hardware vendor and a software vendor.
-            </p>
+            <PageHeader
+              eyebrow="Hardware & Embedded"
+              headline="A sensor reading isn't information until an engineered system decides what it means."
+              size="large"
+              maxWidth="3xl"
+              description="Firmware, the protocols that carry a reading off a board, and the software that turns it into something someone can act on — engineered as one system, by one team, not handed between a hardware vendor and a software vendor."
+            />
           </Reveal>
         </Container>
       </div>

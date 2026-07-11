@@ -63,7 +63,7 @@ export function Footer() {
         {connectLinks.length > 0 && <FooterColumn title="Connect" items={connectLinks} />}
       </Container>
 
-      <Container className="border-border-muted text-caption text-text-muted flex flex-col-reverse items-center gap-4 border-t py-6 md:flex-row md:justify-between">
+      <Container className="border-border-muted text-caption text-text-muted flex flex-col-reverse items-center gap-4 border-t py-6 font-mono md:flex-row md:justify-between">
         <p>© {year} HubZero</p>
         <ul role="list" className="flex gap-6">
           {footerNav.legal.map((item) => (

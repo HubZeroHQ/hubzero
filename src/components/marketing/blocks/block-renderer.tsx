@@ -53,11 +53,21 @@ const containerSizeForWidth: Record<ImageWidth, "prose" | "default" | "full"> = 
   full: "full",
 };
 
+// Left-edge hairline rule in the relevant semantic color, no filled
+// background — a real engineering-document margin annotation, not a
+// consumer-app alert banner (DESIGN/V3/06_COMPONENT_LANGUAGE.md §11).
 const calloutToneClasses: Record<CalloutTone, string> = {
-  note: "border-border-muted bg-bg-light text-text-muted",
-  info: "border-info/30 bg-info/10 text-info",
-  success: "border-success/30 bg-success/10 text-success",
-  warning: "border-warning/30 bg-warning/10 text-warning",
+  note: "border-border-muted text-text-muted",
+  info: "border-info text-info",
+  success: "border-success text-success",
+  warning: "border-warning text-warning",
+};
+
+const calloutToneLabels: Record<CalloutTone, string> = {
+  note: "Note",
+  info: "Info",
+  success: "Success",
+  warning: "Warning",
 };
 
 /** Matches `components/ui/alert.tsx`'s tone→icon convention — color is never the only signal here either. */
@@ -169,13 +179,10 @@ export async function BlockRenderer({ block, media, bare }: BlockRendererProps) 
     case "quote":
       return (
         <Wrap size="prose" bare={bare}>
+          {/* No decorative oversized quotation-mark glyph
+              (DESIGN/V3/06_COMPONENT_LANGUAGE.md §10) — the hairline rule and
+              the serif italic line carry "this is a quote" on their own. */}
           <blockquote className="border-accent relative border-l-2 py-1 pl-8">
-            <span
-              className="text-accent-text/15 absolute -top-4 left-1 font-serif text-8xl leading-none select-none"
-              aria-hidden="true"
-            >
-              &ldquo;
-            </span>
             <p className="text-h2 text-text relative font-serif leading-tight italic">
               {block.data.text}
             </p>
@@ -197,13 +204,18 @@ export async function BlockRenderer({ block, media, bare }: BlockRendererProps) 
       const ToneIcon = calloutToneIcons[block.data.tone];
       return (
         <Wrap size="prose" bare={bare}>
-          <div
-            className={cn("flex gap-3 rounded-lg border p-5", calloutToneClasses[block.data.tone])}
-          >
-            <ToneIcon className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
-            <div>
+          <div className={cn("border-l-2 py-1 pl-6", calloutToneClasses[block.data.tone])}>
+            <div className="flex items-center gap-2">
+              <ToneIcon className="size-3.5" aria-hidden="true" />
+              <span className="text-caption font-mono tracking-wide uppercase">
+                {calloutToneLabels[block.data.tone]}
+              </span>
+            </div>
+            <div className="text-text mt-2">
               {block.data.title && <p className="font-medium">{block.data.title}</p>}
-              <p className={cn("text-body", block.data.title && "mt-1")}>{block.data.text}</p>
+              <p className={cn("text-body text-text-muted", block.data.title && "mt-1")}>
+                {block.data.text}
+              </p>
             </div>
           </div>
         </Wrap>
@@ -300,28 +312,35 @@ export async function BlockRenderer({ block, media, bare }: BlockRendererProps) 
               ))}
             </div>
           ) : (
+            // Contact-sheet grid — consistent 1:1 crop and a numbered
+            // caption per cell, not a lightbox-first carousel presentation
+            // (06_COMPONENT_LANGUAGE.md §16, 14_VISUAL_TOKENS.md §7).
             <div className={cn("grid grid-cols-1 gap-4", gridColsClass)}>
               {images.map((image, index) => (
-                <Lightbox
-                  key={`${image.url}-${index}`}
-                  images={images}
-                  initialIndex={index}
-                  trigger={
-                    <button
-                      type="button"
-                      className="block w-full cursor-zoom-in overflow-hidden rounded-lg"
-                    >
-                      <MediaImage
-                        src={image.url}
-                        alt={image.alt}
-                        width={image.width ?? 1200}
-                        height={image.height ?? 800}
-                        sizes="(min-width: 640px) 50vw, 92vw"
-                        className="h-auto w-full transition-transform duration-300 hover:scale-[1.03]"
-                      />
-                    </button>
-                  }
-                />
+                <div key={`${image.url}-${index}`} className="flex flex-col gap-2">
+                  <Lightbox
+                    images={images}
+                    initialIndex={index}
+                    trigger={
+                      <button
+                        type="button"
+                        className="bg-bg-light block aspect-square w-full cursor-zoom-in overflow-hidden"
+                      >
+                        <MediaImage
+                          src={image.url}
+                          alt={image.alt}
+                          width={image.width ?? 1200}
+                          height={image.height ?? 800}
+                          sizes="(min-width: 640px) 50vw, 92vw"
+                          className="h-full w-full object-cover transition-opacity duration-150 hover:opacity-90"
+                        />
+                      </button>
+                    }
+                  />
+                  <p className="text-caption text-text-muted font-mono">
+                    {String(index + 1).padStart(2, "0")}
+                  </p>
+                </div>
               ))}
             </div>
           )}
@@ -394,8 +413,10 @@ export async function BlockRenderer({ block, media, bare }: BlockRendererProps) 
           <ol className="flex flex-col gap-8">
             {block.data.items.map((item, index) => (
               <li key={index} className="border-border-muted relative border-l-2 pl-6">
+                {/* A filled square node, echoing a schematic junction — not a
+                    round dot on a smooth line (06_COMPONENT_LANGUAGE.md §12). */}
                 <span
-                  className="border-accent bg-bg absolute top-1 -left-[5px] size-2 rounded-full border-2"
+                  className="bg-accent absolute top-1.5 -left-[5px] size-2 rotate-45"
                   aria-hidden="true"
                 />
                 <p className="text-caption text-text-muted font-mono">{item.date}</p>
@@ -415,7 +436,9 @@ export async function BlockRenderer({ block, media, bare }: BlockRendererProps) 
           <div className="border-border-muted overflow-x-auto rounded-lg border">
             <table className="w-full min-w-[32rem] border-collapse text-left">
               <thead>
-                <tr className="border-border-muted bg-bg-light border-b">
+                {/* No heavy header-row fill (06_COMPONENT_LANGUAGE.md §9) — the
+                    hairline bottom border alone marks it as a header row. */}
+                <tr className="border-border-muted border-b">
                   {block.data.headers.map((header, index) => (
                     <th key={index} className="text-caption text-text px-4 py-3 font-medium">
                       {header}
