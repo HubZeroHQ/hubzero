@@ -1,7 +1,7 @@
-import { X } from "lucide-react";
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
 
 import { IconButton } from "@/components/ui/icon-button";
+import { CloseIcon } from "@/components/ui/icons";
 import { cn } from "@/lib/utils";
 
 // Hairline-bordered, no filled background — a real component-designator
@@ -39,7 +39,7 @@ export function Chip({ tone = "default", onRemove, className, children, ...props
       {children}
       {onRemove && (
         <IconButton
-          icon={<X className="h-3 w-3" />}
+          icon={<CloseIcon className="size-3" />}
           aria-label={`Remove ${typeof children === "string" ? children : "tag"}`}
           variant="ghost"
           className="h-5 w-5"

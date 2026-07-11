@@ -10,6 +10,20 @@ export { EmptyState, type EmptyStateProps } from "@/components/ui/empty-state";
 export { Grid, type GridProps } from "@/components/ui/grid";
 export { Heading, type HeadingProps } from "@/components/ui/heading";
 export { IconButton, type IconButtonProps } from "@/components/ui/icon-button";
+export {
+  ChevronIcon,
+  CloseIcon,
+  CopyIcon,
+  ErrorIcon,
+  ExternalLinkIcon,
+  FilterIcon,
+  type IconProps,
+  MenuIcon,
+  SearchIcon,
+  StatusIndicatorIcon,
+  SuccessIcon,
+  WarningIcon,
+} from "@/components/ui/icons";
 export { Input, type InputProps } from "@/components/ui/input";
 export { Label, type LabelProps } from "@/components/ui/label";
 export { Link, type LinkProps } from "@/components/ui/link";
