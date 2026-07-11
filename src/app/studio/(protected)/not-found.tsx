@@ -17,7 +17,7 @@ export default function StudioNotFound() {
       </p>
       <Link
         href="/studio"
-        className="border-border text-body text-text hover:border-accent hover:text-accent mt-2 rounded-full border px-5 py-2 no-underline transition-colors hover:no-underline"
+        className="border-border text-body text-text hover:border-accent hover:text-accent-text mt-2 rounded-full border px-5 py-2 no-underline transition-colors hover:no-underline"
       >
         Back to dashboard
       </Link>

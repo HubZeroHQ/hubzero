@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 const variants = {
   primary: "bg-accent text-accent-foreground hover:opacity-90",
-  secondary: "border-border hover:border-accent hover:text-accent text-text border",
+  secondary: "border-border hover:border-accent hover:text-accent-text text-text border",
   ghost: "text-text-muted hover:text-text hover:bg-bg-light",
 } as const;
 
@@ -37,7 +37,9 @@ export function IconButton({
     <button
       type={type}
       className={cn(
-        "inline-flex items-center justify-center rounded-full",
+        // Same rectangle-not-pill geometry as Button (§1) — an icon-only
+        // control is still a button.
+        "inline-flex items-center justify-center rounded-sm",
         "transition-colors duration-150 disabled:pointer-events-none",
         variants[variant],
         sizes[size],

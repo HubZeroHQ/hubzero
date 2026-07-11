@@ -61,7 +61,7 @@ export function HomepageHero({ item }: { item: HomepageContentItem }) {
       <Container className="mt-16 sm:mt-20 lg:mt-24">
         <div className="max-w-[var(--content-prose)]">
           <Reveal>
-            <p className="text-h3 text-text font-serif italic">{item.summary}</p>
+            <p className="text-h3 text-text font-serif">{item.summary}</p>
           </Reveal>
 
           <Reveal delayMs={100}>

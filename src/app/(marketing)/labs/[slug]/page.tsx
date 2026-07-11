@@ -89,7 +89,9 @@ export default async function LabsProjectPage({ params }: LabsProjectPageProps) 
             <h1 className="text-text max-w-3xl text-[clamp(2.25rem,1rem+4.5vw,4.5rem)] leading-[1.08] font-normal tracking-tight">
               {doc.title}
             </h1>
-            <Badge>Internal R&amp;D — not client work</Badge>
+            <Badge className="tracking-normal normal-case">
+              Internal R&amp;D — not client work
+            </Badge>
           </div>
           <p className="text-caption text-text-muted mt-8 font-mono">
             {stageLabels[doc.stage] ?? doc.stage}
@@ -134,7 +136,7 @@ export default async function LabsProjectPage({ params }: LabsProjectPageProps) 
           <p className="text-h3 text-text font-normal">Curious how this connects to client work?</p>
           <Link
             href="/contact"
-            className="text-accent text-h2 mt-6 inline-flex items-center gap-2 font-serif italic no-underline hover:no-underline hover:opacity-80"
+            className="text-accent-text text-h2 mt-6 inline-flex items-center gap-2 font-serif no-underline hover:no-underline hover:opacity-80"
           >
             Start a project
             <ArrowUpRight className="size-5 not-italic" aria-hidden="true" />

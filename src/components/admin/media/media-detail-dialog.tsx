@@ -189,7 +189,7 @@ function MediaDetailContent({
           <Button type="button" isLoading={isSaving} onClick={handleSave}>
             Save changes
           </Button>
-          <label className="text-caption text-accent cursor-pointer font-medium hover:underline">
+          <label className="text-caption text-accent-text cursor-pointer font-medium hover:underline">
             {isReplacing ? "Replacing…" : "Replace file…"}
             <input
               type="file"

@@ -1,13 +1,26 @@
 /**
- * Motion contract (ARCHITECTURE/07_DESIGN_SYSTEM.md §4).
+ * Motion contract (ARCHITECTURE/07_DESIGN_SYSTEM.md §4; extended per
+ * DESIGN/V3/08_MOTION_SYSTEM.md).
  *
  * Today's primitives use plain CSS transitions (Tailwind's built-in
  * `duration-*`/`ease-*` utilities) for hover/focus/state changes, which
  * keeps them Server Components. These constants exist so that once a later
- * phase needs orchestrated, JS-driven animation (e.g. Framer Motion for a
- * hero entrance or a Work-grid filter transition), every component reaches
+ * phase needs orchestrated, JS-driven animation, every component reaches
  * for the same numbers instead of inventing new ones. `prefers-reduced-motion`
- * is handled once, globally, in globals.css — not per component.
+ * is handled once, globally, in globals.css for plain CSS transitions — not
+ * per component; `prefersReducedMotion()` below is the equivalent check for
+ * JS-driven animation outside React (GSAP, Anime.js), since only Motion
+ * (motion.dev) has a built-in hook for it.
+ *
+ * Ownership boundary (08_MOTION_SYSTEM.md §2) — named here once so it
+ * doesn't need re-deriving per component: GSAP owns *time* (scroll
+ * storytelling, hero scenes, pinned sections, diagram build-order
+ * sequencing); Motion owns *state* (hover/focus/modal, page transitions,
+ * shared-layout animation — already in use for the current hero); Anime.js
+ * owns *small, self-contained draws* (SVG trace-path/line-drawing,
+ * counters, icon-level interactions). No library is installed yet beyond
+ * `motion` — GSAP/Anime.js land with the page work that first needs them
+ * (10_IMPLEMENTATION_ROADMAP.md Phase 2/3), not speculatively here.
  */
 
 export const duration = {
@@ -17,6 +30,15 @@ export const duration = {
   base: 0.3,
   /** Reserved for rare, deliberately slower transitions. */
   slow: 0.4,
+  /**
+   * GSAP's multi-second choreography — a hero's orchestrated load sequence
+   * (e.g. the Trace-In, DESIGN/V3/16_SIGNATURE_MOMENTS.md §1: 1.6–2.0s
+   * total), a pinned-section reveal. Not used for scroll-scrubbed
+   * animation (ScrollTrigger ties progress to scroll position directly,
+   * not to a fixed duration) — only for a GSAP timeline's own
+   * self-contained, non-scroll-linked choreography.
+   */
+  scrollSequence: 2.0,
 } as const;
 
 /** Cubic-bezier eases as arrays, ready for Framer Motion's `ease` prop. */
@@ -32,3 +54,23 @@ export const distance = {
   sm: 8,
   md: 16,
 } as const;
+
+/** Single source of truth for the reduced-motion media query string. */
+export const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
+
+/**
+ * `prefers-reduced-motion` check for JS-driven animation outside React.
+ * Motion (motion.dev) has its own `useReducedMotion()` hook, already used
+ * correctly in the current hero — reach for that inside a component
+ * instead. This helper is for GSAP (pair with `gsap.matchMedia()`) and
+ * Anime.js (call before initializing a draw) setup code, per
+ * DESIGN/V3/08_MOTION_SYSTEM.md §6 principle 3: reduced motion means an
+ * *instant* resolved state, not a shorter version of the same animation —
+ * every call site branches on this, it doesn't just scale a duration down.
+ * Returns `false` outside a browser (SSR) since there's no animation to
+ * skip yet at that point.
+ */
+export function prefersReducedMotion(): boolean {
+  if (typeof window === "undefined") return false;
+  return window.matchMedia(REDUCED_MOTION_QUERY).matches;
+}

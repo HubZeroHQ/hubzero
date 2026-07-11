@@ -171,7 +171,7 @@ export async function BlockRenderer({ block, media, bare }: BlockRendererProps) 
         <Wrap size="prose" bare={bare}>
           <blockquote className="border-accent relative border-l-2 py-1 pl-8">
             <span
-              className="text-accent/15 absolute -top-4 left-1 font-serif text-8xl leading-none select-none"
+              className="text-accent-text/15 absolute -top-4 left-1 font-serif text-8xl leading-none select-none"
               aria-hidden="true"
             >
               &ldquo;
@@ -351,7 +351,7 @@ export async function BlockRenderer({ block, media, bare }: BlockRendererProps) 
               href={block.data.url}
               target="_blank"
               rel="noreferrer"
-              className="text-accent inline-flex items-center gap-2 underline underline-offset-2"
+              className="text-accent-text inline-flex items-center gap-2 underline underline-offset-2"
             >
               Watch the video <ArrowUpRight className="size-4" aria-hidden="true" />
             </a>

@@ -73,7 +73,7 @@ export default async function BlueprintsIndexPage() {
           <p className="text-h3 text-text font-normal">Want to start a project on one of these?</p>
           <Link
             href="/contact"
-            className="text-accent text-h3 mt-4 inline-flex items-center gap-2 font-serif italic no-underline hover:no-underline hover:opacity-80"
+            className="text-accent-text text-h3 mt-4 inline-flex items-center gap-2 font-serif no-underline hover:no-underline hover:opacity-80"
           >
             Start a project
             <ArrowUpRight className="size-4 not-italic" aria-hidden="true" />

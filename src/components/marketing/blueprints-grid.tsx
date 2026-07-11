@@ -58,7 +58,7 @@ export function BlueprintsGrid({ items }: { items: BlueprintsGridItem[] }) {
               className={cn(
                 "text-caption rounded-full border px-4 py-1.5 font-medium transition-colors duration-150",
                 isActive
-                  ? "border-accent/30 bg-accent/15 text-accent"
+                  ? "border-accent/30 bg-accent/15 text-accent-text"
                   : "border-border-muted text-text-muted hover:text-text hover:border-border",
               )}
             >

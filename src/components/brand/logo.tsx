@@ -22,11 +22,14 @@ export interface LogoProps {
  *
  * Wordmark deliberately splits across both type families instead of
  * defaulting to bold sans (the legacy site's treatment, and the generic
- * choice everywhere else): "Hub" in Geist Sans, "Zero" in the same
- * Instrument Serif italic used for the hero's one emphasis word. This is
- * what ties the nav to the rest of the page's typographic identity instead
- * of reading as an unrelated UI-chrome wordmark bolted onto an editorial
- * hero.
+ * choice everywhere else): "Hub" in Geist Sans, "Zero" in the same IBM Plex
+ * Serif used for the site's rare emphasis-word moments — upright, not
+ * italic, per DESIGN/V3/13_BRAND_SYSTEM.md §5 ("the wordmark migrates on
+ * the same timeline as the rest of the type system"; DESIGN/V3/03
+ * §3/§6 retires Instrument Serif's italic-by-default posture along with
+ * the typeface itself). This is what ties the nav to the rest of the
+ * page's typographic identity instead of reading as an unrelated UI-chrome
+ * wordmark bolted onto an editorial hero.
  */
 export function Logo({ variant = "full", className }: LogoProps) {
   return (
@@ -42,7 +45,7 @@ export function Logo({ variant = "full", className }: LogoProps) {
       {variant === "full" && (
         <span className="text-h3 text-text tracking-tight">
           <span className="font-semibold">Hub</span>
-          <span className="text-accent font-serif italic">Zero</span>
+          <span className="text-accent-text font-serif">Zero</span>
         </span>
       )}
     </span>

@@ -59,7 +59,7 @@ export function Navbar() {
           </span>
           <Link
             href={primaryCta.href}
-            className="text-accent inline-flex items-center gap-1 no-underline hover:no-underline hover:opacity-80"
+            className="text-accent-text inline-flex items-center gap-1 no-underline hover:no-underline hover:opacity-80"
           >
             {primaryCta.label.toLowerCase()}
             <ArrowUpRight className="size-3.5" aria-hidden="true" />

@@ -71,7 +71,7 @@ export default async function WorkPage() {
           <p className="text-h3 text-text font-normal">Have something like this to build?</p>
           <Link
             href="/contact"
-            className="text-accent text-h3 mt-4 inline-flex items-center gap-2 font-serif italic no-underline hover:no-underline hover:opacity-80"
+            className="text-accent-text text-h3 mt-4 inline-flex items-center gap-2 font-serif no-underline hover:no-underline hover:opacity-80"
           >
             Start a project
             <ArrowUpRight className="size-4 not-italic" aria-hidden="true" />

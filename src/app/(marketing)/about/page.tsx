@@ -118,7 +118,7 @@ export default function AboutPage() {
             </p>
           </Reveal>
           <Reveal delayMs={120}>
-            <p className="text-h3 text-text mt-8 font-serif italic">
+            <p className="text-h3 text-text mt-8 font-serif">
               The gap between the sensor and the dashboard is exactly where projects go wrong. We
               built the company to sit inside it, not hand it off.
             </p>
@@ -222,7 +222,9 @@ export default function AboutPage() {
               <h2 className="text-h2 text-text font-normal">
                 An IoT sensor dashboard, built for no client.
               </h2>
-              <Badge>Internal R&amp;D &mdash; not client work</Badge>
+              <Badge className="tracking-normal normal-case">
+                Internal R&amp;D &mdash; not client work
+              </Badge>
             </div>
           </Reveal>
           <Reveal delayMs={60} className="mt-5 space-y-5">
@@ -313,7 +315,7 @@ export default function AboutPage() {
             <Reveal delayMs={120}>
               <Link
                 href="/contact"
-                className="text-accent text-h2 mt-8 inline-flex items-center gap-2 font-serif italic no-underline hover:no-underline hover:opacity-80"
+                className="text-accent-text text-h2 mt-8 inline-flex items-center gap-2 font-serif no-underline hover:no-underline hover:opacity-80"
               >
                 Start a project
                 <ArrowUpRight className="size-5 not-italic" aria-hidden="true" />

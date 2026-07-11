@@ -1,39 +1,86 @@
 @import "tailwindcss";
 
 /*
- * Design tokens per ARCHITECTURE/07_DESIGN_SYSTEM.md.
- * Dark is the default palette (§2); `.light` overrides the same custom
- * properties so next-themes can toggle by swapping the class on <html>.
+ * Design tokens per DESIGN/V3 (Working Blueprint) — the seven-stop layered
+ * palette in DESIGN/V3/11_COLOR_PHILOSOPHY_AMENDMENT.md §2, re-deriving the
+ * studio's existing HZ-monogram blue instead of retiring it. Dark
+ * ("solder mask") is the default palette; `.light` ("drafting paper")
+ * overrides the same custom properties so next-themes can toggle by
+ * swapping the class on <html>. Superseded from the old
+ * ARCHITECTURE/07_DESIGN_SYSTEM.md §2 neutral-gray/electric-blue system —
+ * token *names* are kept unchanged for backwards compatibility with every
+ * existing `bg-*`/`text-*`/`border-*` call site; only the values evolve.
  */
 @theme {
-  --color-bg: oklch(0.15 0.005 264);
-  --color-bg-dark: oklch(0.1 0.005 264);
-  --color-bg-light: oklch(0.2 0.005 264);
-  --color-text: oklch(0.96 0.01 264);
-  --color-text-muted: oklch(0.76 0.01 264);
-  --color-border: oklch(0.4 0.01 264);
-  --color-border-muted: oklch(0.3 0.01 264);
-  --color-highlight: oklch(0.5 0.01 264);
-  --color-accent: oklch(0.7595 0.1442 235.31);
+  /* Background — deep structure, the base substrate (Amendment §2). */
+  --color-bg: #030b17;
+  --color-bg-dark: #01030a;
+  /* Structural Blue — engineered surfaces, panels, secondary surfaces. */
+  --color-bg-light: #123257;
+  --color-text: #edf3f7;
+  --color-text-muted: #9aa7b0;
+  /* Real load-bearing boundary (inputs, active states) — calibrated to
+     clear WCAG 2.1 non-text 3:1 against --color-bg (DESIGN/V3/12 §1). */
+  --color-border: #546577;
+  /* Quiet panel/card hairline — deliberately subtler than --color-border;
+     grouping here is carried by spacing/position (the drafting-sheet
+     "unpopulated substrate" logic, 02_VISUAL_LANGUAGE.md §4) as much as by
+     the line itself, per 12_ACCESSIBILITY.md §1's decorative-linework
+     allowance. */
+  --color-border-muted: #364452;
+  --color-highlight: #485765;
+  /* Brand Blue — the core signal, "act here": fills, borders, focus rings,
+     the mark. Exact stop from the Amendment; passes WCAG non-text 3:1
+     against both theme bases (fills/borders/focus), which is all this
+     token is used for — see --color-accent-text for text-sized use. */
+  --color-accent: #0174d5;
   /*
-   * Accent stays bright/light in both themes (unlike bg/text, which invert),
-   * so its "printed on" text color doesn't need a .light override — a single
-   * dark value keeps WCAG AA contrast against --color-accent either way.
+   * Brand Blue itself (#0174d5) clears the 3:1 non-text minimum against
+   * both theme bases but falls just short of the 4.5:1 *text* minimum
+   * (12_ACCESSIBILITY.md §1) when set directly as small/body-scale text on
+   * the page background — the common case for `Link` and inline emphasis.
+   * Per 12_ACCESSIBILITY.md §2 and the Amendment §8 invariant 1, the fix is
+   * a lightness/chroma calibration within the same hue family (253°), not
+   * a different hue — this token is that calibration, reserved for
+   * text-colored-directly-on-background contexts. Fills keep literal Brand
+   * Blue (--color-accent) since the button pairs it with a chosen
+   * foreground color, not the page background.
    */
-  --color-accent-foreground: oklch(0.15 0.02 264);
+  --color-accent-text: #1c81e3;
+  /*
+   * Foreground printed on an --color-accent fill (buttons, active tabs).
+   * Brand Blue is identical in both themes, so one value covers both —
+   * verified ≥4.5:1 against #0174d5.
+   */
+  --color-accent-foreground: #f5f8fc;
+  /* Electric Sky — precision highlight: hover/active/energized states. */
+  --color-electric-sky: #1495ed;
+  /* Ice Blue — the technical-diagram register only. Never interactive,
+     never a fill/border/link color (DESIGN/V3/11 §6). */
+  --color-ice-blue: #62cefb;
+  /* Pale Cyan — rare precision-glint highlight, tight budget (Amendment §7). */
+  --color-pale-cyan: #9ce2f6;
+  /* Neutral Silver — light-mode base surface; chrome/hardware-adjacent
+     borders and trim in dark mode. */
+  --color-neutral-silver: #d9dcdd;
+  /* Status hues re-tuned against the new base (04_COLOR.md §4); info's hue
+     moved 260→300 so it stays distinguishable from the Brand Blue family
+     (217–253°) under CVD simulation, per 12_ACCESSIBILITY.md §2. */
   --color-danger: oklch(0.7 0.05 30);
   --color-warning: oklch(0.7 0.05 100);
   --color-success: oklch(0.7 0.05 160);
-  --color-info: oklch(0.7 0.05 260);
+  --color-info: oklch(0.7 0.05 300);
 
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
   /*
-   * Display serif (ARCHITECTURE/15_HOMEPAGE_DESIGN.md §1) — pacing device,
-   * not a default heading font. Reach for `font-serif` only at the specific
-   * named moments that doc calls out.
+   * Display serif (DESIGN/V3/03_TYPOGRAPHY.md §3, §6) — IBM Plex Serif,
+   * replacing Instrument Serif. A rare pacing device, not a default heading
+   * font, and used upright by default (not italic-by-default) — reach for
+   * `font-serif` only at the specific named moments that doc calls out,
+   * and add `italic` explicitly where a secondary emphasis is warranted.
    */
-  --font-serif: var(--font-instrument-serif), ui-serif, Georgia, serif;
+  --font-serif: var(--font-plex-serif), ui-serif, Georgia, serif;
 
   /* Modular type scale, 4px base unit (§1). */
   --text-display: 4rem;
@@ -52,21 +99,48 @@
   --text-caption--line-height: 1.5;
 
   /*
-   * Radius scale, 4px base unit (matches Tailwind's default --spacing unit,
-   * kept unmodified — see §3 note below). Namespaced under --radius-* so
-   * Tailwind generates rounded-{key} utilities directly.
+   * Radius, DESIGN/V3/14_VISUAL_TOKENS.md §3: "4px — the one radius value
+   * used sitewide... a single value, not a scale... no radius above 4px,
+   * anywhere." A rectangle-with-small-radius reads as a labeled control on
+   * an instrument panel, not a consumer-app pill — and an instrument
+   * panel's controls share one manufacturing tolerance, not a hierarchy of
+   * roundedness. The five names are kept (so every existing `rounded-{key}`
+   * call site keeps working) but all four non-zero steps now collapse to
+   * the same 4px value; `rounded-none` (Tailwind's built-in) is the doc's
+   * 0px step for tags/tables/technical-label chips (handled per-component
+   * in Task 4, not here). `--radius-full` is retained only for the small
+   * set of genuinely circular things (avatars, switches, spinners) — not
+   * for buttons, which move off the pill shape in Task 4.
    */
-  --radius-sm: 0.25rem; /* 4px  — inputs, chips, small controls */
-  --radius-md: 0.5rem; /* 8px  — buttons, badges */
-  --radius-lg: 0.75rem; /* 12px — cards, alerts */
-  --radius-xl: 1rem; /* 16px — surfaces, modals (future) */
-  --radius-full: 9999px; /* pills, avatars, switches */
+  --radius-sm: 0.25rem; /* 4px */
+  --radius-md: 0.25rem; /* 4px — was 8px */
+  --radius-lg: 0.25rem; /* 4px — was 12px */
+  --radius-xl: 0.25rem; /* 4px — was 16px */
+  --radius-full: 9999px; /* avatars, switches, spinners only */
 
   /*
-   * Elevation. Dark-first shadows must be more diffuse/darker than typical
+   * Stroke/hairline weights, DESIGN/V3/14_VISUAL_TOKENS.md §4. Tailwind's
+   * `border` utility already defaults to 1px (the sitewide hairline
+   * weight, used unmodified); these two are the values that default
+   * doesn't cover, referenced by name so a future SVG diagram or a
+   * component needing a literal px value doesn't invent its own.
+   */
+  --stroke-diagram: 1.5px; /* schematic/diagram linework — 06_COMPONENT_LANGUAGE.md §15 */
+  --stroke-focus: 2px; /* focus rings — the one deliberately heaviest hairline, see :focus-visible below */
+
+  /*
+   * Elevation, DESIGN/V3/14_VISUAL_TOKENS.md §5 — two steps, not a large
+   * system: Resting (no shadow, the default for panels/sections/the page
+   * itself) and Raised (a low, tight lift for the small set of surfaces
+   * that must read as floating above content — a dropdown, a modal, a
+   * tooltip). The finer xs/sm/md/lg/xl scale below predates this document
+   * and stays for existing call sites; `--shadow-raised` is the new,
+   * canonical Working Blueprint token new/updated components should reach
+   * for. Dark-first shadows must be more diffuse/darker than typical
    * defaults to read on a dark background; overridden per-value in .light.
    * Namespaced under --shadow-* so Tailwind generates shadow-{key} utilities.
    */
+  --shadow-raised: 0 4px 8px -2px oklch(0 0 0 / 0.4), 0 2px 4px -2px oklch(0 0 0 / 0.32);
   --shadow-xs: 0 1px 2px 0 oklch(0 0 0 / 0.32);
   --shadow-sm: 0 1px 3px 0 oklch(0 0 0 / 0.36), 0 1px 2px -1px oklch(0 0 0 / 0.32);
   --shadow-md: 0 4px 8px -2px oklch(0 0 0 / 0.4), 0 2px 4px -2px oklch(0 0 0 / 0.32);
@@ -80,40 +154,104 @@
 
 .light {
   color-scheme: light;
-  --color-bg: oklch(0.96 0.005 264);
-  --color-bg-dark: oklch(0.92 0.005 264);
-  --color-bg-light: oklch(1 0.005 264);
-  --color-text: oklch(0.15 0.01 264);
-  --color-text-muted: oklch(0.4 0.01 264);
-  --color-border: oklch(0.8 0.01 264);
-  --color-border-muted: oklch(0.88 0.01 264);
-  --color-highlight: oklch(0.7 0.01 264);
-  --color-accent: oklch(0.7985 0.1271 229.93);
+  /* Neutral Silver is the Amendment's own named "light-mode base surface"
+     (§2) — used literally as --color-bg rather than an invented off-white,
+     so light mode draws from the same seven fixed stops as dark mode. */
+  --color-bg: #d9dcdd;
+  --color-bg-dark: #c0c5c7;
+  /* Elevated "paper" surface — brighter/whiter than the Silver base, the
+     drafting-paper analogue of dark mode's Structural Blue panel. */
+  --color-bg-light: #fafbfc;
+  --color-text: #0b121a;
+  --color-text-muted: #444e58;
+  --color-border: #57626b;
+  --color-border-muted: #7e888e;
+  --color-highlight: #68737d;
+  /* Brand Blue is one fixed stop, unchanged across themes (Amendment §2) —
+     it already clears non-text 3:1 against Neutral Silver. */
+  --color-accent: #0174d5;
+  /* Calibrated text-on-background variant (see dark-mode comment above),
+     darkened rather than lightened here since it now sits on a light base. */
+  --color-accent-text: #0049a5;
   --color-danger: oklch(0.5 0.05 30);
   --color-warning: oklch(0.5 0.05 100);
   --color-success: oklch(0.5 0.05 160);
-  --color-info: oklch(0.5 0.05 260);
+  --color-info: oklch(0.5 0.05 300);
 
   /* Light-mode shadows: lower opacity, tighter spread — dark shadows read as dirt on light surfaces. */
-  --shadow-xs: 0 1px 2px 0 oklch(0.4 0.01 264 / 0.08);
-  --shadow-sm: 0 1px 3px 0 oklch(0.4 0.01 264 / 0.1), 0 1px 2px -1px oklch(0.4 0.01 264 / 0.08);
-  --shadow-md: 0 4px 8px -2px oklch(0.4 0.01 264 / 0.12), 0 2px 4px -2px oklch(0.4 0.01 264 / 0.08);
+  --shadow-raised:
+    0 4px 8px -2px oklch(0.4 0.01 245 / 0.12), 0 2px 4px -2px oklch(0.4 0.01 245 / 0.08);
+  --shadow-xs: 0 1px 2px 0 oklch(0.4 0.01 245 / 0.08);
+  --shadow-sm: 0 1px 3px 0 oklch(0.4 0.01 245 / 0.1), 0 1px 2px -1px oklch(0.4 0.01 245 / 0.08);
+  --shadow-md: 0 4px 8px -2px oklch(0.4 0.01 245 / 0.12), 0 2px 4px -2px oklch(0.4 0.01 245 / 0.08);
   --shadow-lg:
-    0 12px 24px -6px oklch(0.4 0.01 264 / 0.14), 0 4px 8px -4px oklch(0.4 0.01 264 / 0.08);
-  --shadow-xl: 0 24px 48px -12px oklch(0.4 0.01 264 / 0.16);
+    0 12px 24px -6px oklch(0.4 0.01 245 / 0.14), 0 4px 8px -4px oklch(0.4 0.01 245 / 0.08);
+  --shadow-xl: 0 24px 48px -12px oklch(0.4 0.01 245 / 0.16);
 }
 
 :root {
-  /* One named gradient token (§2) — hero text / primary CTA only, never a section background. */
-  --brand-gradient: linear-gradient(90deg, #3abeff, #665dcd, #d2ab67);
+  /*
+   * One named gradient token — hero text / primary CTA only, never a
+   * section background. The old blue→violet→gold multi-hue sweep is
+   * retired (DESIGN/V3/04_COLOR.md §5): a gradient sweeping through
+   * unrelated hues reads as "this brand has a spectrum of colors," which
+   * contradicts the one-signature-accent discipline. This is a
+   * single-hue-family value gradient instead — Brand Blue shifting only in
+   * lightness across its own ramp (Amendment §2's Brand Blue → Electric
+   * Sky → Ice Blue stops) — the visual effect of light catching an angled
+   * metal surface, not a second, third, and fourth brand color.
+   */
+  --brand-gradient: linear-gradient(90deg, #0174d5, #1495ed, #62cefb);
 
   /*
-   * Content-width tokens (§3). Not run through Tailwind's @theme namespace —
-   * max-width utilities aren't reliably themeable there, so these are plain
-   * custom properties consumed via `max-w-[var(--content-*)]` (Container).
+   * Content-width tokens, DESIGN/V3/05_LAYOUT_SYSTEM.md §1. Not run through
+   * Tailwind's @theme namespace — max-width utilities aren't reliably
+   * themeable there, so these are plain custom properties consumed via
+   * `max-w-[var(--content-*)]` (Container). Three tiers per the doc: Prose
+   * and Marketing are unchanged from the existing two-tier system; Drafting
+   * is new — diagrams, dimension-line layouts, and large-scale technical
+   * imagery that need more room than Marketing without going full-bleed.
+   * Not yet consumed by Container (Task 4 scopes component work) — the
+   * token exists so a future diagram/imagery component has one to reach
+   * for instead of inventing a one-off width.
    */
   --content-marketing: 75rem; /* 1200px — default marketing page content width */
   --content-prose: 46.25rem; /* 740px  — long-form reading (notes, case studies) */
+  --content-drafting: 93.75rem; /* 1500px — diagrams, dimension-line layouts, large technical imagery */
+
+  /*
+   * Spacing scale, DESIGN/V3/14_VISUAL_TOKENS.md §1 — 4px base unit, nine
+   * steps at ~1.55x, rounded to the nearest 4px. Tailwind v4's arbitrary
+   * spacing multipliers already express every one of these values natively
+   * (its own --spacing base unit is the same 4px, so e.g. step 7 = 120px =
+   * `p-30`/`py-30`) — these named properties exist as the scale's one
+   * documented source of truth, and so a non-utility context (an SVG
+   * diagram's coordinates, a future GSAP/motion timeline) can reference a
+   * step by name instead of a bare, undocumented pixel value. Picking a
+   * spacing decision this table doesn't obviously answer should round to
+   * the nearest step, never invent an intermediate value.
+   */
+  --space-0: 0.25rem; /* 4px   — Tailwind p-1  — icon-to-label gaps, tightest tracking contexts */
+  --space-1: 0.5rem; /* 8px    — Tailwind p-2  — inline element gaps, tag/chip internal padding */
+  --space-2: 0.75rem; /* 12px  — Tailwind p-3  — compact component internal padding */
+  --space-3: 1.25rem; /* 20px  — Tailwind p-5  — standard component padding, label-to-value gap */
+  --space-4: 2rem; /* 32px     — Tailwind p-8  — gap within one beat (heading to its body copy) */
+  --space-5: 3rem; /* 48px     — Tailwind p-12 — gap between distinct elements within one section */
+  --space-6: 4.75rem; /* 76px  — Tailwind p-19 — compact section vertical padding (quiet-beat floor) */
+  --space-7: 7.5rem; /* 120px  — Tailwind p-30 — standard section vertical padding */
+  --space-8: 11.75rem; /* 188px — Tailwind p-47 — tallest-beat vertical padding (a Featured Case Study) */
+
+  /*
+   * Grid, DESIGN/V3/14_VISUAL_TOKENS.md §2 — 12-column base grid at the
+   * Marketing/Drafting tiers (Prose is a single ungridded column). Column
+   * spans are always whole numbers of 12 (8/4, 7/5, 9/3, 5/7 — never a
+   * fractional split); expressed directly via Tailwind's `grid-cols-12`
+   * utility, so no --grid-columns token is needed. Gutters are named here
+   * since they're referenced by both the grid and, per the dimension-chain
+   * rule, the spacing scale above (step 4 and a value between steps 4–5).
+   */
+  --gutter-marketing: 2rem; /* 32px — --space-4 */
+  --gutter-drafting: 2.5rem; /* 40px */
 
   /*
    * Layering scale — plain vars, since Tailwind v4 only auto-generates `z-*`
@@ -175,9 +313,12 @@ body {
   background-repeat: repeat;
 }
 
-/* Every interactive element gets the same visible focus treatment (§6). */
+/* Every interactive element gets the same visible focus treatment
+   (12_ACCESSIBILITY.md §5) — 2px is deliberately the heaviest hairline
+   weight on the site (14_VISUAL_TOKENS.md §4), since a focus indicator's
+   entire job is being unambiguous, not quiet. */
 :focus-visible {
-  outline: 2px solid var(--color-accent);
+  outline: var(--stroke-focus) solid var(--color-accent);
   outline-offset: 2px;
   border-radius: var(--radius-sm);
 }
@@ -190,7 +331,7 @@ body {
 
 ::selection {
   background-color: var(--color-accent);
-  color: var(--color-bg-dark);
+  color: var(--color-accent-foreground);
 }
 
 /*

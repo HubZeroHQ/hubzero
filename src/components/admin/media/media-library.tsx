@@ -227,7 +227,7 @@ export function MediaLibrary({ canDelete, canEdit }: MediaLibraryProps) {
         )}
       >
         {(isDragActive || isUploadingBatch) && (
-          <div className="border-accent/40 text-accent mb-4 flex items-center justify-center gap-2 rounded-md border border-dashed py-6">
+          <div className="border-accent/40 text-accent-text mb-4 flex items-center justify-center gap-2 rounded-md border border-dashed py-6">
             <UploadCloud className="size-5" aria-hidden="true" />
             <Text size="caption" weight="medium">
               {isUploadingBatch ? "Uploading…" : "Drop files to upload"}
