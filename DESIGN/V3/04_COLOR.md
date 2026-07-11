@@ -1,6 +1,8 @@
 # 04 — Color
 
 > Assumes `01_VISION.md` and `00_EXPLORATION.md`'s Working Blueprint recommendation. Values below are directional (approximate OKLCH lightness/chroma/hue targets), not final hex tokens — final calibration against real screens and WCAG contrast testing is implementation work for `10_IMPLEMENTATION_ROADMAP.md`, one level below what a system-level document should lock in, exactly as `ARCHITECTURE/07_DESIGN_SYSTEM.md` specified ranges rather than final values for v2.
+>
+> **Amended — read alongside `11_COLOR_PHILOSOPHY_AMENDMENT.md`.** §3's decision to replace electric blue with copper is superseded — on reflection, the actual problem this section correctly diagnosed (an ungrounded, undisciplined accent) doesn't require a new hue to fix, and `11_COLOR_PHILOSOPHY_AMENDMENT.md` re-derives HubZero's existing blue from its own real mark and real material references instead, organized into a seven-stop layered palette rather than one flat accent plus neutrals. §4's "one accent, plus an unacknowledged second color" framing is corrected into one palette with two assigned registers (§6 of that amendment) rather than two unrelated hues. The neutral base's _material-grounding logic_ (§2), the gradient/glow/shadow discipline (§5–7), and the operational case for having a signature color at all (§3) are unchanged in substance — all now re-expressed through `11_COLOR_PHILOSOPHY_AMENDMENT.md`'s named tokens.
 
 ## 1. Reviewing the existing palette
 

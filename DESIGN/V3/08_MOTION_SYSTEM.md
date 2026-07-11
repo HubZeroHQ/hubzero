@@ -1,6 +1,8 @@
 # 08 — Motion System
 
 > Assumes `02`–`07`. This document assigns exact ownership across three motion libraries — GSAP, Motion (motion.dev), and Anime.js — and defines the principles, budget, and hard exclusions that govern all three. It is written against the real motion contract already in production (`src/lib/motion.ts`'s `duration`/`ease`/`distance` tokens) so the three libraries share one vocabulary instead of three competing ones.
+>
+> **Amended.** §3's diagram-sequencing capability is named as this system's most distinctive signature but never committed to one flagship, worked example — `16_SIGNATURE_MOMENTS.md` §2 names the Labs/R&D data-flow diagram as that reference case and specifies it in full, alongside four other named, worked moments (§1, §3–5 of that document) built entirely from this document's existing ownership boundaries and budget. §6 principle 3's reduced-motion requirement is extended with concrete thresholds (flash-rate limits, scroll-scrub degradation) in `12_ACCESSIBILITY.md` §4.
 
 ## 1. Why three libraries, and why this isn't over-engineering
 
