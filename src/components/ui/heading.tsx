@@ -26,24 +26,18 @@ export interface HeadingProps extends ComponentPropsWithoutRef<"h1"> {
   level?: Level;
   /** Visual size, independent of `level` (e.g. an <h1> rendered at display size). */
   size?: keyof typeof sizes;
-  /**
-   * The one named gradient token, applied to text (§2). Reserve for a single
-   * hero headline per page — never a default heading treatment.
-   */
-  gradient?: boolean;
 }
 
-export function Heading({ level = 2, size, gradient = false, className, ...props }: HeadingProps) {
+/**
+ * No color-fill treatment (retired alongside --brand-gradient,
+ * DESIGN/V4/00_IMPLEMENTATION_STRATEGY.md §3.2 — a headline fill is exactly
+ * the kind of brand-decoration use the Signal color is never for). Where a
+ * single word needs emphasis within a headline, use `italic` on that span
+ * instead — the same typographic-only device already correct on `CtaClose`.
+ */
+export function Heading({ level = 2, size, className, ...props }: HeadingProps) {
   const Tag = levelTags[level];
   return (
-    <Tag
-      className={cn(
-        sizes[size ?? levelDefaults[level]],
-        "text-text",
-        gradient && "bg-[image:var(--brand-gradient)] bg-clip-text text-transparent",
-        className,
-      )}
-      {...props}
-    />
+    <Tag className={cn(sizes[size ?? levelDefaults[level]], "text-text", className)} {...props} />
   );
 }

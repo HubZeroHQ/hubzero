@@ -35,7 +35,7 @@ export default async function HomePage() {
           name: siteConfig.name,
           url: siteConfig.url,
           description: siteConfig.description,
-          logo: `${siteConfig.url}${brandAssets.icon}`,
+          logo: `${siteConfig.url}${brandAssets.appleTouchIcon}`,
         }}
       />
       <HeroSection />

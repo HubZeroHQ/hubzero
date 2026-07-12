@@ -55,10 +55,24 @@ function useCircuitReveal() {
  * "tech pattern," indistinguishable from any dev-tools/fintech site's stock
  * circuit-board decoration. The traces now mix in 45° diagonal segments and
  * resolve into one solid filled triangle — deliberately quoting the actual
- * HubZero mark's angular hexagon-and-triangle geometry (`public/brand/icon.png`)
- * rather than inventing an unrelated linework style. That solid triangle is
- * the one intentional "signature" moment: crop just that corner and it
- * should still read as HubZero, not as generic circuitry.
+ * HubZero mark's angular hexagon-and-triangle geometry
+ * (`assets/hubzero-logo-black.png`) rather than inventing an unrelated
+ * linework style. That solid triangle is the one intentional "signature"
+ * moment: crop just that corner and it should still read as HubZero, not as
+ * generic circuitry.
+ *
+ * Monochrome pass (DESIGN/V4/00_IMPLEMENTATION_STRATEGY.md §3.2): the trace
+ * lines and nodes render in ink (`text-border`), not the Signal color — this
+ * motif is decorative geometry, not an interactive affordance, a progress
+ * indicator, or a diagram, so it doesn't qualify for Signal under this
+ * document's own rule ("if removing the Signal color would only make a page
+ * look less finished, it was decoration"). The one exception is the
+ * signature triangle: it functions as a live/state marker (the mark
+ * "arriving," the one deliberate stamp a reader should register), which is
+ * exactly the "live state" job Signal is scoped for — kept in
+ * `text-accent-text` deliberately, as the single most restrained possible
+ * use of it in this component. The motif reads correctly in pure grayscale
+ * with only that one dot of color removed, per the Grayscale Test.
  *
  * Draw-in uses plain CSS transitions on stroke-dashoffset/opacity (like the
  * mobile nav drawer in globals.css), not the `motion` library's SVG
@@ -89,8 +103,8 @@ export function CircuitMotif({ className }: { className?: string }) {
     { cx: 140, cy: 40, r: 3 },
   ];
 
-  // The one solid, filled shape on the page outside the brand-gradient text —
-  // a small right-pointing triangle quoting the inner facet of the actual
+  // The one solid, filled shape in Signal color on the page — a small
+  // right-pointing triangle quoting the inner facet of the actual
   // HubZero mark. Everything else here is stroke-only linework; this is
   // deliberately not, so it reads as a stamp/signature rather than another
   // trace segment.
@@ -111,7 +125,7 @@ export function CircuitMotif({ className }: { className?: string }) {
       className={className}
       preserveAspectRatio="xMidYMid meet"
     >
-      <g className="text-accent-text" stroke="currentColor" strokeWidth="1.5" opacity="0.65">
+      <g className="text-border" stroke="currentColor" strokeWidth="1.5" opacity="0.65">
         {traces.map((d, i) => (
           <path
             key={d}
@@ -124,7 +138,7 @@ export function CircuitMotif({ className }: { className?: string }) {
           />
         ))}
       </g>
-      <g className="text-accent-text" fill="currentColor">
+      <g className="text-border" fill="currentColor">
         {nodes.map((n, i) => (
           <circle
             key={`${n.cx}-${n.cy}`}
@@ -173,7 +187,7 @@ export function CircuitSignatureMark({ className }: { className?: string }) {
     <svg viewBox="0 0 100 40" fill="none" aria-hidden="true" className={className}>
       <path
         d="M 0 20 L 60 20"
-        className="text-accent-text"
+        className="text-border"
         stroke="currentColor"
         strokeWidth="1.5"
         opacity="0.65"
@@ -247,7 +261,7 @@ export function CircuitConnector({ className }: { className?: string }) {
       >
         <path
           d={trace}
-          className="text-accent-text"
+          className="text-border"
           stroke="currentColor"
           strokeWidth="1.5"
           opacity="0.55"
@@ -258,7 +272,7 @@ export function CircuitConnector({ className }: { className?: string }) {
             transition: `stroke-dashoffset ${drawDuration}s cubic-bezier(0.16,1,0.3,1)`,
           }}
         />
-        <g className="text-accent-text" fill="currentColor">
+        <g className="text-border" fill="currentColor">
           {nodes.map((n, i) => (
             <circle
               key={`${n.cx}-${n.cy}`}

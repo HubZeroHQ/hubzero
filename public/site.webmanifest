@@ -1,19 +1,19 @@
 {
-  "name": "Hub Zero",
+  "name": "HubZero",
   "short_name": "HubZero",
   "description": "Engineering studio building software, hardware, AI, and digital products.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#030b17",
-  "theme_color": "#0174d5",
+  "background_color": "#0a0b0c",
+  "theme_color": "#0a0b0c",
   "icons": [
     {
-      "src": "/android-chrome-192x192.png",
+      "src": "/web-app-manifest-192x192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "/android-chrome-512x512.png",
+      "src": "/web-app-manifest-512x512.png",
       "sizes": "512x512",
       "type": "image/png"
     }
