@@ -1,5 +1,7 @@
 # 12 — Admin Panel Specification
 
+> **Note (2026-07-12):** `01_PRODUCT_VISION.md`, `03_INFORMATION_ARCHITECTURE.md`, and other marketing-website documents referenced below were archived in the 2026-07-12 design reset — see `ARCHIVE/README.md`. This document's admin panel/studio specification remains current.
+
 > **Status: Founder Approved — 2026-07-01; amended 2026-07-04.** §1-3 below updated to match the responsibility-based RBAC and hybrid workflow model in `00_FOUNDER_APPROVAL.md` §3, replacing the original department-based role references. §2's screen list gained Builds and Blueprints, and the Labs/R&D screen description was updated, on 2026-07-04 — see `00_FOUNDER_APPROVAL.md` §8.
 
 > Decision convention: see `01_PRODUCT_VISION.md` §0. Located at `/studio`, excluded from sitemap/robots (`03_INFORMATION_ARCHITECTURE.md` §5) — this is the system that replaces the legacy's entirely-manual, developer-bottlenecked publishing process (`ARCHIVED_PROJECT_ANALYSIS.md` §9.6).

@@ -1,5 +1,7 @@
 # PROJECT_CONTEXT.md
 
+> **⚠️ Design reset — 2026-07-12.** The public marketing website direction this document describes (homepage, services/work/about/contact pages, navigation, hero, page structure, design system, motion, roadmap for those pages) has been archived — see `ARCHIVE/README.md`. Many `ARCHITECTURE/01`–`07`, `10`, `13`–`17` documents referenced below now live under `ARCHIVE/ARCHITECTURE/` and are historical reference only, not implementation guidance. The new marketing-site direction starts fresh in `DESIGN/NEXT`. The CMS/backend/admin sections below (`08`, `09`, `11`, `12`, `18`–`20`, and the repo-structure/git-workflow/coding-standards sections) are unaffected and remain current.
+
 > Single source of truth for any new Claude Code session (or new engineer) picking up HubZero v2 with zero prior context. This document summarizes and cross-references `ARCHITECTURE/`, the current codebase, and decisions made outside those docs — it does not replace `ARCHITECTURE/`, which remains the authoritative spec for anything this document only summarizes.
 >
 > Last compiled: 2026-07-03, immediately before this repository was transferred from a personal GitHub account to the HubZero GitHub organization and re-cloned into a fresh working directory.

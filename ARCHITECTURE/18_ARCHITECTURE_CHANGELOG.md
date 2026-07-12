@@ -1,5 +1,7 @@
 # 18 — Architecture Changelog
 
+> **Note (2026-07-12):** several documents cited throughout this changelog (`01`–`07`, `10`, `13`–`17`) were archived in the 2026-07-12 design reset — see `ARCHIVE/README.md`. Entries below remain an accurate historical record of what changed and why; the CMS/backend-related entries remain relevant to current work.
+
 > This is an **architectural history document**, not a git changelog — it records *why* the specs changed, not which lines moved. Entries are grouped by revision session, most recent first. See `00_FOUNDER_APPROVAL.md` for the corresponding decision-log entries and `17_COMPANY_STRUCTURE.md` for the canonical definition each entry below implements.
 
 ---

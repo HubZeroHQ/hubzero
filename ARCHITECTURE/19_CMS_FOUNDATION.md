@@ -1,5 +1,7 @@
 # 19 — CMS Foundation
 
+> **Note (2026-07-12):** `17_COMPANY_STRUCTURE.md` and other marketing-website documents referenced below were archived in the 2026-07-12 design reset — see `ARCHIVE/README.md`. This document's CMS engine design remains current and is the foundation the redesign builds on.
+
 > **Status: Proposed — 2026-07-04, awaiting founder review.** This document is Phase 1 planning only — architecture, engineering design, and sequencing for the HubZero CMS. No implementation has started as a result of this document. It should be read and approved the way `17_COMPANY_STRUCTURE.md` was: as a real addition to the founder-approved spec set, not a draft that lives outside it.
 >
 > Decision convention: see `01_PRODUCT_VISION.md` §0 and `00_FOUNDER_APPROVAL.md`. Nothing here relitigates a decision already made in `08`, `09`, `11`, `12`, or `14` — those documents already decided *what* the CMS is (custom-built, MongoDB, responsibility-based RBAC, hybrid draft/publish workflow, the collection list). This document answers the question those four don't: *how is it actually built, concretely, file by file, so that Case Studies, Team, Labs, Builds, Blueprints, Notes, and every collection after them are additions to a system, not seven separate systems that happen to look similar.*
