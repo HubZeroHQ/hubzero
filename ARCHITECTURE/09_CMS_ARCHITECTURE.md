@@ -1,5 +1,7 @@
 # 09 — CMS Architecture
 
+> **Note (2026-07-12):** `17_COMPANY_STRUCTURE.md` and other marketing-website documents referenced below were archived in the 2026-07-12 design reset — see `ARCHIVE/README.md`. The CMS/content-model decisions in this document (collections, RBAC, workflow) remain current and are the foundation the redesign builds on.
+
 > **Status: Founder Approved — 2026-07-01; amended 2026-07-04, 2026-07-06.** §1, §3, and §4 below were substantially revised in the founder-approval session — see `00_FOUNDER_APPROVAL.md` §3 for the full rationale. The Payload-CMS framing originally in §1 is superseded; the department-based role model originally in §4 is replaced entirely. §2's collections table was extended 2026-07-04 with Builds and Blueprints, and the Labs/R&D row updated to reflect its new status as a permanent pillar — see `00_FOUNDER_APPROVAL.md` §8 and `17_COMPANY_STRUCTURE.md`. **2026-07-06:** every narrative collection's fixed markdown fields (`problem`/`approach`/`result`, `description`, `body`, `customizationNotes`) were replaced by a single ordered `content` (editorial blocks) field, plus `summary`/`featured`/`readingTimeMinutes`/`contributors` — see `20_CONTENT_BLOCKS.md`, the canonical spec; §2's table below reflects the new shape.
 
 > Decision convention: see `01_PRODUCT_VISION.md` §0. This is the single most consensus-backed requirement in the entire planning dataset — CSV Q19-22 show every respondent wanting real CMS workflow features, rated 4-5/5 importance by all four.

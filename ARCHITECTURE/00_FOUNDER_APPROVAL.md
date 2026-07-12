@@ -1,5 +1,7 @@
 # 00 — Founder Approval & Decision Log
 
+> **Note (2026-07-12):** the marketing-website documents this decision log references (`01`–`07`, `10`, `13`–`17`) were archived in the 2026-07-12 design reset — see `ARCHIVE/README.md`. This log remains authoritative for CMS/backend/business decisions (RBAC, backups, legal status, etc.); the marketing-site decisions it records are historical only.
+
 > Status: **Founder Approved — 2026-07-01; amended 2026-07-04.** This document is the authoritative record of the founder-approval session that resolved every remaining open decision across `01`–`14`, plus the 2026-07-04 amendment session (§8) that adopted the four-pillar company structure and resolved `17_COMPANY_STRUCTURE.md`'s open questions. Where this log conflicts with earlier prose in those documents (particularly around CMS role model, Notes sequencing, hero copy, and growth-target rigidity), **this log wins** — the other documents have been updated to match, but this is the source of truth for *why*.
 
 ## How to read this document

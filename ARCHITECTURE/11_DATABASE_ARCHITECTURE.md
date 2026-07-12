@@ -1,5 +1,7 @@
 # 11 — Database Architecture
 
+> **Note (2026-07-12):** `17_COMPANY_STRUCTURE.md` and other marketing-website documents referenced below were archived in the 2026-07-12 design reset — see `ARCHIVE/README.md`. This document's schema remains current.
+
 > **Status: Founder Approved — 2026-07-01; amended 2026-07-04, 2026-07-06.** `User.role` enum and the `LabsProject` collection below reflect the responsibility-based RBAC and Labs/R&D decisions in `00_FOUNDER_APPROVAL.md` §2-3, superseding the department-based roles originally listed here. §1 gained the `Build` and `Blueprint` collections and `LabsProject`'s graduation fields on 2026-07-04 — see `00_FOUNDER_APPROVAL.md` §8 and `17_COMPANY_STRUCTURE.md` §4. **2026-07-06:** `CaseStudy`/`Build`/`LabsProject`/`Blueprint`/`Note`'s fixed markdown fields are replaced by `content: Block[]`, plus `summary`/`featured`/`readingTimeMinutes`/`contributors`; `SiteSettings` gained `featuredCaseStudyId` — see `20_CONTENT_BLOCKS.md`, the canonical spec for the new shape.
 
 > Decision convention: see `01_PRODUCT_VISION.md` §0. Database choice (MongoDB) and the hybrid storage interpretation are decided in `08_TECHNICAL_ARCHITECTURE.md` §2-3 — this document specifies the resulting schema.

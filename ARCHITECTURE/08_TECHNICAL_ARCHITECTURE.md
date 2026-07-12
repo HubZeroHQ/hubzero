@@ -1,5 +1,7 @@
 # 08 — Technical Architecture
 
+> **Note (2026-07-12):** `01_PRODUCT_VISION.md` and other marketing-website documents referenced below were archived in the 2026-07-12 design reset — see `ARCHIVE/README.md`. This document's stack/technical decisions remain current.
+
 > **Status: Founder Approved — 2026-07-01; amended 2026-07-04.** See `00_FOUNDER_APPROVAL.md` §3 (CMS build approach — fully custom, not a configured third-party CMS) and §4 (data retention/backup policy, new §9 below) for revisions incorporated in this session. §5's layout diagram gained `builds/`, `labs/`, `blueprints/` on 2026-07-04 — see `00_FOUNDER_APPROVAL.md` §8.
 
 > Decision convention: see `01_PRODUCT_VISION.md` §0. New application root is repo root, NOT `client/` (per the rebuild instruction, Step 12) — `client/` remains untouched as the legacy reference implementation until cutover.

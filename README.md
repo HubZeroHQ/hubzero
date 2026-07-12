@@ -4,18 +4,20 @@ HubZero is a small, founder-led engineering studio building software and hardwar
 products for businesses that need both. This repository is the production Next.js application —
 marketing site, Notes (engineering write-ups), and internal CMS — currently under active rebuild as **HubZero v2**.
 
-The full product/technical specification lives in [`ARCHITECTURE/`](./ARCHITECTURE) and is treated
-as the source of truth for every implementation decision. Start with
-[`ARCHITECTURE/00_FOUNDER_APPROVAL.md`](./ARCHITECTURE/00_FOUNDER_APPROVAL.md) and
-[`ARCHITECTURE/14_IMPLEMENTATION_ROADMAP.md`](./ARCHITECTURE/14_IMPLEMENTATION_ROADMAP.md).
+> **⚠️ 2026-07-12 design reset:** the public marketing website direction (homepage, services/work/about/contact pages, navigation, hero, page structure, design system, roadmap) has been archived — see [`ARCHIVE/README.md`](./ARCHIVE/README.md). The new marketing-site direction starts fresh in [`DESIGN/NEXT`](./DESIGN/NEXT). The CMS/backend/admin architecture below is unaffected.
+
+The technical/CMS specification lives in [`ARCHITECTURE/`](./ARCHITECTURE) and is treated
+as the source of truth for backend/CMS implementation decisions. Start with
+[`ARCHITECTURE/00_FOUNDER_APPROVAL.md`](./ARCHITECTURE/00_FOUNDER_APPROVAL.md).
 
 ## Repository layout
 
 - `src/` — the v2 application (this README's `npm` scripts operate on this).
-- `ARCHITECTURE/` — the 14-document product/technical specification for v2.
+- `ARCHITECTURE/` — the active technical/CMS specification (backend, database, admin, CMS foundation, content model). The marketing-website-facing documents that used to live here have been archived — see [`ARCHIVE/README.md`](./ARCHIVE/README.md).
+- `DESIGN/NEXT/` — the marketing-website redesign, starting fresh after the 2026-07-12 reset.
+- `ARCHIVE/` — historical reference only: the archived marketing-website architecture and design documents.
 - `client/` — the **legacy** Next.js implementation. Read-only, kept for feature/content
-  reference only until cutover (`ARCHITECTURE/14_IMPLEMENTATION_ROADMAP.md` Phase 7). Do not build
-  new work here.
+  reference only until cutover. Do not build new work here.
 - `docs/` — supporting research (team planning survey responses, etc.).
 - `ARCHIVED_PROJECT_ANALYSIS.md` — historical audit of the legacy site; several of its findings are
   carried forward into `ARCHITECTURE/` as must-fix rules.
@@ -24,7 +26,7 @@ as the source of truth for every implementation decision. Start with
 
 `client/` is the pre-v2 Next.js site and is temporarily retained during the migration for
 feature/content reference. It is not built or deployed from this README's scripts and should not
-receive new work — see `ARCHITECTURE/14_IMPLEMENTATION_ROADMAP.md` Phase 7 for the cutover plan.
+receive new work — see `ARCHIVE/ARCHITECTURE/14_IMPLEMENTATION_ROADMAP.md` Phase 7 (archived) for the historical cutover plan.
 
 ## Tech stack
 
