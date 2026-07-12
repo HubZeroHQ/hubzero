@@ -79,10 +79,16 @@
   --color-success: oklch(0.7 0.05 160);
   --color-info: oklch(0.7 0.05 300);
 
-  /* No serif family (§3.3) — a deliberate decision, not an oversight.
-     Weight and scale carry every moment of emphasis instead. */
   --font-sans: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+  /* No page built under CREATIVE_DIRECTION.md §3.3 uses a serif — weight
+     and scale carry every moment of emphasis instead, a deliberate
+     decision, not an oversight. This token stays defined only because
+     Services/Work/Labs/Blueprints/About haven't been rebuilt yet and
+     still call `font-serif` under the old system; removing it would
+     silently regress those pages to a generic system serif instead of
+     erroring. Delete it once every `font-serif` call site is gone. */
+  --font-serif: var(--font-plex-serif), ui-serif, Georgia, serif;
 
   /* Modular type scale, 4px base unit (§1). */
   --text-display: 4rem;

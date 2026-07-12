@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Archivo, JetBrains_Mono } from "next/font/google";
+import { Archivo, IBM_Plex_Serif, JetBrains_Mono } from "next/font/google";
 
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { brandAssets } from "@/config/brand";
@@ -10,14 +10,12 @@ import "./globals.css";
 
 /**
  * Typography, per `DESIGN/NEXT/CREATIVE_DIRECTION.md` §3.3 — two families,
- * no serif. A confident geometric grotesk carries every headline, every
- * line of body copy, and every moment of emphasis; weight and scale do the
- * work a third, serif family used to do. Archivo was chosen specifically
- * because it isn't Geist (this project's own retired system, and an
- * increasingly generic "safe default" across the developer-tool category)
- * and isn't IBM Plex (same reason, one step removed) — it has real
- * presence at large display sizes, which the homepage hero and section
- * openers need.
+ * no serif, on any page built under that direction. Archivo was chosen
+ * specifically because it isn't Geist (this project's own retired system,
+ * and an increasingly generic "safe default" across the developer-tool
+ * category) and isn't IBM Plex (same reason, one step removed) — it has
+ * real presence at large display sizes, which the homepage hero and
+ * section openers need.
  */
 const archivo = Archivo({
   variable: "--font-archivo",
@@ -33,6 +31,24 @@ const archivo = Archivo({
 const jetbrainsMono = JetBrains_Mono({
   variable: "--font-jetbrains-mono",
   subsets: ["latin"],
+});
+
+/**
+ * Kept loaded, not removed, even though no page built under
+ * `CREATIVE_DIRECTION.md` §3.3 uses a serif — implementation is happening
+ * page by page (only the homepage has been rebuilt so far), and Services,
+ * Work, Labs, Blueprints, and About still render real `font-serif` content
+ * under the old system. Dropping this token would have silently degraded
+ * every one of those unmigrated pages to a generic system serif fallback
+ * instead of erroring — a real, live regression on pages nobody asked to
+ * touch yet. Remove this once every remaining page has its own redesign
+ * pass and the last `font-serif` call site is gone (grep-verify first).
+ */
+const ibmPlexSerif = IBM_Plex_Serif({
+  variable: "--font-plex-serif",
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  style: ["normal", "italic"],
 });
 
 export const metadata: Metadata = {
@@ -80,7 +96,7 @@ export default function RootLayout({ children }: Readonly<WithChildren>) {
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${archivo.variable} ${jetbrainsMono.variable}`}
+      className={`${archivo.variable} ${jetbrainsMono.variable} ${ibmPlexSerif.variable}`}
     >
       <head>
         <meta name="apple-mobile-web-app-title" content="Hub Zero" />
