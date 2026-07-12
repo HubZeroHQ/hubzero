@@ -1,16 +1,19 @@
 import type { Metadata } from "next";
 
-import { CtaClose } from "@/components/marketing/cta-close";
-import { HeroSection } from "@/components/marketing/hero-section";
-import { HomepageFeaturedGrid } from "@/components/marketing/homepage-featured-grid";
-import { HomepageHero } from "@/components/marketing/homepage-hero";
-import { HowWeWork } from "@/components/marketing/how-we-work";
-import { WhatWeDo } from "@/components/marketing/what-we-do";
+import "@/lib/cms/collections";
+
+import { Close } from "@/components/marketing/homepage/close";
+import { Duality } from "@/components/marketing/homepage/duality";
+import { Hero } from "@/components/marketing/homepage/hero";
+import { Pillars } from "@/components/marketing/homepage/pillars";
+import { Proof } from "@/components/marketing/homepage/proof";
+import { TeamPreview, type TeamPreviewMember } from "@/components/marketing/homepage/team-preview";
 import { JsonLd } from "@/components/seo/json-ld";
 import { brandAssets } from "@/config/brand";
 import { siteConfig } from "@/config/site";
-import { getHomepageContent } from "@/lib/cms/public-content";
+import { findPublished, getHomepageContent, resolveCoverImage } from "@/lib/cms/public-content";
 import { pageMetadata } from "@/lib/seo";
+import { TeamMember, type TeamMemberDocument } from "@/models/team-member";
 
 // `siteConfig.title` is already `"HubZero — [positioning line]"`
 // (`ARCHITECTURE/13_SEO_STRATEGY.md` §2's exact Home pattern), so the root
@@ -23,8 +26,26 @@ export const metadata: Metadata = pageMetadata({
   path: "/",
 });
 
+export const revalidate = 3600;
+
+async function getTeamPreview(): Promise<TeamPreviewMember[]> {
+  const docs = await findPublished<TeamMemberDocument>(TeamMember, {
+    isCoreMember: true,
+    profileVisible: true,
+  });
+
+  return Promise.all(
+    docs.map(async (doc) => ({
+      username: doc.username,
+      name: doc.name,
+      role: doc.role,
+      photo: await resolveCoverImage(doc.photo ? String(doc.photo) : undefined),
+    })),
+  );
+}
+
 export default async function HomePage() {
-  const { hero, items } = await getHomepageContent();
+  const [{ hero }, team] = await Promise.all([getHomepageContent(), getTeamPreview()]);
 
   return (
     <>
@@ -38,12 +59,12 @@ export default async function HomePage() {
           logo: `${siteConfig.url}${brandAssets.appleTouchIcon}`,
         }}
       />
-      <HeroSection />
-      <WhatWeDo />
-      {hero && <HomepageHero item={hero} />}
-      <HomepageFeaturedGrid items={items} />
-      <HowWeWork />
-      <CtaClose />
+      <Hero />
+      <Duality />
+      <Proof item={hero} />
+      <Pillars />
+      <TeamPreview members={team} />
+      <Close />
     </>
   );
 }
