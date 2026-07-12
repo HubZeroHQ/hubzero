@@ -2,17 +2,19 @@ import type { Metadata } from "next";
 
 import "@/lib/cms/collections";
 
+import { ArchitectureDetail } from "@/components/marketing/homepage/architecture-detail";
 import { Close } from "@/components/marketing/homepage/close";
-import { Duality } from "@/components/marketing/homepage/duality";
 import { Hero } from "@/components/marketing/homepage/hero";
-import { Pillars } from "@/components/marketing/homepage/pillars";
+import { Pillars, type LabsPreview } from "@/components/marketing/homepage/pillars";
 import { Proof } from "@/components/marketing/homepage/proof";
+import { SpineRoot } from "@/components/marketing/homepage/spine";
 import { TeamPreview, type TeamPreviewMember } from "@/components/marketing/homepage/team-preview";
 import { JsonLd } from "@/components/seo/json-ld";
 import { brandAssets } from "@/config/brand";
 import { siteConfig } from "@/config/site";
 import { findPublished, getHomepageContent, resolveCoverImage } from "@/lib/cms/public-content";
 import { pageMetadata } from "@/lib/seo";
+import { LabsProject, type LabsProjectDocument } from "@/models/labs-project";
 import { TeamMember, type TeamMemberDocument } from "@/models/team-member";
 
 // `siteConfig.title` is already `"HubZero — [positioning line]"`
@@ -44,8 +46,26 @@ async function getTeamPreview(): Promise<TeamPreviewMember[]> {
   );
 }
 
+/** The one real Labs entry (`CREATIVE_DIRECTION.md` §13.1's "Labs, honestly smaller") — most recently published, whichever that is, rather than a hardcoded slug. */
+async function getFeaturedLabsProject(): Promise<LabsPreview | null> {
+  const docs = await findPublished<LabsProjectDocument>(LabsProject);
+  const doc = docs[0];
+  if (!doc) return null;
+
+  return {
+    title: doc.title,
+    summary: doc.summary,
+    href: `/labs/${doc.slug}`,
+    techTags: doc.techTags,
+  };
+}
+
 export default async function HomePage() {
-  const [{ hero }, team] = await Promise.all([getHomepageContent(), getTeamPreview()]);
+  const [{ hero }, team, labs] = await Promise.all([
+    getHomepageContent(),
+    getTeamPreview(),
+    getFeaturedLabsProject(),
+  ]);
 
   return (
     <>
@@ -60,10 +80,12 @@ export default async function HomePage() {
         }}
       />
       <Hero />
-      <Duality />
-      <Proof item={hero} />
-      <Pillars />
-      <TeamPreview members={team} />
+      <SpineRoot>
+        <ArchitectureDetail />
+        <Proof item={hero} />
+        <Pillars labs={labs} />
+        <TeamPreview members={team} />
+      </SpineRoot>
       <Close />
     </>
   );

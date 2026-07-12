@@ -1,93 +1,94 @@
+import { SpineLabel } from "@/components/marketing/homepage/spine";
 import { Reveal } from "@/components/marketing/reveal";
 import { Container } from "@/components/ui/container";
 import { Link } from "@/components/ui/link";
-import { cn } from "@/lib/utils";
 
-interface Pillar {
-  name: string;
-  description: string;
-  href: string | null;
-  status: string;
+export interface LabsPreview {
+  title: string;
+  summary: string;
+  href: string;
+  techTags: string[];
 }
 
-const pillars: Pillar[] = [
-  {
-    name: "Work",
-    description: "Client engagements, delivered — real evidence, not a portfolio of intentions.",
-    href: "/work",
-    status: "Live",
-  },
-  {
-    name: "Labs",
-    description:
-      "Research and experimentation — hardware, software, AI — shown honestly in progress.",
-    href: "/labs",
-    status: "Live",
-  },
-  {
-    name: "Blueprints",
-    description:
-      "Reusable, production-ready engineering foundations — proof of range, not a template store.",
-    href: null,
-    status: "In progress",
-  },
-  {
-    name: "Builds",
-    description: "Products HubZero owns and ships itself, not delivered to a client.",
-    href: null,
-    status: "In progress",
-  },
-];
-
 /**
- * The pillars, as an index, not a pitch (`CREATIVE_DIRECTION.md` §13.1).
- * Brisk and quiet after Proof's long exhale (§7.1) — a confident company's
- * table of contents. Blueprints and Builds render as real, honestly-labeled
- * pillars with no link yet rather than being hidden — `.hubzero/polish/
- * PRODUCT_POLISH.md` forbids a "coming soon" *page*, not an honest
- * "in progress" state on an index that's telling the truth about a real
- * four-pillar structure.
+ * Labs, honestly smaller (`CREATIVE_DIRECTION.md` §13.1, §13.4). No image
+ * exists for the one real Labs entry, so it doesn't compete with Proof for
+ * space — a deliberately modest footprint, plainly labeled "in progress,"
+ * rather than forced into a device-frame it hasn't earned. Blueprints and
+ * Builds are named honestly (they're real, structural parts of how HubZero
+ * is organized) but not linked — neither has a real published entry yet
+ * (`src/config/nav.ts`'s own content-gating rule keeps them out of primary
+ * nav for the same reason), so pointing to them here would be a link to
+ * nothing, which `.hubzero/polish/PRODUCT_POLISH.md` already forbids.
  */
-export function Pillars() {
+export function Pillars({ labs }: { labs: LabsPreview | null }) {
   return (
-    <section className="py-24 sm:py-28">
+    <section className="py-16 sm:py-20">
       <Container>
         <Reveal>
-          <p className="text-caption text-text-muted font-mono tracking-widest uppercase">
-            How HubZero is organized
-          </p>
+          <SpineLabel>Labs</SpineLabel>
         </Reveal>
-        <div className="mt-10 grid gap-px sm:grid-cols-2 lg:grid-cols-4">
-          {pillars.map((pillar, i) => {
-            const content = (
-              <div className="border-border-muted flex h-full flex-col border p-6">
-                <div className="flex items-center justify-between gap-2">
-                  <h3 className="text-h3 text-text font-semibold">{pillar.name}</h3>
-                  <span
-                    className={cn(
-                      "text-caption font-mono whitespace-nowrap",
-                      pillar.href ? "text-text-muted" : "text-text-muted/70",
-                    )}
-                  >
-                    {pillar.status}
-                  </span>
-                </div>
-                <p className="text-caption text-text-muted mt-3">{pillar.description}</p>
-              </div>
-            );
-
-            return (
-              <Reveal key={pillar.name} delayMs={i * 60}>
-                {pillar.href ? (
-                  <Link href={pillar.href} className="block h-full no-underline hover:no-underline">
-                    {content}
-                  </Link>
-                ) : (
-                  content
+        <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)] lg:items-start">
+          <Reveal>
+            <h2 className="text-h2 text-text font-semibold text-balance">
+              {labs ? labs.title : "Research and experimentation"}
+            </h2>
+            {labs && (
+              <>
+                <p className="text-body text-text-muted mt-4 max-w-md text-balance">
+                  {labs.summary}
+                </p>
+                {labs.techTags.length > 0 && (
+                  <ul className="mt-4 flex flex-wrap gap-x-4 gap-y-2" role="list">
+                    {labs.techTags.map((tag) => (
+                      <li key={tag} className="text-caption text-text-muted font-mono">
+                        {tag}
+                      </li>
+                    ))}
+                  </ul>
                 )}
-              </Reveal>
-            );
-          })}
+                <Link
+                  href={labs.href}
+                  className="text-body text-text mt-6 inline-flex items-center gap-2 font-medium no-underline hover:underline"
+                >
+                  See it built, end to end
+                  <span aria-hidden="true">→</span>
+                </Link>
+              </>
+            )}
+          </Reveal>
+
+          <Reveal delayMs={100}>
+            <div className="border-border-muted bg-bg-light flex items-center gap-2.5 rounded-md border px-4 py-3">
+              <span className="bg-accent size-1.5 shrink-0 rounded-full" aria-hidden="true" />
+              <span className="text-caption text-text-muted font-mono tracking-wide uppercase">
+                Active — internal R&amp;D, no client involved
+              </span>
+            </div>
+            <div className="mt-6 flex flex-col gap-3">
+              <span className="text-caption text-text-muted font-mono tracking-widest uppercase">
+                Also underway
+              </span>
+              <div className="flex items-center gap-2.5">
+                <span
+                  className="bg-text-muted/50 size-1.5 shrink-0 rounded-full"
+                  aria-hidden="true"
+                />
+                <span className="text-caption text-text-muted">
+                  Blueprints — reusable engineering foundations, in development
+                </span>
+              </div>
+              <div className="flex items-center gap-2.5">
+                <span
+                  className="bg-text-muted/50 size-1.5 shrink-0 rounded-full"
+                  aria-hidden="true"
+                />
+                <span className="text-caption text-text-muted">
+                  Builds — products we own and ship ourselves, in development
+                </span>
+              </div>
+            </div>
+          </Reveal>
         </div>
       </Container>
     </section>

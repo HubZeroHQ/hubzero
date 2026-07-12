@@ -20,16 +20,16 @@ export interface MobileNavProps {
 }
 
 /**
- * The mobile half of The Unfold (`CREATIVE_DIRECTION.md` §4). Desktop's
- * hover-driven horizontal unfold doesn't translate to touch — there's no
- * hover, and a horizontal pill wide enough for five links doesn't fit a
- * phone screen — so mobile gets a structurally different answer to the
- * same job: a bottom sheet, rising from the same thumb-reachable zone the
- * collapsed mark trigger already lives in (`navbar.tsx`), not a right-side
- * drawer translated unchanged from a desktop pattern. Radix Dialog owns
- * the focus trap, Escape-to-close, and scroll-lock; Motion owns the open/
- * close transition (`forceMount` + `AnimatePresence`), so a re-tap mid-
- * animation interrupts cleanly instead of restarting from a keyframe start.
+ * Mobile navigation (`CREATIVE_DIRECTION.md` §4). The persistent desktop bar
+ * (`navbar.tsx`) doesn't fit five links plus a CTA at phone width, so mobile
+ * gets a structurally different answer to the same job: tapping the menu
+ * button in that same persistent bar opens this bottom sheet. This was
+ * always tap-triggered, never hover-gated, so it stayed compliant with §4's
+ * "no reveal gesture" rule even before the desktop hover-unfold was retired.
+ * Radix Dialog owns the focus trap, Escape-to-close, and scroll-lock; Motion
+ * owns the open/close transition (`forceMount` + `AnimatePresence`), so a
+ * re-tap mid-animation interrupts cleanly instead of restarting from a
+ * keyframe start.
  */
 export function MobileNav({ items, cta, open, onOpenChange }: MobileNavProps) {
   const pathname = usePathname();
