@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, IBM_Plex_Serif } from "next/font/google";
+import { Archivo, IBM_Plex_Serif, JetBrains_Mono } from "next/font/google";
 
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { brandAssets } from "@/config/brand";
@@ -8,27 +8,41 @@ import type { WithChildren } from "@/types";
 
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+/**
+ * Typography, per `DESIGN/NEXT/CREATIVE_DIRECTION.md` §3.3 — two families,
+ * no serif, on any page built under that direction. Archivo was chosen
+ * specifically because it isn't Geist (this project's own retired system,
+ * and an increasingly generic "safe default" across the developer-tool
+ * category) and isn't IBM Plex (same reason, one step removed) — it has
+ * real presence at large display sizes, which the homepage hero and
+ * section openers need.
+ */
+const archivo = Archivo({
+  variable: "--font-archivo",
   subsets: ["latin"],
 });
 
 /**
- * Display serif (DESIGN/V3/03_TYPOGRAPHY.md §3, §6) — retired Instrument
- * Serif in favor of IBM Plex Serif: a family with real engineering-
- * organization pedigree, meaningfully less trend-saturated in the specific
- * "editorial AI-assisted design" genre Instrument Serif had become a
- * default signal for. Used upright by default (Text/Regular for pull
- * quotes, Medium for firmer emphasis) — italic is loaded as a secondary
- * emphasis available *within* a Plex Serif moment, not the default
- * posture the way Instrument Serif's italic-by-default was. Still a rare,
- * named slow-down device only (at most one moment per page, two on the
- * homepage) — never a default heading treatment.
+ * System label / metadata typeface (§3.3) — IDs, dates, code, small labels
+ * only, never body copy or headlines. JetBrains Mono, not Geist Mono: a
+ * different family from the retired system, genuinely technical rather
+ * than decoratively "coder."
+ */
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains-mono",
+  subsets: ["latin"],
+});
+
+/**
+ * Kept loaded, not removed, even though no page built under
+ * `CREATIVE_DIRECTION.md` §3.3 uses a serif — implementation is happening
+ * page by page (only the homepage has been rebuilt so far), and Services,
+ * Work, Labs, Blueprints, and About still render real `font-serif` content
+ * under the old system. Dropping this token would have silently degraded
+ * every one of those unmigrated pages to a generic system serif fallback
+ * instead of erroring — a real, live regression on pages nobody asked to
+ * touch yet. Remove this once every remaining page has its own redesign
+ * pass and the last `font-serif` call site is gone (grep-verify first).
  */
 const ibmPlexSerif = IBM_Plex_Serif({
   variable: "--font-plex-serif",
@@ -82,7 +96,7 @@ export default function RootLayout({ children }: Readonly<WithChildren>) {
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} ${ibmPlexSerif.variable}`}
+      className={`${archivo.variable} ${jetbrainsMono.variable} ${ibmPlexSerif.variable}`}
     >
       <head>
         <meta name="apple-mobile-web-app-title" content="Hub Zero" />

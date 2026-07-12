@@ -13,53 +13,47 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /*
- * Design tokens per DESIGN/V4/00_IMPLEMENTATION_STRATEGY.md §3 — monochrome
- * Ink base (Graphite dark / Vellum light, genuinely near-zero chroma, not a
- * faint hue lean) plus exactly one functional Signal color, scoped to
- * interaction/focus/progress/diagrams/live-state and never used as brand
- * decoration. This supersedes DESIGN/V3/04_COLOR.md and
- * 11_COLOR_PHILOSOPHY_AMENDMENT.md's seven-stop Brand Blue derivation — that
- * palette was grounded in the old glossy blue logo render's "real equity";
- * the company's actual, delivered canonical mark (assets/hubzero-logo-*.png)
- * is flat black/white, which removed the premise the blue derivation
- * depended on. Dark (Graphite) is the default palette; `.light` (Vellum)
- * overrides the same custom properties so next-themes can toggle by
- * swapping the class on <html>. Token *names* are kept unchanged for
- * backwards compatibility with every existing `bg-*`/`text-*`/`border-*`
- * call site; only the values evolve — same discipline the prior migration
- * already established, applied a second time.
+ * Design tokens per DESIGN/NEXT/CREATIVE_DIRECTION.md §3.2 — two genuinely
+ * neutral monochrome bases (Carbon dark / Chalk light, near-zero chroma,
+ * not a faint material lean toward "drafting paper" or any other
+ * substance) plus exactly one functional Signal color, scoped to
+ * interaction/focus/progress/live-state and never used as brand
+ * decoration or given a meaningful material name. No color is honestly
+ * true of everything HubZero builds (software, hardware, AI) — so the
+ * base palette doesn't try to symbolize a material, it's simply neutral.
+ * Dark (Carbon) is the default palette; `.light` (Chalk) overrides the
+ * same custom properties so next-themes can toggle by swapping the class
+ * on <html>. Token *names* are kept stable across the redesign so every
+ * existing `bg-*`/`text-*`/`border-*` call site keeps working; only the
+ * values and their reasoning changed.
  *
  * Values below are directional, reasoned OKLCH stops, not yet a finished
- * WCAG AA + CVD audit against real rendered output — that audit is still
- * owed before these are treated as final, per DESIGN/V3/12_ACCESSIBILITY.md's
- * own standard for the palette this one replaces.
+ * WCAG AA + colorblind-safety audit against real rendered output — that
+ * audit is still owed before Signal is treated as final (§3.2).
  */
 @theme {
-  /* Graphite — deep structure, the base substrate. Near-zero chroma: this
-     is meant to read as true near-black, not a hue family. */
+  /* Carbon — true near-black, genuinely neutral. */
   --color-bg: oklch(0.15 0.003 250);
   --color-bg-dark: oklch(0.1 0.003 250);
-  /* Structural surface — engineered panels, secondary surfaces. No hue
-     lean of its own; differentiated from --color-bg by lightness alone. */
+  /* Structural surface — secondary panels/surfaces, differentiated from
+     --color-bg by lightness alone, no hue lean of its own. */
   --color-bg-light: oklch(0.21 0.003 250);
   --color-text: oklch(0.96 0.002 250);
   --color-text-muted: oklch(0.66 0.004 250);
   /* Real load-bearing boundary (inputs, active states) — calibrated to
-     clear WCAG 2.1 non-text 3:1 against --color-bg (DESIGN/V3/12 §1). */
+     clear WCAG 2.1 non-text 3:1 against --color-bg. */
   --color-border: oklch(0.43 0.004 250);
   /* Quiet panel/card hairline — deliberately subtler than --color-border;
-     grouping here is carried by spacing/position (the drafting-sheet
-     "unpopulated substrate" logic, 02_VISUAL_LANGUAGE.md §4) as much as by
-     the line itself, per 12_ACCESSIBILITY.md §1's decorative-linework
-     allowance. */
+     grouping is carried by spacing/position as much as by the line
+     itself. */
   --color-border-muted: oklch(0.29 0.004 250);
   --color-highlight: oklch(0.33 0.004 250);
-  /* Signal — the one functional color (DESIGN/V4 §3.2): interaction,
-     focus, progress, diagrams, live state. Never a brand wash. A moderate
-     cyan-leaning blue, deliberately distinct from the retired Brand Blue
-     hue (H253, indigo-leaning) so it doesn't read as "the old brand color,
-     just quieter." Identical across both themes — a signal that shifts hue
-     between themes stops being a reliable learned cue. */
+  /* Signal — the one functional color (§3.2): interaction, focus,
+     progress, live state. Never a brand wash, never given a material or
+     symbolic name — naming it "meant" something is exactly how the two
+     archived systems each talked themselves into treating a functional
+     color as a brand statement. Identical across both themes — a signal
+     that shifts hue between themes stops being a reliable learned cue. */
   --color-accent: oklch(0.62 0.16 215);
   /*
    * Text-safe variant: --color-accent's fill value clears the 3:1 non-text
@@ -85,15 +79,15 @@
   --color-success: oklch(0.7 0.05 160);
   --color-info: oklch(0.7 0.05 300);
 
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
-  /*
-   * Display serif (DESIGN/V3/03_TYPOGRAPHY.md §3, §6) — IBM Plex Serif,
-   * replacing Instrument Serif. A rare pacing device, not a default heading
-   * font, and used upright by default (not italic-by-default) — reach for
-   * `font-serif` only at the specific named moments that doc calls out,
-   * and add `italic` explicitly where a secondary emphasis is warranted.
-   */
+  --font-sans: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+  /* No page built under CREATIVE_DIRECTION.md §3.3 uses a serif — weight
+     and scale carry every moment of emphasis instead, a deliberate
+     decision, not an oversight. This token stays defined only because
+     Services/Work/Labs/Blueprints/About haven't been rebuilt yet and
+     still call `font-serif` under the old system; removing it would
+     silently regress those pages to a generic system serif instead of
+     erroring. Delete it once every `font-serif` call site is gone. */
   --font-serif: var(--font-plex-serif), ui-serif, Georgia, serif;
 
   /* Modular type scale, 4px base unit (§1). */
@@ -113,18 +107,14 @@
   --text-caption--line-height: 1.5;
 
   /*
-   * Radius, DESIGN/V3/14_VISUAL_TOKENS.md §3: "4px — the one radius value
-   * used sitewide... a single value, not a scale... no radius above 4px,
-   * anywhere." A rectangle-with-small-radius reads as a labeled control on
-   * an instrument panel, not a consumer-app pill — and an instrument
-   * panel's controls share one manufacturing tolerance, not a hierarchy of
-   * roundedness. The five names are kept (so every existing `rounded-{key}`
-   * call site keeps working) but all four non-zero steps now collapse to
-   * the same 4px value; `rounded-none` (Tailwind's built-in) is the doc's
-   * 0px step for tags/tables/technical-label chips (handled per-component
-   * in Task 4, not here). `--radius-full` is retained only for the small
-   * set of genuinely circular things (avatars, switches, spinners) — not
-   * for buttons, which move off the pill shape in Task 4.
+   * Radius — one small, consistent value used sitewide, not a scale.
+   * Everything outside the mark and its own hexagonal geometry (§3.4) is
+   * orthogonal, calm, and undecorated (§3.4's closing rule) — a single
+   * restrained corner treatment supports that rather than competing with
+   * it. The five names are kept so every existing `rounded-{key}` call
+   * site keeps working; all four non-zero steps collapse to the same 4px
+   * value. `--radius-full` is retained only for genuinely circular things
+   * (avatars, switches, spinners), not buttons or cards.
    */
   --radius-sm: 0.25rem; /* 4px */
   --radius-md: 0.25rem; /* 4px — was 8px */
@@ -139,20 +129,20 @@
    * doesn't cover, referenced by name so a future SVG diagram or a
    * component needing a literal px value doesn't invent its own.
    */
-  --stroke-diagram: 1.5px; /* schematic/diagram linework — 06_COMPONENT_LANGUAGE.md §15 */
+  --stroke-diagram: 1.5px; /* real diagram/illustration linework (§9) — content, not ambient texture */
   --stroke-focus: 2px; /* focus rings — the one deliberately heaviest hairline, see :focus-visible below */
 
   /*
-   * Elevation, DESIGN/V3/14_VISUAL_TOKENS.md §5 — two steps, not a large
-   * system: Resting (no shadow, the default for panels/sections/the page
-   * itself) and Raised (a low, tight lift for the small set of surfaces
-   * that must read as floating above content — a dropdown, a modal, a
-   * tooltip). The finer xs/sm/md/lg/xl scale below predates this document
-   * and stays for existing call sites; `--shadow-raised` is the new,
-   * canonical Working Blueprint token new/updated components should reach
-   * for. Dark-first shadows must be more diffuse/darker than typical
-   * defaults to read on a dark background; overridden per-value in .light.
-   * Namespaced under --shadow-* so Tailwind generates shadow-{key} utilities.
+   * Elevation — two steps, not a large system: Resting (no shadow, the
+   * default for panels/sections/the page itself) and Raised (a low, tight
+   * lift for the small set of surfaces that must read as floating above
+   * content — the floating nav, a dropdown, a modal, a tooltip). The finer
+   * xs/sm/md/lg/xl scale below predates this token and stays for existing
+   * call sites; `--shadow-raised` is the canonical token new components
+   * should reach for. Dark-first shadows must be more diffuse/darker than
+   * typical defaults to read on a dark background; overridden per-value in
+   * .light. Namespaced under --shadow-* so Tailwind generates
+   * shadow-{key} utilities.
    */
   --shadow-raised: 0 4px 8px -2px oklch(0 0 0 / 0.4), 0 2px 4px -2px oklch(0 0 0 / 0.32);
   --shadow-xs: 0 1px 2px 0 oklch(0 0 0 / 0.32);
@@ -168,10 +158,9 @@
 
 .light {
   color-scheme: light;
-  /* Vellum — warm, low-chroma off-white closer to real drafting/tracing
-     paper than a stark digital white. Genuinely near-zero chroma, with a
-     faint warm (not blue) lean — the honest material grounding
-     DESIGN/V3/04_COLOR.md §2 gestured at, without smuggling in a hue. */
+  /* Chalk — near-white, genuinely near-zero chroma with only a whisper of
+     warmth so it doesn't read as a stark digital white — not a lean
+     toward any material. */
   --color-bg: oklch(0.97 0.005 85);
   --color-bg-dark: oklch(0.93 0.006 85);
   /* Elevated "paper" surface — brighter than the Vellum base. */
@@ -218,19 +207,18 @@
    */
   --content-marketing: 75rem; /* 1200px — default marketing page content width */
   --content-prose: 46.25rem; /* 740px  — long-form reading (notes, case studies) */
-  --content-drafting: 93.75rem; /* 1500px — diagrams, dimension-line layouts, large technical imagery */
+  --content-feature: 93.75rem; /* 1500px — a page's one full-bleed-adjacent spectacle (e.g. The Assembly, §9) */
 
   /*
-   * Spacing scale, DESIGN/V3/14_VISUAL_TOKENS.md §1 — 4px base unit, nine
-   * steps at ~1.55x, rounded to the nearest 4px. Tailwind v4's arbitrary
-   * spacing multipliers already express every one of these values natively
-   * (its own --spacing base unit is the same 4px, so e.g. step 7 = 120px =
-   * `p-30`/`py-30`) — these named properties exist as the scale's one
-   * documented source of truth, and so a non-utility context (an SVG
-   * diagram's coordinates, a future GSAP/motion timeline) can reference a
-   * step by name instead of a bare, undocumented pixel value. Picking a
-   * spacing decision this table doesn't obviously answer should round to
-   * the nearest step, never invent an intermediate value.
+   * Spacing scale — 4px base unit, nine steps at ~1.55x, rounded to the
+   * nearest 4px. Tailwind v4's arbitrary spacing multipliers already
+   * express every one of these values natively (its own --spacing base
+   * unit is the same 4px, so e.g. step 7 = 120px = `p-30`/`py-30`) — these
+   * named properties exist as the scale's one documented source of truth,
+   * so a non-utility context (an SVG's coordinates, a motion timeline) can
+   * reference a step by name instead of a bare, undocumented pixel value.
+   * Picking a spacing decision this table doesn't obviously answer should
+   * round to the nearest step, never invent an intermediate value.
    */
   --space-0: 0.25rem; /* 4px   — Tailwind p-1  — icon-to-label gaps, tightest tracking contexts */
   --space-1: 0.5rem; /* 8px    — Tailwind p-2  — inline element gaps, tag/chip internal padding */
@@ -243,16 +231,16 @@
   --space-8: 11.75rem; /* 188px — Tailwind p-47 — tallest-beat vertical padding (a Featured Case Study) */
 
   /*
-   * Grid, DESIGN/V3/14_VISUAL_TOKENS.md §2 — 12-column base grid at the
-   * Marketing/Drafting tiers (Prose is a single ungridded column). Column
-   * spans are always whole numbers of 12 (8/4, 7/5, 9/3, 5/7 — never a
-   * fractional split); expressed directly via Tailwind's `grid-cols-12`
-   * utility, so no --grid-columns token is needed. Gutters are named here
-   * since they're referenced by both the grid and, per the dimension-chain
-   * rule, the spacing scale above (step 4 and a value between steps 4–5).
+   * Grid — 12-column base grid at the Marketing/Feature tiers (Prose is a
+   * single ungridded column). Column spans are always whole numbers of 12
+   * (8/4, 7/5, 9/3, 5/7 — never a fractional split); expressed directly via
+   * Tailwind's `grid-cols-12` utility, so no --grid-columns token is
+   * needed. Gutters are named here since they're referenced by both the
+   * grid and the spacing scale above (step 4 and a value between steps
+   * 4–5).
    */
   --gutter-marketing: 2rem; /* 32px — --space-4 */
-  --gutter-drafting: 2.5rem; /* 40px */
+  --gutter-feature: 2.5rem; /* 40px */
 
   /*
    * Layering scale — plain vars, since Tailwind v4 only auto-generates `z-*`

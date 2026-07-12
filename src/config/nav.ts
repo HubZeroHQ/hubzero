@@ -56,6 +56,7 @@ export const footerNav: {
     { label: "Careers", href: "/careers" },
     { label: "Notes", href: "/notes" },
     { label: "Contact", href: "/contact" },
+    { label: "Search", href: "/search" },
   ],
   services: [
     { label: "Software Engineering", href: "/services/software" },

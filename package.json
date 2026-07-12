@@ -17,6 +17,7 @@
     "test:watch": "vitest",
     "create-admin": "tsx --env-file=.env.local scripts/create-admin.ts",
     "migrate-content": "tsx --env-file=.env.local scripts/migrate-content.ts",
+    "migrate-team": "tsx --env-file=.env.local scripts/migrate-team.ts",
     "migrate-content-blocks": "tsx --env-file=.env.local scripts/migrate-content-blocks.ts",
     "migrate-media-to-cloudinary": "tsx --env-file=.env.local scripts/migrate-media-to-cloudinary.ts",
     "prepare": "husky"
