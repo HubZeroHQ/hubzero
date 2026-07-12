@@ -86,3 +86,5 @@ base-prompt.md
 # Vitest's globalSetup writes the in-memory MongoDB instance's connection
 # URI here for setupFiles (tests/setup.ts) to read — regenerated every run.
 /tests/.mongo-uri
+
+.mcp.json
