@@ -84,6 +84,9 @@ export default function RootLayout({ children }: Readonly<WithChildren>) {
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} ${ibmPlexSerif.variable}`}
     >
+      <head>
+        <meta name="apple-mobile-web-app-title" content="Hub Zero" />
+      </head>
       {/*
         Font variables live on <html>, not <body>: Tailwind's --font-sans/
         --font-serif/--font-mono tokens (globals.css @theme) are defined on
