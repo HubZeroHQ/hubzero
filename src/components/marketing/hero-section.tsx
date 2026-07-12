@@ -118,10 +118,7 @@ export function HeroSection() {
                 happens to wrap (§9: "asymmetric, left-weighted headline"). */}
             <span className="block">Building technology</span>
             <span className="block">
-              that solves{" "}
-              <span className="bg-[image:var(--brand-gradient)] bg-clip-text text-transparent">
-                <span className="italic">real</span> problems.
-              </span>
+              that solves <span className="italic">real</span> problems.
             </span>
           </motion.h1>
 

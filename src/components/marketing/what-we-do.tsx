@@ -16,6 +16,15 @@ import { Link } from "@/components/ui/link";
  * ARCHITECTURE/15_HOMEPAGE_DESIGN.md §6: only the primary/secondary CTAs
  * get button chrome; everything else links out as text, per the "Services
  * panels ... link out via plain in-content links/arrows" rule.
+ *
+ * Monochrome pass (DESIGN/V4/00_IMPLEMENTATION_STRATEGY.md §3.2): both
+ * textures now mix from --color-border (ink), not --color-accent — an
+ * ambient background pattern tinted with the Signal color, even at low
+ * opacity, is exactly the "brand wash" this document's color rule
+ * excludes. The two panels stay differentiated by texture *geometry*
+ * (hairline vs. dot-grid) alone, which was always the actual
+ * differentiator — the color tint was never load-bearing for telling them
+ * apart.
  */
 export function WhatWeDo() {
   return (
@@ -36,7 +45,7 @@ export function WhatWeDo() {
               className="relative -mx-7 px-7 py-10 sm:-mx-10 sm:px-10 sm:py-12"
               style={{
                 backgroundImage:
-                  "repeating-linear-gradient(90deg, color-mix(in oklch, var(--color-accent) 9%, transparent) 0 1px, transparent 1px 56px)",
+                  "repeating-linear-gradient(90deg, color-mix(in oklch, var(--color-border) 55%, transparent) 0 1px, transparent 1px 56px)",
               }}
             >
               <p className="text-caption text-text-muted font-mono">01 — Software Engineering</p>
@@ -64,7 +73,7 @@ export function WhatWeDo() {
               className="relative -mx-7 px-7 py-10 sm:-mx-10 sm:px-10 sm:py-12"
               style={{
                 backgroundImage:
-                  "radial-gradient(circle at 1px 1px, color-mix(in oklch, var(--color-accent) 16%, transparent) 1px, transparent 0)",
+                  "radial-gradient(circle at 1px 1px, color-mix(in oklch, var(--color-border) 65%, transparent) 1px, transparent 0)",
                 backgroundSize: "22px 22px",
               }}
             >

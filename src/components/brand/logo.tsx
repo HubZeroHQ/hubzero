@@ -15,37 +15,48 @@ export interface LogoProps {
 }
 
 /**
- * The only mark asset that's transparent (`brandAssets.icon`) is used here
- * so the logo reads correctly on both themes. The raster `primary`/
- * `wordmark` brand assets are flattened onto an opaque dark canvas by
- * design and are intentionally NOT used for chrome — see `config/brand.ts`.
+ * Renders both real, transparent monochrome mark variants
+ * (`brandAssets.iconLight`/`iconDark` — black glyph, white glyph) and lets
+ * CSS pick the right one for the active theme, so this stays a Server
+ * Component with zero hydration-flash risk — no `useTheme()`, no
+ * client-side branch. `dark:` is keyed to the app's actual `.dark`/`.light`
+ * toggle via the `@custom-variant dark` rule in globals.css, not the OS
+ * `prefers-color-scheme` media query Tailwind defaults to.
  *
  * Wordmark deliberately splits across both type families instead of
  * defaulting to bold sans (the legacy site's treatment, and the generic
  * choice everywhere else): "Hub" in Geist Sans, "Zero" in the same IBM Plex
  * Serif used for the site's rare emphasis-word moments — upright, not
- * italic, per DESIGN/V3/13_BRAND_SYSTEM.md §5 ("the wordmark migrates on
- * the same timeline as the rest of the type system"; DESIGN/V3/03
- * §3/§6 retires Instrument Serif's italic-by-default posture along with
- * the typeface itself). This is what ties the nav to the rest of the
- * page's typographic identity instead of reading as an unrelated UI-chrome
- * wordmark bolted onto an editorial hero.
+ * italic. Monochrome pass (DESIGN/V4/00_IMPLEMENTATION_STRATEGY.md §2): both
+ * halves render in the ink text color now — no accent-colored half. A
+ * two-syllable wordmark doesn't need a brand hue to read as two distinct
+ * type families; that distinction was always the more interesting move.
  */
 export function Logo({ variant = "full", className }: LogoProps) {
   return (
     <span className={cn("inline-flex items-center gap-2", className)}>
-      <Image
-        src={brandAssets.icon}
-        alt={variant === "icon" ? "HubZero" : ""}
-        width={28}
-        height={28}
-        priority
-        className="size-7 shrink-0"
-      />
+      <span className="relative size-7 shrink-0">
+        <Image
+          src={brandAssets.iconLight}
+          alt={variant === "icon" ? "HubZero" : ""}
+          width={28}
+          height={28}
+          priority
+          className="size-7 dark:hidden"
+        />
+        <Image
+          src={brandAssets.iconDark}
+          alt={variant === "icon" ? "HubZero" : ""}
+          width={28}
+          height={28}
+          priority
+          className="absolute inset-0 hidden size-7 dark:block"
+        />
+      </span>
       {variant === "full" && (
         <span className="text-h3 text-text tracking-tight">
           <span className="font-semibold">Hub</span>
-          <span className="text-accent-text font-serif">Zero</span>
+          <span className="font-serif">Zero</span>
         </span>
       )}
     </span>

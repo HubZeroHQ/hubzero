@@ -1,28 +1,35 @@
 /**
- * Motion contract (ARCHITECTURE/07_DESIGN_SYSTEM.md §4; extended per
- * DESIGN/V3/08_MOTION_SYSTEM.md).
+ * Motion contract (ARCHITECTURE/07_DESIGN_SYSTEM.md §4; revised per
+ * DESIGN/V4/00_IMPLEMENTATION_STRATEGY.md §6 — supersedes
+ * DESIGN/V3/08_MOTION_SYSTEM.md's three-library baseline).
  *
  * Today's primitives use plain CSS transitions (Tailwind's built-in
  * `duration-*`/`ease-*` utilities) for hover/focus/state changes, which
- * keeps them Server Components. These constants exist so that once a later
- * phase needs orchestrated, JS-driven animation, every component reaches
- * for the same numbers instead of inventing new ones. `prefers-reduced-motion`
- * is handled once, globally, in globals.css for plain CSS transitions — not
- * per component; `prefersReducedMotion()` below is the equivalent check for
- * JS-driven animation outside React (GSAP, Anime.js), since only Motion
- * (motion.dev) has a built-in hook for it.
+ * keeps them Server Components. These constants exist so that every
+ * JS-driven animation reaches for the same numbers instead of inventing new
+ * ones. `prefers-reduced-motion` is handled once, globally, in globals.css
+ * for plain CSS transitions — not per component; `prefersReducedMotion()`
+ * below is the equivalent check for JS-driven animation outside React
+ * (GSAP), since Motion (motion.dev) has a built-in hook for it.
  *
- * Ownership boundary (08_MOTION_SYSTEM.md §2) — named here once so it
- * doesn't need re-deriving per component: GSAP owns *time* (scroll
- * storytelling, hero scenes, pinned sections, diagram build-order
- * sequencing); Motion owns *state* (hover/focus/modal, page transitions,
- * shared-layout animation — already in use for the current hero); Anime.js
- * owns *small, self-contained draws* (SVG trace-path/line-drawing,
- * counters, icon-level interactions). All three libraries are installed
- * (`gsap` incl. `ScrollTrigger`, `animejs` v4, `motion`) — every call site
- * still names which of the three owns a given moment before reaching for
- * it (principle 5), rather than defaulting to whichever is already imported
- * nearby.
+ * Two-tier architecture, not three: **Motion (motion.dev) is the default
+ * for everything** — state transitions, hover/focus, page/layout
+ * transitions, one-shot scroll reveals, SVG line-drawing (`pathLength`),
+ * and spring-based counters. This covers the jobs DESIGN/V3/08 originally
+ * split across Motion *and* Anime.js; Anime.js added a third dependency,
+ * bundle cost, and timing vocabulary without a capability Motion didn't
+ * already have, and has been removed from the dependency tree (zero real
+ * usage anywhere in this codebase before removal, grep-verified).
+ *
+ * **GSAP (ScrollTrigger) is kept as one named, scoped exception**: multi-
+ * element, scroll-scrubbed diagram build-order sequencing
+ * (`components/marketing/diagram/sequenced-diagram.tsx`, the Build Sequence
+ * signature moment) — a real, working, isolated case that needs several
+ * elements' reveal progress tied directly to scroll position in a defined
+ * order, which is outside what Motion's simpler scroll primitives do
+ * cleanly. This is not "GSAP is available for scroll work generally" — a
+ * new component reaching for GSAP should be able to name why
+ * `SequencedDiagram`'s existing pattern doesn't already cover its need.
  */
 
 export const duration = {

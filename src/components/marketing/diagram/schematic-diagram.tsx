@@ -65,11 +65,12 @@ function elbowPath(from: DiagramNode, to: DiagramNode) {
  * React/SVG, arbitrary complexity) — built entirely from the site's own type
  * and line tokens, never an embedded image from an external diagramming
  * tool (06_COMPONENT_LANGUAGE.md §15, "the single most important component
- * in this entire language"). Ice Blue linework, 1.5px stroke — the
- * technical-drawing register, never an interactive affordance
- * (11_COLOR_PHILOSOPHY_AMENDMENT.md §6). Flat right-angle box/diamond nodes
- * and orthogonal elbow connectors only, matching the icon system's own
- * right-angle/45°-only construction rule.
+ * in this entire language"). Signal-color linework
+ * (DESIGN/V4/00_IMPLEMENTATION_STRATEGY.md §3.2), 1.5px stroke — diagrams
+ * are one of Signal's few sanctioned jobs, sharing one color with
+ * interaction/focus/live-state rather than a second reserved hue. Flat
+ * right-angle box/diamond nodes and orthogonal elbow connectors only,
+ * matching the icon system's own right-angle/45°-only construction rule.
  *
  * Purely presentational and server-renderable — reduced-motion-safe by
  * construction, since it has no animation of its own. `SequencedDiagram`
@@ -113,11 +114,11 @@ export function SchematicDiagram({
             markerHeight="6"
             orient="auto-start-reverse"
           >
-            <path d="M0 0 L8 4 L0 8 Z" fill="var(--color-ice-blue)" />
+            <path d="M0 0 L8 4 L0 8 Z" fill="var(--color-accent-text)" />
           </marker>
         </defs>
 
-        <g fill="none" stroke="var(--color-ice-blue)" strokeWidth="var(--stroke-diagram)">
+        <g fill="none" stroke="var(--color-accent-text)" strokeWidth="var(--stroke-diagram)">
           {connections.map((connection) => {
             const from = nodesById.get(connection.from);
             const to = nodesById.get(connection.to);
@@ -163,7 +164,7 @@ export function SchematicDiagram({
                 <polygon
                   points={`${node.x},${node.y - height / 2} ${node.x + width / 2},${node.y} ${node.x},${node.y + height / 2} ${node.x - width / 2},${node.y}`}
                   fill="var(--color-bg-light)"
-                  stroke="var(--color-ice-blue)"
+                  stroke="var(--color-accent-text)"
                   strokeWidth="var(--stroke-diagram)"
                 />
               ) : (
@@ -173,7 +174,7 @@ export function SchematicDiagram({
                   width={width}
                   height={height}
                   fill="var(--color-bg-light)"
-                  stroke="var(--color-ice-blue)"
+                  stroke="var(--color-accent-text)"
                   strokeWidth="var(--stroke-diagram)"
                 />
               )}
