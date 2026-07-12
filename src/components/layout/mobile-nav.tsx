@@ -5,6 +5,7 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 
+import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
 import { CloseIcon, MenuIcon } from "@/components/ui/icons";
@@ -93,7 +94,8 @@ export function MobileNav({ items, cta }: MobileNavProps) {
                   Links to the primary sections of the HubZero site.
                 </Dialog.Description>
 
-                <div className="mb-6 flex items-center justify-end">
+                <div className="mb-6 flex items-center justify-between">
+                  <ThemeToggle className="p-2" />
                   <Dialog.Close asChild>
                     <IconButton icon={<CloseIcon className="size-5" />} aria-label="Close menu" />
                   </Dialog.Close>

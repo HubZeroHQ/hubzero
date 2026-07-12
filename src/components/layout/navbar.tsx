@@ -3,6 +3,7 @@ import { ArrowUpRight } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { SearchTrigger } from "@/components/layout/search-trigger";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { Container } from "@/components/ui/container";
 import { Link } from "@/components/ui/link";
 import { primaryCta, primaryNav } from "@/config/nav";
@@ -54,6 +55,10 @@ export function Navbar() {
             /
           </span>
           <SearchTrigger />
+          <span aria-hidden="true" className="text-border">
+            /
+          </span>
+          <ThemeToggle />
           <span aria-hidden="true" className="text-border">
             /
           </span>
