@@ -1,0 +1,5 @@
+client/
+.next/
+node_modules/
+.hubzero/
+*.md

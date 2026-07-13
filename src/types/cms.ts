@@ -1,0 +1,162 @@
+import type { ObjectId } from 'mongodb';
+import type { OwnerType } from '@/lib/documents/schema';
+
+/**
+ * Shared type vocabulary for every CMS collection (PLANNING.md §24, §26).
+ * Relationships are modeled as ObjectId references, never embedding — most
+ * are queried independently (e.g. "all Notes referencing this Build").
+ */
+
+export type PublishStatus = 'draft' | 'inReview' | 'approved' | 'published' | 'archived';
+
+/** Services carries a deliberately lighter two-state workflow (§26.7). */
+export type ServicePublishStatus = 'draft' | 'published';
+
+export type ReferenceIdPrefix = 'WK' | 'BL' | 'BP' | 'LB' | 'NT' | 'TM';
+
+/** Permanent, CMS-assigned identifier — `HZ-{PREFIX}-{NNN}` (§27). Leads and Users never receive one. */
+export type ReferenceId<Prefix extends ReferenceIdPrefix = ReferenceIdPrefix> =
+  `HZ-${Prefix}-${string}`;
+
+export type UserRole = 'headAdmin' | 'admin' | 'teamMember';
+
+export type TaxonomyKind = 'technology' | 'category' | 'topic';
+
+export type LeadStatus = 'new' | 'contacted' | 'closed';
+
+export type LabStage = 'exploring' | 'building' | 'testing';
+
+export type BuildDeploymentState = 'live' | 'retired';
+
+interface WithId {
+  _id: ObjectId;
+}
+
+interface WithTimestamps {
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/** Shared by every collection that runs through the full publishing workflow (§28). */
+interface PublishableEntity extends WithId, WithTimestamps {
+  status: PublishStatus;
+  slug: string;
+}
+
+/** A reference into a Document-owning entry — used for cross-collection evidence links (§13, §14, §24). */
+export interface EntryReference {
+  ownerType: OwnerType;
+  ownerId: ObjectId;
+}
+
+export interface TaxonomyEntry extends WithId, WithTimestamps {
+  kind: TaxonomyKind;
+  label: string;
+  slug: string;
+}
+
+/** Every uploaded asset is a Cloudinary reference — never binary data in the database (§26.10, §33). */
+export interface MediaAsset extends WithId, WithTimestamps {
+  cloudinaryPublicId: string;
+  url: string;
+  altText: string;
+  width?: number;
+  height?: number;
+  reuseTags: string[];
+}
+
+/** System identity for CMS access (§26.9) — never rendered publicly by itself; see Team for public presentation. */
+export interface User extends WithId, WithTimestamps {
+  name: string;
+  email: string;
+  role: UserRole;
+  passwordHash?: string;
+  image?: string;
+}
+
+/** A user's public-facing profile, if they have one — optional and separate from system identity (§24, §26.6). */
+export interface Team extends WithId, WithTimestamps {
+  referenceId: ReferenceId<'TM'>;
+  name: string;
+  role: string;
+  bio: string;
+  /** e.g. "Founders" | "Operating Team" | "Engineering Team" today — adjustable, never hardcoded. */
+  group: string;
+  portraitId?: ObjectId;
+  publicProfile: boolean;
+  userId?: ObjectId;
+}
+
+export interface Work extends PublishableEntity {
+  referenceId: ReferenceId<'WK'>;
+  title: string;
+  clientType: string;
+  categoryTagIds: ObjectId[];
+  timeline: string;
+  role: string;
+  technologyIds: ObjectId[];
+  relatedBuildIds: ObjectId[];
+  relatedBlueprintIds: ObjectId[];
+  heroImageId?: ObjectId;
+}
+
+export interface Build extends PublishableEntity {
+  referenceId: ReferenceId<'BL'>;
+  title: string;
+  deploymentState: BuildDeploymentState;
+  liveUrl?: string;
+  repoUrl?: string;
+  technologyIds: ObjectId[];
+  originatingLabId?: ObjectId;
+  relatedWorkIds: ObjectId[];
+}
+
+export interface Blueprint extends PublishableEntity {
+  referenceId: ReferenceId<'BP'>;
+  /** Enforced `Blueprint-X-Y` format at the schema level (§11, §26.3). */
+  name: `Blueprint-${string}-${string}`;
+  architecture: string;
+  designLanguage: string;
+  description: string;
+  features: string[];
+  technologyIds: ObjectId[];
+  liveDeploymentUrl: string;
+  previewAssetIds: ObjectId[];
+}
+
+export interface Lab extends PublishableEntity {
+  referenceId: ReferenceId<'LB'>;
+  title: string;
+  stage: LabStage;
+  objective: string;
+  nextMilestone: string;
+  graduationCriteria: string;
+  graduatedToBuildId?: ObjectId;
+}
+
+export interface Note extends PublishableEntity {
+  referenceId: ReferenceId<'NT'>;
+  title: string;
+  authorId: ObjectId;
+  tagIds: ObjectId[];
+  relatedEntries: EntryReference[];
+}
+
+/** Small, low-volume — no reference ID, simplified status (§26.7). */
+export interface Service extends WithId, WithTimestamps {
+  title: string;
+  description: string;
+  status: ServicePublishStatus;
+  evidenceLinks: EntryReference[];
+}
+
+/** Deliberately minimal — not a CRM (§26.8). No reference ID: internal-only, no citation purpose. */
+export interface Lead extends WithId, WithTimestamps {
+  name: string;
+  email: string;
+  message: string;
+  source: string;
+  status: LeadStatus;
+  assignedToUserId?: ObjectId;
+  internalNotes?: string;
+}
