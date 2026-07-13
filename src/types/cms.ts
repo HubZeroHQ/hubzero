@@ -36,10 +36,21 @@ export interface WithTimestamps {
   updatedAt: Date;
 }
 
-/** Shared by every collection that runs through the full publishing workflow (§28). */
+/**
+ * Shared by every collection that runs through the full publishing workflow
+ * (§28). `createdByUserId` is permanent provenance metadata — assigned once
+ * at create time, never editable afterward (§29) — not an authorization
+ * mechanism itself; permissions are still decided by `config/permissions.ts`'s
+ * role/capability table (`lib/auth/permissions.ts`'s `requireEntryCapability`
+ * reads this field only to scope which entries a Team Member's
+ * `editOwnEntry` capability applies to). Extending this later with e.g. a
+ * `contributorUserIds` or `maintainerUserId` field is additive to this one
+ * base interface, not a change to Work/Build/Blueprint/Lab/Note individually.
+ */
 interface PublishableEntity extends WithId, WithTimestamps {
   status: PublishStatus;
   slug: string;
+  createdByUserId: ObjectId;
 }
 
 /**

@@ -13,7 +13,8 @@ export const labRepository = {
   list: base.list,
   remove: base.remove,
   findBySlug: async (slug: string) => (await collections.labs()).findOne({ slug }),
-  create: (input: LabInput) => base.create(labSchema.parse(input)),
+  create: (input: LabInput, createdByUserId: string) =>
+    base.create(labSchema.parse(input), { createdByUserId }),
   update: (id: string, input: Partial<LabInput>) =>
     base.update(id, labSchema.partial().parse(input)),
 };

@@ -13,7 +13,8 @@ export const buildRepository = {
   list: base.list,
   remove: base.remove,
   findBySlug: async (slug: string) => (await collections.builds()).findOne({ slug }),
-  create: (input: BuildInput) => base.create(buildSchema.parse(input)),
+  create: (input: BuildInput, createdByUserId: string) =>
+    base.create(buildSchema.parse(input), { createdByUserId }),
   update: (id: string, input: Partial<BuildInput>) =>
     base.update(id, buildSchema.partial().parse(input)),
 };

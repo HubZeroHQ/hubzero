@@ -34,18 +34,23 @@ export function createRepository<TRecord extends WithId & WithTimestamps, TInput
       return results as TRecord[];
     },
 
-    async create(input: TInput): Promise<TRecord> {
+    async create(input: TInput, meta: { createdByUserId?: string } = {}): Promise<TRecord> {
       const now = new Date();
       const referenceId = options.referenceIdPrefix
         ? await generateReferenceId(options.referenceIdPrefix)
         : undefined;
 
       // The runtime contract: every field TRecord requires beyond TInput
-      // (referenceId, _id, timestamps) is supplied here. `referenceIdPrefix`
-      // must be set for any TRecord whose type requires a `referenceId`.
+      // (referenceId, createdByUserId, _id, timestamps) is supplied here.
+      // `referenceIdPrefix` must be set for any TRecord whose type requires
+      // a `referenceId`; callers for any TRecord requiring `createdByUserId`
+      // (PublishableEntity, §24) must pass `meta.createdByUserId` — it's
+      // permanent provenance (§29), assigned exactly once and never part of
+      // TInput, so `update()` can never touch it.
       const doc = {
         ...input,
         ...(referenceId ? { referenceId } : {}),
+        ...(meta.createdByUserId ? { createdByUserId: new ObjectId(meta.createdByUserId) } : {}),
         createdAt: now,
         updatedAt: now,
       } as unknown as TRecord;
