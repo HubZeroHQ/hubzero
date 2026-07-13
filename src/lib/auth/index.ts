@@ -6,7 +6,7 @@ import { authConfig } from './config';
 import { credentialsProvider } from './providers/credentials';
 
 /**
- * Auth.js foundation for CMS access only — there are no public visitor
+ * Auth.js foundation for Studio access only — there are no public visitor
  * accounts (PLANNING.md §37, §26.9).
  *
  * Session strategy is JWT rather than the adapter's database sessions:

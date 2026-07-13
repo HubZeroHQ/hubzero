@@ -1,4 +1,4 @@
-import type { ReferenceIdPrefix } from '@/types/cms';
+import type { ReferenceIdPrefix } from '@/types/studio';
 
 /**
  * PLANNING.md §27 — the permanent `HZ-{PREFIX}-{NNN}` scheme. Centralized so

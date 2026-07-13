@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils/cn';
-import type { PublishStatus, ServicePublishStatus } from '@/types/cms';
+import type { PublishStatus, ServicePublishStatus } from '@/types/studio';
 
 /**
  * DESIGN_SYSTEM.md §7 Status Indicators — filled dot + mono label, three

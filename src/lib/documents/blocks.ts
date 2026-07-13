@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 /**
  * The Document Engine's block catalog (PLANNING.md §25). Every long-form
- * content body in the CMS — case studies, technical docs, Lab journals,
+ * content body in the Studio — case studies, technical docs, Lab journals,
  * Notes — is an ordered array of these blocks, never arbitrary HTML or
  * Markdown as a final output. This is also the exact contract AI generation
  * must produce output against (§31): one content shape for the whole system.

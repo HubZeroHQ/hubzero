@@ -1,7 +1,7 @@
 import { ObjectId } from 'mongodb';
 import type { Collection, Filter, OptionalUnlessRequiredId, UpdateFilter } from 'mongodb';
 import { generateReferenceId } from '@/lib/ids/reference-id';
-import type { ReferenceIdPrefix, WithId, WithTimestamps } from '@/types/cms';
+import type { ReferenceIdPrefix, WithId, WithTimestamps } from '@/types/studio';
 
 export interface RepositoryOptions {
   /** When set, `create()` assigns a permanent reference ID (§27) exactly once. */
@@ -9,7 +9,7 @@ export interface RepositoryOptions {
 }
 
 /**
- * Shared CRUD shape for every CMS collection (PLANNING.md §26) — one
+ * Shared CRUD shape for every Studio collection (PLANNING.md §26) — one
  * implementation of "validate, timestamp, optionally assign a reference ID"
  * instead of hand-rolling the same operations across eleven collections.
  * Collection-specific modules under `lib/db/repositories/` wrap this with
@@ -64,9 +64,30 @@ export function createRepository<TRecord extends WithId & WithTimestamps, TInput
 
     async update(id: string, patch: Partial<TInput>): Promise<TRecord | null> {
       const collection = await getCollection();
+
+      // A key explicitly present with value `undefined` (as opposed to
+      // simply absent from `patch`) means "clear this optional field" —
+      // e.g. Work's repoUrl. MongoDB's driver silently drops `undefined`
+      // values from `$set`, so those keys are routed to `$unset` instead;
+      // every other key is set normally.
+      const setFields: Record<string, unknown> = { updatedAt: new Date() };
+      const unsetFields: Record<string, ''> = {};
+      for (const [key, value] of Object.entries(patch)) {
+        if (value === undefined) {
+          unsetFields[key] = '';
+        } else {
+          setFields[key] = value;
+        }
+      }
+
+      const updateOperation = { $set: setFields } as UpdateFilter<TRecord>;
+      if (Object.keys(unsetFields).length > 0) {
+        (updateOperation as { $unset?: Record<string, ''> }).$unset = unsetFields;
+      }
+
       const result = await collection.findOneAndUpdate(
         { _id: new ObjectId(id) } as Filter<TRecord>,
-        { $set: { ...patch, updatedAt: new Date() } } as UpdateFilter<TRecord>,
+        updateOperation,
         { returnDocument: 'after' },
       );
       return result as TRecord | null;

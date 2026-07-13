@@ -1,5 +1,5 @@
 import { serviceSchema, type ServiceInput } from '@/lib/validation/service';
-import type { Service } from '@/types/cms';
+import type { Service } from '@/types/studio';
 import { collections } from '../collections';
 import { createRepository } from '../repository';
 

@@ -3,7 +3,7 @@ import Credentials from 'next-auth/providers/credentials';
 import { userRepository } from '@/lib/db/repositories/user';
 
 /**
- * The only sign-in method — CMS access only, no public visitor accounts and
+ * The only sign-in method — Studio access only, no public visitor accounts and
  * no external identity provider dependency for a five-person team
  * (PLANNING.md §37, §26.9). Auth.js requires JWT sessions whenever a
  * Credentials provider is present (see lib/auth/index.ts for why).

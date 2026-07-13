@@ -26,6 +26,9 @@ const ibmPlexMono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   title: 'HubZero',
   description: 'HubZero is an engineering-first technology studio.',
+  appleWebApp: {
+    title: 'Hub Zero',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

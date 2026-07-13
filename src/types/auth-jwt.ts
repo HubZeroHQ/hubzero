@@ -4,7 +4,7 @@
 // block (reproduced against next-auth 5.0.0-beta.31 / TS 5.9) — some real
 // import of the specifier has to happen first.
 import 'next-auth/jwt';
-import type { UserRole } from './cms';
+import type { UserRole } from './studio';
 
 /**
  * JWT type augmentation for Auth.js (next-auth v5) — split from `auth.ts`;

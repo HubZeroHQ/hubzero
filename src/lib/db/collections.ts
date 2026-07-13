@@ -13,7 +13,7 @@ import type {
   Team,
   User,
   Work,
-} from '@/types/cms';
+} from '@/types/studio';
 
 /**
  * Typed accessors for every collection in PLANNING.md §26 — the single

@@ -1,6 +1,6 @@
 import { REFERENCE_ID_PREFIXES } from '@/config/reference-ids';
 import { noteSchema, type NoteInput } from '@/lib/validation/note';
-import type { Note } from '@/types/cms';
+import type { Note } from '@/types/studio';
 import { collections } from '../collections';
 import { createRepository } from '../repository';
 

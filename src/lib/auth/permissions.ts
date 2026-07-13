@@ -1,6 +1,6 @@
 import type { ObjectId } from 'mongodb';
 import { type Capability, roleHasCapability } from '@/config/permissions';
-import type { UserRole } from '@/types/cms';
+import type { UserRole } from '@/types/studio';
 import { auth } from './index';
 
 export class UnauthorizedError extends Error {
@@ -22,7 +22,7 @@ export interface SessionIdentity {
   userId: string;
 }
 
-/** The current CMS session's role, or `null` if signed out. */
+/** The current Studio session's role, or `null` if signed out. */
 export async function getSessionRole(): Promise<UserRole | null> {
   const session = await auth();
   return session?.user.role ?? null;
@@ -30,7 +30,7 @@ export async function getSessionRole(): Promise<UserRole | null> {
 
 /**
  * Throws if the current session lacks `capability` (PLANNING.md §29). Every
- * CMS server action or route handler that performs a role-level gated
+ * Studio server action or route handler that performs a role-level gated
  * operation should call this before touching the database —
  * `config/permissions.ts`'s capability table is the single source of truth
  * for who can do what, not ad hoc `role === 'admin'` checks scattered
@@ -78,8 +78,24 @@ export async function requireEntryCapability(entry: OwnableEntry): Promise<Sessi
     throw new UnauthorizedError();
   }
 
-  const { role } = session.user;
-  const userId = session.user.id;
+  if (!canActOnEntry(entry, { role: session.user.role, userId: session.user.id })) {
+    throw new ForbiddenError(`Role "${session.user.role}" cannot act on this entry.`);
+  }
+
+  return { role: session.user.role, userId: session.user.id };
+}
+
+/**
+ * The non-throwing sibling of `requireEntryCapability` — same ownership
+ * logic, used where a page needs a plain boolean to decide what to *show*
+ * (an Edit button, a status-transition control) rather than to gate a
+ * mutation. Every collection's detail/edit pages need this exact "can the
+ * viewer act on this specific entry" check, so it's the one place that
+ * logic lives instead of each page re-deriving
+ * `isAnyEntryEditor`/`isOwner`/`isAssignee` inline.
+ */
+export function canActOnEntry(entry: OwnableEntry, session: SessionIdentity): boolean {
+  const { role, userId } = session;
 
   const isAnyEntryEditor = roleHasCapability(role, 'editAnyEntry');
   const isOwner =
@@ -87,9 +103,5 @@ export async function requireEntryCapability(entry: OwnableEntry): Promise<Sessi
   const isAssignee =
     roleHasCapability(role, 'editAssignedEntry') && entry.assignedToUserId?.toString() === userId;
 
-  if (!isAnyEntryEditor && !isOwner && !isAssignee) {
-    throw new ForbiddenError(`Role "${role}" cannot act on this entry.`);
-  }
-
-  return { role, userId };
+  return isAnyEntryEditor || isOwner || isAssignee;
 }

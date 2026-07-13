@@ -1,6 +1,11 @@
 import { cn } from '@/lib/utils/cn';
 
-/** Calm, plain error messaging per §13 Voice — states the problem, never blames the user. */
+/**
+ * Calm, plain error messaging per §13 Voice — states the problem, never
+ * blames the user. Solid border + filled surface (vs. `EmptyState`'s
+ * dashed/unfilled treatment) is deliberate — see that component's own
+ * comment for why the two boundary styles stay distinct.
+ */
 export function ErrorState({
   title = 'Something went wrong.',
   description,

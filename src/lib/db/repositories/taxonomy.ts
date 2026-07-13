@@ -1,5 +1,5 @@
 import { taxonomyEntrySchema, type TaxonomyEntryInput } from '@/lib/validation/taxonomy';
-import type { TaxonomyEntry, TaxonomyKind } from '@/types/cms';
+import type { TaxonomyEntry, TaxonomyKind } from '@/types/studio';
 import { collections } from '../collections';
 import { createRepository } from '../repository';
 

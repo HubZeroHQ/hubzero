@@ -1,5 +1,5 @@
 import { mediaAssetSchema, type MediaAssetInput } from '@/lib/validation/media';
-import type { MediaAsset } from '@/types/cms';
+import type { MediaAsset } from '@/types/studio';
 import { collections } from '../collections';
 import { createRepository } from '../repository';
 

@@ -95,3 +95,66 @@
     scroll-behavior: auto !important;
   }
 }
+
+/*
+ * §6 — overlay/menu motion contract ("fade + scale from 0.98→1 on enter;
+ * reverse at the fast band on exit"), driven directly off each Radix
+ * primitive's own `data-state` attribute rather than a Tailwind
+ * `data-[state=]:` variant per callsite. One class each for a
+ * centered-surface overlay (command palette, dropdown menu) and an
+ * off-canvas drawer (mobile nav) — every overlay in the shell gets real
+ * enter/exit motion instead of an instant pop.
+ */
+@keyframes overlay-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes overlay-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes overlay-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+}
+@keyframes overlay-scale-out {
+  to {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+}
+@keyframes drawer-slide-in {
+  from {
+    transform: translateX(-100%);
+  }
+}
+@keyframes drawer-slide-out {
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+@layer utilities {
+  .overlay-scrim {
+    animation: overlay-fade-in var(--duration-fast) var(--ease-standard);
+  }
+  .overlay-scrim[data-state='closed'] {
+    animation: overlay-fade-out var(--duration-fast) var(--ease-standard) forwards;
+  }
+  .overlay-panel {
+    animation: overlay-scale-in var(--duration-fast) var(--ease-standard);
+  }
+  .overlay-panel[data-state='closed'] {
+    animation: overlay-scale-out var(--duration-fast) var(--ease-standard) forwards;
+  }
+  .drawer-panel {
+    animation: drawer-slide-in var(--duration-considered) var(--ease-standard);
+  }
+  .drawer-panel[data-state='closed'] {
+    animation: drawer-slide-out var(--duration-fast) var(--ease-standard) forwards;
+  }
+}

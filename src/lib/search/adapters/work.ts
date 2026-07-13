@@ -4,7 +4,7 @@ import { createContentAdapter } from './content-adapter';
 export const workSearchAdapter = createContentAdapter({
   type: 'work',
   label: 'Work',
-  href: '/cms/content/work',
+  href: (entry) => `/studio/content/work/${entry._id.toString()}`,
   list: () => workRepository.list(),
   getTitle: (entry) => entry.title,
   getReferenceId: (entry) => entry.referenceId,

@@ -1,6 +1,6 @@
 import { REFERENCE_ID_PREFIXES } from '@/config/reference-ids';
 import { teamSchema, type TeamInput } from '@/lib/validation/team';
-import type { Team } from '@/types/cms';
+import type { Team } from '@/types/studio';
 import { collections } from '../collections';
 import { createRepository } from '../repository';
 

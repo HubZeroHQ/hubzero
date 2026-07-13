@@ -1,4 +1,4 @@
-import type { PublishStatus, ServicePublishStatus } from '@/types/cms';
+import type { PublishStatus, ServicePublishStatus } from '@/types/studio';
 
 /**
  * PLANNING.md §28 — one shared state machine used across Work, Builds,
