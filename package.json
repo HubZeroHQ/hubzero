@@ -1,0 +1,5 @@
+{
+  "devDependencies": {
+    "@hubzero/core": "^3.0.0"
+  }
+}
