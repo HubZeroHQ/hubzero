@@ -1,6 +1,6 @@
 import { REFERENCE_ID_PREFIXES } from '@/config/reference-ids';
 import { labSchema, type LabInput } from '@/lib/validation/lab';
-import type { Lab } from '@/types/cms';
+import type { Lab } from '@/types/studio';
 import { collections } from '../collections';
 import { createRepository } from '../repository';
 

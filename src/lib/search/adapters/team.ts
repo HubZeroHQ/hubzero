@@ -24,7 +24,7 @@ export const teamSearchAdapter: SearchAdapter = {
         title: entry.name,
         subtitle: entry.role,
         referenceId: entry.referenceId,
-        href: '/cms/studio/team',
+        href: '/studio/team',
       }));
   },
 };

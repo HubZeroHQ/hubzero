@@ -31,7 +31,7 @@ export const leadsSearchAdapter: SearchAdapter = {
         title: entry.name,
         subtitle: entry.email,
         status: undefined,
-        href: '/cms/leads',
+        href: '/studio/leads',
       }));
   },
 };

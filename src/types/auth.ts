@@ -1,5 +1,5 @@
 import type { DefaultSession } from 'next-auth';
-import type { UserRole } from './cms';
+import type { UserRole } from './studio';
 
 /**
  * Session/User type augmentation for Auth.js (next-auth v5). The role lives

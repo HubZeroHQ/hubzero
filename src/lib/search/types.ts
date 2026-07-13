@@ -1,9 +1,9 @@
-import type { PublishStatus, ServicePublishStatus, UserRole } from '@/types/cms';
+import type { PublishStatus, ServicePublishStatus, UserRole } from '@/types/studio';
 
 /**
- * The entity types the CMS search index understands today
+ * The entity types the Studio search index understands today
  * (CMS_PRODUCT_DESIGN.md §7). Deliberately narrower than every collection
- * in `types/cms.ts` — Media, Taxonomy, and full-text Document search are
+ * in `types/studio.ts` — Media, Taxonomy, and full-text Document search are
  * named extension points for a later phase (they need a reverse
  * tag-lookup and/or a heavier full-text query this shell doesn't build),
  * not omissions the registry pattern below can't already accommodate.

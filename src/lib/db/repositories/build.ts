@@ -1,6 +1,6 @@
 import { REFERENCE_ID_PREFIXES } from '@/config/reference-ids';
 import { buildSchema, type BuildInput } from '@/lib/validation/build';
-import type { Build } from '@/types/cms';
+import type { Build } from '@/types/studio';
 import { collections } from '../collections';
 import { createRepository } from '../repository';
 

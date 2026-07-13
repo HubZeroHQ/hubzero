@@ -1,7 +1,7 @@
 import { ObjectId } from 'mongodb';
 import type { Collection, Filter, OptionalUnlessRequiredId, UpdateFilter } from 'mongodb';
 import { generateReferenceId } from '@/lib/ids/reference-id';
-import type { ReferenceIdPrefix, WithId, WithTimestamps } from '@/types/cms';
+import type { ReferenceIdPrefix, WithId, WithTimestamps } from '@/types/studio';
 
 export interface RepositoryOptions {
   /** When set, `create()` assigns a permanent reference ID (§27) exactly once. */
@@ -9,7 +9,7 @@ export interface RepositoryOptions {
 }
 
 /**
- * Shared CRUD shape for every CMS collection (PLANNING.md §26) — one
+ * Shared CRUD shape for every Studio collection (PLANNING.md §26) — one
  * implementation of "validate, timestamp, optionally assign a reference ID"
  * instead of hand-rolling the same operations across eleven collections.
  * Collection-specific modules under `lib/db/repositories/` wrap this with

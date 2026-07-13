@@ -1,5 +1,5 @@
 import { leadSchema, type LeadInput } from '@/lib/validation/lead';
-import type { Lead } from '@/types/cms';
+import type { Lead } from '@/types/studio';
 import { collections } from '../collections';
 import { createRepository } from '../repository';
 

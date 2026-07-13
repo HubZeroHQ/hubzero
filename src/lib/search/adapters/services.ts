@@ -21,7 +21,7 @@ export const servicesSearchAdapter: SearchAdapter = {
         type: 'services' as const,
         title: entry.title,
         status: entry.status,
-        href: '/cms/studio/services',
+        href: '/studio/services',
       }));
   },
 };

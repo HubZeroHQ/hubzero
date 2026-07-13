@@ -1,5 +1,5 @@
 import { userSchema, type UserInput } from '@/lib/validation/user';
-import type { User } from '@/types/cms';
+import type { User } from '@/types/studio';
 import { collections } from '../collections';
 import { createRepository } from '../repository';
 

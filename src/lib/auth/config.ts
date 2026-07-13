@@ -1,5 +1,5 @@
 import type { NextAuthConfig } from 'next-auth';
-import type { UserRole } from '@/types/cms';
+import type { UserRole } from '@/types/studio';
 
 // Session/JWT type augmentation (`@/types/auth`, `@/types/auth-jwt`) is
 // intentionally not imported here: both are already part of the TS
@@ -26,7 +26,7 @@ import type { UserRole } from '@/types/cms';
  */
 export const authConfig: NextAuthConfig = {
   session: { strategy: 'jwt' },
-  pages: { signIn: '/cms/login' },
+  pages: { signIn: '/studio/login' },
   providers: [],
   callbacks: {
     jwt({ token, user }) {

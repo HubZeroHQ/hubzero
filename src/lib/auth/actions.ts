@@ -4,7 +4,7 @@ import { AuthError } from 'next-auth';
 import { signIn, signOut } from '@/lib/auth';
 
 export async function signOutAction(): Promise<void> {
-  await signOut({ redirectTo: '/cms/login' });
+  await signOut({ redirectTo: '/studio/login' });
 }
 
 export interface LoginActionState {
@@ -23,7 +23,8 @@ export async function loginAction(
     await signIn('credentials', {
       email,
       password,
-      redirectTo: typeof callbackUrl === 'string' && callbackUrl ? callbackUrl : '/cms/dashboard',
+      redirectTo:
+        typeof callbackUrl === 'string' && callbackUrl ? callbackUrl : '/studio/dashboard',
     });
     return {};
   } catch (error) {

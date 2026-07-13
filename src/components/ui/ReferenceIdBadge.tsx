@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils/cn';
-import type { ReferenceId, ReferenceIdPrefix } from '@/types/cms';
+import type { ReferenceId, ReferenceIdPrefix } from '@/types/studio';
 
 /**
  * PLANNING.md §27 / §18 — the permanent, read-only `HZ-{PREFIX}-{NNN}`

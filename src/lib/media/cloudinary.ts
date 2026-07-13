@@ -31,7 +31,7 @@ export interface SignedUploadParams {
 }
 
 /**
- * Cloudinary is the sole media storage provider (§26.10, §33) — the CMS
+ * Cloudinary is the sole media storage provider (§26.10, §33) — the Studio
  * never stores image files locally or in the database. Uploads happen
  * directly from the browser to Cloudinary using a short-lived signature
  * generated server-side, so the API secret never reaches the client.

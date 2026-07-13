@@ -1,5 +1,5 @@
 import type { ObjectId } from 'mongodb';
-import type { PublishStatus } from '@/types/cms';
+import type { PublishStatus } from '@/types/studio';
 import type { SearchAdapter, SearchEntityType, SearchResult } from '../types';
 
 interface PublishableSearchable {
@@ -12,7 +12,7 @@ interface PublishableSearchable {
  * Shared factory for the five workflow-driven Content collections (Work,
  * Builds, Blueprints, Labs, Notes) — every one of them is a
  * `PublishableEntity` (§24) searched the same way (title/slug/reference ID,
- * every status visible per §7's CMS-vs-public-index distinction). Visible
+ * every status visible per §7's Studio-vs-public-index distinction). Visible
  * to every authenticated role: Team Members have full read transparency
  * into Content (§8).
  */

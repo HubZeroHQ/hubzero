@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { userRoleSchema } from './shared';
 
-/** PLANNING.md §26.9 — system identity for CMS access, never rendered publicly. */
+/** PLANNING.md §26.9 — system identity for Studio access, never rendered publicly. */
 export const userSchema = z.object({
   name: z.string().min(1),
   email: z.string().email(),

@@ -1,6 +1,6 @@
 import { nextCounterValue } from '@/lib/db/counters';
 import { REFERENCE_ID_PAD_LENGTH } from '@/config/reference-ids';
-import type { ReferenceId, ReferenceIdPrefix } from '@/types/cms';
+import type { ReferenceId, ReferenceIdPrefix } from '@/types/studio';
 
 /**
  * Assigns the next permanent reference ID for a collection (PLANNING.md

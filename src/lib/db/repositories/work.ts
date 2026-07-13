@@ -1,6 +1,6 @@
 import { REFERENCE_ID_PREFIXES } from '@/config/reference-ids';
 import { workSchema, type WorkInput } from '@/lib/validation/work';
-import type { Work } from '@/types/cms';
+import type { Work } from '@/types/studio';
 import { collections } from '../collections';
 import { createRepository } from '../repository';
 

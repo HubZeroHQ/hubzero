@@ -1,5 +1,5 @@
 import { userRepository } from '@/lib/db/repositories/user';
-import { ROLE_LABEL } from '@/lib/cms/role-label';
+import { ROLE_LABEL } from '@/lib/studio/role-label';
 import type { SearchAdapter } from '../types';
 
 /** Users (§26.9) is Head Admin-only, matching Settings' visibility (§8). */
@@ -22,7 +22,7 @@ export const usersSearchAdapter: SearchAdapter = {
         type: 'users' as const,
         title: entry.name,
         subtitle: ROLE_LABEL[entry.role],
-        href: '/cms/settings/users',
+        href: '/studio/settings/users',
       }));
   },
 };

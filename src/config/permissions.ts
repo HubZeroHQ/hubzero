@@ -1,4 +1,4 @@
-import type { UserRole } from '@/types/cms';
+import type { UserRole } from '@/types/studio';
 
 /**
  * PLANNING.md §29's capability matrix, expressed as data rather than

@@ -1,6 +1,6 @@
 import type { ObjectId } from 'mongodb';
 import { type Capability, roleHasCapability } from '@/config/permissions';
-import type { UserRole } from '@/types/cms';
+import type { UserRole } from '@/types/studio';
 import { auth } from './index';
 
 export class UnauthorizedError extends Error {
@@ -22,7 +22,7 @@ export interface SessionIdentity {
   userId: string;
 }
 
-/** The current CMS session's role, or `null` if signed out. */
+/** The current Studio session's role, or `null` if signed out. */
 export async function getSessionRole(): Promise<UserRole | null> {
   const session = await auth();
   return session?.user.role ?? null;
@@ -30,7 +30,7 @@ export async function getSessionRole(): Promise<UserRole | null> {
 
 /**
  * Throws if the current session lacks `capability` (PLANNING.md §29). Every
- * CMS server action or route handler that performs a role-level gated
+ * Studio server action or route handler that performs a role-level gated
  * operation should call this before touching the database —
  * `config/permissions.ts`'s capability table is the single source of truth
  * for who can do what, not ad hoc `role === 'admin'` checks scattered

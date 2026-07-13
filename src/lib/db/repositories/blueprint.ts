@@ -1,6 +1,6 @@
 import { REFERENCE_ID_PREFIXES } from '@/config/reference-ids';
 import { blueprintSchema, type BlueprintInput } from '@/lib/validation/blueprint';
-import type { Blueprint } from '@/types/cms';
+import type { Blueprint } from '@/types/studio';
 import { collections } from '../collections';
 import { createRepository } from '../repository';
 
