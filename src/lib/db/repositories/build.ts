@@ -1,0 +1,19 @@
+import { REFERENCE_ID_PREFIXES } from '@/config/reference-ids';
+import { buildSchema, type BuildInput } from '@/lib/validation/build';
+import type { Build } from '@/types/cms';
+import { collections } from '../collections';
+import { createRepository } from '../repository';
+
+const base = createRepository<Build, BuildInput>(collections.builds, {
+  referenceIdPrefix: REFERENCE_ID_PREFIXES.builds,
+});
+
+export const buildRepository = {
+  findById: base.findById,
+  list: base.list,
+  remove: base.remove,
+  findBySlug: async (slug: string) => (await collections.builds()).findOne({ slug }),
+  create: (input: BuildInput) => base.create(buildSchema.parse(input)),
+  update: (id: string, input: Partial<BuildInput>) =>
+    base.update(id, buildSchema.partial().parse(input)),
+};

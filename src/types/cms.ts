@@ -27,11 +27,11 @@ export type LabStage = 'exploring' | 'building' | 'testing';
 
 export type BuildDeploymentState = 'live' | 'retired';
 
-interface WithId {
+export interface WithId {
   _id: ObjectId;
 }
 
-interface WithTimestamps {
+export interface WithTimestamps {
   createdAt: Date;
   updatedAt: Date;
 }
