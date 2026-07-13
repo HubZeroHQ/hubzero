@@ -2,10 +2,8 @@ import { MongoDBAdapter } from '@auth/mongodb-adapter';
 import NextAuth from 'next-auth';
 import { getMongoClient } from '@/lib/db/mongodb';
 import { serverEnv } from '@/lib/env';
-import type { UserRole } from '@/types/cms';
+import { authConfig } from './config';
 import { credentialsProvider } from './providers/credentials';
-import '@/types/auth';
-import '@/types/auth-jwt';
 
 /**
  * Auth.js foundation for CMS access only — there are no public visitor
@@ -21,24 +19,16 @@ import '@/types/auth-jwt';
  * Permissions enforcement (Phase 1 priority 6, §29) lives in
  * lib/auth/permissions.ts and reads the role the `jwt`/`session` callbacks
  * attach here.
+ *
+ * This is the Node-runtime half of the config — it adds the MongoDB
+ * adapter and the Credentials provider on top of the shared, edge-safe
+ * `authConfig` (`./config.ts`). Never import this module from
+ * `middleware.ts`; the `mongodb` driver it pulls in doesn't run on the
+ * Edge runtime middleware executes under.
  */
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  ...authConfig,
   adapter: MongoDBAdapter(getMongoClient()),
-  session: { strategy: 'jwt' },
   secret: serverEnv().AUTH_SECRET,
   providers: [credentialsProvider],
-  callbacks: {
-    jwt({ token, user }) {
-      if (user) {
-        token.id = user.id;
-        token.role = (user as { role?: UserRole }).role ?? 'teamMember';
-      }
-      return token;
-    },
-    session({ session, token }) {
-      session.user.id = token.id ?? '';
-      session.user.role = token.role ?? 'teamMember';
-      return session;
-    },
-  },
 });

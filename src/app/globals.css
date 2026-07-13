@@ -40,6 +40,8 @@
 
   /* Reserved exclusively for success/nominal/submitted states (§2) — never interchangeable with amber. */
   --color-success: #4ade80;
+  /* §9's reserved warning/error token, introduced here for the CMS's first error state (login failure) — a distinct warm red, never amber. */
+  --color-danger: #f2917a;
 
   /* Corner radius system (§2) */
   --radius-control: 6px;
@@ -74,5 +76,22 @@
   :focus-visible {
     outline: 2px solid var(--color-focus-ring);
     outline-offset: 2px;
+  }
+}
+
+/*
+ * §6/§12 — honor prefers-reduced-motion globally rather than gating every
+ * transition/animation utility individually; a component author who
+ * forgets `motion-safe:` shouldn't be the only thing standing between a
+ * user and motion they explicitly asked their OS to suppress.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
