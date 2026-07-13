@@ -1,5 +1,5 @@
 # ------------------------------
-# Root-Level .gitignore for hubzero
+# Root-Level .gitignore for HubZero-Next
 # ------------------------------
 
 # Node.js
@@ -62,29 +62,3 @@ coverage/
 
 # Static Assets Cache
 .cache/
-
-# TypeScript build info
-*.tsbuildinfo
-
-# Claude Code local state (settings, worktrees, temp files) - never commit
-.claude/
-
-# Unknown local tool/IDE cache artifact
-.nexus/
-
-# Internal team planning data - not for public repo
-docs/team-planning-responses.csv
-
-next-prompt.md
-
-base-prompt.md
-
-# Local media storage adapter's on-disk files (lib/cms/storage/local-adapter.ts) —
-# never committed, same reasoning as any other local dev data store.
-/storage/
-
-# Vitest's globalSetup writes the in-memory MongoDB instance's connection
-# URI here for setupFiles (tests/setup.ts) to read — regenerated every run.
-/tests/.mongo-uri
-
-.mcp.json

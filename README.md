@@ -1,79 +1,118 @@
-# HubZero
+# HubZero‑Next ⚛️✨
 
-HubZero is a small, founder-led engineering studio building software and hardware-adjacent
-products for businesses that need both. This repository is the production Next.js application —
-marketing site, Notes (engineering write-ups), and internal CMS — currently under active rebuild as **HubZero v2**.
+**The official Next.js frontend for the Hub Zero website — a tech-driven collective crafting software, electronics, and design solutions.**
 
-> **⚠️ 2026-07-12 design reset:** the public marketing website direction (homepage, services/work/about/contact pages, navigation, hero, page structure, design system, roadmap) has been archived — see [`ARCHIVE/README.md`](./ARCHIVE/README.md). The new marketing-site direction starts fresh in [`DESIGN/NEXT`](./DESIGN/NEXT). The CMS/backend/admin architecture below is unaffected.
+---
 
-The technical/CMS specification lives in [`ARCHITECTURE/`](./ARCHITECTURE) and is treated
-as the source of truth for backend/CMS implementation decisions. Start with
-[`ARCHITECTURE/00_FOUNDER_APPROVAL.md`](./ARCHITECTURE/00_FOUNDER_APPROVAL.md).
+## 🔗 Table of Contents
 
-## Repository layout
+1. [About the Project](#️-about-the-project)
+2. [Tech Stack](#️-tech-stack)
+3. [Features](#️-features)
+4. [Getting Started](#️-getting-started)
+5. [Deployment](#️-deployment)
+6. [Contributing](#️-contributing)
+7. [License](#️-license)
 
-- `src/` — the v2 application (this README's `npm` scripts operate on this).
-- `ARCHITECTURE/` — the active technical/CMS specification (backend, database, admin, CMS foundation, content model). The marketing-website-facing documents that used to live here have been archived — see [`ARCHIVE/README.md`](./ARCHIVE/README.md).
-- `DESIGN/NEXT/` — the marketing-website redesign, starting fresh after the 2026-07-12 reset.
-- `ARCHIVE/` — historical reference only: the archived marketing-website architecture and design documents.
-- `client/` — the **legacy** Next.js implementation. Read-only, kept for feature/content
-  reference only until cutover. Do not build new work here.
-- `docs/` — supporting research (team planning survey responses, etc.).
-- `ARCHIVED_PROJECT_ANALYSIS.md` — historical audit of the legacy site; several of its findings are
-  carried forward into `ARCHITECTURE/` as must-fix rules.
+---
 
-## Legacy application
+## 📝 About the Project
 
-`client/` is the pre-v2 Next.js site and is temporarily retained during the migration for
-feature/content reference. It is not built or deployed from this README's scripts and should not
-receive new work — see `ARCHIVE/ARCHITECTURE/14_IMPLEMENTATION_ROADMAP.md` Phase 7 (archived) for the historical cutover plan.
+**HubZero‑Next** is the blazing-fast frontend powering [hubzero.in](https://hubzero.in) — a sleek portfolio and service site built by the **Hub Zero** team: a crew of CSE and ECE engineers merging code and creativity.
 
-## Tech stack
+This project focuses on modern UI/UX, scroll-triggered animations, SEO, and responsiveness — all built with **Next.js** for production-ready performance.
 
-| Layer          | Choice                                             |
-| -------------- | -------------------------------------------------- |
-| Framework      | Next.js (App Router), React, TypeScript (strict)   |
-| Styling        | Tailwind CSS v4, CSS-first design tokens           |
-| Tooling        | ESLint (flat config), Prettier, Husky, lint-staged |
-| Env validation | Zod                                                |
+---
 
-See `ARCHITECTURE/08_TECHNICAL_ARCHITECTURE.md` for the full stack decision and rationale
-(database, auth, CMS, deployment).
+## 🛠️ Tech Stack
 
-## Getting started
+| Layer               | Technologies                                  |
+| ------------------- | --------------------------------------------- |
+| **Framework**       | Next.js (App Router)                          |
+| **Styling**         | Tailwind CSS                                  |
+| **Animations**      | GSAP + ScrollTrigger                          |
+| **Assets**          | Cloudinary (for images via URLs)              |
+| **Hosting**         | Ubuntu Server 24.04 LTS, NGINX, Cloudflare    |
+| **Analytics & SEO** | Open Graph Tags, Favicon, Structured Metadata |
+
+---
+
+## 🚀 Features
+
+* 🧑‍💻 Interactive team showcase with portfolio navigation
+* 🌈 Custom UI with scroll-triggered animations (GSAP)
+* 🖼️ Image delivery via Cloudinary URLs (lightweight & fast)
+* 🧭 Sticky navbar with scroll-to-section navigation
+* 🌐 SEO‑friendly with Open Graph tags and structured data
+* 📱 Fully responsive and optimized for all devices
+* 🌙 Built for dark mode (default styling)
+
+---
+
+## ⚙️ Getting Started
 
 ```bash
+# Clone the repo
+git clone https://github.com/Rifaque/HubZero-Next.git
+cd HubZero-Next/client
+
+# Install dependencies
 npm install
-cp .env.example .env.local
 
+# Run locally
 npm run dev
+
+# Build for production
+npm run build
 ```
 
-The app runs at `http://localhost:3000`.
+---
 
-## Scripts
+## 📦 Deployment
 
-| Script                                    | Purpose                |
-| ----------------------------------------- | ---------------------- |
-| `npm run dev`                             | Start the dev server   |
-| `npm run build`                           | Production build       |
-| `npm run start`                           | Run a production build |
-| `npm run lint` / `npm run lint:fix`       | ESLint                 |
-| `npm run format` / `npm run format:check` | Prettier               |
-| `npm run typecheck`                       | TypeScript, no emit    |
+This project is deployed on:
 
-A pre-commit hook (Husky + lint-staged) lints and formats staged files automatically.
+* **Ubuntu Server 24.04 LTS**
+* **NGINX** as a reverse proxy for static builds
+* **Cloudflare** for domain, DNS, HTTPS & security
+* **Manual CI/CD:** Deployment via shell script (`deploy.sh`) from project root
 
-## Docker
-
-A production image is built from the standalone Next.js output:
+To deploy a fresh build:
 
 ```bash
-docker build -t hubzero .
-docker run -p 3000:3000 --env-file .env.local hubzero
+cd client
+npm run build
+cd ..
+./deploy.sh
 ```
 
-## Contributing
+---
 
-This is an internal HubZero project. Branch from `main`, keep changes scoped to what
-`ARCHITECTURE/` specifies for the phase in progress, and open a PR.
+## 🤝 Contributing
+
+We’d love to see improvements or ideas from other developers!
+
+### How to Contribute
+
+```bash
+1. Fork this repository
+2. Create a new branch: git checkout -b feature/your-feature
+3. Commit your changes: git commit -m "Add your feature"
+4. Push to your fork: git push origin feature/your-feature
+5. Open a Pull Request 🚀
+```
+
+Let’s build something future-ready together.
+
+---
+
+## 📄 License
+
+This project is licensed under the **MIT License**.
+See the [LICENSE](LICENSE) file for full details.
+
+---
+
+<p align="center">
+  ⚛️ Powered by <strong>Hub Zero</strong> — Engineering Ideas Into Reality.
+</p>
