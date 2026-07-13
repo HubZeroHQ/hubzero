@@ -13,11 +13,11 @@ export const blueprintRepository = {
   list: base.list,
   remove: base.remove,
   findBySlug: async (slug: string) => (await collections.blueprints()).findOne({ slug }),
-  create: (input: BlueprintInput) => {
+  create: (input: BlueprintInput, createdByUserId: string) => {
     const parsed = blueprintSchema.parse(input);
     // Validated against the Blueprint-X-Y pattern above; asserting the
     // branded template-literal type here is the single conversion point.
-    return base.create({ ...parsed, name: parsed.name as Blueprint['name'] });
+    return base.create({ ...parsed, name: parsed.name as Blueprint['name'] }, { createdByUserId });
   },
   update: (id: string, input: Partial<BlueprintInput>) => {
     const parsed = blueprintSchema.partial().parse(input);
