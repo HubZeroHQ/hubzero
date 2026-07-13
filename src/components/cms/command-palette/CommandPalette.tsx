@@ -126,7 +126,7 @@ export function CommandPalette({ nav, open, onOpenChange }: CommandPaletteProps)
             <Command.Group
               key={type}
               heading={SEARCH_TYPE_META[type as keyof typeof SEARCH_TYPE_META].label}
-              className="text-text-muted px-2 py-1.5 font-mono text-[11px] tracking-[0.08em] uppercase [&_[cmdk-group-items]]:mt-1.5"
+              className="[&_[cmdk-group-heading]]:text-text-muted [&_[cmdk-group-heading]]:px-2.5 [&_[cmdk-group-heading]]:pt-2 [&_[cmdk-group-heading]]:pb-1.5 [&_[cmdk-group-heading]]:font-mono [&_[cmdk-group-heading]]:text-[11px] [&_[cmdk-group-heading]]:tracking-[0.08em] [&_[cmdk-group-heading]]:uppercase"
             >
               {items.map((result) => {
                 const Icon = SEARCH_TYPE_META[result.type].icon;
