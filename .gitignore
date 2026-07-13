@@ -62,3 +62,7 @@ coverage/
 
 # Static Assets Cache
 .cache/
+
+.mcp.json
+
+tsconfig.tsbuildinfo
