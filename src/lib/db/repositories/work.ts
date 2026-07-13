@@ -13,7 +13,8 @@ export const workRepository = {
   list: base.list,
   remove: base.remove,
   findBySlug: async (slug: string) => (await collections.work()).findOne({ slug }),
-  create: (input: WorkInput) => base.create(workSchema.parse(input)),
+  create: (input: WorkInput, createdByUserId: string) =>
+    base.create(workSchema.parse(input), { createdByUserId }),
   update: (id: string, input: Partial<WorkInput>) =>
     base.update(id, workSchema.partial().parse(input)),
 };

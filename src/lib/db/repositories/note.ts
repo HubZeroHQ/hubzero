@@ -13,7 +13,8 @@ export const noteRepository = {
   list: base.list,
   remove: base.remove,
   findBySlug: async (slug: string) => (await collections.notes()).findOne({ slug }),
-  create: (input: NoteInput) => base.create(noteSchema.parse(input)),
+  create: (input: NoteInput, createdByUserId: string) =>
+    base.create(noteSchema.parse(input), { createdByUserId }),
   update: (id: string, input: Partial<NoteInput>) =>
     base.update(id, noteSchema.partial().parse(input)),
 };
