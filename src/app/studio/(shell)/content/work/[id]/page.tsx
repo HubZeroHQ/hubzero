@@ -9,9 +9,9 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { ReferenceIdBadge } from '@/components/ui/ReferenceIdBadge';
 import { Tag } from '@/components/ui/Tag';
 import { auth } from '@/lib/auth';
+import { canActOnEntry } from '@/lib/auth/permissions';
 import { transitionWorkStatusAction } from '@/lib/studio/actions/work';
 import { canUnpublishOverride, getAvailableTransitions } from '@/lib/studio/workflow-permissions';
-import { roleHasCapability } from '@/config/permissions';
 import { blueprintRepository } from '@/lib/db/repositories/blueprint';
 import { buildRepository } from '@/lib/db/repositories/build';
 import { documentRepository } from '@/lib/db/repositories/document';
@@ -29,6 +29,7 @@ export default async function WorkDetailPage({ params }: { params: Promise<{ id:
 
   const session = await auth();
   const { role, id: userId } = session!.user;
+  const canEdit = canActOnEntry(work, { role, userId });
 
   const [document, technologies, categories, builds, blueprints] = await Promise.all([
     documentRepository.findByOwnerAndRole('Work', id, 'caseStudy'),
@@ -54,11 +55,6 @@ export default async function WorkDetailPage({ params }: { params: Promise<{ id:
       { label: entry.name, referenceId: entry.referenceId },
     ]),
   );
-
-  const isAnyEntryEditor = roleHasCapability(role, 'editAnyEntry');
-  const isOwner =
-    roleHasCapability(role, 'editOwnEntry') && work.createdByUserId.toString() === userId;
-  const canEdit = isAnyEntryEditor || isOwner;
 
   const availableTransitions = getAvailableTransitions(work.status, role, canEdit);
   const canOverride = canUnpublishOverride(work.status, role);
@@ -88,7 +84,7 @@ export default async function WorkDetailPage({ params }: { params: Promise<{ id:
               rel="noreferrer"
               className="text-text-secondary hover:text-text-primary duration-fast ease-standard inline-flex items-center gap-1 text-xs transition-colors"
             >
-              <ExternalLink size={12} aria-hidden />
+              <ExternalLink className="h-3.5 w-3.5" aria-hidden />
               Repository
             </a>
           ) : null}

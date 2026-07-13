@@ -31,7 +31,7 @@ export function UserMenu({ name, email, role }: UserMenuProps) {
           </span>
           <span className="hidden flex-col sm:flex">
             <span className="text-text-primary text-sm leading-tight">{name}</span>
-            <span className="text-text-muted font-mono text-[11px] leading-tight uppercase">
+            <span className="text-text-muted font-mono text-[11px] leading-tight tracking-[0.08em] uppercase">
               {ROLE_LABEL[role]}
             </span>
           </span>
@@ -43,7 +43,7 @@ export function UserMenu({ name, email, role }: UserMenuProps) {
         <DropdownMenu.Content
           align="end"
           sideOffset={8}
-          className="rounded-card border-border-default bg-surface-overlay z-50 w-56 border p-1.5 shadow-[0_24px_48px_-24px_rgba(0,0,0,0.7)] outline-none"
+          className="overlay-panel rounded-card border-border-default bg-surface-overlay z-50 w-56 border p-1.5 shadow-[0_24px_48px_-24px_rgba(0,0,0,0.7)] outline-none"
         >
           <div className="px-2.5 py-2">
             <p className="text-text-primary truncate text-sm">{name}</p>
@@ -54,7 +54,7 @@ export function UserMenu({ name, email, role }: UserMenuProps) {
             <form action={signOutAction}>
               <button
                 type="submit"
-                className="text-text-secondary duration-fast ease-standard hover:bg-surface-elevated hover:text-text-primary data-[highlighted]:bg-surface-elevated data-[highlighted]:text-text-primary flex w-full items-center gap-2 rounded-[4px] px-2.5 py-2 text-left text-sm transition-colors outline-none"
+                className="text-text-secondary duration-fast ease-standard hover:bg-surface-elevated hover:text-text-primary data-[highlighted]:bg-surface-elevated data-[highlighted]:text-text-primary rounded-control flex w-full items-center gap-2 px-2.5 py-2 text-left text-sm transition-colors outline-none"
               >
                 <LogOut className="h-3.5 w-3.5" aria-hidden />
                 Sign out

@@ -1,18 +1,16 @@
 'use client';
 
+import { ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
+import { fieldClassName, Input } from '@/components/ui/Input';
 import type { Block, BlockType } from '@/lib/documents/blocks';
 import { createDefaultBlock, EDITABLE_BLOCK_TYPES } from '@/lib/documents/editable-blocks';
 import { cn } from '@/lib/utils/cn';
 
-const textareaClass =
-  'bg-surface-default text-text-primary rounded-[4px] border border-[#2a2a2a] px-3 py-2 text-sm placeholder:text-text-muted focus-visible:border-accent focus-visible:bg-[#171717] focus-visible:outline-none w-full';
-
-const selectClass =
-  'bg-surface-default text-text-primary rounded-[4px] border border-[#2a2a2a] px-2 py-2 text-sm';
+const textareaClass = cn(fieldClassName, 'w-full');
+const selectClass = cn(fieldClassName, 'px-2');
 
 /**
  * The v1 block editor (`lib/documents/editable-blocks.ts` explains the
@@ -106,7 +104,7 @@ export function BlockEditor({
                     onClick={() => moveBlock(block.id, -1)}
                     aria-label="Move block up"
                   >
-                    ↑
+                    <ChevronUp className="h-4 w-4" aria-hidden />
                   </Button>
                   <Button
                     variant="ghost"
@@ -115,9 +113,10 @@ export function BlockEditor({
                     onClick={() => moveBlock(block.id, 1)}
                     aria-label="Move block down"
                   >
-                    ↓
+                    <ChevronDown className="h-4 w-4" aria-hidden />
                   </Button>
                   <Button variant="ghost" type="button" onClick={() => removeBlock(block.id)}>
+                    <Trash2 className="h-3.5 w-3.5" aria-hidden />
                     Remove
                   </Button>
                 </div>
@@ -308,12 +307,10 @@ function BlockFieldsEditor({ block, onChange }: { block: Block; onChange: (next:
                 // Preserve each existing item's `checked` state by line
                 // position — editing the text shouldn't silently
                 // uncheck every item the author had already ticked off.
-                items: event.target.value
-                  .split('\n')
-                  .map((text, index) => ({
-                    text,
-                    checked: existingItems[index]?.checked ?? false,
-                  })),
+                items: event.target.value.split('\n').map((text, index) => ({
+                  text,
+                  checked: existingItems[index]?.checked ?? false,
+                })),
               },
             })
           }

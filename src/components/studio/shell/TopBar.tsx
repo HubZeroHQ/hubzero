@@ -39,9 +39,9 @@ export function TopBar({ breadcrumbs, user, onOpenPalette, onOpenMobileNav }: To
       <button
         type="button"
         onClick={onOpenPalette}
-        className="rounded-control border-border-default text-text-muted duration-fast ease-standard hover:bg-surface-elevated hover:text-text-primary flex min-h-11 items-center gap-2 border px-3 text-sm transition-colors"
+        className="rounded-control border-border-default text-text-muted duration-fast ease-standard hover:bg-surface-elevated hover:text-text-primary flex min-h-11 min-w-11 items-center gap-2 border px-3 text-sm transition-colors"
       >
-        <Search className="h-3.5 w-3.5" aria-hidden />
+        <Search className="h-4 w-4" aria-hidden />
         <span className="hidden sm:inline">Search</span>
         <kbd className="border-border-default bg-surface-elevated text-text-muted hidden rounded-[4px] border px-1.5 py-0.5 font-mono text-[10px] sm:inline">
           ⌘K

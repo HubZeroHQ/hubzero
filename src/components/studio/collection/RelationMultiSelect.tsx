@@ -31,13 +31,14 @@ export function RelationMultiSelect({
       {options.map((option) => (
         <label
           key={option.id}
-          className="hover:bg-surface-elevated duration-fast ease-standard flex items-center gap-2 rounded px-2 py-1.5 text-sm transition-colors"
+          className="hover:bg-surface-elevated duration-fast ease-standard rounded-control flex items-center gap-2 px-2 py-1.5 text-sm transition-colors"
         >
           <input
             type="checkbox"
             name={name}
             value={option.id}
             defaultChecked={selectedIds.includes(option.id)}
+            className="accent-accent"
           />
           <span className="text-text-primary flex-1 truncate">{option.label}</span>
           {option.referenceId ? (

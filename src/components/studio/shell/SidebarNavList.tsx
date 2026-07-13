@@ -27,7 +27,7 @@ function NavLink({
       title={collapsed ? item.label : undefined}
       onClick={onNavigate}
       className={cn(
-        'rounded-control duration-fast ease-standard flex items-center gap-3 px-3 py-2 text-sm transition-colors',
+        'rounded-control duration-fast ease-standard flex items-center gap-2.5 px-3 py-2 text-sm transition-colors',
         collapsed && 'justify-center px-0',
         active
           ? 'bg-surface-elevated text-text-primary'
@@ -38,7 +38,12 @@ function NavLink({
       {collapsed ? (
         <span className="sr-only">{item.label}</span>
       ) : (
-        <span className="truncate">{item.label}</span>
+        // `min-w-0` is required alongside `flex-1` for a flex child to
+        // actually shrink below its content's natural width — without it,
+        // `truncate` has no narrower width to clip against and a label
+        // longer than today's ("Dashboard", "Work", …) would silently
+        // overflow the rail instead of ellipsizing.
+        <span className="min-w-0 flex-1 truncate">{item.label}</span>
       )}
     </Link>
   );

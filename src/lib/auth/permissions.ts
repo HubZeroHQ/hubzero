@@ -78,8 +78,24 @@ export async function requireEntryCapability(entry: OwnableEntry): Promise<Sessi
     throw new UnauthorizedError();
   }
 
-  const { role } = session.user;
-  const userId = session.user.id;
+  if (!canActOnEntry(entry, { role: session.user.role, userId: session.user.id })) {
+    throw new ForbiddenError(`Role "${session.user.role}" cannot act on this entry.`);
+  }
+
+  return { role: session.user.role, userId: session.user.id };
+}
+
+/**
+ * The non-throwing sibling of `requireEntryCapability` — same ownership
+ * logic, used where a page needs a plain boolean to decide what to *show*
+ * (an Edit button, a status-transition control) rather than to gate a
+ * mutation. Every collection's detail/edit pages need this exact "can the
+ * viewer act on this specific entry" check, so it's the one place that
+ * logic lives instead of each page re-deriving
+ * `isAnyEntryEditor`/`isOwner`/`isAssignee` inline.
+ */
+export function canActOnEntry(entry: OwnableEntry, session: SessionIdentity): boolean {
+  const { role, userId } = session;
 
   const isAnyEntryEditor = roleHasCapability(role, 'editAnyEntry');
   const isOwner =
@@ -87,9 +103,5 @@ export async function requireEntryCapability(entry: OwnableEntry): Promise<Sessi
   const isAssignee =
     roleHasCapability(role, 'editAssignedEntry') && entry.assignedToUserId?.toString() === userId;
 
-  if (!isAnyEntryEditor && !isOwner && !isAssignee) {
-    throw new ForbiddenError(`Role "${role}" cannot act on this entry.`);
-  }
-
-  return { role, userId };
+  return isAnyEntryEditor || isOwner || isAssignee;
 }

@@ -78,11 +78,11 @@ export function CommandPalette({ nav, open, onOpenChange }: CommandPaletteProps)
       onOpenChange={onOpenChange}
       label="Command palette"
       shouldFilter={false}
-      overlayClassName="fixed inset-0 z-50 bg-black/60"
-      contentClassName="fixed top-[15%] left-1/2 z-50 w-[calc(100%-32px)] max-w-[560px] -translate-x-1/2 overflow-hidden rounded-overlay border border-border-default bg-surface-overlay shadow-[0_24px_60px_-28px_rgba(0,0,0,0.7)]"
+      overlayClassName="overlay-scrim fixed inset-0 z-50 bg-black/60"
+      contentClassName="overlay-panel fixed top-[15%] inset-x-0 z-50 mx-auto w-[calc(100%-32px)] max-w-[560px] overflow-hidden rounded-overlay border border-border-default bg-surface-overlay shadow-[0_24px_60px_-28px_rgba(0,0,0,0.7)]"
     >
-      <div className="border-border-muted flex items-center gap-2.5 border-b px-4 py-3">
-        <Search className="text-text-muted h-4 w-4 shrink-0" aria-hidden />
+      <div className="border-border-muted focus-within:border-accent duration-fast ease-standard flex items-center gap-2.5 border-b px-4 py-3 transition-colors">
+        <Search className="text-text-muted h-3.5 w-3.5 shrink-0" aria-hidden />
         <Command.Input
           autoFocus
           value={query}
@@ -105,7 +105,7 @@ export function CommandPalette({ nav, open, onOpenChange }: CommandPaletteProps)
                   key={item.href}
                   value={`nav-${item.href}`}
                   onSelect={() => navigateTo(item.href)}
-                  className="text-text-secondary data-[selected=true]:bg-surface-elevated data-[selected=true]:text-text-primary flex cursor-pointer items-center gap-2.5 rounded-[4px] px-2.5 py-2 text-sm"
+                  className="text-text-secondary data-[selected=true]:bg-surface-elevated data-[selected=true]:text-text-primary rounded-control flex cursor-pointer items-center gap-2.5 px-2.5 py-2 text-sm"
                 >
                   <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden />
                   {item.label}
@@ -135,7 +135,7 @@ export function CommandPalette({ nav, open, onOpenChange }: CommandPaletteProps)
                     key={result.id}
                     value={result.id}
                     onSelect={() => navigateTo(result.href)}
-                    className="text-text-secondary data-[selected=true]:bg-surface-elevated data-[selected=true]:text-text-primary flex cursor-pointer items-center gap-2.5 rounded-[4px] px-2.5 py-2 text-sm"
+                    className="text-text-secondary data-[selected=true]:bg-surface-elevated data-[selected=true]:text-text-primary rounded-control flex cursor-pointer items-center gap-2.5 px-2.5 py-2 text-sm"
                   >
                     <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden />
                     <span className="flex-1 truncate">{result.title}</span>

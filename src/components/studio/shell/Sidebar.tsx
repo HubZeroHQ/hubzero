@@ -34,20 +34,28 @@ export function Sidebar({ nav, collapsed, onToggleCollapsed }: SidebarProps) {
         collapsed ? 'w-16' : 'w-60',
       )}
     >
-      <div className={cn('flex items-center gap-2 px-3 py-4', collapsed && 'justify-center px-0')}>
+      <div className="border-border-muted border-b px-2 py-3">
         <Link
           href="/studio/dashboard"
-          className="text-text-primary flex min-w-0 flex-1 items-center gap-2 truncate text-sm font-semibold"
+          className={cn(
+            // Same `px-2` (outer) + `px-3` (inner) padding recipe as
+            // `SidebarNavList`'s rows and the collapse toggle below, so the
+            // brand mark sits on the exact same vertical column as every
+            // other icon in the rail instead of its own, slightly-more-left
+            // inset — one consistent alignment axis for the whole sidebar.
+            'text-text-primary rounded-control duration-fast ease-standard hover:bg-surface-elevated flex items-center gap-2 px-3 py-2 text-sm font-semibold transition-colors',
+            collapsed && 'justify-center px-0',
+          )}
         >
           <Image
             src="/brand/hubzero-app-icon.png"
             alt="HubZero"
             width={28}
             height={28}
-            className="shrink-0 rounded-[6px]"
+            className="rounded-control shrink-0"
             priority
           />
-          {collapsed ? null : <span className="truncate">HubZero Studio</span>}
+          {collapsed ? null : <span className="min-w-0 flex-1 truncate">HubZero Studio</span>}
         </Link>
       </div>
 

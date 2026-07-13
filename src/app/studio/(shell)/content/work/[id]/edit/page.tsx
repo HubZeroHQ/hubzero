@@ -5,8 +5,8 @@ import { WorkForm } from '@/components/studio/work/WorkForm';
 import { BlockEditor } from '@/components/documents/BlockEditor';
 import { ButtonLink } from '@/components/ui/ButtonLink';
 import { ErrorState } from '@/components/ui/ErrorState';
-import { roleHasCapability } from '@/config/permissions';
 import { auth } from '@/lib/auth';
+import { canActOnEntry } from '@/lib/auth/permissions';
 import { saveWorkCaseStudyAction, updateWorkAction } from '@/lib/studio/actions/work';
 import { getWorkRelationOptions } from '@/lib/studio/work-relations';
 import { documentRepository } from '@/lib/db/repositories/document';
@@ -23,10 +23,7 @@ export default async function EditWorkPage({ params }: { params: Promise<{ id: s
 
   const session = await auth();
   const { role, id: userId } = session!.user;
-  const isAnyEntryEditor = roleHasCapability(role, 'editAnyEntry');
-  const isOwner =
-    roleHasCapability(role, 'editOwnEntry') && work.createdByUserId.toString() === userId;
-  const canEdit = isAnyEntryEditor || isOwner;
+  const canEdit = canActOnEntry(work, { role, userId });
 
   if (!canEdit) {
     return (

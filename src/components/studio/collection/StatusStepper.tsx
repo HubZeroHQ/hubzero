@@ -14,6 +14,14 @@ const TRANSITION_LABEL: Record<PublishStatus, string> = {
   archived: 'Archive',
 };
 
+const STATUS_ANNOUNCEMENT: Record<PublishStatus, string> = {
+  draft: 'Moved back to draft.',
+  inReview: 'Submitted for review.',
+  approved: 'Approved.',
+  published: 'Published.',
+  archived: 'Archived.',
+};
+
 /**
  * CMS_PRODUCT_DESIGN.md §5/§30 — "the status stepper shows only the
  * transition(s) valid for the acting role, never a five-option dropdown."
@@ -36,6 +44,7 @@ export function StatusStepper({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | undefined>();
+  const [announcement, setAnnouncement] = useState<string | undefined>();
 
   function handleTransition(to: PublishStatus) {
     setError(undefined);
@@ -45,6 +54,10 @@ export function StatusStepper({
         setError(result.error);
         return;
       }
+      // Announced via `aria-live` below — a screen-reader user triggering a
+      // transition otherwise has no non-visual signal that it succeeded
+      // once `router.refresh()` re-renders the stepper with new props.
+      setAnnouncement(STATUS_ANNOUNCEMENT[to]);
       router.refresh();
     });
   }
@@ -80,6 +93,9 @@ export function StatusStepper({
           {error}
         </p>
       ) : null}
+      <p aria-live="polite" className="sr-only">
+        {announcement}
+      </p>
     </div>
   );
 }

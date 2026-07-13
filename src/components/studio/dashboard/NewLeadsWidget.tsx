@@ -1,7 +1,7 @@
-import Link from 'next/link';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { formatRelativeTime } from '@/lib/utils/relative-time';
 import type { Lead } from '@/types/studio';
+import { DashboardListRow } from './DashboardListRow';
 
 /**
  * CMS_PRODUCT_DESIGN.md §3 — "how many things are waiting, untriaged" is
@@ -22,16 +22,13 @@ export function NewLeadsWidget({ leads }: { leads: Lead[] }) {
     <ul className="divide-border-muted flex flex-col divide-y">
       {leads.slice(0, 8).map((lead) => (
         <li key={lead._id.toString()}>
-          <Link
-            href="/studio/leads"
-            className="duration-fast ease-standard hover:bg-surface-elevated flex items-center gap-3 py-2.5 text-sm transition-colors"
-          >
+          <DashboardListRow href="/studio/leads">
             <span className="text-text-primary min-w-0 flex-1 truncate">{lead.name}</span>
             <span className="text-text-muted shrink-0 truncate text-xs">{lead.email}</span>
             <span className="text-text-muted shrink-0 text-xs">
               {formatRelativeTime(lead.createdAt)}
             </span>
-          </Link>
+          </DashboardListRow>
         </li>
       ))}
     </ul>
