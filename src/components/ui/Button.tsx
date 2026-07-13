@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils/cn';
  * button variant of its own, but the same visual rule applied to a second
  * kind of control rather than inventing a new one.
  */
-type ButtonVariant = 'primary' | 'secondary' | 'ghost';
+export type ButtonVariant = 'primary' | 'secondary' | 'ghost';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
@@ -22,6 +22,17 @@ const variantClasses: Record<ButtonVariant, string> = {
   ghost: 'bg-transparent text-text-secondary hover:bg-surface-elevated hover:text-text-primary',
 };
 
+/** Shared with `ButtonLink` so a link that must look like a button never drifts from the real thing. */
+export function buttonClassName(variant: ButtonVariant, className?: string): string {
+  return cn(
+    'rounded-control inline-flex min-h-11 items-center justify-center gap-2 px-4 text-sm font-semibold',
+    'duration-fast ease-standard transition-[filter,background-color,border-color,transform]',
+    'active:scale-[0.97] disabled:pointer-events-none disabled:opacity-40',
+    variantClasses[variant],
+    className,
+  );
+}
+
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
   { variant = 'primary', className, disabled, children, ...props },
   ref,
@@ -30,13 +41,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     <button
       ref={ref}
       disabled={disabled}
-      className={cn(
-        'rounded-control inline-flex min-h-11 items-center justify-center gap-2 px-4 text-sm font-semibold',
-        'duration-fast ease-standard transition-[filter,background-color,border-color,transform]',
-        'active:scale-[0.97] disabled:pointer-events-none disabled:opacity-40',
-        variantClasses[variant],
-        className,
-      )}
+      className={buttonClassName(variant, className)}
       {...props}
     >
       {children}

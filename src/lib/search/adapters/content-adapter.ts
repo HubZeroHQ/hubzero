@@ -19,7 +19,8 @@ interface PublishableSearchable {
 export function createContentAdapter<T extends PublishableSearchable>(config: {
   type: SearchEntityType;
   label: string;
-  href: string;
+  /** A static list-page link, or a per-entry link once that collection has a detail route (Work, §38 Phase 3). */
+  href: string | ((entry: T) => string);
   list: () => Promise<T[]>;
   getTitle: (entry: T) => string;
   getReferenceId?: (entry: T) => string | undefined;
@@ -48,7 +49,7 @@ export function createContentAdapter<T extends PublishableSearchable>(config: {
           title: config.getTitle(entry),
           referenceId: config.getReferenceId?.(entry),
           status: entry.status,
-          href: config.href,
+          href: typeof config.href === 'function' ? config.href(entry) : config.href,
         }));
     },
   };

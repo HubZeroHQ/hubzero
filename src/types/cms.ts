@@ -117,6 +117,8 @@ export interface Work extends PublishableEntity {
   relatedBuildIds: ObjectId[];
   relatedBlueprintIds: ObjectId[];
   heroImageId?: ObjectId;
+  /** Additive beyond §26.1 — mirrors Build's `repoUrl` (§26.2). */
+  repoUrl?: string;
 }
 
 export interface Build extends PublishableEntity {

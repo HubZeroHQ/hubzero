@@ -64,9 +64,30 @@ export function createRepository<TRecord extends WithId & WithTimestamps, TInput
 
     async update(id: string, patch: Partial<TInput>): Promise<TRecord | null> {
       const collection = await getCollection();
+
+      // A key explicitly present with value `undefined` (as opposed to
+      // simply absent from `patch`) means "clear this optional field" —
+      // e.g. Work's repoUrl. MongoDB's driver silently drops `undefined`
+      // values from `$set`, so those keys are routed to `$unset` instead;
+      // every other key is set normally.
+      const setFields: Record<string, unknown> = { updatedAt: new Date() };
+      const unsetFields: Record<string, ''> = {};
+      for (const [key, value] of Object.entries(patch)) {
+        if (value === undefined) {
+          unsetFields[key] = '';
+        } else {
+          setFields[key] = value;
+        }
+      }
+
+      const updateOperation = { $set: setFields } as UpdateFilter<TRecord>;
+      if (Object.keys(unsetFields).length > 0) {
+        (updateOperation as { $unset?: Record<string, ''> }).$unset = unsetFields;
+      }
+
       const result = await collection.findOneAndUpdate(
         { _id: new ObjectId(id) } as Filter<TRecord>,
-        { $set: { ...patch, updatedAt: new Date() } } as UpdateFilter<TRecord>,
+        updateOperation,
         { returnDocument: 'after' },
       );
       return result as TRecord | null;
