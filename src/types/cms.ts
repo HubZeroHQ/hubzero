@@ -1,5 +1,4 @@
 import type { ObjectId } from 'mongodb';
-import type { OwnerType } from '@/lib/documents/schema';
 
 /**
  * Shared type vocabulary for every CMS collection (PLANNING.md §24, §26).
@@ -43,9 +42,18 @@ interface PublishableEntity extends WithId, WithTimestamps {
   slug: string;
 }
 
-/** A reference into a Document-owning entry — used for cross-collection evidence links (§13, §14, §24). */
+/**
+ * The collections evidence-style cross-references are allowed to point at
+ * (§13, §24: Service → {Work, Build, Blueprint, Lab}; Note → the same four).
+ * Deliberately narrower than the Document Engine's `OwnerType` (§25), which
+ * also includes Team and Note — an evidence link and a Document owner are
+ * different concepts that happen to overlap, not the same type.
+ */
+export type EvidenceOwnerType = 'Work' | 'Build' | 'Blueprint' | 'Lab';
+
+/** A reference into a Work/Build/Blueprint/Lab entry — evidence links (§13) and Note cross-references (§24). */
 export interface EntryReference {
-  ownerType: OwnerType;
+  ownerType: EvidenceOwnerType;
   ownerId: ObjectId;
 }
 
