@@ -1,0 +1,78 @@
+@import 'tailwindcss';
+
+/*
+ * Design tokens transcribed from DESIGN_SYSTEM.md §9 (Color Tokens), plus
+ * the typography (§3), radius (§2), and motion (§6) systems. Components
+ * should reference these token names — `bg-surface-default`,
+ * `text-text-secondary`, `duration-fast` — never raw hex values or magic
+ * durations. Tailwind v4's spacing scale is formula-based (N × 4px for any
+ * N), so the §4 spacing scale (4, 8, 12, ... 140) already works via the
+ * default numeric utilities (p-30 = 120px, p-35 = 140px) with no extra
+ * tokens needed.
+ */
+@theme {
+  --font-sans: var(--font-instrument-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-instrument-serif), ui-serif, Georgia, serif;
+  --font-mono: var(--font-ibm-plex-mono), ui-monospace, 'SFMono-Regular', monospace;
+
+  /* Surfaces, darkest to lightest (§2 Surface hierarchy) */
+  --color-bg-base: #0d0d0d;
+  --color-surface-default: #141414;
+  --color-surface-elevated: #1c1c1c;
+  --color-surface-overlay: #141414;
+
+  /* Borders — edges of surfaces, never decoration (§2 Border language) */
+  --color-border-default: #262626;
+  --color-border-muted: #1c1c1c;
+  --color-border-strong: #3a3a3a;
+
+  /* Text */
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #cccccc;
+  --color-text-muted: #666666;
+  --color-text-disabled: #999999;
+
+  /* Amber — functional signal only: live/active/selected state, never decoration (§2, §15) */
+  --color-accent: #e8ab5c;
+  /* Active-chip tint background (§2) — its own token because it's a distinct semantic use, not just accent at low opacity. */
+  --color-accent-subtle: rgb(232 171 92 / 0.1);
+  --color-focus-ring: #e8ab5c;
+
+  /* Reserved exclusively for success/nominal/submitted states (§2) — never interchangeable with amber. */
+  --color-success: #4ade80;
+
+  /* Corner radius system (§2) */
+  --radius-control: 6px;
+  --radius-card: 8px;
+  --radius-overlay: 10px;
+
+  /* Motion (§6) — two speed bands only, one confident decelerate easing. */
+  --ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --duration-fast: 200ms;
+  --duration-considered: 400ms;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border-default);
+  }
+
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    background-color: var(--color-bg-base);
+    color: var(--color-text-primary);
+  }
+
+  ::selection {
+    background-color: #ffffff;
+    color: #000000;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-focus-ring);
+    outline-offset: 2px;
+  }
+}
