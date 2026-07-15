@@ -1,6 +1,7 @@
 import type { Collection } from 'mongodb';
 import { getDb } from './mongodb';
 import type { DocumentRecord } from '@/lib/documents/schema';
+import type { DocumentVersionRecord } from '@/lib/documents/version';
 import type {
   Blueprint,
   Build,
@@ -38,4 +39,5 @@ export const collections = {
   media: () => collection<MediaAsset>('media'),
   taxonomy: () => collection<TaxonomyEntry>('taxonomy'),
   documents: () => collection<DocumentRecord>('documents'),
+  documentVersions: () => collection<DocumentVersionRecord>('documentVersions'),
 };

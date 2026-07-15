@@ -1,11 +1,37 @@
 import { ObjectId } from 'mongodb';
 import type { Collection, Filter, OptionalUnlessRequiredId, UpdateFilter } from 'mongodb';
+import type { z } from 'zod';
 import { generateReferenceId } from '@/lib/ids/reference-id';
 import type { ReferenceIdPrefix, WithId, WithTimestamps } from '@/types/studio';
 
 export interface RepositoryOptions {
   /** When set, `create()` assigns a permanent reference ID (§27) exactly once. */
   referenceIdPrefix?: ReferenceIdPrefix;
+}
+
+/**
+ * Parses a partial update payload against an entity's full Zod schema
+ * without letting a field's `.default(...)` silently reintroduce it.
+ *
+ * `schema.partial().parse(input)` alone isn't safe for updates: Zod fills in
+ * any `.default(...)` for a field the caller omitted, and that substituted
+ * value (e.g. `technologyIds: []`) is indistinguishable from a real value
+ * once parsing finishes — `base.update()` then `$set`s it, wiping out
+ * whatever was already stored. Filtering the parsed result down to keys
+ * actually present in `input` keeps every other field untouched, which is
+ * what every caller of `xRepository.update()` actually intends by omitting
+ * a field.
+ */
+export function parsePartialInput<Schema extends z.ZodType<object>>(
+  schema: Schema,
+  input: Partial<z.input<Schema>>,
+): Partial<z.output<Schema>> {
+  const parsed = (schema as unknown as { partial: () => z.ZodType })
+    .partial()
+    .parse(input) as Record<string, unknown>;
+  return Object.fromEntries(Object.entries(parsed).filter(([key]) => key in input)) as Partial<
+    z.output<Schema>
+  >;
 }
 
 /**

@@ -2,6 +2,16 @@ import { ObjectId } from 'mongodb';
 import type { OptionalUnlessRequiredId } from 'mongodb';
 import { documentSchema, type DocumentInput, type DocumentRecord } from '@/lib/documents/schema';
 import { collections } from '../collections';
+import { documentVersionRepository } from './document-version';
+
+/**
+ * Version-foundation throttle (`lib/documents/version.ts`) — a snapshot of
+ * the pre-update state is written at most once per this window per
+ * document, so an active autosave-driven editing session doesn't produce
+ * hundreds of near-duplicate rows for a feature that doesn't have a
+ * retention/compaction policy yet.
+ */
+const VERSION_SNAPSHOT_MIN_INTERVAL_MS = 5 * 60 * 1000;
 
 /**
  * Documents are queried by owner far more often than by their own `_id`
@@ -46,9 +56,25 @@ export const documentRepository = {
     return { ...doc, _id: insertedId };
   },
 
-  async updateBlocks(id: string, blocks: DocumentInput['blocks']): Promise<DocumentRecord | null> {
+  async updateBlocks(
+    id: string,
+    blocks: DocumentInput['blocks'],
+    options?: { actorUserId?: string },
+  ): Promise<DocumentRecord | null> {
     const parsedBlocks = documentSchema.shape.blocks.parse(blocks);
     const collection = await collections.documents();
+
+    const current = await collection.findOne({ _id: new ObjectId(id) });
+    if (current) {
+      const latestVersion = await documentVersionRepository.findLatestForDocument(id);
+      const dueForSnapshot =
+        !latestVersion ||
+        Date.now() - latestVersion.createdAt.getTime() >= VERSION_SNAPSHOT_MIN_INTERVAL_MS;
+      if (dueForSnapshot) {
+        await documentVersionRepository.createSnapshot(current, options?.actorUserId);
+      }
+    }
+
     return collection.findOneAndUpdate(
       { _id: new ObjectId(id) },
       { $set: { blocks: parsedBlocks, updatedAt: new Date() } },

@@ -1,7 +1,7 @@
 import { leadSchema, type LeadInput } from '@/lib/validation/lead';
 import type { Lead } from '@/types/studio';
 import { collections } from '../collections';
-import { createRepository } from '../repository';
+import { createRepository, parsePartialInput } from '../repository';
 
 const base = createRepository<Lead, LeadInput>(collections.leads);
 
@@ -11,5 +11,5 @@ export const leadRepository = {
   remove: base.remove,
   create: (input: LeadInput) => base.create(leadSchema.parse(input)),
   update: (id: string, input: Partial<LeadInput>) =>
-    base.update(id, leadSchema.partial().parse(input)),
+    base.update(id, parsePartialInput(leadSchema, input)),
 };

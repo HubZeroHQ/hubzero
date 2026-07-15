@@ -30,8 +30,9 @@ export function createDocumentSaveAction<TOwner extends OwnableEntry>(config: {
       return { error: 'This entry no longer exists.' };
     }
 
+    let actorUserId: string;
     try {
-      await requireEntryCapability(owner);
+      ({ userId: actorUserId } = await requireEntryCapability(owner));
     } catch (error) {
       return { error: error instanceof Error ? error.message : 'You cannot edit this entry.' };
     }
@@ -44,7 +45,7 @@ export function createDocumentSaveAction<TOwner extends OwnableEntry>(config: {
       );
 
       if (existing) {
-        await documentRepository.updateBlocks(existing._id.toString(), blocks);
+        await documentRepository.updateBlocks(existing._id.toString(), blocks, { actorUserId });
       } else {
         await documentRepository.create({
           ownerType: config.ownerType,

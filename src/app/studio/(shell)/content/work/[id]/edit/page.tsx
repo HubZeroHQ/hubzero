@@ -80,7 +80,11 @@ export default async function EditWorkPage({ params }: { params: Promise<{ id: s
         <h2 className="text-text-muted font-mono text-xs tracking-[0.05em] uppercase">
           Case study
         </h2>
-        <BlockEditor initialBlocks={document?.blocks ?? []} onSave={boundSaveDocumentAction} />
+        <BlockEditor
+          initialBlocks={document?.blocks ?? []}
+          onSave={boundSaveDocumentAction}
+          technologyOptions={technologyOptions}
+        />
       </section>
     </div>
   );

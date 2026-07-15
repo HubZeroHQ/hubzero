@@ -161,7 +161,7 @@ export default async function WorkDetailPage({ params }: { params: Promise<{ id:
           Case study
         </h2>
         {document && document.blocks.length > 0 ? (
-          <BlockRenderer blocks={document.blocks} />
+          <BlockRenderer blocks={document.blocks} technologyLabels={technologyLabels} />
         ) : (
           <EmptyState
             title="No case study yet."

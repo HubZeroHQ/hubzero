@@ -2,7 +2,7 @@ import { REFERENCE_ID_PREFIXES } from '@/config/reference-ids';
 import { blueprintSchema, type BlueprintInput } from '@/lib/validation/blueprint';
 import type { Blueprint } from '@/types/studio';
 import { collections } from '../collections';
-import { createRepository } from '../repository';
+import { createRepository, parsePartialInput } from '../repository';
 
 const base = createRepository<Blueprint, BlueprintInput>(collections.blueprints, {
   referenceIdPrefix: REFERENCE_ID_PREFIXES.blueprints,
@@ -20,7 +20,7 @@ export const blueprintRepository = {
     return base.create({ ...parsed, name: parsed.name as Blueprint['name'] }, { createdByUserId });
   },
   update: (id: string, input: Partial<BlueprintInput>) => {
-    const parsed = blueprintSchema.partial().parse(input);
+    const parsed = parsePartialInput(blueprintSchema, input);
     return base.update(id, {
       ...parsed,
       ...(parsed.name ? { name: parsed.name as Blueprint['name'] } : {}),

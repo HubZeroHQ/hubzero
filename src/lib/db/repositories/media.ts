@@ -1,7 +1,7 @@
 import { mediaAssetSchema, type MediaAssetInput } from '@/lib/validation/media';
 import type { MediaAsset } from '@/types/studio';
 import { collections } from '../collections';
-import { createRepository } from '../repository';
+import { createRepository, parsePartialInput } from '../repository';
 
 const base = createRepository<MediaAsset, MediaAssetInput>(collections.media);
 
@@ -13,5 +13,5 @@ export const mediaRepository = {
     (await collections.media()).findOne({ cloudinaryPublicId }),
   create: (input: MediaAssetInput) => base.create(mediaAssetSchema.parse(input)),
   update: (id: string, input: Partial<MediaAssetInput>) =>
-    base.update(id, mediaAssetSchema.partial().parse(input)),
+    base.update(id, parsePartialInput(mediaAssetSchema, input)),
 };

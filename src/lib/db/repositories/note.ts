@@ -2,7 +2,7 @@ import { REFERENCE_ID_PREFIXES } from '@/config/reference-ids';
 import { noteSchema, type NoteInput } from '@/lib/validation/note';
 import type { Note } from '@/types/studio';
 import { collections } from '../collections';
-import { createRepository } from '../repository';
+import { createRepository, parsePartialInput } from '../repository';
 
 const base = createRepository<Note, NoteInput>(collections.notes, {
   referenceIdPrefix: REFERENCE_ID_PREFIXES.notes,
@@ -16,5 +16,5 @@ export const noteRepository = {
   create: (input: NoteInput, createdByUserId: string) =>
     base.create(noteSchema.parse(input), { createdByUserId }),
   update: (id: string, input: Partial<NoteInput>) =>
-    base.update(id, noteSchema.partial().parse(input)),
+    base.update(id, parsePartialInput(noteSchema, input)),
 };

@@ -15,6 +15,27 @@ const blockBase = {
   id: z.string().min(1),
 };
 
+/**
+ * `z.string().url()` alone accepts any well-formed URL, including
+ * `javascript:`/`data:` schemes — those pass validation, get stored, and
+ * BlockRenderer renders them as a real `href`/`src` with no further check.
+ * Every block field that becomes a clickable link or embed src goes through
+ * this instead, restricted to the schemes those contexts actually need.
+ */
+const safeUrlSchema = z
+  .string()
+  .url()
+  .refine(
+    (value) => {
+      try {
+        return ['http:', 'https:'].includes(new URL(value).protocol);
+      } catch {
+        return false;
+      }
+    },
+    { message: 'URL must start with http:// or https://.' },
+  );
+
 export const headingBlockSchema = z.object({
   ...blockBase,
   type: z.literal('heading'),
@@ -65,7 +86,7 @@ export const imageBlockSchema = z.object({
   type: z.literal('image'),
   data: z.object({
     mediaId: z.string().min(1),
-    url: z.string().url(),
+    url: safeUrlSchema,
     altText: z.string().min(1),
     caption: z.string().optional(),
   }),
@@ -79,7 +100,7 @@ export const imageGalleryBlockSchema = z.object({
       .array(
         z.object({
           mediaId: z.string().min(1),
-          url: z.string().url(),
+          url: safeUrlSchema,
           altText: z.string().min(1),
         }),
       )
@@ -91,7 +112,7 @@ export const videoEmbedBlockSchema = z.object({
   ...blockBase,
   type: z.literal('videoEmbed'),
   data: z.object({
-    url: z.string().url(),
+    url: safeUrlSchema,
     caption: z.string().optional(),
   }),
 });
@@ -151,7 +172,7 @@ export const fileAttachmentBlockSchema = z.object({
   ...blockBase,
   type: z.literal('fileAttachment'),
   data: z.object({
-    url: z.string().url(),
+    url: safeUrlSchema,
     fileName: z.string().min(1),
     fileSizeBytes: z.number().nonnegative().optional(),
   }),
@@ -209,7 +230,7 @@ export const linksBlockSchema = z.object({
       .array(
         z.object({
           label: z.string().min(1),
-          url: z.string().url(),
+          url: safeUrlSchema,
         }),
       )
       .min(1),
@@ -224,7 +245,7 @@ export const referencesBlockSchema = z.object({
       .array(
         z.object({
           label: z.string().min(1),
-          url: z.string().url().optional(),
+          url: safeUrlSchema.optional(),
         }),
       )
       .min(1),
