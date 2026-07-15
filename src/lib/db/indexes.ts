@@ -25,5 +25,8 @@ export async function ensureIndexes(): Promise<void> {
     db.collection('taxonomy').createIndex({ kind: 1 }),
     db.collection('taxonomy').createIndex({ slug: 1 }, { unique: true }),
     db.collection('users').createIndex({ email: 1 }, { unique: true }),
+    db.collection('media').createIndex({ cloudinaryPublicId: 1 }, { unique: true }),
+    db.collection('media').createIndex({ folder: 1 }),
+    db.collection('media').createIndex({ reuseTags: 1 }),
   ]);
 }

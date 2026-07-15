@@ -21,6 +21,14 @@ export type UserRole = 'headAdmin' | 'admin' | 'teamMember';
 
 export type TaxonomyKind = 'technology' | 'category' | 'topic';
 
+/**
+ * One-level grouping only, matching "avoid unnecessary nesting"
+ * (CMS_PRODUCT_DESIGN.md §6) — a lightweight tag for where an asset is
+ * mainly used, not a folder hierarchy. `general` is the default for
+ * anything that doesn't obviously belong to one collection.
+ */
+export type MediaFolder = 'work' | 'builds' | 'blueprints' | 'labs' | 'notes' | 'team' | 'general';
+
 export type LeadStatus = 'new' | 'contacted' | 'closed';
 
 export type LabStage = 'exploring' | 'building' | 'testing';
@@ -79,9 +87,18 @@ export interface MediaAsset extends WithId, WithTimestamps {
   cloudinaryPublicId: string;
   url: string;
   altText: string;
+  caption?: string;
+  credit?: string;
   width?: number;
   height?: number;
+  /** Read from Cloudinary's upload response, never entered by hand (CMS_PRODUCT_DESIGN.md §6). */
+  fileSizeBytes?: number;
+  mimeType?: string;
+  originalFilename?: string;
+  folder: MediaFolder;
   reuseTags: string[];
+  /** Provenance only, like every other collection's `createdByUserId` — not itself an authorization mechanism. */
+  createdByUserId?: ObjectId;
 }
 
 /** System identity for Studio access (§26.9) — never rendered publicly by itself; see Team for public presentation. */

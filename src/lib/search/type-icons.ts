@@ -4,6 +4,7 @@ import {
   Briefcase,
   FlaskConical,
   Handshake,
+  Image as ImageIcon,
   Inbox,
   NotebookPen,
   UserCog,
@@ -23,4 +24,5 @@ export const SEARCH_TYPE_META: Record<SearchEntityType, { label: string; icon: L
   services: { label: 'Services', icon: Handshake },
   leads: { label: 'Leads', icon: Inbox },
   users: { label: 'Users', icon: UserCog },
+  media: { label: 'Media', icon: ImageIcon },
 };

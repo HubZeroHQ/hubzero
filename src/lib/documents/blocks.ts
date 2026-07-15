@@ -89,6 +89,13 @@ export const imageBlockSchema = z.object({
     url: safeUrlSchema,
     altText: z.string().min(1),
     caption: z.string().optional(),
+    // Carried over from the selected Media Library asset (`types/studio.ts`'s
+    // `MediaAsset.width`/`height`) so `BlockRenderer` can use `next/image`'s
+    // real optimization pipeline instead of a raw `<img>` — optional because
+    // documents authored before the Media Library existed only ever stored a
+    // bare URL with no known dimensions.
+    width: z.number().positive().optional(),
+    height: z.number().positive().optional(),
   }),
 });
 
@@ -102,6 +109,8 @@ export const imageGalleryBlockSchema = z.object({
           mediaId: z.string().min(1),
           url: safeUrlSchema,
           altText: z.string().min(1),
+          width: z.number().positive().optional(),
+          height: z.number().positive().optional(),
         }),
       )
       .min(1),

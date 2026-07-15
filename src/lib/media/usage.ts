@@ -1,0 +1,177 @@
+import { ObjectId } from 'mongodb';
+import { collections } from '@/lib/db/collections';
+import { blueprintRepository } from '@/lib/db/repositories/blueprint';
+import { buildRepository } from '@/lib/db/repositories/build';
+import { labRepository } from '@/lib/db/repositories/lab';
+import { noteRepository } from '@/lib/db/repositories/note';
+import { teamRepository } from '@/lib/db/repositories/team';
+import { workRepository } from '@/lib/db/repositories/work';
+import type { DocumentRole, OwnerType } from '@/lib/documents/schema';
+
+/**
+ * Everywhere a Media asset can be referenced today: inside a Document's
+ * `image`/`imageGallery` blocks (any owner — Work/Build/Blueprint/Lab/Note/
+ * Team can each hold one, §25), or one of the handful of direct
+ * Cloudinary-reference fields a collection's own metadata carries
+ * (`Work.heroImageId`, `Blueprint.previewAssetIds`, `Team.portraitId`).
+ * New direct-reference fields are additive to `DIRECT_FIELD_CHECKS` below —
+ * this module never needs restructuring for one.
+ */
+export interface MediaUsageRef {
+  ownerType: OwnerType;
+  ownerId: string;
+  label: string;
+  referenceId?: string;
+  field: 'document' | 'heroImage' | 'previewAsset' | 'portrait';
+  documentRole?: DocumentRole;
+  href: string;
+}
+
+const OWNER_DETAIL_PATH: Record<OwnerType, (id: string) => string> = {
+  Work: (id) => `/studio/content/work/${id}`,
+  Build: (id) => `/studio/content/builds/${id}`,
+  Blueprint: (id) => `/studio/content/blueprints/${id}`,
+  Lab: (id) => `/studio/content/labs/${id}`,
+  Note: (id) => `/studio/content/notes/${id}`,
+  Team: (id) => `/studio/team/${id}`,
+};
+
+/** True if any block in `blocks` (searching nested `imageGallery.images` too) references `mediaId`. */
+export function blocksReferenceMedia(
+  blocks: Array<{ type: string; data: Record<string, unknown> }>,
+  mediaId: string,
+): boolean {
+  return blocks.some((block) => {
+    if (block.type === 'image') {
+      return block.data.mediaId === mediaId;
+    }
+    if (block.type === 'imageGallery') {
+      const images = block.data.images as Array<{ mediaId: string }> | undefined;
+      return images?.some((image) => image.mediaId === mediaId) ?? false;
+    }
+    return false;
+  });
+}
+
+async function findDocumentUsage(mediaId: string): Promise<MediaUsageRef[]> {
+  const collection = await collections.documents();
+  const candidates = await collection
+    .find({
+      $or: [
+        { blocks: { $elemMatch: { type: 'image', 'data.mediaId': mediaId } } },
+        { blocks: { $elemMatch: { type: 'imageGallery', 'data.images.mediaId': mediaId } } },
+      ],
+    })
+    .toArray();
+
+  const refs: MediaUsageRef[] = [];
+  for (const doc of candidates) {
+    if (!blocksReferenceMedia(doc.blocks, mediaId)) {
+      continue;
+    }
+    const ownerId = doc.ownerId.toString();
+    const label = await resolveOwnerLabel(doc.ownerType, ownerId);
+    refs.push({
+      ownerType: doc.ownerType,
+      ownerId,
+      label: label.title,
+      referenceId: label.referenceId,
+      field: 'document',
+      documentRole: doc.role,
+      href: OWNER_DETAIL_PATH[doc.ownerType](ownerId),
+    });
+  }
+  return refs;
+}
+
+async function resolveOwnerLabel(
+  ownerType: OwnerType,
+  ownerId: string,
+): Promise<{ title: string; referenceId?: string }> {
+  switch (ownerType) {
+    case 'Work': {
+      const entry = await workRepository.findById(ownerId);
+      return { title: entry?.title ?? 'Unknown Work entry', referenceId: entry?.referenceId };
+    }
+    case 'Build': {
+      const entry = await buildRepository.findById(ownerId);
+      return { title: entry?.title ?? 'Unknown Build', referenceId: entry?.referenceId };
+    }
+    case 'Blueprint': {
+      const entry = await blueprintRepository.findById(ownerId);
+      return { title: entry?.name ?? 'Unknown Blueprint', referenceId: entry?.referenceId };
+    }
+    case 'Lab': {
+      const entry = await labRepository.findById(ownerId);
+      return { title: entry?.title ?? 'Unknown Lab', referenceId: entry?.referenceId };
+    }
+    case 'Note': {
+      const entry = await noteRepository.findById(ownerId);
+      return { title: entry?.title ?? 'Unknown Note', referenceId: entry?.referenceId };
+    }
+    case 'Team': {
+      const entry = await teamRepository.findById(ownerId);
+      return { title: entry?.name ?? 'Unknown Team profile', referenceId: entry?.referenceId };
+    }
+    default: {
+      const exhaustive: never = ownerType;
+      return { title: `Unknown (${exhaustive as string})` };
+    }
+  }
+}
+
+async function findDirectFieldUsage(mediaId: string): Promise<MediaUsageRef[]> {
+  const objectId = ObjectId.isValid(mediaId) ? new ObjectId(mediaId) : undefined;
+  if (!objectId) {
+    return [];
+  }
+
+  const [workEntries, blueprintEntries, teamEntries] = await Promise.all([
+    (await collections.work()).find({ heroImageId: objectId }).toArray(),
+    (await collections.blueprints()).find({ previewAssetIds: objectId }).toArray(),
+    (await collections.team()).find({ portraitId: objectId }).toArray(),
+  ]);
+
+  return [
+    ...workEntries.map((entry) => ({
+      ownerType: 'Work' as const,
+      ownerId: entry._id.toString(),
+      label: entry.title,
+      referenceId: entry.referenceId,
+      field: 'heroImage' as const,
+      href: OWNER_DETAIL_PATH.Work(entry._id.toString()),
+    })),
+    ...blueprintEntries.map((entry) => ({
+      ownerType: 'Blueprint' as const,
+      ownerId: entry._id.toString(),
+      label: entry.name,
+      referenceId: entry.referenceId,
+      field: 'previewAsset' as const,
+      href: OWNER_DETAIL_PATH.Blueprint(entry._id.toString()),
+    })),
+    ...teamEntries.map((entry) => ({
+      ownerType: 'Team' as const,
+      ownerId: entry._id.toString(),
+      label: entry.name,
+      referenceId: entry.referenceId,
+      field: 'portrait' as const,
+      href: OWNER_DETAIL_PATH.Team(entry._id.toString()),
+    })),
+  ];
+}
+
+/**
+ * "Where is this asset currently used?" — the reverse-relationship question
+ * the Media detail page, and the replace/delete confirmation flows, need
+ * answered before touching a shared asset (CMS_PRODUCT_DESIGN.md §6).
+ * Computed on demand rather than maintained as a denormalized field, since
+ * usage changes any time an author edits a Document elsewhere — a stored
+ * counter would drift the moment it wasn't the one thing updating it.
+ */
+export async function findMediaUsage(mediaId: string): Promise<MediaUsageRef[]> {
+  const [documentUsage, directUsage] = await Promise.all([
+    findDocumentUsage(mediaId),
+    findDirectFieldUsage(mediaId),
+  ]);
+  return [...documentUsage, ...directUsage];
+}

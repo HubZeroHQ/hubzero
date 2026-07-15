@@ -11,7 +11,8 @@ export const mediaRepository = {
   remove: base.remove,
   findByCloudinaryPublicId: async (cloudinaryPublicId: string) =>
     (await collections.media()).findOne({ cloudinaryPublicId }),
-  create: (input: MediaAssetInput) => base.create(mediaAssetSchema.parse(input)),
+  create: (input: MediaAssetInput, meta: { createdByUserId?: string } = {}) =>
+    base.create(mediaAssetSchema.parse(input), meta),
   update: (id: string, input: Partial<MediaAssetInput>) =>
     base.update(id, parsePartialInput(mediaAssetSchema, input)),
 };

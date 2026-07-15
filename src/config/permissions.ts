@@ -7,6 +7,14 @@ import type { UserRole } from '@/types/studio';
  *
  * "Repository ownership / final authority" from §29 is descriptive, not an
  * enforceable capability, and is intentionally not modeled here.
+ *
+ * `manageMedia` is granted to every role: Media is a shared Library
+ * resource (CMS_PRODUCT_DESIGN.md §1, §8), not workflow-driven Content, and
+ * §8's permissions table never scopes Library access by role the way it
+ * does Content/Leads/Settings. It isn't a `PublishableEntity` either
+ * (`types/studio.ts`), so it has no ownership boundary for `editOwnEntry`/
+ * `editAssignedEntry` to key off — deleting a shared asset is guarded
+ * instead by the usage-warning flow in `lib/media/usage.ts`, not by role.
  */
 export type Capability =
   | 'createOwnEntry'
@@ -19,7 +27,8 @@ export type Capability =
   | 'publish'
   | 'unpublishOverride'
   | 'manageUsers'
-  | 'manageSystemConfig';
+  | 'manageSystemConfig'
+  | 'manageMedia';
 
 export const ROLE_CAPABILITIES: Record<UserRole, readonly Capability[]> = {
   headAdmin: [
@@ -34,6 +43,7 @@ export const ROLE_CAPABILITIES: Record<UserRole, readonly Capability[]> = {
     'unpublishOverride',
     'manageUsers',
     'manageSystemConfig',
+    'manageMedia',
   ],
   admin: [
     'createOwnEntry',
@@ -44,8 +54,15 @@ export const ROLE_CAPABILITIES: Record<UserRole, readonly Capability[]> = {
     'submitForReview',
     'approve',
     'publish',
+    'manageMedia',
   ],
-  teamMember: ['createOwnEntry', 'editOwnEntry', 'editAssignedEntry', 'submitForReview'],
+  teamMember: [
+    'createOwnEntry',
+    'editOwnEntry',
+    'editAssignedEntry',
+    'submitForReview',
+    'manageMedia',
+  ],
 };
 
 export function roleHasCapability(role: UserRole, capability: Capability): boolean {
