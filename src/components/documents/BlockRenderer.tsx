@@ -1,5 +1,6 @@
 import { ExternalLink, Link2 } from 'lucide-react';
 import DOMPurify from 'isomorphic-dompurify';
+import Image from 'next/image';
 import type { Block } from '@/lib/documents/blocks';
 import { cn } from '@/lib/utils/cn';
 
@@ -99,14 +100,31 @@ function BlockView({
         </pre>
       );
     case 'image': {
-      const { url, altText, caption } = block.data;
+      const { url, altText, caption, width, height } = block.data;
       if (!url) {
         return null;
       }
       return (
         <figure className="flex flex-col gap-2">
-          {/* eslint-disable-next-line @next/next/no-img-element -- arbitrary author-supplied URLs, kept out of the Next.js image optimizer until real Media Library integration lands */}
-          <img src={url} alt={altText} loading="lazy" className="rounded-card w-full" />
+          {width && height ? (
+            // Real dimensions, from the Media Library asset this block points at
+            // (`lib/media/dto.ts`) — routes through next/image's real optimization
+            // pipeline rather than the raw-`<img>` fallback below.
+            <Image
+              src={url}
+              alt={altText}
+              width={width}
+              height={height}
+              sizes="(min-width: 1024px) 800px, 100vw"
+              className="rounded-card h-auto w-full"
+            />
+          ) : (
+            // Pre-Media-Library documents (or any external URL without known
+            // dimensions) — kept out of the optimizer since next/image requires
+            // known width/height (or `fill`, which needs a sized container).
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={url} alt={altText} loading="lazy" className="rounded-card w-full" />
+          )}
           {caption ? <figcaption className="text-text-muted text-xs">{caption}</figcaption> : null}
         </figure>
       );
@@ -115,14 +133,27 @@ function BlockView({
       return (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {block.data.images.map((image, index) => (
-            <figure key={image.mediaId || index} className="flex flex-col gap-1">
-              {/* eslint-disable-next-line @next/next/no-img-element -- see the `image` case above */}
-              <img
-                src={image.url}
-                alt={image.altText}
-                loading="lazy"
-                className="rounded-card aspect-square w-full object-cover"
-              />
+            <figure
+              key={image.mediaId || index}
+              className="bg-surface-default rounded-card relative aspect-square w-full overflow-hidden"
+            >
+              {image.width && image.height ? (
+                <Image
+                  src={image.url}
+                  alt={image.altText}
+                  fill
+                  sizes="(min-width: 640px) 33vw, 50vw"
+                  className="object-cover"
+                />
+              ) : (
+                // eslint-disable-next-line @next/next/no-img-element -- see the `image` case above
+                <img
+                  src={image.url}
+                  alt={image.altText}
+                  loading="lazy"
+                  className="absolute inset-0 h-full w-full object-cover"
+                />
+              )}
             </figure>
           ))}
         </div>

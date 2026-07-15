@@ -28,6 +28,8 @@ export interface SignedUploadParams {
   signature: string;
   apiKey: string;
   cloudName: string;
+  /** Must be submitted to Cloudinary verbatim — the signature was computed over this exact string. */
+  folder: string;
 }
 
 /**
@@ -48,9 +50,26 @@ export function createSignedUploadParams(folder = 'hubzero'): SignedUploadParams
     signature,
     apiKey: env.CLOUDINARY_API_KEY,
     cloudName: env.CLOUDINARY_CLOUD_NAME,
+    folder,
   };
 }
 
 export function getCloudinaryClient(): typeof cloudinary {
   return ensureConfigured();
+}
+
+/**
+ * Removes the binary from Cloudinary — called only when a Media record
+ * itself is deleted (never on "Replace", which always creates a new record
+ * per CMS_PRODUCT_DESIGN.md §6/Appendix B.2 rather than mutating the
+ * shared one in place). Resolves even on a Cloudinary-side "not found" so a
+ * dangling Mongo record can still be cleaned up if the two ever drift.
+ */
+export async function deleteCloudinaryAsset(publicId: string): Promise<void> {
+  const client = ensureConfigured();
+  try {
+    await client.uploader.destroy(publicId);
+  } catch (error) {
+    console.error(`Failed to delete Cloudinary asset "${publicId}":`, error);
+  }
 }

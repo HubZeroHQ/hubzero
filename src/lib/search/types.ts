@@ -3,13 +3,23 @@ import type { PublishStatus, ServicePublishStatus, UserRole } from '@/types/stud
 /**
  * The entity types the Studio search index understands today
  * (CMS_PRODUCT_DESIGN.md §7). Deliberately narrower than every collection
- * in `types/studio.ts` — Media, Taxonomy, and full-text Document search are
- * named extension points for a later phase (they need a reverse
- * tag-lookup and/or a heavier full-text query this shell doesn't build),
- * not omissions the registry pattern below can't already accommodate.
+ * in `types/studio.ts` — Taxonomy and full-text Document search remain
+ * named extension points for a later phase (a heavier full-text query this
+ * shell doesn't build), not omissions the registry pattern below can't
+ * already accommodate. Media joined in Phase 5 (`adapters/media.ts`),
+ * matched by alt text/reuse tags/filename per §7's table.
  */
 export type SearchEntityType =
-  'work' | 'builds' | 'blueprints' | 'labs' | 'notes' | 'team' | 'services' | 'leads' | 'users';
+  | 'work'
+  | 'builds'
+  | 'blueprints'
+  | 'labs'
+  | 'notes'
+  | 'team'
+  | 'services'
+  | 'leads'
+  | 'users'
+  | 'media';
 
 export interface SearchResult {
   id: string;
