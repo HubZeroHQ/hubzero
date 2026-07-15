@@ -16,6 +16,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { Plus } from 'lucide-react';
+import { memo } from 'react';
 import { getBlockCatalogEntry } from '@/lib/documents/block-catalog';
 import type { Block } from '@/lib/documents/blocks';
 import { BlockShell } from './BlockShell';
@@ -82,6 +83,7 @@ export function BlockCanvas({
 
   return (
     <DndContext
+      id="document-block-canvas"
       sensors={sensors}
       collisionDetection={closestCenter}
       modifiers={[restrictToVerticalAxis, restrictToParentElement]}
@@ -117,36 +119,99 @@ export function BlockCanvas({
         <div className="flex flex-col">
           <InsertDivider index={0} onInsert={onInsertAt} />
           {blocks.map((block, index) => (
-            <div key={block.id}>
-              <BlockShell
-                block={block}
-                index={index}
-                total={blocks.length}
-                selected={block.id === selectedBlockId}
-                onSelect={() => onSelect(block.id)}
-                onMoveUp={() => onMoveUp(block.id)}
-                onMoveDown={() => onMoveDown(block.id)}
-                onDuplicate={() => onDuplicate(block.id)}
-                onCopy={() => onCopy(block.id)}
-                onDelete={() => onDelete(block.id)}
-                collapsible={isCollapsibleBlock(block)}
-                collapsed={collapsedBlockIds.has(block.id)}
-                onToggleCollapsed={() => onToggleCollapsed(block.id)}
-              >
-                <BlockFields
-                  block={block}
-                  onChange={onChangeBlock}
-                  technologyOptions={technologyOptions}
-                />
-              </BlockShell>
-              <InsertDivider index={index + 1} onInsert={onInsertAt} />
-            </div>
+            <BlockRow
+              key={block.id}
+              block={block}
+              index={index}
+              total={blocks.length}
+              selected={block.id === selectedBlockId}
+              collapsed={collapsedBlockIds.has(block.id)}
+              collapsible={isCollapsibleBlock(block)}
+              technologyOptions={technologyOptions}
+              onSelect={onSelect}
+              onChangeBlock={onChangeBlock}
+              onMoveUp={onMoveUp}
+              onMoveDown={onMoveDown}
+              onDuplicate={onDuplicate}
+              onCopy={onCopy}
+              onDelete={onDelete}
+              onToggleCollapsed={onToggleCollapsed}
+              onInsertAt={onInsertAt}
+            />
           ))}
         </div>
       </SortableContext>
     </DndContext>
   );
 }
+
+/**
+ * One block's row, memoized so editing one block doesn't re-render every other
+ * block on the canvas. `block-ops.ts`'s update functions leave untouched block
+ * objects referentially unchanged, so `React.memo`'s default shallow comparison
+ * already skips rows whose block didn't change — as long as the callback props
+ * below stay stable too, which is why `BlockEditor` wraps them in `useCallback`.
+ * The `() => onX(block.id)` closures live in here rather than in the `.map` above
+ * so they're only recreated when this row itself re-renders.
+ */
+const BlockRow = memo(function BlockRow({
+  block,
+  index,
+  total,
+  selected,
+  collapsed,
+  collapsible,
+  technologyOptions,
+  onSelect,
+  onChangeBlock,
+  onMoveUp,
+  onMoveDown,
+  onDuplicate,
+  onCopy,
+  onDelete,
+  onToggleCollapsed,
+  onInsertAt,
+}: {
+  block: Block;
+  index: number;
+  total: number;
+  selected: boolean;
+  collapsed: boolean;
+  collapsible: boolean;
+  technologyOptions: Array<{ id: string; label: string }>;
+  onSelect: (id: string) => void;
+  onChangeBlock: (next: Block) => void;
+  onMoveUp: (id: string) => void;
+  onMoveDown: (id: string) => void;
+  onDuplicate: (id: string) => void;
+  onCopy: (id: string) => void;
+  onDelete: (id: string) => void;
+  onToggleCollapsed: (id: string) => void;
+  onInsertAt: (index: number) => void;
+}) {
+  return (
+    <div>
+      <BlockShell
+        block={block}
+        index={index}
+        total={total}
+        selected={selected}
+        onSelect={() => onSelect(block.id)}
+        onMoveUp={() => onMoveUp(block.id)}
+        onMoveDown={() => onMoveDown(block.id)}
+        onDuplicate={() => onDuplicate(block.id)}
+        onCopy={() => onCopy(block.id)}
+        onDelete={() => onDelete(block.id)}
+        collapsible={collapsible}
+        collapsed={collapsed}
+        onToggleCollapsed={() => onToggleCollapsed(block.id)}
+      >
+        <BlockFields block={block} onChange={onChangeBlock} technologyOptions={technologyOptions} />
+      </BlockShell>
+      <InsertDivider index={index + 1} onInsert={onInsertAt} />
+    </div>
+  );
+});
 
 /** Always in the tab order (not hover-only) so a keyboard user can reach every insertion point; visually subtle until hover/focus. */
 function InsertDivider({ index, onInsert }: { index: number; onInsert: (index: number) => void }) {

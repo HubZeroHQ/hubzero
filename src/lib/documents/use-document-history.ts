@@ -28,7 +28,12 @@ export interface HistoryState {
 }
 
 export type HistoryAction =
-  | { type: 'commit'; blocks: Block[]; coalesceKey?: string; now: number }
+  | {
+      type: 'commit';
+      blocks: Block[] | ((present: Block[]) => Block[]);
+      coalesceKey?: string;
+      now: number;
+    }
   | { type: 'undo' }
   | { type: 'redo' };
 
@@ -39,18 +44,21 @@ export function createHistoryState(initialBlocks: Block[]): HistoryState {
 export function historyReducer(state: HistoryState, action: HistoryAction): HistoryState {
   switch (action.type) {
     case 'commit': {
+      const resolvedBlocks =
+        typeof action.blocks === 'function' ? action.blocks(state.present) : action.blocks;
+
       const shouldCoalesce =
         action.coalesceKey !== undefined &&
         action.coalesceKey === state.lastCoalesceKey &&
         action.now - state.lastCommitAt < COALESCE_WINDOW_MS;
 
       if (shouldCoalesce) {
-        return { ...state, present: action.blocks, lastCommitAt: action.now };
+        return { ...state, present: resolvedBlocks, lastCommitAt: action.now };
       }
 
       return {
         past: [...state.past, state.present].slice(-MAX_HISTORY_ENTRIES),
-        present: action.blocks,
+        present: resolvedBlocks,
         future: [],
         lastCoalesceKey: action.coalesceKey ?? null,
         lastCommitAt: action.now,
@@ -90,9 +98,12 @@ export function historyReducer(state: HistoryState, action: HistoryAction): Hist
 export function useDocumentHistory(initialBlocks: Block[]) {
   const [state, dispatch] = useReducer(historyReducer, initialBlocks, createHistoryState);
 
-  const commit = useCallback((blocks: Block[], coalesceKey?: string) => {
-    dispatch({ type: 'commit', blocks, coalesceKey, now: Date.now() });
-  }, []);
+  const commit = useCallback(
+    (blocks: Block[] | ((present: Block[]) => Block[]), coalesceKey?: string) => {
+      dispatch({ type: 'commit', blocks, coalesceKey, now: Date.now() });
+    },
+    [],
+  );
 
   const undo = useCallback(() => dispatch({ type: 'undo' }), []);
   const redo = useCallback(() => dispatch({ type: 'redo' }), []);

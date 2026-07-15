@@ -3,7 +3,7 @@
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { Bold, Code, Italic, Link as LinkIcon, type LucideIcon } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import type { Block } from '@/lib/documents/blocks';
 import { cn } from '@/lib/utils/cn';
 
@@ -29,6 +29,16 @@ export function RichTextFields({
   block: Extract<Block, { type: 'richText' }>;
   onChange: (next: Block) => void;
 }) {
+  // Seeds the editor once and never again — @tiptap/react's useEditor calls
+  // editor.setOptions() on every render where any option value changed
+  // (including `content`), and since `onUpdate` below writes each keystroke
+  // straight back into `block.data.html`, passing that same live value as
+  // `content` created a feedback loop (setOptions → re-render → new content
+  // prop → setOptions → ...) that blew React's update-depth limit. The
+  // guarded useEffect further down already owns syncing genuinely external
+  // changes (undo/redo, paste) into the editor.
+  const [initialHtml] = useState(() => block.data.html || '<p></p>');
+
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
@@ -46,7 +56,7 @@ export function RichTextFields({
         link: { openOnClick: false, autolink: true },
       }),
     ],
-    content: block.data.html || '<p></p>',
+    content: initialHtml,
     onUpdate: ({ editor: instance }) => {
       onChange({ ...block, data: { html: instance.getHTML() } });
     },

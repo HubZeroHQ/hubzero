@@ -74,6 +74,14 @@ export function BlockEditor({
   const insertIndexRef = useRef<number>(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Lets the row-action callbacks below stay referentially stable (empty/near-empty
+  // useCallback deps) while still always acting on the latest blocks — a ref assigned
+  // during render is guaranteed current by the time any event handler actually runs.
+  // Stability here is what lets BlockCanvas's per-row memoization (BlockRow) skip
+  // re-rendering blocks that weren't touched by a given edit.
+  const blocksRef = useRef(blocks);
+  blocksRef.current = blocks;
+
   const technologyLabels = useMemo(
     () => new Map(technologyOptions.map((option) => [option.id, option.label])),
     [technologyOptions],
@@ -95,45 +103,59 @@ export function BlockEditor({
     });
   }, []);
 
-  function openInsertMenuAt(index: number) {
+  const openInsertMenuAt = useCallback((index: number) => {
     insertIndexRef.current = index;
     setInsertMenuOpen(true);
-  }
+  }, []);
 
   function handleInsertSelect(type: BlockType) {
     const newBlock = createDefaultBlock(type);
-    commit(insertBlockAt(blocks, insertIndexRef.current, newBlock));
+    commit(insertBlockAt(blocksRef.current, insertIndexRef.current, newBlock));
     focusBlock(newBlock.id);
   }
 
-  function handleChangeBlock(next: Block) {
-    commit(updateBlockById(blocks, next.id, next), `field:${next.id}`);
-  }
+  const handleChangeBlock = useCallback(
+    (next: Block) => {
+      commit((prev) => updateBlockById(prev, next.id, next), `field:${next.id}`);
+    },
+    [commit],
+  );
 
-  function handleMoveUp(id: string) {
-    commit(moveBlockBy(blocks, id, -1));
-  }
+  const handleMoveUp = useCallback(
+    (id: string) => {
+      commit((prev) => moveBlockBy(prev, id, -1));
+    },
+    [commit],
+  );
 
-  function handleMoveDown(id: string) {
-    commit(moveBlockBy(blocks, id, 1));
-  }
+  const handleMoveDown = useCallback(
+    (id: string) => {
+      commit((prev) => moveBlockBy(prev, id, 1));
+    },
+    [commit],
+  );
 
-  function handleDuplicate(id: string) {
-    const next = duplicateBlockById(blocks, id);
-    commit(next);
-    const duplicated = next[next.findIndex((block) => block.id === id) + 1];
-    if (duplicated) {
-      focusBlock(duplicated.id);
-    }
-  }
+  const handleDuplicate = useCallback(
+    (id: string) => {
+      const next = duplicateBlockById(blocksRef.current, id);
+      commit(next);
+      const duplicated = next[next.findIndex((block) => block.id === id) + 1];
+      if (duplicated) {
+        focusBlock(duplicated.id);
+      }
+    },
+    [commit, focusBlock],
+  );
 
-  async function handleCopy(id: string) {
-    const block = blocks.find((entry) => entry.id === id);
-    if (!block || typeof navigator === 'undefined' || !navigator.clipboard) {
-      return;
-    }
-    await navigator.clipboard.writeText(serializeBlockForClipboard(block));
-  }
+  const handleCopy = useCallback((id: string) => {
+    void (async () => {
+      const block = blocksRef.current.find((entry) => entry.id === id);
+      if (!block || typeof navigator === 'undefined' || !navigator.clipboard) {
+        return;
+      }
+      await navigator.clipboard.writeText(serializeBlockForClipboard(block));
+    })();
+  }, []);
 
   async function handlePaste() {
     setPasteError(undefined);
@@ -149,28 +171,33 @@ export function BlockEditor({
         setPasteError('Clipboard doesn’t contain a copied block.');
         return;
       }
+      const current = blocksRef.current;
       const insertAfterIndex = selectedBlockId
-        ? blocks.findIndex((block) => block.id === selectedBlockId) + 1
-        : blocks.length;
-      commit(insertBlockAt(blocks, insertAfterIndex, result.data));
+        ? current.findIndex((block) => block.id === selectedBlockId) + 1
+        : current.length;
+      commit(insertBlockAt(current, insertAfterIndex, result.data));
       focusBlock(result.data.id);
     } catch {
       setPasteError('Could not read the clipboard.');
     }
   }
 
-  function handleDelete(id: string) {
-    commit(removeBlockById(blocks, id));
-    if (selectedBlockId === id) {
-      setSelectedBlockId(null);
-    }
-  }
+  const handleDelete = useCallback(
+    (id: string) => {
+      commit((prev) => removeBlockById(prev, id));
+      setSelectedBlockId((prevSelected) => (prevSelected === id ? null : prevSelected));
+    },
+    [commit],
+  );
 
-  function handleReorder(fromIndex: number, toIndex: number) {
-    commit(reorderBlocks(blocks, fromIndex, toIndex));
-  }
+  const handleReorder = useCallback(
+    (fromIndex: number, toIndex: number) => {
+      commit((prev) => reorderBlocks(prev, fromIndex, toIndex));
+    },
+    [commit],
+  );
 
-  function handleToggleCollapsed(id: string) {
+  const handleToggleCollapsed = useCallback((id: string) => {
     setCollapsedBlockIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) {
@@ -180,7 +207,7 @@ export function BlockEditor({
       }
       return next;
     });
-  }
+  }, []);
 
   useEditorShortcuts({
     containerRef,
@@ -236,7 +263,7 @@ export function BlockEditor({
             onMoveUp={handleMoveUp}
             onMoveDown={handleMoveDown}
             onDuplicate={handleDuplicate}
-            onCopy={(id) => void handleCopy(id)}
+            onCopy={handleCopy}
             onDelete={handleDelete}
             onToggleCollapsed={handleToggleCollapsed}
             onReorder={handleReorder}
