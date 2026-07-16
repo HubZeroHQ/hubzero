@@ -1,4 +1,4 @@
-import { ExternalLink, Github } from 'lucide-react';
+import { BookOpen, ExternalLink, Github } from 'lucide-react';
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
@@ -11,78 +11,50 @@ import { ReferenceIdBadge } from '@/components/ui/ReferenceIdBadge';
 import { Tag } from '@/components/ui/Tag';
 import { auth } from '@/lib/auth';
 import { canActOnEntry } from '@/lib/auth/permissions';
-import { transitionBuildStatusAction } from '@/lib/studio/actions/build';
+import { transitionBlueprintStatusAction } from '@/lib/studio/actions/blueprint';
+import { getBlueprintReferencingWork } from '@/lib/studio/blueprint-relations';
 import { canUnpublishOverride, getAvailableTransitions } from '@/lib/studio/workflow-permissions';
-import { buildRepository } from '@/lib/db/repositories/build';
+import { blueprintRepository } from '@/lib/db/repositories/blueprint';
 import { documentRepository } from '@/lib/db/repositories/document';
-import { labRepository } from '@/lib/db/repositories/lab';
 import { resolveHeroAndGallery } from '@/lib/media/resolve';
 import { taxonomyRepository } from '@/lib/db/repositories/taxonomy';
-import { workRepository } from '@/lib/db/repositories/work';
 
-export const metadata: Metadata = { title: 'Builds — HubZero Studio' };
+export const metadata: Metadata = { title: 'Blueprints — HubZero Studio' };
 
-const DEPLOYMENT_STATE_LABEL = { live: 'Live', retired: 'Retired' } as const;
-
-export default async function BuildDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function BlueprintDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const build = await buildRepository.findById(id);
-  if (!build) {
+  const blueprint = await blueprintRepository.findById(id);
+  if (!blueprint) {
     notFound();
   }
 
   const session = await auth();
   const { role, id: userId } = session!.user;
-  const canEdit = canActOnEntry(build, { role, userId });
+  const canEdit = canActOnEntry(blueprint, { role, userId });
 
-  const [
-    caseStudyDocument,
-    technicalDocument,
-    technologies,
-    labs,
-    workEntries,
-    { heroAsset, galleryAssets: gallery },
-  ] = await Promise.all([
-    documentRepository.findByOwnerAndRole('Build', id, 'caseStudy'),
-    documentRepository.findByOwnerAndRole('Build', id, 'technical'),
-    taxonomyRepository.findByKind('technology'),
-    labRepository.list(),
-    workRepository.list(),
-    resolveHeroAndGallery(build.heroImageId, build.galleryImageIds),
-  ]);
+  const [caseStudyDocument, technologies, { heroAsset, galleryAssets: gallery }, referencingWork] =
+    await Promise.all([
+      documentRepository.findByOwnerAndRole('Blueprint', id, 'caseStudy'),
+      taxonomyRepository.findByKind('technology'),
+      resolveHeroAndGallery(blueprint.heroImageId, blueprint.previewAssetIds),
+      getBlueprintReferencingWork(id),
+    ]);
 
   const technologyLabels = new Map(
     technologies.map((entry) => [entry._id.toString(), entry.label]),
   );
-  const labLabels = new Map(
-    labs.map((entry) => [
-      entry._id.toString(),
-      { label: entry.title, referenceId: entry.referenceId },
-    ]),
-  );
-  const workLabels = new Map(
-    workEntries.map((entry) => [
-      entry._id.toString(),
-      { label: entry.title, referenceId: entry.referenceId },
-    ]),
-  );
-
-  const originatingLab = build.originatingLabId
-    ? labLabels.get(build.originatingLabId.toString())
-    : undefined;
-
-  const availableTransitions = getAvailableTransitions(build.status, role, canEdit);
-  const canOverride = canUnpublishOverride(build.status, role);
-  const boundTransitionAction = transitionBuildStatusAction.bind(null, id);
+  const availableTransitions = getAvailableTransitions(blueprint.status, role, canEdit);
+  const canOverride = canUnpublishOverride(blueprint.status, role);
+  const boundTransitionAction = transitionBlueprintStatusAction.bind(null, id);
 
   return (
     <div className="flex flex-col gap-8">
       <PageHeader
-        title={build.title}
-        description={`${DEPLOYMENT_STATE_LABEL[build.deploymentState]}${build.featured ? ' · Featured' : ''}`}
+        title={blueprint.name}
+        description={`${blueprint.architecture} · ${blueprint.designLanguage} · v${blueprint.version}${blueprint.featured ? ' · Featured' : ''}`}
         actions={
           canEdit ? (
-            <ButtonLink href={`/studio/content/builds/${id}/edit`} variant="secondary">
+            <ButtonLink href={`/studio/content/blueprints/${id}/edit`} variant="secondary">
               Edit
             </ButtonLink>
           ) : undefined
@@ -91,21 +63,30 @@ export default async function BuildDetailPage({ params }: { params: Promise<{ id
 
       <div className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center gap-4">
-          <ReferenceIdBadge referenceId={build.referenceId} />
-          {build.liveUrl ? (
+          <ReferenceIdBadge referenceId={blueprint.referenceId} />
+          <a
+            href={blueprint.liveDeploymentUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="text-text-secondary hover:text-text-primary duration-fast ease-standard inline-flex items-center gap-1 text-xs transition-colors"
+          >
+            <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+            Live preview
+          </a>
+          {blueprint.docsUrl ? (
             <a
-              href={build.liveUrl}
+              href={blueprint.docsUrl}
               target="_blank"
               rel="noreferrer"
               className="text-text-secondary hover:text-text-primary duration-fast ease-standard inline-flex items-center gap-1 text-xs transition-colors"
             >
-              <ExternalLink className="h-3.5 w-3.5" aria-hidden />
-              Live deployment
+              <BookOpen className="h-3.5 w-3.5" aria-hidden />
+              Documentation
             </a>
           ) : null}
-          {build.repoUrl ? (
+          {blueprint.repoUrl ? (
             <a
-              href={build.repoUrl}
+              href={blueprint.repoUrl}
               target="_blank"
               rel="noreferrer"
               className="text-text-secondary hover:text-text-primary duration-fast ease-standard inline-flex items-center gap-1 text-xs transition-colors"
@@ -117,7 +98,7 @@ export default async function BuildDetailPage({ params }: { params: Promise<{ id
         </div>
 
         <StatusStepper
-          status={build.status}
+          status={blueprint.status}
           availableTransitions={availableTransitions}
           canUnpublishOverride={canOverride}
           onTransition={boundTransitionAction}
@@ -138,13 +119,33 @@ export default async function BuildDetailPage({ params }: { params: Promise<{ id
 
       <section className="flex flex-col gap-2">
         <h2 className="text-text-muted font-mono text-xs tracking-[0.05em] uppercase">
+          Short description
+        </h2>
+        <p className="text-text-secondary text-sm">{blueprint.shortDescription}</p>
+      </section>
+
+      {blueprint.features.length > 0 ? (
+        <section className="flex flex-col gap-2">
+          <h2 className="text-text-muted font-mono text-xs tracking-[0.05em] uppercase">
+            Features
+          </h2>
+          <ul className="text-text-secondary list-disc pl-5 text-sm">
+            {blueprint.features.map((feature) => (
+              <li key={feature}>{feature}</li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      <section className="flex flex-col gap-2">
+        <h2 className="text-text-muted font-mono text-xs tracking-[0.05em] uppercase">
           Technologies
         </h2>
-        {build.technologyIds.length === 0 ? (
+        {blueprint.technologyIds.length === 0 ? (
           <p className="text-text-muted text-sm">None tagged.</p>
         ) : (
           <div className="flex flex-wrap gap-2">
-            {build.technologyIds.map((tagId) => (
+            {blueprint.technologyIds.map((tagId) => (
               <Tag key={tagId.toString()}>
                 {technologyLabels.get(tagId.toString()) ?? 'Unknown'}
               </Tag>
@@ -178,23 +179,17 @@ export default async function BuildDetailPage({ params }: { params: Promise<{ id
         </section>
       ) : null}
 
-      {originatingLab || build.relatedWorkIds.length > 0 ? (
+      {referencingWork.length > 0 ? (
         <section className="flex flex-col gap-2">
-          <h2 className="text-text-muted font-mono text-xs tracking-[0.05em] uppercase">Related</h2>
+          <h2 className="text-text-muted font-mono text-xs tracking-[0.05em] uppercase">
+            Generalized into
+          </h2>
           <ul className="flex flex-col gap-1 text-sm">
-            {originatingLab ? (
-              <li className="text-text-secondary">
-                Graduated from: {originatingLab.label} ({originatingLab.referenceId})
+            {referencingWork.map((work) => (
+              <li key={work._id.toString()} className="text-text-secondary">
+                {work.title} ({work.referenceId})
               </li>
-            ) : null}
-            {build.relatedWorkIds.map((workId) => {
-              const work = workLabels.get(workId.toString());
-              return (
-                <li key={workId.toString()} className="text-text-secondary">
-                  {work ? `${work.label} (${work.referenceId})` : 'Unknown Work entry'}
-                </li>
-              );
-            })}
+            ))}
           </ul>
         </section>
       ) : null}
@@ -211,28 +206,7 @@ export default async function BuildDetailPage({ params }: { params: Promise<{ id
             description="The document body hasn't been written yet (PLANNING.md §25)."
             action={
               canEdit ? (
-                <ButtonLink href={`/studio/content/builds/${id}/edit`} variant="secondary">
-                  Add content
-                </ButtonLink>
-              ) : undefined
-            }
-          />
-        )}
-      </section>
-
-      <section className="flex flex-col gap-3">
-        <h2 className="text-text-muted font-mono text-xs tracking-[0.05em] uppercase">
-          Technical documentation
-        </h2>
-        {technicalDocument && technicalDocument.blocks.length > 0 ? (
-          <BlockRenderer blocks={technicalDocument.blocks} technologyLabels={technologyLabels} />
-        ) : (
-          <EmptyState
-            title="No technical documentation yet."
-            description="Architecture, technical decisions, and challenges (PLANNING.md §10) haven't been written yet."
-            action={
-              canEdit ? (
-                <ButtonLink href={`/studio/content/builds/${id}/edit`} variant="secondary">
+                <ButtonLink href={`/studio/content/blueprints/${id}/edit`} variant="secondary">
                   Add content
                 </ButtonLink>
               ) : undefined

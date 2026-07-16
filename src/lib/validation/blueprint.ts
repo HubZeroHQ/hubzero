@@ -16,11 +16,16 @@ export const blueprintSchema = z.object({
   status: publishStatusSchema.default('draft'),
   architecture: z.string().min(1),
   designLanguage: z.string().min(1),
-  description: z.string().min(1),
+  shortDescription: z.string().min(1),
   features: z.array(z.string().min(1)).default([]),
   technologyIds: z.array(objectIdString).default([]),
   liveDeploymentUrl: z.string().url(),
+  repoUrl: z.string().url().optional(),
+  docsUrl: z.string().url().optional(),
+  heroImageId: objectIdString.optional(),
   previewAssetIds: z.array(objectIdString).default([]),
+  featured: z.boolean().default(false),
+  version: z.string().min(1).default('1.0.0'),
 });
 
 export type BlueprintInput = z.infer<typeof blueprintSchema>;

@@ -4,7 +4,7 @@ import { createContentAdapter } from './content-adapter';
 export const blueprintsSearchAdapter = createContentAdapter({
   type: 'blueprints',
   label: 'Blueprints',
-  href: '/studio/content/blueprints',
+  href: (entry) => `/studio/content/blueprints/${entry._id.toString()}`,
   list: () => blueprintRepository.list(),
   getTitle: (entry) => entry.name,
   getReferenceId: (entry) => entry.referenceId,

@@ -15,8 +15,8 @@ import {
 import { getBuildRelationOptions } from '@/lib/studio/build-relations';
 import { buildRepository } from '@/lib/db/repositories/build';
 import { documentRepository } from '@/lib/db/repositories/document';
-import { mediaRepository } from '@/lib/db/repositories/media';
 import { toMediaAssetDTO } from '@/lib/media/dto';
+import { resolveHeroAndGallery } from '@/lib/media/resolve';
 
 export const metadata: Metadata = { title: 'Edit Build — HubZero Studio' };
 
@@ -45,13 +45,12 @@ export default async function EditBuildPage({ params }: { params: Promise<{ id: 
     );
   }
 
-  const [caseStudyDocument, technicalDocument, relationOptions, heroAsset, galleryAssets] =
+  const [caseStudyDocument, technicalDocument, relationOptions, { heroAsset, galleryAssets }] =
     await Promise.all([
       documentRepository.findByOwnerAndRole('Build', id, 'caseStudy'),
       documentRepository.findByOwnerAndRole('Build', id, 'technical'),
       getBuildRelationOptions(),
-      build.heroImageId ? mediaRepository.findById(build.heroImageId.toString()) : null,
-      Promise.all(build.galleryImageIds.map((imageId) => mediaRepository.findById(imageId.toString()))),
+      resolveHeroAndGallery(build.heroImageId, build.galleryImageIds),
     ]);
   const { technologyOptions, labOptions, workOptions } = relationOptions;
 
@@ -81,7 +80,7 @@ export default async function EditBuildPage({ params }: { params: Promise<{ id: 
           relatedWorkIds: build.relatedWorkIds.map((entryId) => entryId.toString()),
         }}
         initialHeroAsset={heroAsset ? toMediaAssetDTO(heroAsset) : undefined}
-        initialGalleryAssets={galleryAssets.filter((asset) => asset !== null).map(toMediaAssetDTO)}
+        initialGalleryAssets={galleryAssets.map(toMediaAssetDTO)}
         technologyOptions={technologyOptions}
         labOptions={labOptions}
         workOptions={workOptions}

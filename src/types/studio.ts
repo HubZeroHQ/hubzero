@@ -160,11 +160,22 @@ export interface Blueprint extends PublishableEntity {
   name: `Blueprint-${string}-${string}`;
   architecture: string;
   designLanguage: string;
-  description: string;
+  /** Card/list-view summary — the long-form narrative lives in the owned `caseStudy` Document (§25) instead. */
+  shortDescription: string;
   features: string[];
   technologyIds: ObjectId[];
   liveDeploymentUrl: string;
+  /** Additive beyond §26.3 — mirrors Work/Build's `repoUrl` for a public or internal repository link. */
+  repoUrl?: string;
+  /** Additive beyond §26.3 — optional standalone documentation site, distinct from the in-CMS case study Document. */
+  docsUrl?: string;
+  /** Additive beyond §26.3 — mirrors Build's `heroImageId`/`galleryImageIds` split between a lead image and supporting gallery. */
+  heroImageId?: ObjectId;
   previewAssetIds: ObjectId[];
+  /** Additive beyond §26.3 — mirrors Build's homepage "Featured" slot (PLANNING.md §8). */
+  featured: boolean;
+  /** Additive beyond §26.3 — a foundation evolves after its first release; free-form so `1.2.0` and `2024.1` both fit. */
+  version: string;
 }
 
 export interface Lab extends PublishableEntity {
