@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { ComboboxFilter } from '@/components/studio/collection/ComboboxFilter';
 import { EntryTable, type EntryTableColumn } from '@/components/studio/collection/EntryTable';
 import { FilterChip } from '@/components/studio/collection/FilterChip';
 import { Pagination } from '@/components/studio/collection/Pagination';
@@ -47,6 +48,15 @@ export default async function BlueprintsListPage({
     new Set(allEntries.map((entry) => entry.designLanguage)),
   ).sort();
 
+  // Technology is the one facet genuinely worth filtering by more than one
+  // value at a time (a Blueprint tags several technologies at once, §26.3)
+  // — encoded as a single comma-joined query value so `buildListHref` and
+  // every single-select `FilterChip`/`ComboboxFilter` on this same page
+  // need no change to support it (see `ComboboxFilter`'s own doc comment).
+  const selectedTechnologyIds = params.technology
+    ? params.technology.split(',').filter(Boolean)
+    : [];
+
   const result = filterAndPaginate<Blueprint>({
     entries: allEntries,
     query: params.q,
@@ -56,9 +66,9 @@ export default async function BlueprintsListPage({
       (entry) => (params.architecture ? entry.architecture === params.architecture : true),
       (entry) => (params.designLanguage ? entry.designLanguage === params.designLanguage : true),
       (entry) =>
-        params.technology
-          ? entry.technologyIds.some((id) => id.toString() === params.technology)
-          : true,
+        selectedTechnologyIds.length === 0
+          ? true
+          : entry.technologyIds.some((id) => selectedTechnologyIds.includes(id.toString())),
     ],
     sort: (a, b) => b.updatedAt.getTime() - a.updatedAt.getTime(),
     page: parsePage(params),
@@ -151,80 +161,53 @@ export default async function BlueprintsListPage({
         ))}
       </div>
 
-      {architectures.length > 0 ? (
-        <div className="flex flex-wrap items-center gap-2">
-          <FilterChip
-            href={buildListHref(BLUEPRINTS_LIST_PATH, params, {
-              architecture: undefined,
-              page: undefined,
-            })}
-            active={!params.architecture}
-          >
-            All architectures
-          </FilterChip>
-          {architectures.map((architecture) => (
-            <FilterChip
-              key={architecture}
-              href={buildListHref(BLUEPRINTS_LIST_PATH, params, { architecture, page: undefined })}
-              active={params.architecture === architecture}
-            >
-              {architecture}
-            </FilterChip>
-          ))}
-        </div>
-      ) : null}
+      <div className="flex flex-wrap items-center gap-3">
+        {architectures.length > 0 ? (
+          <ComboboxFilter
+            basePath={BLUEPRINTS_LIST_PATH}
+            params={params}
+            paramKey="architecture"
+            options={architectures.map((architecture) => ({
+              id: architecture,
+              label: architecture,
+            }))}
+            placeholder="All architectures"
+            searchPlaceholder="Search architectures…"
+            ariaLabel="Filter by architecture"
+          />
+        ) : null}
 
-      {designLanguages.length > 0 ? (
-        <div className="flex flex-wrap items-center gap-2">
-          <FilterChip
-            href={buildListHref(BLUEPRINTS_LIST_PATH, params, {
-              designLanguage: undefined,
-              page: undefined,
-            })}
-            active={!params.designLanguage}
-          >
-            All design languages
-          </FilterChip>
-          {designLanguages.map((designLanguage) => (
-            <FilterChip
-              key={designLanguage}
-              href={buildListHref(BLUEPRINTS_LIST_PATH, params, {
-                designLanguage,
-                page: undefined,
-              })}
-              active={params.designLanguage === designLanguage}
-            >
-              {designLanguage}
-            </FilterChip>
-          ))}
-        </div>
-      ) : null}
+        {designLanguages.length > 0 ? (
+          <ComboboxFilter
+            basePath={BLUEPRINTS_LIST_PATH}
+            params={params}
+            paramKey="designLanguage"
+            options={designLanguages.map((designLanguage) => ({
+              id: designLanguage,
+              label: designLanguage,
+            }))}
+            placeholder="All design languages"
+            searchPlaceholder="Search design languages…"
+            ariaLabel="Filter by design language"
+          />
+        ) : null}
 
-      {technologies.length > 0 ? (
-        <div className="flex flex-wrap items-center gap-2">
-          <FilterChip
-            href={buildListHref(BLUEPRINTS_LIST_PATH, params, {
-              technology: undefined,
-              page: undefined,
-            })}
-            active={!params.technology}
-          >
-            All technologies
-          </FilterChip>
-          {technologies.map((technology) => (
-            <FilterChip
-              key={technology._id.toString()}
-              href={buildListHref(BLUEPRINTS_LIST_PATH, params, {
-                technology: technology._id.toString(),
-                page: undefined,
-              })}
-              active={params.technology === technology._id.toString()}
-            >
-              {technology.label}
-            </FilterChip>
-          ))}
-        </div>
-      ) : null}
+        {technologies.length > 0 ? (
+          <ComboboxFilter
+            basePath={BLUEPRINTS_LIST_PATH}
+            params={params}
+            paramKey="technology"
+            multiple
+            options={technologies.map((technology) => ({
+              id: technology._id.toString(),
+              label: technology.label,
+            }))}
+            placeholder="All technologies"
+            searchPlaceholder="Search technologies…"
+            ariaLabel="Filter by technology"
+          />
+        ) : null}
+      </div>
 
       {result.items.length === 0 ? (
         hasAnyEntries ? (
