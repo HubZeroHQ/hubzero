@@ -14,9 +14,9 @@ import type { DocumentRole, OwnerType } from '@/lib/documents/schema';
  * Team can each hold one, §25), or one of the handful of direct
  * Cloudinary-reference fields a collection's own metadata carries
  * (`Work.heroImageId`, `Build.heroImageId`/`galleryImageIds`,
- * `Blueprint.previewAssetIds`, `Team.portraitId`). New direct-reference
- * fields are additive to `findDirectFieldUsage` below — this module never
- * needs restructuring for one.
+ * `Blueprint.heroImageId`/`previewAssetIds`, `Team.portraitId`). New
+ * direct-reference fields are additive to `findDirectFieldUsage` below —
+ * this module never needs restructuring for one.
  */
 export interface MediaUsageRef {
   ownerType: OwnerType;
@@ -137,14 +137,21 @@ async function findDirectFieldUsage(mediaId: string): Promise<MediaUsageRef[]> {
   // needs an explicit cast to express what's actually stored at runtime.
   const idMatch = { $in: [objectId, mediaId] };
 
-  const [workEntries, buildHeroEntries, buildGalleryEntries, blueprintEntries, teamEntries] =
-    await Promise.all([
-      (await collections.work()).find({ heroImageId: idMatch } as never).toArray(),
-      (await collections.builds()).find({ heroImageId: idMatch } as never).toArray(),
-      (await collections.builds()).find({ galleryImageIds: idMatch } as never).toArray(),
-      (await collections.blueprints()).find({ previewAssetIds: idMatch } as never).toArray(),
-      (await collections.team()).find({ portraitId: idMatch } as never).toArray(),
-    ]);
+  const [
+    workEntries,
+    buildHeroEntries,
+    buildGalleryEntries,
+    blueprintHeroEntries,
+    blueprintPreviewEntries,
+    teamEntries,
+  ] = await Promise.all([
+    (await collections.work()).find({ heroImageId: idMatch } as never).toArray(),
+    (await collections.builds()).find({ heroImageId: idMatch } as never).toArray(),
+    (await collections.builds()).find({ galleryImageIds: idMatch } as never).toArray(),
+    (await collections.blueprints()).find({ heroImageId: idMatch } as never).toArray(),
+    (await collections.blueprints()).find({ previewAssetIds: idMatch } as never).toArray(),
+    (await collections.team()).find({ portraitId: idMatch } as never).toArray(),
+  ]);
 
   return [
     ...workEntries.map((entry) => ({
@@ -171,7 +178,15 @@ async function findDirectFieldUsage(mediaId: string): Promise<MediaUsageRef[]> {
       field: 'galleryImage' as const,
       href: OWNER_DETAIL_PATH.Build(entry._id.toString()),
     })),
-    ...blueprintEntries.map((entry) => ({
+    ...blueprintHeroEntries.map((entry) => ({
+      ownerType: 'Blueprint' as const,
+      ownerId: entry._id.toString(),
+      label: entry.name,
+      referenceId: entry.referenceId,
+      field: 'heroImage' as const,
+      href: OWNER_DETAIL_PATH.Blueprint(entry._id.toString()),
+    })),
+    ...blueprintPreviewEntries.map((entry) => ({
       ownerType: 'Blueprint' as const,
       ownerId: entry._id.toString(),
       label: entry.name,
