@@ -17,6 +17,11 @@ export const buildSchema = z.object({
   technologyIds: z.array(objectIdString).default([]),
   originatingLabId: objectIdString.optional(),
   relatedWorkIds: z.array(objectIdString).default([]),
+  /** Additive beyond §26.2 — mirrors Work's `heroImageId` (§26.1) plus a supporting gallery (§10's "screenshots"). */
+  heroImageId: objectIdString.optional(),
+  galleryImageIds: z.array(objectIdString).default([]),
+  /** Additive beyond §26.2 — the homepage's "Featured Build" slot (PLANNING.md §8) needs one flag to query against. */
+  featured: z.boolean().default(false),
 });
 
 export type BuildInput = z.infer<typeof buildSchema>;

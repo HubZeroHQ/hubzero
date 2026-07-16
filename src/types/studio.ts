@@ -147,6 +147,11 @@ export interface Build extends PublishableEntity {
   technologyIds: ObjectId[];
   originatingLabId?: ObjectId;
   relatedWorkIds: ObjectId[];
+  /** Additive beyond PLANNING.md §26.2 — the product hero image and supporting gallery (§10's "screenshots"). */
+  heroImageId?: ObjectId;
+  galleryImageIds: ObjectId[];
+  /** Additive beyond §26.2 — surfaces a Build on the homepage's "Featured Build" slot (PLANNING.md §8). */
+  featured: boolean;
 }
 
 export interface Blueprint extends PublishableEntity {

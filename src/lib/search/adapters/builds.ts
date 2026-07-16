@@ -4,7 +4,7 @@ import { createContentAdapter } from './content-adapter';
 export const buildsSearchAdapter = createContentAdapter({
   type: 'builds',
   label: 'Builds',
-  href: '/studio/content/builds',
+  href: (entry) => `/studio/content/builds/${entry._id.toString()}`,
   list: () => buildRepository.list(),
   getTitle: (entry) => entry.title,
   getReferenceId: (entry) => entry.referenceId,
