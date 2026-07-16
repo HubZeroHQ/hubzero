@@ -3,6 +3,13 @@ import type { MediaUsageRef } from '@/lib/media/usage';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Tag } from '@/components/ui/Tag';
 
+const FIELD_LABEL: Record<Exclude<MediaUsageRef['field'], 'document'>, string> = {
+  heroImage: 'Hero image',
+  galleryImage: 'Gallery image',
+  previewAsset: 'Preview asset',
+  portrait: 'Portrait',
+};
+
 /**
  * "Where is this asset currently used?" (Phase 5 brief) — the reverse
  * relationship computed by `lib/media/usage.ts`. Shown unconditionally on
@@ -39,13 +46,7 @@ export function MediaUsagePanel({ usage }: { usage: MediaUsageRef[] }) {
             </span>
           ) : null}
           <span className="text-text-muted text-xs">
-            {ref.field === 'document'
-              ? `In ${ref.documentRole ?? 'document'}`
-              : ref.field === 'heroImage'
-                ? 'Hero image'
-                : ref.field === 'previewAsset'
-                  ? 'Preview asset'
-                  : 'Portrait'}
+            {ref.field === 'document' ? `In ${ref.documentRole ?? 'document'}` : FIELD_LABEL[ref.field]}
           </span>
         </li>
       ))}

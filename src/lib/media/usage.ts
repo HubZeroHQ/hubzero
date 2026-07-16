@@ -13,16 +13,17 @@ import type { DocumentRole, OwnerType } from '@/lib/documents/schema';
  * `image`/`imageGallery` blocks (any owner — Work/Build/Blueprint/Lab/Note/
  * Team can each hold one, §25), or one of the handful of direct
  * Cloudinary-reference fields a collection's own metadata carries
- * (`Work.heroImageId`, `Blueprint.previewAssetIds`, `Team.portraitId`).
- * New direct-reference fields are additive to `DIRECT_FIELD_CHECKS` below —
- * this module never needs restructuring for one.
+ * (`Work.heroImageId`, `Build.heroImageId`/`galleryImageIds`,
+ * `Blueprint.previewAssetIds`, `Team.portraitId`). New direct-reference
+ * fields are additive to `findDirectFieldUsage` below — this module never
+ * needs restructuring for one.
  */
 export interface MediaUsageRef {
   ownerType: OwnerType;
   ownerId: string;
   label: string;
   referenceId?: string;
-  field: 'document' | 'heroImage' | 'previewAsset' | 'portrait';
+  field: 'document' | 'heroImage' | 'galleryImage' | 'previewAsset' | 'portrait';
   documentRole?: DocumentRole;
   href: string;
 }
@@ -126,11 +127,24 @@ async function findDirectFieldUsage(mediaId: string): Promise<MediaUsageRef[]> {
     return [];
   }
 
-  const [workEntries, blueprintEntries, teamEntries] = await Promise.all([
-    (await collections.work()).find({ heroImageId: objectId }).toArray(),
-    (await collections.blueprints()).find({ previewAssetIds: objectId }).toArray(),
-    (await collections.team()).find({ portraitId: objectId }).toArray(),
-  ]);
+  // Relation fields validated through `objectIdString` (`lib/validation/shared.ts`)
+  // persist as plain hex strings, not real `ObjectId`s — a pre-existing
+  // repository-layer gap (`createRepository` never converts them) that
+  // predates this module. Matching both representations keeps this query
+  // correct today without depending on a fix to that shared layer, and stays
+  // correct if a future migration starts storing real `ObjectId`s. The
+  // declared collection types say these fields are `ObjectId`, so the filter
+  // needs an explicit cast to express what's actually stored at runtime.
+  const idMatch = { $in: [objectId, mediaId] };
+
+  const [workEntries, buildHeroEntries, buildGalleryEntries, blueprintEntries, teamEntries] =
+    await Promise.all([
+      (await collections.work()).find({ heroImageId: idMatch } as never).toArray(),
+      (await collections.builds()).find({ heroImageId: idMatch } as never).toArray(),
+      (await collections.builds()).find({ galleryImageIds: idMatch } as never).toArray(),
+      (await collections.blueprints()).find({ previewAssetIds: idMatch } as never).toArray(),
+      (await collections.team()).find({ portraitId: idMatch } as never).toArray(),
+    ]);
 
   return [
     ...workEntries.map((entry) => ({
@@ -140,6 +154,22 @@ async function findDirectFieldUsage(mediaId: string): Promise<MediaUsageRef[]> {
       referenceId: entry.referenceId,
       field: 'heroImage' as const,
       href: OWNER_DETAIL_PATH.Work(entry._id.toString()),
+    })),
+    ...buildHeroEntries.map((entry) => ({
+      ownerType: 'Build' as const,
+      ownerId: entry._id.toString(),
+      label: entry.title,
+      referenceId: entry.referenceId,
+      field: 'heroImage' as const,
+      href: OWNER_DETAIL_PATH.Build(entry._id.toString()),
+    })),
+    ...buildGalleryEntries.map((entry) => ({
+      ownerType: 'Build' as const,
+      ownerId: entry._id.toString(),
+      label: entry.title,
+      referenceId: entry.referenceId,
+      field: 'galleryImage' as const,
+      href: OWNER_DETAIL_PATH.Build(entry._id.toString()),
     })),
     ...blueprintEntries.map((entry) => ({
       ownerType: 'Blueprint' as const,
