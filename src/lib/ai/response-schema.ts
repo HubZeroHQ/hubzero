@@ -22,6 +22,24 @@ const stringProp: Schema = { type: Type.STRING };
 const optionalStringProp: Schema = { type: Type.STRING, nullable: true };
 const numberProp: Schema = { type: Type.NUMBER };
 
+/**
+ * Gemini only treats `enum` as an actual constraint when `format: 'enum'` is
+ * also set — undocumented in the TS types themselves, but explicit in the
+ * API's own field description ("To mark a field as an enum, set `format` to
+ * `enum` and provide the list of possible values in `enum`"). Every `enum`
+ * usage in this file goes through this helper specifically so that
+ * requirement can never be silently dropped again — an earlier version of
+ * this schema set bare `enum` arrays with no `format`, which meant Gemini
+ * was never actually constrained to emit a valid `type` discriminator, a
+ * valid heading `level`, or a valid callout `tone`; the real
+ * `blockSchema.safeParse()` gate in `service.ts` was silently absorbing the
+ * resulting mismatches by dropping the block, most visibly heading blocks
+ * losing their level.
+ */
+function enumSchema(type: Type, values: string[]): Schema {
+  return { type, format: 'enum', enum: values };
+}
+
 function blockShape(
   type: string,
   dataProperties: Record<string, Schema>,
@@ -31,7 +49,7 @@ function blockShape(
     type: Type.OBJECT,
     properties: {
       id: stringProp,
-      type: { type: Type.STRING, enum: [type] },
+      type: enumSchema(Type.STRING, [type]),
       data: {
         type: Type.OBJECT,
         properties: dataProperties,
@@ -43,11 +61,10 @@ function blockShape(
 }
 
 const BLOCK_SCHEMAS: Schema[] = [
-  blockShape(
-    'heading',
-    { level: { type: Type.INTEGER, enum: ['2', '3', '4'] }, text: stringProp },
-    ['level', 'text'],
-  ),
+  blockShape('heading', { level: enumSchema(Type.INTEGER, ['2', '3', '4']), text: stringProp }, [
+    'level',
+    'text',
+  ]),
   blockShape('paragraph', { text: stringProp }, ['text']),
   blockShape('markdown', { markdown: stringProp }, ['markdown']),
   blockShape('richText', { html: stringProp }, ['html']),
@@ -81,7 +98,7 @@ const BLOCK_SCHEMAS: Schema[] = [
   blockShape('divider', {}),
   blockShape(
     'callout',
-    { text: stringProp, tone: { type: Type.STRING, enum: ['neutral', 'warning', 'success'] } },
+    { text: stringProp, tone: enumSchema(Type.STRING, ['neutral', 'warning', 'success']) },
     ['text', 'tone'],
   ),
   blockShape(
