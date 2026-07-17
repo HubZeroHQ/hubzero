@@ -4,7 +4,7 @@
 
 **Scope:** Public destinations, navigation, relationships, journeys, and Studio-to-public mapping
 
-This architecture treats routes as addressable views over a connected publishing system. It does not treat them as independent marketing pages.
+This architecture treats routes as addressable views over a connected publishing system. It does not treat them as independent marketing pages. [PUBLIC_DATA_LAYER.md](PUBLIC_DATA_LAYER.md) is canonical for how Studio records become the visibility-safe public objects consumed by these routes, relationships, indexes, and discovery surfaces.
 
 ## Structural model
 
@@ -125,7 +125,7 @@ Do not infer human contribution from `createdByUserId`. That field is provenance
 Services ─────────────── proven by ─────────► all four pillars
 ```
 
-Relations should be queryable and reciprocal. When Studio stores only one direction, the public query layer derives the inverse; editors must never maintain two copies of the same relationship.
+Relations should be queryable and reciprocal. When Studio stores only one direction, the public read layer defined in [PUBLIC_DATA_LAYER.md](PUBLIC_DATA_LAYER.md) derives the inverse; editors must never maintain two copies of the same relationship.
 
 ## Entry and exit rules
 
@@ -179,7 +179,7 @@ The reusable foundation is evaluated before a sales conversation begins.
 
 ## Studio-to-public mapping
 
-Studio owns records and documents. The public layer owns presentation, sequence, and derived navigation.
+Studio owns records and documents. The public layer owns presentation, sequence, and derived navigation. The mapping below is delivered through public DTOs and resolvers in [PUBLIC_DATA_LAYER.md](PUBLIC_DATA_LAYER.md), never through direct collection access from a route or component.
 
 | Studio type | Public appearance | Editable in Studio | Handcrafted/derived publicly |
 |---|---|---|---|
@@ -213,11 +213,13 @@ Do not overload Services, Notes, or Documents to simulate global settings. If ed
 
 ## Publishing and visibility rules
 
+[PUBLIC_DATA_LAYER.md](PUBLIC_DATA_LAYER.md#canonical-visibility) owns the complete, fail-closed predicate. The rules below summarize its public-information-architecture consequences:
+
 - Only `published` full-workflow records and `published` Services render publicly.
 - Team requires `publicProfile: true`; Engineering Profiles additionally require their own `published` status.
 - A published Engineering Profile whose Team record is not public must not render; Studio should surface this mismatch before public implementation.
 - Archived or draft relation targets do not render as links. The source content remains readable without a broken relationship.
-- Search, indexes, sitemaps, feeds, and relationship queries use the same public visibility predicate.
+- Search, indexes, Homepage queries, sitemaps, feeds, structured data, and relationship queries consume the same public visibility predicate and read models.
 - Featured flags influence curation only; they never bypass publication status.
 
 ## Discoverability
@@ -227,7 +229,7 @@ Do not overload Services, Notes, or Documents to simulate global settings. If ed
 - Structured data reflects real types and available facts; no fabricated ratings, metrics, or authorship.
 - Notes, Labs, and Engineering Profiles target question-, decision-, and practitioner-shaped discovery, not keyword volume.
 - Internal links are generated only from explicit relations, authorship, shared taxonomy where useful, and editorial curation.
-- Public search indexes lightweight metadata first. Full-document search may be added later without changing the palette contract.
+- Public search indexes a lightweight discovery projection from the public read layer first. Full-document search may be added later without changing the palette contract or querying raw Studio blocks.
 
 ## Decisions requiring approval
 
@@ -236,3 +238,4 @@ Do not overload Services, Notes, or Documents to simulate global settings. If ed
 3. Keep Services public and discoverable but contextual rather than permanently primary.
 4. Keep global positioning handcrafted until a typed Studio settings model is separately approved.
 5. Do not expose inferred contributors until Studio has explicit contribution relationships.
+6. Require every public route and discovery surface to consume `PUBLIC_DATA_LAYER.md` contracts rather than Studio collections.

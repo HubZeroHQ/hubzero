@@ -191,7 +191,7 @@ Reduced motion uses a direct route change with the same anchor information visib
 
 ### Authorship and contribution
 
-Notes have an explicit User author. Public bylines may resolve User → Team → Engineering Profile when those links and visibility conditions exist.
+Notes have an explicit User author. Public bylines resolve through the safe Author DTO path in [PUBLIC_DATA_LAYER.md](PUBLIC_DATA_LAYER.md#author-resolution): User → public Team → published Engineering Profile when those links and visibility conditions exist.
 
 Other content types currently store `createdByUserId` for provenance and authorization. This must not be presented as public contribution credit. A future explicit contributor relation is required before Work, Builds, Blueprints, or Labs can name individual contributors reliably.
 

@@ -6,7 +6,7 @@
 
 **Depends on:** `AGENTS.md`, `.hubzero/agents/AGENTS.md`, `PLANNING.md`, `CMS_PRODUCT_DESIGN.md`, and `DESIGN_SYSTEM.md`
 
-This document defines the long-term character of HubZero's public experience. It does not authorize implementation. The detailed structure lives in [PUBLIC_INFORMATION_ARCHITECTURE.md](PUBLIC_INFORMATION_ARCHITECTURE.md), the time-based story in [PUBLIC_NARRATIVE.md](PUBLIC_NARRATIVE.md), motion in [MOTION_GUIDELINES.md](MOTION_GUIDELINES.md), engineering identity in [ENGINEERING_IDENTITY.md](ENGINEERING_IDENTITY.md), and sequencing in [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md).
+This document defines the long-term character of HubZero's public experience. It does not authorize implementation. The detailed structure lives in [PUBLIC_INFORMATION_ARCHITECTURE.md](PUBLIC_INFORMATION_ARCHITECTURE.md), the Studio-to-public read boundary in [PUBLIC_DATA_LAYER.md](PUBLIC_DATA_LAYER.md), the time-based story in [PUBLIC_NARRATIVE.md](PUBLIC_NARRATIVE.md), motion in [MOTION_GUIDELINES.md](MOTION_GUIDELINES.md), engineering identity in [ENGINEERING_IDENTITY.md](ENGINEERING_IDENTITY.md), and sequencing in [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md).
 
 ## Experience thesis
 
@@ -159,7 +159,7 @@ Phase 12 is not a restatement of the earlier page plan. It tests several assumpt
 
 ## Content governance
 
-Studio is the source of truth for collection content. Templates, narrative order, relationship labels, global positioning, legal copy, and conversion framing remain handcrafted until a deliberate global-settings model is approved.
+Studio is the source of truth for collection content. The public website receives that content only through the visibility-safe read models defined in [PUBLIC_DATA_LAYER.md](PUBLIC_DATA_LAYER.md); public components never consume Studio collections or persistence records directly. Templates, narrative order, relationship labels, global positioning, legal copy, and conversion framing remain handcrafted until a deliberate global-settings model is approved.
 
 This boundary prevents two failures:
 
@@ -189,4 +189,5 @@ Raw time-on-site is not a success signal by itself. Ten minutes spent lost is wo
 4. Keep Services evidence-led and subordinate in the long-term global navigation.
 5. Treat Engineering Profiles as earned evidence records, distinct from Team biographies.
 6. Keep global framing handcrafted until a dedicated Studio model is intentionally designed.
-7. Approve the implementation sequence only after this documentation set is reviewed.
+7. Adopt `PUBLIC_DATA_LAYER.md` as the canonical boundary between Studio and every public consumer.
+8. Approve the Homepage-first implementation sequence only after this documentation set is reviewed.
