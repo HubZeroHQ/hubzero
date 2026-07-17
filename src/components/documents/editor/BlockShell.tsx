@@ -32,6 +32,8 @@ export function BlockShell({
   collapsible,
   collapsed,
   onToggleCollapsed,
+  aiMenu,
+  aiBadge,
   children,
 }: {
   block: Block;
@@ -47,6 +49,10 @@ export function BlockShell({
   collapsible: boolean;
   collapsed: boolean;
   onToggleCollapsed: () => void;
+  /** The per-block AI actions trigger (`AiBlockMenu`), slotted in as a plain `ReactNode` so this shell stays feature-agnostic rather than importing AI-specific types directly. Absent entirely when no AI config was supplied or the block type has no applicable instructions. */
+  aiMenu?: ReactNode;
+  /** The "AI-generated — review" flag (`AiGeneratedBadge`) for a just-inserted/transformed block, rendered above the field editor. */
+  aiBadge?: ReactNode;
   children: ReactNode;
 }) {
   const catalogEntry = getBlockCatalogEntry(block.type);
@@ -86,6 +92,7 @@ export function BlockShell({
         </div>
 
         <div className="flex shrink-0 items-center gap-0.5">
+          {aiMenu}
           {collapsible ? (
             <Button
               variant="ghost"
@@ -159,7 +166,10 @@ export function BlockShell({
       {collapsed ? (
         <p className="text-text-muted px-3 pt-1 pb-3 text-xs">Collapsed — expand to edit.</p>
       ) : (
-        <div className="p-3 pt-2">{children}</div>
+        <>
+          {aiBadge}
+          <div className="p-3 pt-2">{children}</div>
+        </>
       )}
     </div>
   );

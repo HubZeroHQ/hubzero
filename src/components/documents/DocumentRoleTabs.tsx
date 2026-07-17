@@ -4,6 +4,7 @@ import { useState } from 'react';
 import type { Block } from '@/lib/documents/blocks';
 import type { DocumentRole } from '@/lib/documents/schema';
 import { cn } from '@/lib/utils/cn';
+import type { BlockEditorAiConfig } from './ai/types';
 import { BlockEditor, type BlockEditorSaveResult } from './BlockEditor';
 
 export interface DocumentRoleTab {
@@ -11,6 +12,8 @@ export interface DocumentRoleTab {
   label: string;
   initialBlocks: Block[];
   onSave: (blocks: Block[]) => Promise<BlockEditorSaveResult>;
+  /** Omit to hide every AI affordance for this specific Document role — each tab opts in independently, same as `BlockEditor`'s own `ai` prop. */
+  ai?: BlockEditorAiConfig;
 }
 
 /**
@@ -50,6 +53,7 @@ export function DocumentRoleTabs({
         initialBlocks={activeTab.initialBlocks}
         onSave={activeTab.onSave}
         technologyOptions={technologyOptions}
+        ai={activeTab.ai}
       />
     );
   }
@@ -85,6 +89,7 @@ export function DocumentRoleTabs({
         initialBlocks={activeTab.initialBlocks}
         onSave={activeTab.onSave}
         technologyOptions={technologyOptions}
+        ai={activeTab.ai}
       />
     </div>
   );

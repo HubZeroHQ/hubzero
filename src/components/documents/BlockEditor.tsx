@@ -1,6 +1,6 @@
 'use client';
 
-import { ClipboardPaste, Eye, Pencil, Redo2, Undo2 } from 'lucide-react';
+import { ClipboardPaste, Eye, Pencil, Redo2, Sparkles, Undo2 } from 'lucide-react';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import {
@@ -17,10 +17,13 @@ import {
 } from '@/lib/documents/block-ops';
 import type { Block, BlockType } from '@/lib/documents/blocks';
 import { blockSchema } from '@/lib/documents/blocks';
+import { deriveDocumentOutline } from '@/lib/documents/ai-summarize';
 import { useAutosave } from '@/lib/documents/use-autosave';
 import { useDocumentHistory } from '@/lib/documents/use-document-history';
 import { validateDocument } from '@/lib/documents/validation';
 import { cn } from '@/lib/utils/cn';
+import { GenerateContentPanel } from './ai/GenerateContentPanel';
+import type { BlockEditorAiConfig } from './ai/types';
 import { BlockCanvas } from './editor/BlockCanvas';
 import { BlockInsertMenu } from './editor/BlockInsertMenu';
 import { BlockInspector } from './editor/BlockInspector';
@@ -57,10 +60,13 @@ export function BlockEditor({
   initialBlocks,
   onSave,
   technologyOptions = [],
+  ai,
 }: {
   initialBlocks: Block[];
   onSave: (blocks: Block[]) => Promise<BlockEditorSaveResult>;
   technologyOptions?: Array<{ id: string; label: string }>;
+  /** Omit entirely to hide every AI affordance — AI assistance stays strictly opt-in per call site (CMS_PRODUCT_DESIGN.md §30). */
+  ai?: BlockEditorAiConfig;
 }) {
   const { blocks, commit, undo, redo, canUndo, canRedo } = useDocumentHistory(initialBlocks);
   const autosave = useAutosave({ blocks, onSave });
@@ -70,9 +76,13 @@ export function BlockEditor({
   const [insertMenuOpen, setInsertMenuOpen] = useState(false);
   const [previewMode, setPreviewMode] = useState(false);
   const [pasteError, setPasteError] = useState<string | undefined>();
+  const [generatePanelOpen, setGeneratePanelOpen] = useState(false);
+  const [aiGeneratedBlockIds, setAiGeneratedBlockIds] = useState<Set<string>>(new Set());
 
   const insertIndexRef = useRef<number>(0);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const outline = useMemo(() => deriveDocumentOutline(blocks), [blocks]);
 
   // Lets the row-action callbacks below stay referentially stable (empty/near-empty
   // useCallback deps) while still always acting on the latest blocks — a ref assigned
@@ -209,6 +219,64 @@ export function BlockEditor({
     });
   }, []);
 
+  const flagAiGenerated = useCallback((newBlocks: Block[]) => {
+    setAiGeneratedBlockIds((prev) => {
+      const next = new Set(prev);
+      newBlocks.forEach((block) => next.add(block.id));
+      return next;
+    });
+  }, []);
+
+  const handleDismissAiFlag = useCallback((id: string) => {
+    setAiGeneratedBlockIds((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+  }, []);
+
+  /** Replaces `targetId`'s block with one or more AI-returned blocks — every per-block/slash-command AI action except "generate alternatives" (`AiBlockMenu`, `TextBlockField`). */
+  const handleReplaceBlock = useCallback(
+    (targetId: string, newBlocks: Block[]) => {
+      commit((prev) => {
+        const index = prev.findIndex((block) => block.id === targetId);
+        if (index === -1) return prev;
+        const next = [...prev];
+        next.splice(index, 1, ...newBlocks);
+        return next;
+      });
+      flagAiGenerated(newBlocks);
+      if (newBlocks[0]) focusBlock(newBlocks[0].id);
+    },
+    [commit, flagAiGenerated, focusBlock],
+  );
+
+  /** Inserts AI-returned blocks right after `targetId`, keeping the original in place — "generate alternatives," so the author picks between real candidates rather than losing the source. */
+  const handleInsertAfterBlock = useCallback(
+    (targetId: string, newBlocks: Block[]) => {
+      commit((prev) => {
+        const index = prev.findIndex((block) => block.id === targetId);
+        if (index === -1) return prev;
+        const next = [...prev];
+        next.splice(index + 1, 0, ...newBlocks);
+        return next;
+      });
+      flagAiGenerated(newBlocks);
+      if (newBlocks[0]) focusBlock(newBlocks[0].id);
+    },
+    [commit, flagAiGenerated, focusBlock],
+  );
+
+  /** The "Generate content" panel's result — replaces the (typically empty) document outright, or appends to the end of an already-started one. */
+  const handleWholeDocumentGenerated = useCallback(
+    (newBlocks: Block[]) => {
+      commit((prev) => (prev.length === 0 ? newBlocks : [...prev, ...newBlocks]));
+      flagAiGenerated(newBlocks);
+      if (newBlocks[0]) focusBlock(newBlocks[0].id);
+    },
+    [commit, flagAiGenerated, focusBlock],
+  );
+
   useEditorShortcuts({
     containerRef,
     onUndo: undo,
@@ -233,7 +301,19 @@ export function BlockEditor({
         onPaste={() => void handlePaste()}
         previewMode={previewMode}
         onTogglePreview={() => setPreviewMode((prev) => !prev)}
+        onGenerate={ai ? () => setGeneratePanelOpen(true) : undefined}
       />
+
+      {ai ? (
+        <GenerateContentPanel
+          open={generatePanelOpen}
+          onOpenChange={setGeneratePanelOpen}
+          contentTypeLabel={ai.contentTypeLabel}
+          currentOutline={outline}
+          onGenerate={ai.generateDocument}
+          onInserted={(newBlocks) => handleWholeDocumentGenerated(newBlocks)}
+        />
+      ) : null}
 
       {pasteError ? (
         <p role="alert" className="text-danger text-xs">
@@ -268,6 +348,12 @@ export function BlockEditor({
             onToggleCollapsed={handleToggleCollapsed}
             onReorder={handleReorder}
             onInsertAt={openInsertMenuAt}
+            ai={ai}
+            outline={outline}
+            aiGeneratedBlockIds={aiGeneratedBlockIds}
+            onDismissAiFlag={handleDismissAiFlag}
+            onReplaceBlock={handleReplaceBlock}
+            onInsertAfterBlock={handleInsertAfterBlock}
           />
 
           <aside className="border-border-muted flex flex-col divide-y divide-[color:var(--color-border-muted)] border-l lg:sticky lg:top-4 lg:h-fit">
@@ -308,6 +394,7 @@ function EditorHeader({
   onPaste,
   previewMode,
   onTogglePreview,
+  onGenerate,
 }: {
   autosaveStatus: 'idle' | 'dirty' | 'saving' | 'saved' | 'invalid' | 'error';
   autosaveError?: string;
@@ -321,6 +408,8 @@ function EditorHeader({
   onPaste: () => void;
   previewMode: boolean;
   onTogglePreview: () => void;
+  /** Omitted entirely when the editor has no `ai` config — the "Generate content" entry is opt-in per call site, not a default toolbar fixture (CMS_PRODUCT_DESIGN.md §30). */
+  onGenerate?: () => void;
 }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">
@@ -359,6 +448,18 @@ function EditorHeader({
         >
           <ClipboardPaste className="h-3.5 w-3.5" aria-hidden />
         </Button>
+        {onGenerate ? (
+          <Button
+            variant="secondary"
+            type="button"
+            onClick={onGenerate}
+            disabled={previewMode}
+            title="Generate content with AI"
+          >
+            <Sparkles className="h-3.5 w-3.5" aria-hidden />
+            Generate content
+          </Button>
+        ) : null}
         <Button variant="secondary" type="button" onClick={onTogglePreview}>
           {previewMode ? (
             <>

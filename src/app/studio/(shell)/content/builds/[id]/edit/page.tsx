@@ -8,8 +8,16 @@ import { ErrorState } from '@/components/ui/ErrorState';
 import { auth } from '@/lib/auth';
 import { canActOnEntry } from '@/lib/auth/permissions';
 import {
+  generateBuildCaseStudyBlockAction,
+  generateBuildCaseStudyDocumentAction,
+  generateBuildTechnicalBlockAction,
+  generateBuildTechnicalDocumentAction,
   saveBuildCaseStudyAction,
   saveBuildTechnicalAction,
+  transformBuildCaseStudyBlockAction,
+  transformBuildCaseStudySelectionAction,
+  transformBuildTechnicalBlockAction,
+  transformBuildTechnicalSelectionAction,
   updateBuildAction,
 } from '@/lib/studio/actions/build';
 import { getBuildRelationOptions } from '@/lib/studio/build-relations';
@@ -57,6 +65,20 @@ export default async function EditBuildPage({ params }: { params: Promise<{ id: 
   const boundUpdateAction = updateBuildAction.bind(null, id);
   const boundSaveCaseStudyAction = saveBuildCaseStudyAction.bind(null, id);
   const boundSaveTechnicalAction = saveBuildTechnicalAction.bind(null, id);
+  const caseStudyAiConfig = {
+    contentTypeLabel: 'case study',
+    generateDocument: generateBuildCaseStudyDocumentAction.bind(null, id),
+    generateBlock: generateBuildCaseStudyBlockAction.bind(null, id),
+    transformBlock: transformBuildCaseStudyBlockAction.bind(null, id),
+    transformSelection: transformBuildCaseStudySelectionAction.bind(null, id),
+  };
+  const technicalAiConfig = {
+    contentTypeLabel: 'technical documentation',
+    generateDocument: generateBuildTechnicalDocumentAction.bind(null, id),
+    generateBlock: generateBuildTechnicalBlockAction.bind(null, id),
+    transformBlock: transformBuildTechnicalBlockAction.bind(null, id),
+    transformSelection: transformBuildTechnicalSelectionAction.bind(null, id),
+  };
 
   return (
     <div className="flex flex-col gap-10">
@@ -97,12 +119,14 @@ export default async function EditBuildPage({ params }: { params: Promise<{ id: 
               label: 'Case Study',
               initialBlocks: caseStudyDocument?.blocks ?? [],
               onSave: boundSaveCaseStudyAction,
+              ai: caseStudyAiConfig,
             },
             {
               role: 'technical',
               label: 'Technical',
               initialBlocks: technicalDocument?.blocks ?? [],
               onSave: boundSaveTechnicalAction,
+              ai: technicalAiConfig,
             },
           ]}
           technologyOptions={technologyOptions}

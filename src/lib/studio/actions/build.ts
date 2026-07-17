@@ -6,6 +6,12 @@ import {
   createEntryTransitionAction,
   createEntryUpdateAction,
 } from '@/lib/studio/entry-actions';
+import {
+  createGenerateBlockAction,
+  createGenerateDocumentAction,
+  createTransformBlockAction,
+  createTransformSelectionAction,
+} from '@/lib/studio/generate-content-actions';
 import { buildRepository } from '@/lib/db/repositories/build';
 import type { BuildInput } from '@/lib/validation/build';
 import type { Build } from '@/types/studio';
@@ -29,7 +35,9 @@ function readBuildMetadataFields(formData: FormData) {
   return {
     title: String(formData.get('title') ?? ''),
     slug: String(formData.get('slug') ?? ''),
-    deploymentState: String(formData.get('deploymentState') ?? 'live') as BuildInput['deploymentState'],
+    deploymentState: String(
+      formData.get('deploymentState') ?? 'live',
+    ) as BuildInput['deploymentState'],
     technologyIds: formData.getAll('technologyIds').map(String),
     relatedWorkIds: formData.getAll('relatedWorkIds').map(String),
     galleryImageIds: formData.getAll('galleryImageIds').map(String),
@@ -101,4 +109,46 @@ export const saveBuildTechnicalAction = createDocumentSaveAction<Build>({
   role: 'technical',
   findOwnerById: buildRepository.findById,
   detailPath: buildDetailPath,
+});
+
+export const generateBuildCaseStudyDocumentAction = createGenerateDocumentAction<Build>({
+  ownerType: 'Build',
+  role: 'caseStudy',
+  findOwnerById: buildRepository.findById,
+});
+export const generateBuildCaseStudyBlockAction = createGenerateBlockAction<Build>({
+  ownerType: 'Build',
+  role: 'caseStudy',
+  findOwnerById: buildRepository.findById,
+});
+export const transformBuildCaseStudyBlockAction = createTransformBlockAction<Build>({
+  ownerType: 'Build',
+  role: 'caseStudy',
+  findOwnerById: buildRepository.findById,
+});
+export const transformBuildCaseStudySelectionAction = createTransformSelectionAction<Build>({
+  ownerType: 'Build',
+  role: 'caseStudy',
+  findOwnerById: buildRepository.findById,
+});
+
+export const generateBuildTechnicalDocumentAction = createGenerateDocumentAction<Build>({
+  ownerType: 'Build',
+  role: 'technical',
+  findOwnerById: buildRepository.findById,
+});
+export const generateBuildTechnicalBlockAction = createGenerateBlockAction<Build>({
+  ownerType: 'Build',
+  role: 'technical',
+  findOwnerById: buildRepository.findById,
+});
+export const transformBuildTechnicalBlockAction = createTransformBlockAction<Build>({
+  ownerType: 'Build',
+  role: 'technical',
+  findOwnerById: buildRepository.findById,
+});
+export const transformBuildTechnicalSelectionAction = createTransformSelectionAction<Build>({
+  ownerType: 'Build',
+  role: 'technical',
+  findOwnerById: buildRepository.findById,
 });
