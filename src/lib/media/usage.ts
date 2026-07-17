@@ -143,6 +143,8 @@ async function findDirectFieldUsage(mediaId: string): Promise<MediaUsageRef[]> {
     buildGalleryEntries,
     blueprintHeroEntries,
     blueprintPreviewEntries,
+    labHeroEntries,
+    labGalleryEntries,
     teamEntries,
   ] = await Promise.all([
     (await collections.work()).find({ heroImageId: idMatch } as never).toArray(),
@@ -150,6 +152,8 @@ async function findDirectFieldUsage(mediaId: string): Promise<MediaUsageRef[]> {
     (await collections.builds()).find({ galleryImageIds: idMatch } as never).toArray(),
     (await collections.blueprints()).find({ heroImageId: idMatch } as never).toArray(),
     (await collections.blueprints()).find({ previewAssetIds: idMatch } as never).toArray(),
+    (await collections.labs()).find({ heroImageId: idMatch } as never).toArray(),
+    (await collections.labs()).find({ galleryImageIds: idMatch } as never).toArray(),
     (await collections.team()).find({ portraitId: idMatch } as never).toArray(),
   ]);
 
@@ -193,6 +197,22 @@ async function findDirectFieldUsage(mediaId: string): Promise<MediaUsageRef[]> {
       referenceId: entry.referenceId,
       field: 'previewAsset' as const,
       href: OWNER_DETAIL_PATH.Blueprint(entry._id.toString()),
+    })),
+    ...labHeroEntries.map((entry) => ({
+      ownerType: 'Lab' as const,
+      ownerId: entry._id.toString(),
+      label: entry.title,
+      referenceId: entry.referenceId,
+      field: 'heroImage' as const,
+      href: OWNER_DETAIL_PATH.Lab(entry._id.toString()),
+    })),
+    ...labGalleryEntries.map((entry) => ({
+      ownerType: 'Lab' as const,
+      ownerId: entry._id.toString(),
+      label: entry.title,
+      referenceId: entry.referenceId,
+      field: 'galleryImage' as const,
+      href: OWNER_DETAIL_PATH.Lab(entry._id.toString()),
     })),
     ...teamEntries.map((entry) => ({
       ownerType: 'Team' as const,
