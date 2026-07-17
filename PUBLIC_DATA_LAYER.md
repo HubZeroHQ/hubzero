@@ -1,10 +1,10 @@
 # Public Data Layer
 
-**Status:** Phase 12 architecture proposal — documentation only
+**Status:** Phase 12 architecture, refined by Phase 13 public contracts — documentation only
 
 **Scope:** The canonical read architecture between Studio and every public HubZero surface
 
-This document defines how Studio powers the public website. `PLANNING.md` and `CMS_PRODUCT_DESIGN.md` remain canonical for Studio's write model, workflows, and permissions. This document is canonical for public reads, visibility, resolution, caching, and delivery.
+This document defines how Studio powers the public website. `PLANNING.md` and `CMS_PRODUCT_DESIGN.md` remain canonical for Studio's write model, workflows, and permissions. This document is canonical for public-read architecture, resolution, caching, and delivery. Phase 13 makes its field-level DTO contract explicit in [PUBLIC_DTO_SPECIFICATION.md](PUBLIC_DTO_SPECIFICATION.md), its one visibility predicate explicit in [VISIBILITY_RULES.md](VISIBILITY_RULES.md), and its relationship normalization explicit in [RELATIONSHIP_AUDIT.md](RELATIONSHIP_AUDIT.md).
 
 ## Purpose
 
@@ -83,6 +83,8 @@ Public route modules, search builders, sitemap generators, feeds, and structured
 
 A public DTO is a deliberate allow-list, not a Studio object with a few fields deleted.
 
+[PUBLIC_DTO_SPECIFICATION.md](PUBLIC_DTO_SPECIFICATION.md) is the canonical field-level allow-list for every collection and supporting object. The families below describe the architectural roles those concrete contracts fulfill.
+
 Every DTO must be:
 
 - safe to serialize and cache;
@@ -151,14 +153,14 @@ Notes store authorship against a Studio User. The public read layer resolves the
 ```text
 Note.authorId
     ↓ internal User lookup
-public Team record linked by userId?
-    ├─ no  → public author name allowed by the approved fallback contract
+exactly one public Team record linked by userId?
+    ├─ no  → HubZero organization Author linking to About
     └─ yes → published Engineering Profile for that Team member?
                ├─ no  → Team identity and About destination
                └─ yes → Team identity and Engineering Profile destination
 ```
 
-The resulting Author DTO never contains the User record or its internal identifier. Other collection types do not infer public contributors from `createdByUserId`.
+The resulting Author DTO never contains the User record, User display name, account image, system role, or internal identifier. Missing, hidden, duplicate, or unresolved Team linkage uses the closed HubZero organization fallback defined in [PUBLIC_DTO_SPECIFICATION.md](PUBLIC_DTO_SPECIFICATION.md#author-resolution). Other collection types do not infer public contributors from `createdByUserId`.
 
 ### Derived fields
 
@@ -176,7 +178,7 @@ Derived fields must remain deterministic from visible source records and configu
 
 ## Canonical visibility
 
-One fail-closed visibility policy governs every public consumer.
+One fail-closed visibility policy governs every public consumer. [VISIBILITY_RULES.md](VISIBILITY_RULES.md) is the canonical complete predicate and acceptance table; the table below is its architectural summary.
 
 Conceptually, an entity is publicly visible only when all conditions for its type are true:
 
@@ -216,7 +218,7 @@ Examples:
 
 - Lab `graduatedToBuildId` produces **Graduated into** on the Lab and **Originated in** on the visible Build.
 - Work `relatedBuildIds` and Build/Work relation data produce the approved **Informed by** / **Applied in client work** pair.
-- Work or Build to Blueprint produces the approved **Generalized as** / **Built on** language according to the stored relation's meaning.
+- Work or Build to Blueprint produces **Generalized as** / **Built on** only when the stored relation makes that meaning explicit. The current relation shape does not, so Phase 13 requires the conservative **Blueprint** label rather than inferred causality.
 - Note references produce **Discusses** on the Note and **Engineering notes** on the visible target.
 
 Where Studio already maintains a symmetric relation, the read layer normalizes it to the same public contract rather than exposing storage direction.

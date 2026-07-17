@@ -1,6 +1,6 @@
 # Public Narrative
 
-**Status:** Phase 12 design proposal — documentation only
+**Status:** Phase 12 design proposal, refined by Phase 13 content contracts — documentation only
 
 The public story is designed by time and understanding, not by page count. It should reward both a five-second scan and a ten-minute investigation without forcing either visitor into the other's pace.
 
@@ -199,7 +199,7 @@ Visitors must be able to disqualify a Blueprint quickly. Clear fit increases tru
 Stage → objective → current milestone → approach → experiments/findings → blockers → graduation criteria → next update
 ```
 
-Labs are not unfinished case studies. Dates, milestones, and honest blockers matter. When a Lab graduates, the journal remains a historical record and the transition points to the Build.
+Labs are not unfinished case studies. Dates, milestones, and honest blockers matter. The current Studio model separates long-form evidence into `overview`, `engineeringJournal`, `findings`, and `researchNotes` Documents; the public narrative selects only populated roles rather than rendering empty tabs. When a Lab graduates, that engineering record remains historical evidence and the transition points to the Build. A reviewed legacy `journal` may map into the engineering-journal role, but it is never duplicated across all four roles.
 
 ### Notes — one useful idea
 

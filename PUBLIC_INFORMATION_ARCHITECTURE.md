@@ -1,10 +1,10 @@
 # Public Information Architecture
 
-**Status:** Phase 12 design proposal — documentation only
+**Status:** Phase 12 design proposal, refined by Phase 13 public contracts — documentation only
 
 **Scope:** Public destinations, navigation, relationships, journeys, and Studio-to-public mapping
 
-This architecture treats routes as addressable views over a connected publishing system. It does not treat them as independent marketing pages. [PUBLIC_DATA_LAYER.md](PUBLIC_DATA_LAYER.md) is canonical for how Studio records become the visibility-safe public objects consumed by these routes, relationships, indexes, and discovery surfaces.
+This architecture treats routes as addressable views over a connected publishing system. It does not treat them as independent marketing pages. [PUBLIC_DATA_LAYER.md](PUBLIC_DATA_LAYER.md) defines the read architecture; [PUBLIC_DTO_SPECIFICATION.md](PUBLIC_DTO_SPECIFICATION.md), [VISIBILITY_RULES.md](VISIBILITY_RULES.md), and [RELATIONSHIP_AUDIT.md](RELATIONSHIP_AUDIT.md) define the Phase 13 field, visibility, and relationship contracts consumed by routes, relationships, indexes, and discovery surfaces.
 
 ## Structural model
 
@@ -93,7 +93,7 @@ Generic “Related” labels conceal the system. Public links should name why tw
 | Build | Lab | Originated in |
 | Build | Work | Applied in client work |
 | Work | Build | Informed by |
-| Work or Build | Blueprint | Generalized as / Built on |
+| Work or Build | Blueprint | Generalized as / Built on only when that meaning is explicit; otherwise Blueprint |
 | Service | Evidence entry | Proven by |
 | Note | Any pillar | Discusses / Documents |
 | Pillar entry | Note | Engineering notes |
@@ -125,7 +125,7 @@ Do not infer human contribution from `createdByUserId`. That field is provenance
 Services ─────────────── proven by ─────────► all four pillars
 ```
 
-Relations should be queryable and reciprocal. When Studio stores only one direction, the public read layer defined in [PUBLIC_DATA_LAYER.md](PUBLIC_DATA_LAYER.md) derives the inverse; editors must never maintain two copies of the same relationship.
+Relations should be queryable and reciprocal. When Studio stores only one direction, the public read layer derives the inverse. The current Work/Build and Lab/Build models can store both endpoints; [RELATIONSHIP_AUDIT.md](RELATIONSHIP_AUDIT.md) defines deterministic normalization and conflict behavior until Studio establishes one canonical write direction or atomic synchronization.
 
 ## Entry and exit rules
 
@@ -186,7 +186,7 @@ Studio owns records and documents. The public layer owns presentation, sequence,
 | Work | Index cards/rows, detail case study, evidence links | Title, client type, category, timeline, role, technologies, relations, hero, repo, status, case-study Document | Detail template, narrative order, relationship labels, outcome placement rules |
 | Build | Featured/product indexes, product detail, live/repo state | Title, deployment state, URLs, technologies, originating Lab, related Work, media, featured flag, case-study and technical Documents | Product-first composition, architecture presentation, live-state treatment, derived backlinks |
 | Blueprint | Filterable library and detail/preview | Enforced name, architecture, design language, summary, features, technologies, URLs, version, media, featured flag, case-study Document | Fit-assessment sequence, preview choreography, relation labels, naming explanation |
-| Lab | Active index, journal detail, homepage current-state signal | Stage, objective, research direction, milestone, criteria, dates, URLs, technologies, relations, media, milestones, journal Document | Stage semantics, progress composition, recency policy, graduation transition |
+| Lab | Active index, engineering-journal detail, homepage current-state signal | Stage, objective, research direction, milestone, criteria, dates, URLs, technologies, relations, media, milestones, and populated `overview` / `engineeringJournal` / `findings` / `researchNotes` Documents; reviewed legacy `journal` content may map into this set | Stage semantics, progress composition, recency policy, role sequencing, graduation transition |
 | Note | Editorial index, article, relation bridge | Title, author User, summary, technologies, relations, publication date, featured flag, media, body Document | Article template, byline resolution, topic landing logic, reciprocal links |
 | Engineering Profile | Earned index/detail, byline destination, About bridge | Team member, overview, philosophy, exploration, expertise/interests/identity, technologies, featured relations, media, five profile Documents, workflow | Profile eligibility language, document-role sequencing, transition behavior, evidence completeness rules |
 | Team | About roster and identity source for Profiles | Name, role, bio, group, portrait, public visibility, optional User link | Roster-stage composition, group order, profile availability state |
@@ -213,7 +213,7 @@ Do not overload Services, Notes, or Documents to simulate global settings. If ed
 
 ## Publishing and visibility rules
 
-[PUBLIC_DATA_LAYER.md](PUBLIC_DATA_LAYER.md#canonical-visibility) owns the complete, fail-closed predicate. The rules below summarize its public-information-architecture consequences:
+[VISIBILITY_RULES.md](VISIBILITY_RULES.md) owns the complete, fail-closed predicate. The rules below summarize its public-information-architecture consequences:
 
 - Only `published` full-workflow records and `published` Services render publicly.
 - Team requires `publicProfile: true`; Engineering Profiles additionally require their own `published` status.
