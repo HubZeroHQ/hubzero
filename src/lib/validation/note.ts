@@ -7,8 +7,13 @@ export const noteSchema = z.object({
   slug: slugSchema,
   status: publishStatusSchema.default('draft'),
   authorId: objectIdString,
-  tagIds: z.array(objectIdString).default([]),
+  summary: z.string().min(1),
+  technologyIds: z.array(objectIdString).default([]),
   relatedEntries: z.array(entryReferenceSchema).default([]),
+  publicationDate: z.coerce.date(),
+  featured: z.boolean().default(false),
+  heroImageId: objectIdString.optional(),
+  galleryImageIds: z.array(objectIdString).default([]),
 });
 
 export type NoteInput = z.infer<typeof noteSchema>;

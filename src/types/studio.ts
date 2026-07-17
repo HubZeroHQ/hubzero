@@ -229,9 +229,20 @@ export interface Lab extends PublishableEntity {
 export interface Note extends PublishableEntity {
   referenceId: ReferenceId<'NT'>;
   title: string;
+  /** System identity, not a Team public profile (§24) — set at creation, reassignable by anyone who can edit the entry. */
   authorId: ObjectId;
-  tagIds: ObjectId[];
+  /** Card/list-view summary — mirrors Blueprint's `shortDescription`; the long-form write-up lives in the owned `body` Document (§25) instead. */
+  summary: string;
+  /** Renamed from §26.5's combined "tags/technologies" facet — consistent with every other collection's `technologyIds`, referencing the shared Taxonomy's `technology` kind (§26.11). */
+  technologyIds: ObjectId[];
   relatedEntries: EntryReference[];
+  /** Additive beyond §26.5 — an editorial date distinct from `createdAt` and the workflow's `published` transition, for backdating or scheduling a write-up. */
+  publicationDate: Date;
+  /** Additive beyond §26.5 — mirrors every other Content collection's homepage "Featured" slot. */
+  featured: boolean;
+  /** Additive beyond §26.5 — mirrors Build/Blueprint/Lab's optional hero + gallery split. */
+  heroImageId?: ObjectId;
+  galleryImageIds: ObjectId[];
 }
 
 /** Small, low-volume — no reference ID, simplified status (§26.7). */

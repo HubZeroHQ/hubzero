@@ -24,6 +24,16 @@ export function createContentAdapter<T extends PublishableSearchable>(config: {
   list: () => Promise<T[]>;
   getTitle: (entry: T) => string;
   getReferenceId?: (entry: T) => string | undefined;
+  /**
+   * Additional matchable text beyond title/slug/reference ID — e.g. Notes'
+   * summary and technology labels (CMS_PRODUCT_DESIGN.md §7: "relevant
+   * engineering notes should be discoverable by... technologies"). Optional
+   * so every existing adapter keeps matching exactly as before; a future
+   * collection wanting the same richer match (a Work category, a
+   * Blueprint's short description) reuses this rather than a new adapter
+   * shape.
+   */
+  getExtraSearchText?: (entry: T) => string[];
 }): SearchAdapter {
   return {
     type: config.type,
@@ -37,10 +47,12 @@ export function createContentAdapter<T extends PublishableSearchable>(config: {
         .filter((entry) => {
           const title = config.getTitle(entry).toLowerCase();
           const referenceId = config.getReferenceId?.(entry)?.toLowerCase() ?? '';
+          const extra = config.getExtraSearchText?.(entry).join(' ').toLowerCase() ?? '';
           return (
             title.includes(normalizedQuery) ||
             entry.slug.toLowerCase().includes(normalizedQuery) ||
-            referenceId.includes(normalizedQuery)
+            referenceId.includes(normalizedQuery) ||
+            extra.includes(normalizedQuery)
           );
         })
         .map((entry) => ({
