@@ -2,10 +2,13 @@ import { blueprintRepository } from '@/lib/db/repositories/blueprint';
 import { buildRepository } from '@/lib/db/repositories/build';
 import { labRepository } from '@/lib/db/repositories/lab';
 import { noteRepository } from '@/lib/db/repositories/note';
+import { engineeringProfileRepository } from '@/lib/db/repositories/engineering-profile';
+import { teamRepository } from '@/lib/db/repositories/team';
 import { workRepository } from '@/lib/db/repositories/work';
 import type { PublishStatus } from '@/types/studio';
 
-export type ContentEntityType = 'work' | 'builds' | 'blueprints' | 'labs' | 'notes';
+export type ContentEntityType =
+  'work' | 'builds' | 'blueprints' | 'labs' | 'notes' | 'engineeringProfiles';
 
 const CONTENT_HREF: Record<ContentEntityType, string> = {
   work: '/studio/content/work',
@@ -13,6 +16,7 @@ const CONTENT_HREF: Record<ContentEntityType, string> = {
   blueprints: '/studio/content/blueprints',
   labs: '/studio/content/labs',
   notes: '/studio/content/notes',
+  engineeringProfiles: '/studio/engineering-profiles',
 };
 
 export interface ContentSummary {
@@ -33,13 +37,16 @@ export interface ContentSummary {
  * hand-rolling its own aggregation across five repositories.
  */
 export async function listAllContent(): Promise<ContentSummary[]> {
-  const [work, builds, blueprints, labs, notes] = await Promise.all([
+  const [work, builds, blueprints, labs, notes, profiles, team] = await Promise.all([
     workRepository.list(),
     buildRepository.list(),
     blueprintRepository.list(),
     labRepository.list(),
     noteRepository.list(),
+    engineeringProfileRepository.list(),
+    teamRepository.list(),
   ]);
+  const teamNames = new Map(team.map((entry) => [entry._id.toString(), entry.name]));
 
   return [
     ...work.map((entry) => ({
@@ -89,6 +96,16 @@ export async function listAllContent(): Promise<ContentSummary[]> {
       referenceId: entry.referenceId,
       status: entry.status,
       href: CONTENT_HREF.notes,
+      updatedAt: entry.updatedAt,
+      createdByUserId: entry.createdByUserId.toString(),
+    })),
+    ...profiles.map((entry) => ({
+      id: entry._id.toString(),
+      type: 'engineeringProfiles' as const,
+      title: teamNames.get(entry.teamMemberId.toString()) ?? 'Unknown engineer',
+      referenceId: entry.referenceId,
+      status: entry.status,
+      href: CONTENT_HREF.engineeringProfiles,
       updatedAt: entry.updatedAt,
       createdByUserId: entry.createdByUserId.toString(),
     })),

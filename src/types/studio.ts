@@ -12,11 +12,12 @@ export type PublishStatus = 'draft' | 'inReview' | 'approved' | 'published' | 'a
 /** Services carries a deliberately lighter two-state workflow (§26.7). */
 export type ServicePublishStatus = 'draft' | 'published';
 
-export type ReferenceIdPrefix = 'WK' | 'BL' | 'BP' | 'LB' | 'NT' | 'TM';
+export type ReferenceIdPrefix = 'WK' | 'BL' | 'BP' | 'LB' | 'NT' | 'TM' | 'EP';
 
-/** Permanent, Studio-assigned identifier — `HZ-{PREFIX}-{NNN}` (§27). Leads and Users never receive one. */
-export type ReferenceId<Prefix extends ReferenceIdPrefix = ReferenceIdPrefix> =
-  `HZ-${Prefix}-${string}`;
+/** Permanent Studio identifier. Existing content uses `HZ-{PREFIX}-{NNN}`; Engineering Profiles use `EP-{NNN}`. */
+export type ReferenceId<Prefix extends ReferenceIdPrefix = ReferenceIdPrefix> = Prefix extends 'EP'
+  ? `EP-${string}`
+  : `HZ-${Prefix}-${string}`;
 
 export type UserRole = 'headAdmin' | 'admin' | 'teamMember';
 
@@ -28,7 +29,8 @@ export type TaxonomyKind = 'technology' | 'category' | 'topic';
  * mainly used, not a folder hierarchy. `general` is the default for
  * anything that doesn't obviously belong to one collection.
  */
-export type MediaFolder = 'work' | 'builds' | 'blueprints' | 'labs' | 'notes' | 'team' | 'general';
+export type MediaFolder =
+  'work' | 'builds' | 'blueprints' | 'labs' | 'notes' | 'team' | 'engineeringProfiles' | 'general';
 
 export type LeadStatus = 'new' | 'contacted' | 'closed';
 
@@ -242,6 +244,27 @@ export interface Note extends PublishableEntity {
   featured: boolean;
   /** Additive beyond §26.5 — mirrors Build/Blueprint/Lab's optional hero + gallery split. */
   heroImageId?: ObjectId;
+  galleryImageIds: ObjectId[];
+}
+
+/** An earned, evidence-led record of how one Team Member thinks and works. */
+export interface EngineeringProfile extends PublishableEntity {
+  referenceId: ReferenceId<'EP'>;
+  teamMemberId: ObjectId;
+  overview: string;
+  engineeringPhilosophy: string;
+  currentExploration: string;
+  areasOfExpertise: string[];
+  currentInterests: string[];
+  engineeringIdentity: string[];
+  technologyIds: ObjectId[];
+  featuredWorkIds: ObjectId[];
+  featuredBuildIds: ObjectId[];
+  featuredBlueprintIds: ObjectId[];
+  featuredLabIds: ObjectId[];
+  featuredNoteIds: ObjectId[];
+  portraitId?: ObjectId;
+  heroMediaId?: ObjectId;
   galleryImageIds: ObjectId[];
 }
 

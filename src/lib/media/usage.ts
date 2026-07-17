@@ -5,6 +5,7 @@ import { buildRepository } from '@/lib/db/repositories/build';
 import { labRepository } from '@/lib/db/repositories/lab';
 import { noteRepository } from '@/lib/db/repositories/note';
 import { teamRepository } from '@/lib/db/repositories/team';
+import { engineeringProfileRepository } from '@/lib/db/repositories/engineering-profile';
 import { workRepository } from '@/lib/db/repositories/work';
 import type { DocumentRole, OwnerType } from '@/lib/documents/schema';
 
@@ -23,7 +24,7 @@ export interface MediaUsageRef {
   ownerId: string;
   label: string;
   referenceId?: string;
-  field: 'document' | 'heroImage' | 'galleryImage' | 'previewAsset' | 'portrait';
+  field: 'document' | 'heroImage' | 'heroMedia' | 'galleryImage' | 'previewAsset' | 'portrait';
   documentRole?: DocumentRole;
   href: string;
 }
@@ -35,6 +36,7 @@ const OWNER_DETAIL_PATH: Record<OwnerType, (id: string) => string> = {
   Lab: (id) => `/studio/content/labs/${id}`,
   Note: (id) => `/studio/content/notes/${id}`,
   Team: (id) => `/studio/team/${id}`,
+  EngineeringProfile: (id) => `/studio/engineering-profiles/${id}`,
 };
 
 /** True if any block in `blocks` (searching nested `imageGallery.images` too) references `mediaId`. */
@@ -114,6 +116,14 @@ async function resolveOwnerLabel(
       const entry = await teamRepository.findById(ownerId);
       return { title: entry?.name ?? 'Unknown Team profile', referenceId: entry?.referenceId };
     }
+    case 'EngineeringProfile': {
+      const entry = await engineeringProfileRepository.findById(ownerId);
+      const team = entry ? await teamRepository.findById(entry.teamMemberId.toString()) : null;
+      return {
+        title: team?.name ?? 'Unknown Engineering Profile',
+        referenceId: entry?.referenceId,
+      };
+    }
     default: {
       const exhaustive: never = ownerType;
       return { title: `Unknown (${exhaustive as string})` };
@@ -146,6 +156,9 @@ async function findDirectFieldUsage(mediaId: string): Promise<MediaUsageRef[]> {
     labHeroEntries,
     labGalleryEntries,
     teamEntries,
+    profilePortraitEntries,
+    profileHeroEntries,
+    profileGalleryEntries,
   ] = await Promise.all([
     (await collections.work()).find({ heroImageId: idMatch } as never).toArray(),
     (await collections.builds()).find({ heroImageId: idMatch } as never).toArray(),
@@ -155,6 +168,9 @@ async function findDirectFieldUsage(mediaId: string): Promise<MediaUsageRef[]> {
     (await collections.labs()).find({ heroImageId: idMatch } as never).toArray(),
     (await collections.labs()).find({ galleryImageIds: idMatch } as never).toArray(),
     (await collections.team()).find({ portraitId: idMatch } as never).toArray(),
+    (await collections.engineeringProfiles()).find({ portraitId: idMatch } as never).toArray(),
+    (await collections.engineeringProfiles()).find({ heroMediaId: idMatch } as never).toArray(),
+    (await collections.engineeringProfiles()).find({ galleryImageIds: idMatch } as never).toArray(),
   ]);
 
   return [
@@ -221,6 +237,30 @@ async function findDirectFieldUsage(mediaId: string): Promise<MediaUsageRef[]> {
       referenceId: entry.referenceId,
       field: 'portrait' as const,
       href: OWNER_DETAIL_PATH.Team(entry._id.toString()),
+    })),
+    ...profilePortraitEntries.map((entry) => ({
+      ownerType: 'EngineeringProfile' as const,
+      ownerId: entry._id.toString(),
+      label: entry.referenceId,
+      referenceId: entry.referenceId,
+      field: 'portrait' as const,
+      href: OWNER_DETAIL_PATH.EngineeringProfile(entry._id.toString()),
+    })),
+    ...profileHeroEntries.map((entry) => ({
+      ownerType: 'EngineeringProfile' as const,
+      ownerId: entry._id.toString(),
+      label: entry.referenceId,
+      referenceId: entry.referenceId,
+      field: 'heroMedia' as const,
+      href: OWNER_DETAIL_PATH.EngineeringProfile(entry._id.toString()),
+    })),
+    ...profileGalleryEntries.map((entry) => ({
+      ownerType: 'EngineeringProfile' as const,
+      ownerId: entry._id.toString(),
+      label: entry.referenceId,
+      referenceId: entry.referenceId,
+      field: 'galleryImage' as const,
+      href: OWNER_DETAIL_PATH.EngineeringProfile(entry._id.toString()),
     })),
   ];
 }

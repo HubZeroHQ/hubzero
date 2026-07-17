@@ -1,5 +1,6 @@
 import { registerSearchAdapter } from './registry';
 import { blueprintsSearchAdapter } from './adapters/blueprints';
+import { engineeringProfilesSearchAdapter } from './adapters/engineering-profiles';
 import { buildsSearchAdapter } from './adapters/builds';
 import { labsSearchAdapter } from './adapters/labs';
 import { leadsSearchAdapter } from './adapters/leads';
@@ -32,6 +33,7 @@ export function ensureSearchAdaptersRegistered(): void {
   registerSearchAdapter(blueprintsSearchAdapter);
   registerSearchAdapter(labsSearchAdapter);
   registerSearchAdapter(notesSearchAdapter);
+  registerSearchAdapter(engineeringProfilesSearchAdapter);
   registerSearchAdapter(teamSearchAdapter);
   registerSearchAdapter(servicesSearchAdapter);
   registerSearchAdapter(leadsSearchAdapter);

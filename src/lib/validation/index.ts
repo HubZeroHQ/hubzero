@@ -8,5 +8,6 @@ export * from './build';
 export * from './blueprint';
 export * from './lab';
 export * from './note';
+export * from './engineering-profile';
 export * from './service';
 export * from './lead';

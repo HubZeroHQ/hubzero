@@ -6,6 +6,7 @@ import { labRepository } from '@/lib/db/repositories/lab';
 import { noteRepository } from '@/lib/db/repositories/note';
 import { taxonomyRepository } from '@/lib/db/repositories/taxonomy';
 import { teamRepository } from '@/lib/db/repositories/team';
+import { engineeringProfileRepository } from '@/lib/db/repositories/engineering-profile';
 import { workRepository } from '@/lib/db/repositories/work';
 import type { DocumentRole, OwnerType } from '@/lib/documents/schema';
 import type { EntryReference, EvidenceOwnerType } from '@/types/studio';
@@ -175,6 +176,19 @@ export async function buildGenerationEntryMetadata(
         title: entry.name,
         referenceId: entry.referenceId,
         summary: entry.bio,
+      };
+    }
+    case 'EngineeringProfile': {
+      const entry = await engineeringProfileRepository.findById(ownerId);
+      if (!entry) throw new GenerationEntryNotFoundError();
+      const team = await teamRepository.findById(entry.teamMemberId.toString());
+      return {
+        ownerType,
+        role,
+        title: team?.name ?? 'Engineering Profile',
+        referenceId: entry.referenceId,
+        summary: entry.overview,
+        technologies: await resolveTechnologyLabels(entry.technologyIds),
       };
     }
     default: {
