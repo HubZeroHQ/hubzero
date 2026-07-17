@@ -1,12 +1,12 @@
 # HubZero Public Experience
 
-**Status:** Phase 12 design proposal — documentation only
+**Status:** Phase 12 design proposal, informed by Phase 13 content audit — documentation only
 
 **Research date:** 17 July 2026
 
 **Depends on:** `AGENTS.md`, `.hubzero/agents/AGENTS.md`, `PLANNING.md`, `CMS_PRODUCT_DESIGN.md`, and `DESIGN_SYSTEM.md`
 
-This document defines the long-term character of HubZero's public experience. It does not authorize implementation. The detailed structure lives in [PUBLIC_INFORMATION_ARCHITECTURE.md](PUBLIC_INFORMATION_ARCHITECTURE.md), the Studio-to-public read boundary in [PUBLIC_DATA_LAYER.md](PUBLIC_DATA_LAYER.md), the time-based story in [PUBLIC_NARRATIVE.md](PUBLIC_NARRATIVE.md), motion in [MOTION_GUIDELINES.md](MOTION_GUIDELINES.md), engineering identity in [ENGINEERING_IDENTITY.md](ENGINEERING_IDENTITY.md), and sequencing in [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md).
+This document defines the long-term character of HubZero's public experience. It does not authorize implementation. The detailed structure lives in [PUBLIC_INFORMATION_ARCHITECTURE.md](PUBLIC_INFORMATION_ARCHITECTURE.md), the Studio-to-public read boundary in [PUBLIC_DATA_LAYER.md](PUBLIC_DATA_LAYER.md), the Phase 13 field contract in [PUBLIC_DTO_SPECIFICATION.md](PUBLIC_DTO_SPECIFICATION.md), the time-based story in [PUBLIC_NARRATIVE.md](PUBLIC_NARRATIVE.md), motion in [MOTION_GUIDELINES.md](MOTION_GUIDELINES.md), engineering identity in [ENGINEERING_IDENTITY.md](ENGINEERING_IDENTITY.md), and sequencing in [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Current content readiness is recorded separately in [LAUNCH_READINESS.md](LAUNCH_READINESS.md).
 
 ## Experience thesis
 

@@ -1,6 +1,6 @@
 # Public Experience Implementation Plan
 
-**Status:** Proposed after Phase 12 review — no implementation is authorized by this document
+**Status:** Proposed after Phase 12 review; Phase 13 draft contracts produced — no implementation is authorized by this document
 
 This roadmap begins only after the complete Phase 12 documentation set is approved. It establishes the public data boundary first, then uses the Homepage to define the shared public language before collection templates inherit and extend it.
 
@@ -93,6 +93,8 @@ Decisions:
 ## Phase 13 — Content Audit + Public Contracts
 
 **Goal:** determine what can be published truthfully and approve the public-domain contract before building it.
+
+**Draft deliverables:** [CONTENT_AUDIT.md](CONTENT_AUDIT.md), [PUBLIC_DTO_SPECIFICATION.md](PUBLIC_DTO_SPECIFICATION.md), [VISIBILITY_RULES.md](VISIBILITY_RULES.md), [RELATIONSHIP_AUDIT.md](RELATIONSHIP_AUDIT.md), [EDITORIAL_GAP_REPORT.md](EDITORIAL_GAP_REPORT.md), and [LAUNCH_READINESS.md](LAUNCH_READINESS.md). These remain pending review and do not satisfy the phase exit until approved.
 
 Work:
 
