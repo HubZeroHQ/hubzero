@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { documentRoleSchema } from '@/lib/documents/schema';
 
 /**
  * Primitives shared by every collection's validation schema (PLANNING.md
@@ -34,3 +35,21 @@ export const entryReferenceSchema = z.object({
   ownerType: evidenceOwnerTypeSchema,
   ownerId: objectIdString,
 });
+
+/**
+ * A single entry in a collection entry's progress timeline (Phase 10's
+ * "lightweight progress timeline," built generic enough for a future
+ * collection to reuse rather than being modeled as Labs-specific
+ * infrastructure). `relatedDocumentRole` optionally points at one of the
+ * owning entry's own Documents (§25) — e.g. a milestone that names which
+ * Engineering Journal entry backs it up — rather than a separate reference
+ * scheme of its own.
+ */
+export const progressMilestoneSchema = z.object({
+  title: z.string().min(1),
+  date: z.coerce.date(),
+  summary: z.string().min(1),
+  relatedDocumentRole: documentRoleSchema.optional(),
+});
+
+export type ProgressMilestoneInput = z.infer<typeof progressMilestoneSchema>;

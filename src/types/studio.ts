@@ -1,4 +1,5 @@
 import type { ObjectId } from 'mongodb';
+import type { DocumentRole } from '@/lib/documents/schema';
 
 /**
  * Shared type vocabulary for every Studio collection (PLANNING.md §24, §26).
@@ -178,14 +179,51 @@ export interface Blueprint extends PublishableEntity {
   version: string;
 }
 
+/**
+ * A single entry in a collection entry's progress timeline — generic and
+ * reusable (`lib/validation/shared.ts`'s `progressMilestoneSchema`), not
+ * modeled as Lab-specific. `relatedDocumentRole` optionally names one of the
+ * owning entry's own Documents (§25) that backs the milestone up.
+ */
+export interface ProgressMilestone {
+  title: string;
+  date: Date;
+  summary: string;
+  relatedDocumentRole?: DocumentRole;
+}
+
 export interface Lab extends PublishableEntity {
   referenceId: ReferenceId<'LB'>;
   title: string;
+  /** Where the research currently sits — distinct from `status` (§28's publishing workflow). */
   stage: LabStage;
   objective: string;
-  nextMilestone: string;
+  /** Additive beyond §26.4 — current technical approach/direction, separate from `objective`'s "what/why." */
+  researchDirection: string;
+  /** Renamed from §26.4's `nextMilestone` — the milestone actively being worked toward right now. */
+  currentMilestone: string;
   graduationCriteria: string;
   graduatedToBuildId?: ObjectId;
+  /** Additive beyond §26.4 — when this exploration began. */
+  startDate: Date;
+  /** Additive beyond §26.4 — deliberately curated, distinct from the record's own `updatedAt` (which changes on every trivial edit). */
+  lastMajorUpdateAt?: Date;
+  /** Additive beyond §26.4 — mirrors Build/Blueprint's `repoUrl`, split into internal vs. optionally-public. */
+  internalRepoUrl: string;
+  publicRepoUrl?: string;
+  /** Additive beyond §26.4 — mirrors Blueprint's `liveDeploymentUrl`, optional since not every Lab has a running demo. */
+  liveDemoUrl?: string;
+  technologyIds: ObjectId[];
+  /** Additive beyond §26.4 — mirrors Work's forward relation shape (§24), distinct from `graduatedToBuildId`'s graduation-specific link. */
+  relatedBuildIds: ObjectId[];
+  relatedBlueprintIds: ObjectId[];
+  /** Additive beyond §26.4 — mirrors Build/Blueprint's hero + gallery split. */
+  heroImageId?: ObjectId;
+  galleryImageIds: ObjectId[];
+  /** Additive beyond §26.4 — mirrors Build/Blueprint's homepage "Featured" slot. */
+  featured: boolean;
+  /** The Progress Timeline (Phase 10). */
+  milestones: ProgressMilestone[];
 }
 
 export interface Note extends PublishableEntity {

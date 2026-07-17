@@ -24,6 +24,14 @@ export const metadata: Metadata = { title: 'Builds — HubZero Studio' };
 
 const DEPLOYMENT_STATE_LABEL = { live: 'Live', retired: 'Retired' } as const;
 
+/** Mirrors the Lab detail page's own document-role list (`lib/studio/actions/lab.ts`). */
+const LAB_DOCUMENT_SECTIONS = [
+  { role: 'overview' as const, label: 'Overview' },
+  { role: 'engineeringJournal' as const, label: 'Engineering Journal' },
+  { role: 'findings' as const, label: 'Findings' },
+  { role: 'researchNotes' as const, label: 'Research Notes' },
+];
+
 export default async function BuildDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const build = await buildRepository.findById(id);
@@ -70,6 +78,23 @@ export default async function BuildDetailPage({ params }: { params: Promise<{ id
   const originatingLab = build.originatingLabId
     ? labLabels.get(build.originatingLabId.toString())
     : undefined;
+
+  // The graduation mechanic (PLANNING.md §26.4, CMS_PRODUCT_DESIGN.md
+  // Appendix A) never copies the originating Lab's Documents onto the Build —
+  // they stay owned by the Lab and are simply queried here via
+  // `originatingLabId`, so both entries' detail views render the exact same
+  // historical record rather than each maintaining their own copy.
+  const labDocuments = build.originatingLabId
+    ? await Promise.all(
+        LAB_DOCUMENT_SECTIONS.map((section) =>
+          documentRepository.findByOwnerAndRole(
+            'Lab',
+            build.originatingLabId!.toString(),
+            section.role,
+          ),
+        ),
+      )
+    : [];
 
   const availableTransitions = getAvailableTransitions(build.status, role, canEdit);
   const canOverride = canUnpublishOverride(build.status, role);
@@ -196,6 +221,26 @@ export default async function BuildDetailPage({ params }: { params: Promise<{ id
               );
             })}
           </ul>
+        </section>
+      ) : null}
+
+      {originatingLab && labDocuments.some((document) => document && document.blocks.length > 0) ? (
+        <section className="flex flex-col gap-4">
+          <h2 className="text-text-muted font-mono text-xs tracking-[0.05em] uppercase">
+            Lab history — {originatingLab.label} ({originatingLab.referenceId})
+          </h2>
+          {LAB_DOCUMENT_SECTIONS.map((section, index) => {
+            const document = labDocuments[index];
+            if (!document || document.blocks.length === 0) {
+              return null;
+            }
+            return (
+              <div key={section.role} className="flex flex-col gap-2">
+                <h3 className="text-text-secondary text-sm font-medium">{section.label}</h3>
+                <BlockRenderer blocks={document.blocks} technologyLabels={technologyLabels} />
+              </div>
+            );
+          })}
         </section>
       ) : null}
 
