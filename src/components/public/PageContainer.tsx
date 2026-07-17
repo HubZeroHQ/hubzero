@@ -21,9 +21,14 @@ export function PageContainer({
 export function PublicSection({
   children,
   className,
+  ...props
 }: {
   children: ReactNode;
   className?: string;
-}) {
-  return <section className={cn('public-section', className)}>{children}</section>;
+} & Omit<ComponentPropsWithoutRef<'section'>, 'children'>) {
+  return (
+    <section className={cn('public-section', className)} {...props}>
+      {children}
+    </section>
+  );
 }

@@ -14,6 +14,49 @@ export const PUBLIC_SITE = {
   },
 } as const;
 
+export const PUBLIC_HOME = {
+  eyebrow: 'Independent technology studio',
+  title: {
+    lead: 'We build',
+    emphasis: 'software',
+    close: 'that holds up.',
+  },
+  introduction:
+    'HubZero designs products, developer tools, AI systems, websites, and digital infrastructure. The work is documented through its constraints, decisions, and outcomes.',
+  pillars: [
+    {
+      label: 'Labs',
+      description:
+        'Investigations in progress, with their stage and current evidence made explicit.',
+      href: '/labs',
+      type: 'lab',
+    },
+    {
+      label: 'Builds',
+      description: 'Products shipped and maintained by HubZero.',
+      href: '/builds',
+      type: 'build',
+    },
+    {
+      label: 'Work',
+      description: 'Client problems resolved through engineering judgment.',
+      href: '/work',
+      type: 'work',
+    },
+    {
+      label: 'Blueprints',
+      description: 'Proven information architectures and design languages made reusable.',
+      href: '/blueprints',
+      type: 'blueprint',
+    },
+  ],
+  closing: {
+    eyebrow: 'A useful beginning',
+    title: 'Bring the problem, not a prepared solution.',
+    body: 'Start with the constraint, the people affected, and what has already been tried. We will begin by making the problem precise.',
+  },
+} as const;
+
 export const PUBLIC_NAVIGATION = [
   { label: 'Work', href: '/work', type: 'work', enabled: false },
   { label: 'Builds', href: '/builds', type: 'build', enabled: false },

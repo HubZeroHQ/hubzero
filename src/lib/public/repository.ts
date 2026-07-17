@@ -25,6 +25,8 @@ import type {
   PublicEntitySummary,
   PublicEntityType,
   PublicExternalLink,
+  PublicHomepageFeature,
+  PublicHomepageProjection,
   PublicLabSummary,
   PublicNoteSummary,
   PublicRelationship,
@@ -67,6 +69,7 @@ export interface PublicRepository {
   listDiscoveryEntries(
     types?: readonly PublicEntityType[],
   ): Promise<ImmutablePublic<PublicDiscoveryEntry[]>>;
+  getHomepage(now: Date): Promise<ImmutablePublic<PublicHomepageProjection>>;
 }
 
 export function createPublicRepository(source: PublicDataSource): PublicRepository {
@@ -509,6 +512,98 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
     return toPublicDocuments(source, documents);
   }
 
+  async function homepageFeature<T extends PublicEntitySummary>(
+    entity: StudioPublicEntity,
+    expectedType: T['type'],
+    now: Date,
+  ): Promise<PublicHomepageFeature<T> | null> {
+    if (!('slug' in entity.record)) return null;
+    const detail = await findDetail(expectedType as PublicDetailEntityType, entity.record.slug);
+    if (!detail || detail.type !== expectedType || !isHomepageEligible(detail, now)) return null;
+    return {
+      entity: detail as unknown as T,
+      relationships: detail.relationships.slice(0, 2),
+    };
+  }
+
+  async function getHomepage(now: Date): Promise<PublicHomepageProjection> {
+    const [workEntities, buildEntities, blueprintEntities, labEntities, noteEntities, profiles] =
+      await Promise.all([
+        source.listEntities('work'),
+        source.listEntities('build'),
+        source.listEntities('blueprint'),
+        source.listEntities('lab'),
+        source.listEntities('note'),
+        source.listEntities('engineeringProfile'),
+      ]);
+
+    const work = compact(
+      await Promise.all(
+        sortEntities(workEntities).map((entity) =>
+          homepageFeature<PublicWorkSummary>(entity, 'work', now),
+        ),
+      ),
+    ).slice(0, 1);
+    const builds = compact(
+      await Promise.all(
+        sortEntities(buildEntities.filter(hasFeaturedFlag)).map((entity) =>
+          homepageFeature<PublicBuildSummary>(entity, 'build', now),
+        ),
+      ),
+    ).slice(0, 2);
+    const blueprints = compact(
+      await Promise.all(
+        sortEntities(blueprintEntities.filter(hasFeaturedFlag)).map((entity) =>
+          homepageFeature<PublicBlueprintSummary>(entity, 'blueprint', now),
+        ),
+      ),
+    );
+    const labs = compact(
+      await Promise.all(
+        sortEntities(labEntities.filter(hasFeaturedFlag)).map((entity) =>
+          homepageFeature<PublicLabSummary>(entity, 'lab', now),
+        ),
+      ),
+    ).slice(0, 2);
+    const allSubstantiveNotes = compact(
+      await Promise.all(
+        sortEntities(noteEntities).map((entity) =>
+          homepageFeature<PublicNoteSummary>(entity, 'note', now),
+        ),
+      ),
+    );
+    const featuredNoteIds = new Set(
+      noteEntities.filter(hasFeaturedFlag).map((entity) => entity.id),
+    );
+    const notes =
+      allSubstantiveNotes.length >= 5
+        ? allSubstantiveNotes
+            .filter((feature) => {
+              const sourceEntity = noteEntities.find(
+                (entity) => 'slug' in entity.record && entity.record.slug === feature.entity.slug,
+              );
+              return sourceEntity ? featuredNoteIds.has(sourceEntity.id) : false;
+            })
+            .slice(0, 3)
+        : [];
+    const engineeringProfiles = compact(
+      await Promise.all(
+        sortEntities(profiles).map((entity) =>
+          homepageFeature<PublicEngineeringProfileSummary>(entity, 'engineeringProfile', now),
+        ),
+      ),
+    ).slice(0, 2);
+
+    return {
+      work,
+      builds,
+      labs,
+      notes,
+      ...(blueprints[0] ? { blueprint: blueprints[0] } : {}),
+      profiles: engineeringProfiles,
+    };
+  }
+
   return {
     async findSummary(type, slug) {
       return freezePublicDto(await findSummary(type, slug));
@@ -522,6 +617,9 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
     async listDiscoveryEntries(types = ALL_PUBLIC_TYPES) {
       const summaries = (await Promise.all(types.map(listSummaries))).flat();
       return freezePublicDto(summaries.map(toDiscoveryEntry));
+    },
+    async getHomepage(now) {
+      return freezePublicDto(await getHomepage(now));
     },
   };
 }
@@ -583,6 +681,83 @@ function toDiscoveryEntry(summary: PublicEntitySummary): PublicDiscoveryEntry {
 
 function hasRoles(documents: readonly { role: string }[], roles: readonly string[]): boolean {
   return roles.every((role) => documents.some((document) => document.role === role));
+}
+
+function compact<T>(values: readonly (T | null)[]): T[] {
+  return values.filter((value): value is T => value !== null);
+}
+
+function hasFeaturedFlag(entity: StudioPublicEntity): boolean {
+  return 'featured' in entity.record && entity.record.featured === true;
+}
+
+function sortEntities(entities: readonly StudioPublicEntity[]): StudioPublicEntity[] {
+  return [...entities].sort((left, right) => {
+    const leftReference = 'referenceId' in left.record ? left.record.referenceId : left.id;
+    const rightReference = 'referenceId' in right.record ? right.record.referenceId : right.id;
+    return rightReference.localeCompare(leftReference);
+  });
+}
+
+function hasSubstantiveDocument(
+  documents: readonly { blocks: readonly { type: string; data: unknown }[] }[],
+): boolean {
+  return documents.some((document) => {
+    const textBlocks = document.blocks.filter(
+      (block) =>
+        !['heading', 'divider', 'image', 'imageGallery', 'technologyStack'].includes(block.type),
+    );
+    const words = textBlocks
+      .map((block) => JSON.stringify(block.data).replace(/<[^>]*>/g, ' '))
+      .join(' ')
+      .match(/[\p{L}\p{N}][\p{L}\p{N}'’-]*/gu);
+    return textBlocks.length >= 2 && (words?.length ?? 0) >= 80;
+  });
+}
+
+function isRecent(date: string | undefined, now: Date, maxAgeDays = 180): boolean {
+  if (!date) return false;
+  const value = new Date(date);
+  if (Number.isNaN(value.getTime()) || value > now) return false;
+  return now.getTime() - value.getTime() <= maxAgeDays * 24 * 60 * 60 * 1000;
+}
+
+function isHomepageEligible(detail: PublicEntityDetail, now: Date): boolean {
+  switch (detail.type) {
+    case 'work':
+      return hasSubstantiveDocument(detail.documents);
+    case 'build':
+      return (
+        Boolean(detail.hero) &&
+        detail.links.some((link) => link.kind === 'live') &&
+        detail.documents.filter((document) => ['caseStudy', 'technical'].includes(document.role))
+          .length >= 2 &&
+        detail.documents
+          .filter((document) => ['caseStudy', 'technical'].includes(document.role))
+          .every((document) => hasSubstantiveDocument([document]))
+      );
+    case 'blueprint':
+      return (
+        detail.previewMedia.length > 0 &&
+        detail.features.length > 0 &&
+        hasSubstantiveDocument(detail.documents)
+      );
+    case 'lab':
+      return (
+        isRecent(detail.lastMajorUpdate, now) &&
+        detail.milestones.length > 0 &&
+        detail.technologies.length > 0 &&
+        hasSubstantiveDocument(detail.documents)
+      );
+    case 'note':
+      return isRecent(detail.publicationDate, now) && hasSubstantiveDocument(detail.documents);
+    case 'engineeringProfile':
+      return (
+        Boolean(detail.portrait) &&
+        detail.relationships.length >= 2 &&
+        hasSubstantiveDocument(detail.documents)
+      );
+  }
 }
 
 function evidenceType(reference: EntryReference): PublicEntityType {
