@@ -14,7 +14,15 @@ import { blockSchema, type Block } from './blocks';
  * left open-ended, since every owner must also know how to authorize and
  * render the Documents it holds.
  */
-export const ownerTypeSchema = z.enum(['Work', 'Build', 'Blueprint', 'Lab', 'Note', 'Team']);
+export const ownerTypeSchema = z.enum([
+  'Work',
+  'Build',
+  'Blueprint',
+  'Lab',
+  'Note',
+  'Team',
+  'EngineeringProfile',
+]);
 export type OwnerType = z.infer<typeof ownerTypeSchema>;
 
 /**
@@ -34,6 +42,11 @@ export const documentRoleSchema = z.enum([
   'engineeringJournal',
   'findings',
   'researchNotes',
+  'introduction',
+  'interview',
+  'timeline',
+  'quotes',
+  'achievements',
 ]);
 export type DocumentRole = z.infer<typeof documentRoleSchema>;
 

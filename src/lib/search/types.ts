@@ -15,6 +15,7 @@ export type SearchEntityType =
   | 'blueprints'
   | 'labs'
   | 'notes'
+  | 'engineeringProfiles'
   | 'team'
   | 'services'
   | 'leads'

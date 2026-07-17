@@ -11,6 +11,7 @@ import {
   Tags,
   Users,
   UserCog,
+  UserRoundSearch,
   Briefcase,
   type LucideIcon,
 } from 'lucide-react';
@@ -60,7 +61,11 @@ const CONTENT: StudioNavGroup = {
 const STUDIO: StudioNavGroup = {
   kind: 'group',
   label: 'Studio',
-  items: [leaf('Team', '/studio/team', Users), leaf('Services', '/studio/services', Handshake)],
+  items: [
+    leaf('Team', '/studio/team', Users),
+    leaf('Engineering Profiles', '/studio/engineering-profiles', UserRoundSearch),
+    leaf('Services', '/studio/services', Handshake),
+  ],
 };
 
 const LEADS = leaf('Leads', '/studio/leads', Inbox);

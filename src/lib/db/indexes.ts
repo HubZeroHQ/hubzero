@@ -9,9 +9,32 @@ import { getDb } from './mongodb';
 export async function ensureIndexes(): Promise<void> {
   const db = await getDb();
 
-  const slugCollections = ['work', 'builds', 'blueprints', 'labs', 'notes'] as const;
-  const referenceIdCollections = ['work', 'builds', 'blueprints', 'labs', 'notes', 'team'] as const;
-  const statusCollections = ['work', 'builds', 'blueprints', 'labs', 'notes', 'services'] as const;
+  const slugCollections = [
+    'work',
+    'builds',
+    'blueprints',
+    'labs',
+    'notes',
+    'engineeringProfiles',
+  ] as const;
+  const referenceIdCollections = [
+    'work',
+    'builds',
+    'blueprints',
+    'labs',
+    'notes',
+    'team',
+    'engineeringProfiles',
+  ] as const;
+  const statusCollections = [
+    'work',
+    'builds',
+    'blueprints',
+    'labs',
+    'notes',
+    'engineeringProfiles',
+    'services',
+  ] as const;
 
   await Promise.all([
     ...slugCollections.map((name) =>
@@ -28,5 +51,6 @@ export async function ensureIndexes(): Promise<void> {
     db.collection('media').createIndex({ cloudinaryPublicId: 1 }, { unique: true }),
     db.collection('media').createIndex({ folder: 1 }),
     db.collection('media').createIndex({ reuseTags: 1 }),
+    db.collection('engineeringProfiles').createIndex({ teamMemberId: 1 }, { unique: true }),
   ]);
 }

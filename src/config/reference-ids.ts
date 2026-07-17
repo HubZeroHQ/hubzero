@@ -13,6 +13,7 @@ export const REFERENCE_ID_PREFIXES = {
   labs: 'LB',
   notes: 'NT',
   team: 'TM',
+  engineeringProfiles: 'EP',
 } as const satisfies Record<string, ReferenceIdPrefix>;
 
 export const REFERENCE_ID_PAD_LENGTH = 3;

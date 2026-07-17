@@ -12,5 +12,5 @@ export async function generateReferenceId<Prefix extends ReferenceIdPrefix>(
 ): Promise<ReferenceId<Prefix>> {
   const seq = await nextCounterValue(prefix);
   const padded = String(seq).padStart(REFERENCE_ID_PAD_LENGTH, '0');
-  return `HZ-${prefix}-${padded}` as ReferenceId<Prefix>;
+  return (prefix === 'EP' ? `EP-${padded}` : `HZ-${prefix}-${padded}`) as ReferenceId<Prefix>;
 }

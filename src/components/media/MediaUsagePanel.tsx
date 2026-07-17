@@ -5,6 +5,7 @@ import { Tag } from '@/components/ui/Tag';
 
 const FIELD_LABEL: Record<Exclude<MediaUsageRef['field'], 'document'>, string> = {
   heroImage: 'Hero image',
+  heroMedia: 'Hero media',
   galleryImage: 'Gallery image',
   previewAsset: 'Preview asset',
   portrait: 'Portrait',
@@ -46,7 +47,9 @@ export function MediaUsagePanel({ usage }: { usage: MediaUsageRef[] }) {
             </span>
           ) : null}
           <span className="text-text-muted text-xs">
-            {ref.field === 'document' ? `In ${ref.documentRole ?? 'document'}` : FIELD_LABEL[ref.field]}
+            {ref.field === 'document'
+              ? `In ${ref.documentRole ?? 'document'}`
+              : FIELD_LABEL[ref.field]}
           </span>
         </li>
       ))}

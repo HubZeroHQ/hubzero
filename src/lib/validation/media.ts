@@ -9,6 +9,7 @@ export const MEDIA_FOLDERS: readonly MediaFolder[] = [
   'labs',
   'notes',
   'team',
+  'engineeringProfiles',
   'general',
 ] as const;
 

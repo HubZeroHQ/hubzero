@@ -25,3 +25,8 @@ export async function resolveHeroAndGallery(
     galleryAssets: galleryAssets.filter((asset): asset is MediaAsset => asset !== null),
   };
 }
+
+export async function resolveMediaAssets(ids: ObjectId[]): Promise<MediaAsset[]> {
+  const assets = await Promise.all(ids.map((id) => mediaRepository.findById(id.toString())));
+  return assets.filter((asset): asset is MediaAsset => asset !== null);
+}

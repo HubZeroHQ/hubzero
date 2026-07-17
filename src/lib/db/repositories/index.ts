@@ -1,6 +1,7 @@
 import { blueprintRepository } from './blueprint';
 import { buildRepository } from './build';
 import { documentRepository } from './document';
+import { engineeringProfileRepository } from './engineering-profile';
 import { labRepository } from './lab';
 import { leadRepository } from './lead';
 import { mediaRepository } from './media';
@@ -15,6 +16,7 @@ export {
   blueprintRepository,
   buildRepository,
   documentRepository,
+  engineeringProfileRepository,
   labRepository,
   leadRepository,
   mediaRepository,
@@ -36,6 +38,7 @@ export const repositories = {
   blueprints: blueprintRepository,
   labs: labRepository,
   notes: noteRepository,
+  engineeringProfiles: engineeringProfileRepository,
   team: teamRepository,
   services: serviceRepository,
   leads: leadRepository,
