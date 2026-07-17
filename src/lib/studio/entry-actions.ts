@@ -9,6 +9,8 @@ import {
 } from '@/lib/auth/permissions';
 import { zodErrorToFieldErrors } from '@/lib/validation/form-errors';
 import type { PublishStatus } from '@/types/studio';
+import { invalidatePublicEntity } from '@/lib/public/cache';
+import type { PublicEntityType } from '@/lib/public/domain';
 import { capabilityForTransition } from './workflow-permissions';
 import { isValidPublishTransition } from '@/config/workflow';
 
@@ -46,12 +48,16 @@ function actionErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : 'Something went wrong. Try again.';
 }
 
-export function createEntryCreateAction<TRecord, TInput extends object>(config: {
+export function createEntryCreateAction<
+  TRecord extends { slug: string },
+  TInput extends object,
+>(config: {
   create: (input: TInput, createdByUserId: string) => Promise<TRecord>;
   parseFormData: (formData: FormData) => TInput;
   idOf: (record: TRecord) => string;
   listPath: string;
   detailPath: (id: string) => string;
+  publicType?: PublicEntityType;
 }) {
   return async function createAction(
     _prevState: EntryActionState,
@@ -80,18 +86,20 @@ export function createEntryCreateAction<TRecord, TInput extends object>(config: 
     }
 
     revalidatePath(config.listPath);
+    if (config.publicType) invalidatePublicEntity(config.publicType, record.slug);
     redirect(config.detailPath(config.idOf(record)));
   };
 }
 
 export function createEntryUpdateAction<
-  TRecord extends OwnableEntry,
+  TRecord extends OwnableEntry & { slug: string },
   TInput extends object,
 >(config: {
   findById: (id: string) => Promise<TRecord | null>;
   update: (id: string, input: Partial<TInput>) => Promise<TRecord | null>;
   parseFormData: (formData: FormData) => Partial<TInput>;
   detailPath: (id: string) => string;
+  publicType?: PublicEntityType;
 }) {
   return async function updateAction(
     id: string,
@@ -110,7 +118,12 @@ export function createEntryUpdateAction<
     }
 
     try {
-      await config.update(id, config.parseFormData(formData));
+      const updated = await config.update(id, config.parseFormData(formData));
+      if (config.publicType) {
+        invalidatePublicEntity(config.publicType, existing.slug);
+        if (updated?.slug !== existing.slug)
+          invalidatePublicEntity(config.publicType, updated?.slug);
+      }
     } catch (error) {
       if (error instanceof ZodError) {
         return {
@@ -134,11 +147,12 @@ export function createEntryUpdateAction<
  * gates it (`workflow-permissions.ts`).
  */
 export function createEntryTransitionAction<
-  TRecord extends OwnableEntry & { status: PublishStatus },
+  TRecord extends OwnableEntry & { status: PublishStatus; slug: string },
 >(config: {
   findById: (id: string) => Promise<TRecord | null>;
   setStatus: (id: string, status: PublishStatus) => Promise<TRecord | null>;
   detailPath: (id: string) => string;
+  publicType?: PublicEntityType;
 }) {
   return async function transitionAction(id: string, to: PublishStatus): Promise<EntryActionState> {
     const existing = await config.findById(id);
@@ -167,6 +181,7 @@ export function createEntryTransitionAction<
     }
 
     await config.setStatus(id, to);
+    if (config.publicType) invalidatePublicEntity(config.publicType, existing.slug);
     revalidatePath(config.detailPath(id));
     return {};
   };

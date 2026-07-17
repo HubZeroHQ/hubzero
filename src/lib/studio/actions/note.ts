@@ -78,6 +78,7 @@ export const createNoteAction = createEntryCreateAction<Note, NoteInput>({
   idOf: (record) => record._id.toString(),
   listPath: NOTES_LIST_PATH,
   detailPath: noteDetailPath,
+  publicType: 'note',
 });
 
 export const updateNoteAction = createEntryUpdateAction<Note, NoteInput>({
@@ -85,12 +86,14 @@ export const updateNoteAction = createEntryUpdateAction<Note, NoteInput>({
   update: noteRepository.update,
   parseFormData: parseNoteUpdateFormData,
   detailPath: noteDetailPath,
+  publicType: 'note',
 });
 
 export const transitionNoteStatusAction = createEntryTransitionAction<Note>({
   findById: noteRepository.findById,
   setStatus: (id, status) => noteRepository.update(id, { status }),
   detailPath: noteDetailPath,
+  publicType: 'note',
 });
 
 /** A Note owns one Document (§26.5) — `body` — the long-form write-up. */

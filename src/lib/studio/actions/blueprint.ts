@@ -83,6 +83,7 @@ export const createBlueprintAction = createEntryCreateAction<Blueprint, Blueprin
   idOf: (record) => record._id.toString(),
   listPath: BLUEPRINTS_LIST_PATH,
   detailPath: blueprintDetailPath,
+  publicType: 'blueprint',
 });
 
 export const updateBlueprintAction = createEntryUpdateAction<Blueprint, BlueprintInput>({
@@ -90,12 +91,14 @@ export const updateBlueprintAction = createEntryUpdateAction<Blueprint, Blueprin
   update: blueprintRepository.update,
   parseFormData: parseBlueprintUpdateFormData,
   detailPath: blueprintDetailPath,
+  publicType: 'blueprint',
 });
 
 export const transitionBlueprintStatusAction = createEntryTransitionAction<Blueprint>({
   findById: blueprintRepository.findById,
   setStatus: (id, status) => blueprintRepository.update(id, { status }),
   detailPath: blueprintDetailPath,
+  publicType: 'blueprint',
 });
 
 /** A Blueprint owns one Document (§11, §26.3) — `caseStudy` — the "long description." */

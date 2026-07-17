@@ -13,6 +13,7 @@ import { toMediaAssetDTO, type MediaAssetDTO } from '@/lib/media/dto';
 import { findMediaUsage, type MediaUsageRef } from '@/lib/media/usage';
 import { mediaAssetSchema } from '@/lib/validation/media';
 import type { MediaFolder } from '@/types/studio';
+import { invalidatePublicMedia } from '@/lib/public/cache';
 
 const MEDIA_LIST_PATH = '/studio/library/media';
 const mediaDetailPath = (id: string) => `${MEDIA_LIST_PATH}/${id}`;
@@ -80,6 +81,7 @@ export async function createMediaFromUploadAction(input: {
     });
 
     const created = await mediaRepository.create(parsed, { createdByUserId: userId });
+    invalidatePublicMedia(created._id.toString());
     revalidatePath(MEDIA_LIST_PATH);
     return { data: toMediaAssetDTO(created) };
   } catch (error) {
@@ -114,6 +116,7 @@ export async function updateMediaMetadataAction(
 
   revalidatePath(mediaDetailPath(id));
   revalidatePath(MEDIA_LIST_PATH);
+  invalidatePublicMedia(id);
   return {};
 }
 
@@ -168,6 +171,7 @@ export async function replaceMediaAssetFileAction(
 
   revalidatePath(mediaDetailPath(id));
   revalidatePath(MEDIA_LIST_PATH);
+  invalidatePublicMedia(id);
   return { data: toMediaAssetDTO(updated) };
 }
 
@@ -206,6 +210,7 @@ export async function deleteMediaAction(
 
   await deleteCloudinaryAsset(asset.cloudinaryPublicId);
   await mediaRepository.remove(id);
+  invalidatePublicMedia(id);
   revalidatePath(MEDIA_LIST_PATH);
   return {};
 }

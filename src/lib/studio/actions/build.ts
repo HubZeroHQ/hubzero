@@ -81,6 +81,7 @@ export const createBuildAction = createEntryCreateAction<Build, BuildInput>({
   idOf: (record) => record._id.toString(),
   listPath: BUILDS_LIST_PATH,
   detailPath: buildDetailPath,
+  publicType: 'build',
 });
 
 export const updateBuildAction = createEntryUpdateAction<Build, BuildInput>({
@@ -88,12 +89,14 @@ export const updateBuildAction = createEntryUpdateAction<Build, BuildInput>({
   update: buildRepository.update,
   parseFormData: parseBuildUpdateFormData,
   detailPath: buildDetailPath,
+  publicType: 'build',
 });
 
 export const transitionBuildStatusAction = createEntryTransitionAction<Build>({
   findById: buildRepository.findById,
   setStatus: (id, status) => buildRepository.update(id, { status }),
   detailPath: buildDetailPath,
+  publicType: 'build',
 });
 
 /** A Build owns two Documents (§10, §26.2) — `caseStudy` and `technical` — each saved through its own bound action. */

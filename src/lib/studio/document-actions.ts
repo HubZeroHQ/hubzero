@@ -6,6 +6,17 @@ import type { Block } from '@/lib/documents/blocks';
 import type { DocumentRole, OwnerType } from '@/lib/documents/schema';
 import { zodErrorToFieldErrors } from '@/lib/validation/form-errors';
 import type { EntryActionState } from './entry-actions';
+import { invalidatePublicEntity } from '@/lib/public/cache';
+import type { PublicEntityType } from '@/lib/public/domain';
+
+const PUBLIC_TYPE_BY_OWNER: Partial<Record<OwnerType, PublicEntityType>> = {
+  Work: 'work',
+  Build: 'build',
+  Blueprint: 'blueprint',
+  Lab: 'lab',
+  Note: 'note',
+  EngineeringProfile: 'engineeringProfile',
+};
 
 /**
  * The Document Engine (§25) is already schema/persistence-shared across
@@ -15,7 +26,7 @@ import type { EntryActionState } from './entry-actions';
  * each collection reinventing "does a Document already exist for this
  * owner+role."
  */
-export function createDocumentSaveAction<TOwner extends OwnableEntry>(config: {
+export function createDocumentSaveAction<TOwner extends OwnableEntry & { slug: string }>(config: {
   ownerType: OwnerType;
   role: DocumentRole;
   findOwnerById: (id: string) => Promise<TOwner | null>;
@@ -65,6 +76,8 @@ export function createDocumentSaveAction<TOwner extends OwnableEntry>(config: {
     }
 
     revalidatePath(config.detailPath(ownerId));
+    const publicType = PUBLIC_TYPE_BY_OWNER[config.ownerType];
+    if (publicType) invalidatePublicEntity(publicType, owner.slug);
     return {};
   };
 }
