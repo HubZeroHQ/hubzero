@@ -6,6 +6,12 @@ import {
   createEntryTransitionAction,
   createEntryUpdateAction,
 } from '@/lib/studio/entry-actions';
+import {
+  createGenerateBlockAction,
+  createGenerateDocumentAction,
+  createTransformBlockAction,
+  createTransformSelectionAction,
+} from '@/lib/studio/generate-content-actions';
 import { blueprintRepository } from '@/lib/db/repositories/blueprint';
 import type { BlueprintInput } from '@/lib/validation/blueprint';
 import type { Blueprint } from '@/types/studio';
@@ -99,3 +105,29 @@ export const saveBlueprintCaseStudyAction = createDocumentSaveAction<Blueprint>(
   findOwnerById: blueprintRepository.findById,
   detailPath: blueprintDetailPath,
 });
+
+export const generateBlueprintCaseStudyDocumentAction = createGenerateDocumentAction<Blueprint>({
+  ownerType: 'Blueprint',
+  role: 'caseStudy',
+  findOwnerById: blueprintRepository.findById,
+});
+
+export const generateBlueprintCaseStudyBlockAction = createGenerateBlockAction<Blueprint>({
+  ownerType: 'Blueprint',
+  role: 'caseStudy',
+  findOwnerById: blueprintRepository.findById,
+});
+
+export const transformBlueprintCaseStudyBlockAction = createTransformBlockAction<Blueprint>({
+  ownerType: 'Blueprint',
+  role: 'caseStudy',
+  findOwnerById: blueprintRepository.findById,
+});
+
+export const transformBlueprintCaseStudySelectionAction = createTransformSelectionAction<Blueprint>(
+  {
+    ownerType: 'Blueprint',
+    role: 'caseStudy',
+    findOwnerById: blueprintRepository.findById,
+  },
+);

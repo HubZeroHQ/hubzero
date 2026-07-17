@@ -19,6 +19,11 @@ import { Plus } from 'lucide-react';
 import { memo } from 'react';
 import { getBlockCatalogEntry } from '@/lib/documents/block-catalog';
 import type { Block } from '@/lib/documents/blocks';
+import type { DocumentOutlineHeading } from '@/lib/ai/types';
+import { summarizeBlockForContext } from '@/lib/documents/ai-summarize';
+import { AiBlockMenu } from '@/components/documents/ai/AiBlockMenu';
+import { AiGeneratedBadge } from '@/components/documents/ai/AiGeneratedBadge';
+import type { BlockEditorAiConfig } from '@/components/documents/ai/types';
 import { BlockShell } from './BlockShell';
 import { BlockFields } from './fields/BlockFields';
 
@@ -47,6 +52,12 @@ export function BlockCanvas({
   onToggleCollapsed,
   onReorder,
   onInsertAt,
+  ai,
+  outline,
+  aiGeneratedBlockIds,
+  onDismissAiFlag,
+  onReplaceBlock,
+  onInsertAfterBlock,
 }: {
   blocks: Block[];
   selectedBlockId: string | null;
@@ -62,6 +73,12 @@ export function BlockCanvas({
   onToggleCollapsed: (id: string) => void;
   onReorder: (fromIndex: number, toIndex: number) => void;
   onInsertAt: (index: number) => void;
+  ai?: BlockEditorAiConfig;
+  outline: DocumentOutlineHeading[];
+  aiGeneratedBlockIds: Set<string>;
+  onDismissAiFlag: (id: string) => void;
+  onReplaceBlock: (targetId: string, blocks: Block[]) => void;
+  onInsertAfterBlock: (targetId: string, blocks: Block[]) => void;
 }) {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -137,6 +154,19 @@ export function BlockCanvas({
               onDelete={onDelete}
               onToggleCollapsed={onToggleCollapsed}
               onInsertAt={onInsertAt}
+              ai={ai}
+              outline={outline}
+              previousBlock={blocks[index - 1]}
+              adjacent={{
+                previous: blocks[index - 1]
+                  ? summarizeBlockForContext(blocks[index - 1]!)
+                  : undefined,
+                next: blocks[index + 1] ? summarizeBlockForContext(blocks[index + 1]!) : undefined,
+              }}
+              isAiGenerated={aiGeneratedBlockIds.has(block.id)}
+              onDismissAiFlag={onDismissAiFlag}
+              onReplaceBlock={onReplaceBlock}
+              onInsertAfterBlock={onInsertAfterBlock}
             />
           ))}
         </div>
@@ -171,6 +201,14 @@ const BlockRow = memo(function BlockRow({
   onDelete,
   onToggleCollapsed,
   onInsertAt,
+  ai,
+  outline,
+  adjacent,
+  previousBlock,
+  isAiGenerated,
+  onDismissAiFlag,
+  onReplaceBlock,
+  onInsertAfterBlock,
 }: {
   block: Block;
   index: number;
@@ -188,6 +226,17 @@ const BlockRow = memo(function BlockRow({
   onDelete: (id: string) => void;
   onToggleCollapsed: (id: string) => void;
   onInsertAt: (index: number) => void;
+  ai?: BlockEditorAiConfig;
+  outline: DocumentOutlineHeading[];
+  adjacent: {
+    previous?: ReturnType<typeof summarizeBlockForContext>;
+    next?: ReturnType<typeof summarizeBlockForContext>;
+  };
+  previousBlock?: Block;
+  isAiGenerated: boolean;
+  onDismissAiFlag: (id: string) => void;
+  onReplaceBlock: (targetId: string, blocks: Block[]) => void;
+  onInsertAfterBlock: (targetId: string, blocks: Block[]) => void;
 }) {
   return (
     <div>
@@ -205,8 +254,35 @@ const BlockRow = memo(function BlockRow({
         collapsible={collapsible}
         collapsed={collapsed}
         onToggleCollapsed={() => onToggleCollapsed(block.id)}
+        aiMenu={
+          ai ? (
+            <AiBlockMenu
+              block={block}
+              ai={ai}
+              outline={outline}
+              adjacent={adjacent}
+              onReplace={(blocks) => onReplaceBlock(block.id, blocks)}
+              onInsertAlternatives={(blocks) => onInsertAfterBlock(block.id, blocks)}
+            />
+          ) : undefined
+        }
+        aiBadge={
+          isAiGenerated ? (
+            <AiGeneratedBadge onDismiss={() => onDismissAiFlag(block.id)} />
+          ) : undefined
+        }
       >
-        <BlockFields block={block} onChange={onChangeBlock} technologyOptions={technologyOptions} />
+        <BlockFields
+          block={block}
+          onChange={onChangeBlock}
+          technologyOptions={technologyOptions}
+          ai={ai}
+          outline={outline}
+          adjacent={adjacent}
+          previousBlock={previousBlock}
+          onReplaceSelf={(blocks) => onReplaceBlock(block.id, blocks)}
+          onReplacePrevious={(blocks) => previousBlock && onReplaceBlock(previousBlock.id, blocks)}
+        />
       </BlockShell>
       <InsertDivider index={index + 1} onInsert={onInsertAt} />
     </div>

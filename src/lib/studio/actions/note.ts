@@ -6,6 +6,12 @@ import {
   createEntryTransitionAction,
   createEntryUpdateAction,
 } from '@/lib/studio/entry-actions';
+import {
+  createGenerateBlockAction,
+  createGenerateDocumentAction,
+  createTransformBlockAction,
+  createTransformSelectionAction,
+} from '@/lib/studio/generate-content-actions';
 import { noteRepository } from '@/lib/db/repositories/note';
 import { RELATED_ENTRY_FIELDS } from '@/lib/studio/note-relations';
 import type { NoteInput } from '@/lib/validation/note';
@@ -93,4 +99,29 @@ export const saveNoteBodyAction = createDocumentSaveAction<Note>({
   role: 'body',
   findOwnerById: noteRepository.findById,
   detailPath: noteDetailPath,
+});
+
+/** "Generate content" for the Note body Document (Phase 10, §31/§32) — same authorization as saving it. */
+export const generateNoteBodyDocumentAction = createGenerateDocumentAction<Note>({
+  ownerType: 'Note',
+  role: 'body',
+  findOwnerById: noteRepository.findById,
+});
+
+export const generateNoteBodyBlockAction = createGenerateBlockAction<Note>({
+  ownerType: 'Note',
+  role: 'body',
+  findOwnerById: noteRepository.findById,
+});
+
+export const transformNoteBodyBlockAction = createTransformBlockAction<Note>({
+  ownerType: 'Note',
+  role: 'body',
+  findOwnerById: noteRepository.findById,
+});
+
+export const transformNoteBodySelectionAction = createTransformSelectionAction<Note>({
+  ownerType: 'Note',
+  role: 'body',
+  findOwnerById: noteRepository.findById,
 });

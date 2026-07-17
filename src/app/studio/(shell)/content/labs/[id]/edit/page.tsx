@@ -8,10 +8,26 @@ import { ErrorState } from '@/components/ui/ErrorState';
 import { auth } from '@/lib/auth';
 import { canActOnEntry } from '@/lib/auth/permissions';
 import {
+  generateLabEngineeringJournalBlockAction,
+  generateLabEngineeringJournalDocumentAction,
+  generateLabFindingsBlockAction,
+  generateLabFindingsDocumentAction,
+  generateLabOverviewBlockAction,
+  generateLabOverviewDocumentAction,
+  generateLabResearchNotesBlockAction,
+  generateLabResearchNotesDocumentAction,
   saveLabEngineeringJournalAction,
   saveLabFindingsAction,
   saveLabOverviewAction,
   saveLabResearchNotesAction,
+  transformLabEngineeringJournalBlockAction,
+  transformLabEngineeringJournalSelectionAction,
+  transformLabFindingsBlockAction,
+  transformLabFindingsSelectionAction,
+  transformLabOverviewBlockAction,
+  transformLabOverviewSelectionAction,
+  transformLabResearchNotesBlockAction,
+  transformLabResearchNotesSelectionAction,
   updateLabAction,
 } from '@/lib/studio/actions/lab';
 import { getLabRelationOptions } from '@/lib/studio/lab-relations';
@@ -73,6 +89,35 @@ export default async function EditLabPage({ params }: { params: Promise<{ id: st
   const boundSaveFindingsAction = saveLabFindingsAction.bind(null, id);
   const boundSaveResearchNotesAction = saveLabResearchNotesAction.bind(null, id);
 
+  const overviewAiConfig = {
+    contentTypeLabel: 'Lab overview',
+    generateDocument: generateLabOverviewDocumentAction.bind(null, id),
+    generateBlock: generateLabOverviewBlockAction.bind(null, id),
+    transformBlock: transformLabOverviewBlockAction.bind(null, id),
+    transformSelection: transformLabOverviewSelectionAction.bind(null, id),
+  };
+  const engineeringJournalAiConfig = {
+    contentTypeLabel: 'engineering journal entry',
+    generateDocument: generateLabEngineeringJournalDocumentAction.bind(null, id),
+    generateBlock: generateLabEngineeringJournalBlockAction.bind(null, id),
+    transformBlock: transformLabEngineeringJournalBlockAction.bind(null, id),
+    transformSelection: transformLabEngineeringJournalSelectionAction.bind(null, id),
+  };
+  const findingsAiConfig = {
+    contentTypeLabel: 'findings entry',
+    generateDocument: generateLabFindingsDocumentAction.bind(null, id),
+    generateBlock: generateLabFindingsBlockAction.bind(null, id),
+    transformBlock: transformLabFindingsBlockAction.bind(null, id),
+    transformSelection: transformLabFindingsSelectionAction.bind(null, id),
+  };
+  const researchNotesAiConfig = {
+    contentTypeLabel: 'research notes entry',
+    generateDocument: generateLabResearchNotesDocumentAction.bind(null, id),
+    generateBlock: generateLabResearchNotesBlockAction.bind(null, id),
+    transformBlock: transformLabResearchNotesBlockAction.bind(null, id),
+    transformSelection: transformLabResearchNotesSelectionAction.bind(null, id),
+  };
+
   return (
     <div className="flex flex-col gap-10">
       <PageHeader
@@ -128,24 +173,28 @@ export default async function EditLabPage({ params }: { params: Promise<{ id: st
               label: 'Overview',
               initialBlocks: overviewDocument?.blocks ?? [],
               onSave: boundSaveOverviewAction,
+              ai: overviewAiConfig,
             },
             {
               role: 'engineeringJournal',
               label: 'Engineering Journal',
               initialBlocks: engineeringJournalDocument?.blocks ?? [],
               onSave: boundSaveEngineeringJournalAction,
+              ai: engineeringJournalAiConfig,
             },
             {
               role: 'findings',
               label: 'Findings',
               initialBlocks: findingsDocument?.blocks ?? [],
               onSave: boundSaveFindingsAction,
+              ai: findingsAiConfig,
             },
             {
               role: 'researchNotes',
               label: 'Research Notes',
               initialBlocks: researchNotesDocument?.blocks ?? [],
               onSave: boundSaveResearchNotesAction,
+              ai: researchNotesAiConfig,
             },
           ]}
           technologyOptions={technologyOptions}

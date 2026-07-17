@@ -7,7 +7,14 @@ import { ButtonLink } from '@/components/ui/ButtonLink';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { auth } from '@/lib/auth';
 import { canActOnEntry } from '@/lib/auth/permissions';
-import { saveWorkCaseStudyAction, updateWorkAction } from '@/lib/studio/actions/work';
+import {
+  generateWorkCaseStudyBlockAction,
+  generateWorkCaseStudyDocumentAction,
+  saveWorkCaseStudyAction,
+  transformWorkCaseStudyBlockAction,
+  transformWorkCaseStudySelectionAction,
+  updateWorkAction,
+} from '@/lib/studio/actions/work';
 import { getWorkRelationOptions } from '@/lib/studio/work-relations';
 import { documentRepository } from '@/lib/db/repositories/document';
 import { workRepository } from '@/lib/db/repositories/work';
@@ -47,6 +54,13 @@ export default async function EditWorkPage({ params }: { params: Promise<{ id: s
 
   const boundUpdateAction = updateWorkAction.bind(null, id);
   const boundSaveDocumentAction = saveWorkCaseStudyAction.bind(null, id);
+  const caseStudyAiConfig = {
+    contentTypeLabel: 'case study',
+    generateDocument: generateWorkCaseStudyDocumentAction.bind(null, id),
+    generateBlock: generateWorkCaseStudyBlockAction.bind(null, id),
+    transformBlock: transformWorkCaseStudyBlockAction.bind(null, id),
+    transformSelection: transformWorkCaseStudySelectionAction.bind(null, id),
+  };
 
   return (
     <div className="flex flex-col gap-10">
@@ -84,6 +98,7 @@ export default async function EditWorkPage({ params }: { params: Promise<{ id: s
           initialBlocks={document?.blocks ?? []}
           onSave={boundSaveDocumentAction}
           technologyOptions={technologyOptions}
+          ai={caseStudyAiConfig}
         />
       </section>
     </div>

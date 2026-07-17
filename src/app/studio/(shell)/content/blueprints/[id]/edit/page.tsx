@@ -8,7 +8,11 @@ import { ErrorState } from '@/components/ui/ErrorState';
 import { auth } from '@/lib/auth';
 import { canActOnEntry } from '@/lib/auth/permissions';
 import {
+  generateBlueprintCaseStudyBlockAction,
+  generateBlueprintCaseStudyDocumentAction,
   saveBlueprintCaseStudyAction,
+  transformBlueprintCaseStudyBlockAction,
+  transformBlueprintCaseStudySelectionAction,
   updateBlueprintAction,
 } from '@/lib/studio/actions/blueprint';
 import { getBlueprintRelationOptions } from '@/lib/studio/blueprint-relations';
@@ -53,6 +57,13 @@ export default async function EditBlueprintPage({ params }: { params: Promise<{ 
 
   const boundUpdateAction = updateBlueprintAction.bind(null, id);
   const boundSaveCaseStudyAction = saveBlueprintCaseStudyAction.bind(null, id);
+  const caseStudyAiConfig = {
+    contentTypeLabel: 'case study',
+    generateDocument: generateBlueprintCaseStudyDocumentAction.bind(null, id),
+    generateBlock: generateBlueprintCaseStudyBlockAction.bind(null, id),
+    transformBlock: transformBlueprintCaseStudyBlockAction.bind(null, id),
+    transformSelection: transformBlueprintCaseStudySelectionAction.bind(null, id),
+  };
 
   return (
     <div className="flex flex-col gap-10">
@@ -92,6 +103,7 @@ export default async function EditBlueprintPage({ params }: { params: Promise<{ 
           initialBlocks={caseStudyDocument?.blocks ?? []}
           onSave={boundSaveCaseStudyAction}
           technologyOptions={technologyOptions}
+          ai={caseStudyAiConfig}
         />
       </section>
     </div>

@@ -4,7 +4,10 @@ import { useId } from 'react';
 import { Field } from '@/components/ui/Field';
 import { Input } from '@/components/ui/Input';
 import type { Block } from '@/lib/documents/blocks';
+import type { AdjacentBlockContext, DocumentOutlineHeading } from '@/lib/ai/types';
 import { cn } from '@/lib/utils/cn';
+import type { BlockEditorAiConfig } from '@/components/documents/ai/types';
+import { TextBlockField } from '@/components/documents/ai/TextBlockField';
 import { ChecklistFields, OrderedListFields, UnorderedListFields } from './ListFields';
 import { ImageFields, ImageGalleryFields } from './ImageFields';
 import { LinksFields, ReferencesFields } from './LinkFields';
@@ -19,16 +22,32 @@ import { TimelineFields } from './TimelineFields';
  * The per-block-type field editor dispatch — covers all 21 catalog types
  * (`lib/documents/blocks.ts`). Simple single/few-field types render inline
  * here; anything with repeatable items, a picker, or a non-text editing
- * surface delegates to its own file in this folder.
+ * surface delegates to its own file in this folder. `ai`/`outline`/
+ * `adjacent`/`previousBlock`/`onReplaceSelf`/`onReplacePrevious` are only
+ * used by the paragraph/markdown cases (`TextBlockField`, Phase 10's
+ * selection toolbar + slash commands) and are all optional — every other
+ * case, and every caller that doesn't pass `ai`, behaves exactly as before.
  */
 export function BlockFields({
   block,
   onChange,
   technologyOptions,
+  ai,
+  outline,
+  adjacent,
+  previousBlock,
+  onReplaceSelf,
+  onReplacePrevious,
 }: {
   block: Block;
   onChange: (next: Block) => void;
   technologyOptions: Array<{ id: string; label: string }>;
+  ai?: BlockEditorAiConfig;
+  outline?: DocumentOutlineHeading[];
+  adjacent?: AdjacentBlockContext;
+  previousBlock?: Block;
+  onReplaceSelf?: (blocks: Block[]) => void;
+  onReplacePrevious?: (blocks: Block[]) => void;
 }) {
   const id = useId();
 
@@ -64,26 +83,37 @@ export function BlockFields({
       );
     case 'paragraph':
       return (
-        <textarea
+        <TextBlockField
           value={block.data.text}
-          onChange={(event) => onChange({ ...block, data: { text: event.target.value } })}
+          onChange={(text) => onChange({ ...block, data: { text } })}
           rows={3}
           placeholder="Paragraph text"
-          aria-label="Paragraph text"
-          className={textareaClass}
+          ariaLabel="Paragraph text"
+          ai={ai}
+          outline={outline ?? []}
+          adjacent={adjacent}
+          previousBlock={previousBlock}
+          onReplaceSelf={onReplaceSelf ?? (() => {})}
+          onReplacePrevious={onReplacePrevious ?? (() => {})}
         />
       );
     case 'richText':
       return <RichTextFields block={block} onChange={onChange} />;
     case 'markdown':
       return (
-        <textarea
+        <TextBlockField
           value={block.data.markdown}
-          onChange={(event) => onChange({ ...block, data: { markdown: event.target.value } })}
+          onChange={(markdown) => onChange({ ...block, data: { markdown } })}
           rows={4}
           placeholder="Markdown source"
-          aria-label="Markdown source"
-          className={cn(textareaClass, 'font-mono')}
+          ariaLabel="Markdown source"
+          monospace
+          ai={ai}
+          outline={outline ?? []}
+          adjacent={adjacent}
+          previousBlock={previousBlock}
+          onReplaceSelf={onReplaceSelf ?? (() => {})}
+          onReplacePrevious={onReplacePrevious ?? (() => {})}
         />
       );
     case 'quote':

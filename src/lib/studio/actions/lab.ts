@@ -11,6 +11,12 @@ import {
   createEntryUpdateAction,
   type EntryActionState,
 } from '@/lib/studio/entry-actions';
+import {
+  createGenerateBlockAction,
+  createGenerateDocumentAction,
+  createTransformBlockAction,
+  createTransformSelectionAction,
+} from '@/lib/studio/generate-content-actions';
 import { buildRepository } from '@/lib/db/repositories/build';
 import { labRepository } from '@/lib/db/repositories/lab';
 import type { LabInput } from '@/lib/validation/lab';
@@ -142,6 +148,59 @@ export const saveLabResearchNotesAction = createDocumentSaveAction<Lab>({
   findOwnerById: labRepository.findById,
   detailPath: labDetailPath,
 });
+
+/** "Generate content" for each of a Lab's four Documents — same four-action shape as every other collection, repeated per role rather than per collection. */
+function createLabGenerationActions(
+  role: 'overview' | 'engineeringJournal' | 'findings' | 'researchNotes',
+) {
+  return {
+    generateDocument: createGenerateDocumentAction<Lab>({
+      ownerType: 'Lab',
+      role,
+      findOwnerById: labRepository.findById,
+    }),
+    generateBlock: createGenerateBlockAction<Lab>({
+      ownerType: 'Lab',
+      role,
+      findOwnerById: labRepository.findById,
+    }),
+    transformBlock: createTransformBlockAction<Lab>({
+      ownerType: 'Lab',
+      role,
+      findOwnerById: labRepository.findById,
+    }),
+    transformSelection: createTransformSelectionAction<Lab>({
+      ownerType: 'Lab',
+      role,
+      findOwnerById: labRepository.findById,
+    }),
+  };
+}
+
+const labOverviewAi = createLabGenerationActions('overview');
+export const generateLabOverviewDocumentAction = labOverviewAi.generateDocument;
+export const generateLabOverviewBlockAction = labOverviewAi.generateBlock;
+export const transformLabOverviewBlockAction = labOverviewAi.transformBlock;
+export const transformLabOverviewSelectionAction = labOverviewAi.transformSelection;
+
+const labEngineeringJournalAi = createLabGenerationActions('engineeringJournal');
+export const generateLabEngineeringJournalDocumentAction = labEngineeringJournalAi.generateDocument;
+export const generateLabEngineeringJournalBlockAction = labEngineeringJournalAi.generateBlock;
+export const transformLabEngineeringJournalBlockAction = labEngineeringJournalAi.transformBlock;
+export const transformLabEngineeringJournalSelectionAction =
+  labEngineeringJournalAi.transformSelection;
+
+const labFindingsAi = createLabGenerationActions('findings');
+export const generateLabFindingsDocumentAction = labFindingsAi.generateDocument;
+export const generateLabFindingsBlockAction = labFindingsAi.generateBlock;
+export const transformLabFindingsBlockAction = labFindingsAi.transformBlock;
+export const transformLabFindingsSelectionAction = labFindingsAi.transformSelection;
+
+const labResearchNotesAi = createLabGenerationActions('researchNotes');
+export const generateLabResearchNotesDocumentAction = labResearchNotesAi.generateDocument;
+export const generateLabResearchNotesBlockAction = labResearchNotesAi.generateBlock;
+export const transformLabResearchNotesBlockAction = labResearchNotesAi.transformBlock;
+export const transformLabResearchNotesSelectionAction = labResearchNotesAi.transformSelection;
 
 /**
  * The explicit "Graduate to Build" action (PLANNING.md §26.4,

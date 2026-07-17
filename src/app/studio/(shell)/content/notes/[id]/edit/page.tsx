@@ -7,7 +7,14 @@ import { ButtonLink } from '@/components/ui/ButtonLink';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { auth } from '@/lib/auth';
 import { canActOnEntry } from '@/lib/auth/permissions';
-import { saveNoteBodyAction, updateNoteAction } from '@/lib/studio/actions/note';
+import {
+  generateNoteBodyBlockAction,
+  generateNoteBodyDocumentAction,
+  saveNoteBodyAction,
+  transformNoteBodyBlockAction,
+  transformNoteBodySelectionAction,
+  updateNoteAction,
+} from '@/lib/studio/actions/note';
 import { getNoteRelationOptions, splitRelatedEntries } from '@/lib/studio/note-relations';
 import { documentRepository } from '@/lib/db/repositories/document';
 import { noteRepository } from '@/lib/db/repositories/note';
@@ -53,6 +60,13 @@ export default async function EditNotePage({ params }: { params: Promise<{ id: s
 
   const boundUpdateAction = updateNoteAction.bind(null, id);
   const boundSaveBodyAction = saveNoteBodyAction.bind(null, id);
+  const bodyAiConfig = {
+    contentTypeLabel: 'engineering journal entry',
+    generateDocument: generateNoteBodyDocumentAction.bind(null, id),
+    generateBlock: generateNoteBodyBlockAction.bind(null, id),
+    transformBlock: transformNoteBodyBlockAction.bind(null, id),
+    transformSelection: transformNoteBodySelectionAction.bind(null, id),
+  };
 
   return (
     <div className="flex flex-col gap-10">
@@ -86,6 +100,7 @@ export default async function EditNotePage({ params }: { params: Promise<{ id: s
           initialBlocks={bodyDocument?.blocks ?? []}
           onSave={boundSaveBodyAction}
           technologyOptions={relationOptions.technologyOptions}
+          ai={bodyAiConfig}
         />
       </section>
     </div>

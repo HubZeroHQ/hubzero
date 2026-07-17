@@ -6,6 +6,12 @@ import {
   createEntryTransitionAction,
   createEntryUpdateAction,
 } from '@/lib/studio/entry-actions';
+import {
+  createGenerateBlockAction,
+  createGenerateDocumentAction,
+  createTransformBlockAction,
+  createTransformSelectionAction,
+} from '@/lib/studio/generate-content-actions';
 import { workRepository } from '@/lib/db/repositories/work';
 import type { WorkInput } from '@/lib/validation/work';
 import type { Work } from '@/types/studio';
@@ -80,4 +86,28 @@ export const saveWorkCaseStudyAction = createDocumentSaveAction<Work>({
   role: 'caseStudy',
   findOwnerById: workRepository.findById,
   detailPath: workDetailPath,
+});
+
+export const generateWorkCaseStudyDocumentAction = createGenerateDocumentAction<Work>({
+  ownerType: 'Work',
+  role: 'caseStudy',
+  findOwnerById: workRepository.findById,
+});
+
+export const generateWorkCaseStudyBlockAction = createGenerateBlockAction<Work>({
+  ownerType: 'Work',
+  role: 'caseStudy',
+  findOwnerById: workRepository.findById,
+});
+
+export const transformWorkCaseStudyBlockAction = createTransformBlockAction<Work>({
+  ownerType: 'Work',
+  role: 'caseStudy',
+  findOwnerById: workRepository.findById,
+});
+
+export const transformWorkCaseStudySelectionAction = createTransformSelectionAction<Work>({
+  ownerType: 'Work',
+  role: 'caseStudy',
+  findOwnerById: workRepository.findById,
 });
