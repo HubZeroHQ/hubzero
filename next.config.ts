@@ -22,6 +22,13 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       {
+        // Phase 15 owns the first public Homepage. Until then `/` is not a
+        // placeholder page; it routes operators to the only active product.
+        source: '/',
+        destination: '/studio',
+        permanent: false,
+      },
+      {
         source: '/cms',
         destination: '/studio',
         permanent: false,

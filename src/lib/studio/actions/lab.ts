@@ -105,6 +105,7 @@ export const createLabAction = createEntryCreateAction<Lab, LabInput>({
   idOf: (record) => record._id.toString(),
   listPath: LABS_LIST_PATH,
   detailPath: labDetailPath,
+  publicType: 'lab',
 });
 
 export const updateLabAction = createEntryUpdateAction<Lab, LabInput>({
@@ -112,12 +113,14 @@ export const updateLabAction = createEntryUpdateAction<Lab, LabInput>({
   update: labRepository.update,
   parseFormData: parseLabUpdateFormData,
   detailPath: labDetailPath,
+  publicType: 'lab',
 });
 
 export const transitionLabStatusAction = createEntryTransitionAction<Lab>({
   findById: labRepository.findById,
   setStatus: (id, status) => labRepository.update(id, { status }),
   detailPath: labDetailPath,
+  publicType: 'lab',
 });
 
 /** A Lab owns four Documents (Phase 10) — Overview, Engineering Journal, Findings, Research Notes — each saved through its own bound action, same pattern as Build's two. */

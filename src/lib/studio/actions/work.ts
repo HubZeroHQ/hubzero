@@ -66,6 +66,7 @@ export const createWorkAction = createEntryCreateAction<Work, WorkInput>({
   idOf: (record) => record._id.toString(),
   listPath: WORK_LIST_PATH,
   detailPath: workDetailPath,
+  publicType: 'work',
 });
 
 export const updateWorkAction = createEntryUpdateAction<Work, WorkInput>({
@@ -73,12 +74,14 @@ export const updateWorkAction = createEntryUpdateAction<Work, WorkInput>({
   update: workRepository.update,
   parseFormData: parseWorkUpdateFormData,
   detailPath: workDetailPath,
+  publicType: 'work',
 });
 
 export const transitionWorkStatusAction = createEntryTransitionAction<Work>({
   findById: workRepository.findById,
   setStatus: (id, status) => workRepository.update(id, { status }),
   detailPath: workDetailPath,
+  publicType: 'work',
 });
 
 export const saveWorkCaseStudyAction = createDocumentSaveAction<Work>({

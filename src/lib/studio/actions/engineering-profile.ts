@@ -57,6 +57,7 @@ export const createEngineeringProfileAction = createEntryCreateAction<
   idOf: (r) => r._id.toString(),
   listPath: LIST_PATH,
   detailPath,
+  publicType: 'engineeringProfile',
 });
 export const updateEngineeringProfileAction = createEntryUpdateAction<
   EngineeringProfile,
@@ -66,12 +67,14 @@ export const updateEngineeringProfileAction = createEntryUpdateAction<
   update: engineeringProfileRepository.update,
   parseFormData: parseUpdate,
   detailPath,
+  publicType: 'engineeringProfile',
 });
 export const transitionEngineeringProfileStatusAction =
   createEntryTransitionAction<EngineeringProfile>({
     findById: engineeringProfileRepository.findById,
     setStatus: (id, status) => engineeringProfileRepository.update(id, { status }),
     detailPath,
+    publicType: 'engineeringProfile',
   });
 
 export const saveEngineeringProfileDocumentAction = async (
