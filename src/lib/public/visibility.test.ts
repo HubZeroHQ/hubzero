@@ -2,13 +2,19 @@ import { describe, expect, it } from 'vitest';
 import { isPublicDocumentRole, isPubliclyVisible, publicFailureStatus } from './visibility';
 
 describe('canonical public visibility', () => {
-  it.each(['draft', 'inReview', 'approved', 'archived', undefined, 'unknown'])(
-    'fails closed for workflow state %s',
-    (status) => expect(isPubliclyVisible({ type: 'work', status })).toBe(false),
+  const workflowTypes = ['work', 'build', 'blueprint', 'lab', 'note'] as const;
+  const hiddenStates = ['draft', 'inReview', 'approved', 'archived', undefined, 'unknown'] as const;
+
+  it.each(workflowTypes.flatMap((type) => hiddenStates.map((status) => [type, status] as const)))(
+    'fails closed for %s workflow state %s',
+    (type, status) => expect(isPubliclyVisible({ type, status })).toBe(false),
   );
 
-  it('allows only published workflow records and published services', () => {
-    expect(isPubliclyVisible({ type: 'build', status: 'published' })).toBe(true);
+  it.each(workflowTypes)('allows only the published state for %s', (type) =>
+    expect(isPubliclyVisible({ type, status: 'published' })).toBe(true),
+  );
+
+  it('allows only published services', () => {
     expect(isPubliclyVisible({ type: 'service', status: 'published' })).toBe(true);
     expect(isPubliclyVisible({ type: 'service', status: 'draft' })).toBe(false);
   });

@@ -15,17 +15,19 @@ export function createPublicMetadata(input: {
   noIndex?: boolean;
   type?: 'website' | 'article';
 }): Metadata {
-  const title = input.title ? `${input.title} — ${PUBLIC_SITE.name}` : PUBLIC_SITE.name;
+  const socialTitle = input.title ? `${input.title} — ${PUBLIC_SITE.name}` : PUBLIC_SITE.name;
   const canonical = canonicalUrl(input.path);
   const image = input.image?.url ?? canonicalUrl(PUBLIC_SITE.socialImage).toString();
   return {
     metadataBase: canonicalUrl('/'),
-    title,
+    // The root layout owns the `%s — HubZero` document-title template.
+    // Supplying only the page title here prevents the site name being appended twice.
+    ...(input.title ? { title: input.title } : {}),
     description: input.description,
     alternates: { canonical },
     robots: input.noIndex ? { index: false, follow: false } : { index: true, follow: true },
     openGraph: {
-      title,
+      title: socialTitle,
       description: input.description,
       url: canonical,
       siteName: PUBLIC_SITE.name,
@@ -42,7 +44,7 @@ export function createPublicMetadata(input: {
     },
     twitter: {
       card: 'summary_large_image',
-      title,
+      title: socialTitle,
       description: input.description,
       images: [image],
     },

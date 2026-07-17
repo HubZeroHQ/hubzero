@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import type { PublicEntityType } from './domain';
 import {
   normalizeRelationshipAssertions,
   relationshipLabel,
@@ -43,6 +44,26 @@ describe('public relationship normalization', () => {
     expect(normalizeRelationshipAssertions(edges)).toEqual([]);
   });
 
+  it('omits exclusive lineage when multiple Labs claim the same Build', () => {
+    const edges: RelationshipAssertion[] = [
+      {
+        kind: 'labGraduatedToBuild',
+        fromType: 'lab',
+        fromId: 'lab-1',
+        toType: 'build',
+        toId: 'build-1',
+      },
+      {
+        kind: 'labGraduatedToBuild',
+        fromType: 'lab',
+        fromId: 'lab-2',
+        toType: 'build',
+        toId: 'build-1',
+      },
+    ];
+    expect(normalizeRelationshipAssertions(edges)).toEqual([]);
+  });
+
   it('uses directional and conservative labels', () => {
     expect(relationshipLabel(workBuild, 'build', 'build-1')).toBe('Applied in client work');
     expect(relationshipLabel(workBuild, 'work', 'work-1')).toBe('Informed by');
@@ -63,5 +84,29 @@ describe('public relationship normalization', () => {
       async () => null,
     );
     expect(relations).toEqual([]);
+  });
+
+  it('resolves one logical edge consistently in both directions', async () => {
+    const resolveLink = async (type: PublicEntityType, id: string) => ({
+      type,
+      title: id,
+      url: `/${type}/${id}`,
+    });
+    const fromBuild = await resolvePublicRelationships(
+      { type: 'build', id: 'build-1' },
+      [workBuild, workBuild],
+      resolveLink,
+    );
+    const fromWork = await resolvePublicRelationships(
+      { type: 'work', id: 'work-1' },
+      [workBuild],
+      resolveLink,
+    );
+    expect(fromBuild).toMatchObject([
+      { kind: 'buildAppliedInWork', label: 'Applied in client work', target: { type: 'work' } },
+    ]);
+    expect(fromWork).toMatchObject([
+      { kind: 'buildAppliedInWork', label: 'Informed by', target: { type: 'build' } },
+    ]);
   });
 });

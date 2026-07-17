@@ -13,6 +13,7 @@ import type {
 import { toPublicDocuments } from './documents';
 import type {
   OrganizationAuthor,
+  ImmutablePublic,
   PublicAuthor,
   PublicBlueprintSummary,
   PublicBuildSummary,
@@ -54,10 +55,18 @@ const TYPE_TO_OWNER: Record<PublicDetailEntityType, OwnerType> = {
 };
 
 export interface PublicRepository {
-  findSummary(type: PublicEntityType, slug: string): Promise<PublicEntitySummary | null>;
-  findDetail(type: PublicDetailEntityType, slug: string): Promise<PublicEntityDetail | null>;
-  listSummaries(type: PublicEntityType): Promise<PublicEntitySummary[]>;
-  listDiscoveryEntries(types?: readonly PublicEntityType[]): Promise<PublicDiscoveryEntry[]>;
+  findSummary(
+    type: PublicEntityType,
+    slug: string,
+  ): Promise<ImmutablePublic<PublicEntitySummary> | null>;
+  findDetail(
+    type: PublicDetailEntityType,
+    slug: string,
+  ): Promise<ImmutablePublic<PublicEntityDetail> | null>;
+  listSummaries(type: PublicEntityType): Promise<ImmutablePublic<PublicEntitySummary[]>>;
+  listDiscoveryEntries(
+    types?: readonly PublicEntityType[],
+  ): Promise<ImmutablePublic<PublicDiscoveryEntry[]>>;
 }
 
 export function createPublicRepository(source: PublicDataSource): PublicRepository {
@@ -314,7 +323,7 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
           referenceId: record.referenceId,
           summary: record.overview,
           role: team.role,
-          engineeringIdentity: record.engineeringIdentity,
+          engineeringIdentity: [...record.engineeringIdentity],
           currentExploration: record.currentExploration,
           state: record.currentExploration,
           technologies,
@@ -451,7 +460,7 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
           ...summary,
           documents,
           relationships,
-          features: (entity.record as Blueprint).features,
+          features: [...(entity.record as Blueprint).features],
         };
       }
       case 'lab': {
@@ -487,8 +496,8 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
           documents,
           relationships,
           engineeringPhilosophy: record.engineeringPhilosophy,
-          currentInterests: record.currentInterests,
-          areasOfExpertise: record.areasOfExpertise,
+          currentInterests: [...record.currentInterests],
+          areasOfExpertise: [...record.areasOfExpertise],
           gallery: await gallery(record.galleryImageIds),
         };
       }
@@ -501,14 +510,28 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
   }
 
   return {
-    findSummary,
-    findDetail,
-    listSummaries,
+    async findSummary(type, slug) {
+      return freezePublicDto(await findSummary(type, slug));
+    },
+    async findDetail(type, slug) {
+      return freezePublicDto(await findDetail(type, slug));
+    },
+    async listSummaries(type) {
+      return freezePublicDto(await listSummaries(type));
+    },
     async listDiscoveryEntries(types = ALL_PUBLIC_TYPES) {
       const summaries = (await Promise.all(types.map(listSummaries))).flat();
-      return summaries.map(toDiscoveryEntry);
+      return freezePublicDto(summaries.map(toDiscoveryEntry));
     },
   };
+}
+
+function freezePublicDto<T>(value: T): ImmutablePublic<T> {
+  if (value !== null && typeof value === 'object' && !Object.isFrozen(value)) {
+    for (const child of Object.values(value)) freezePublicDto(child);
+    Object.freeze(value);
+  }
+  return value as ImmutablePublic<T>;
 }
 
 const ALL_PUBLIC_TYPES: readonly PublicEntityType[] = [

@@ -1,5 +1,14 @@
 import type { Block } from '@/lib/documents/blocks';
 
+/** Compile-time view of the runtime-frozen objects returned by PublicRepository. */
+export type ImmutablePublic<T> = T extends (...args: never[]) => unknown
+  ? T
+  : T extends readonly (infer Item)[]
+    ? readonly ImmutablePublic<Item>[]
+    : T extends object
+      ? { readonly [Key in keyof T]: ImmutablePublic<T[Key]> }
+      : T;
+
 export type PublicEntityType =
   'work' | 'build' | 'blueprint' | 'lab' | 'note' | 'engineeringProfile' | 'teamMember' | 'service';
 

@@ -69,6 +69,9 @@ describe('public repository boundary', () => {
     expect(serialized).not.toContain('createdByUserId');
     expect(serialized).not.toContain('published');
     expect(serialized).not.toContain(creator.toString());
+    expect(Object.isFrozen(result)).toBe(true);
+    expect(Object.isFrozen(result?.technologies)).toBe(true);
+    expect(Object.isFrozen(blueprint)).toBe(false);
   });
 
   it('does not invent missing required summaries', async () => {
@@ -91,6 +94,36 @@ describe('public repository boundary', () => {
     };
     const repository = createPublicRepository(fakeSource({ entities: [entity('work', work)] }));
     expect(await repository.findSummary('work', 'work')).toBeNull();
+  });
+
+  it('does not resolve Documents for a non-visible owner', async () => {
+    const work = {
+      _id: new ObjectId(),
+      createdAt: now,
+      updatedAt: now,
+      createdByUserId: creator,
+      status: 'archived',
+      slug: 'archived-work',
+      referenceId: 'HZ-WK-002',
+      title: 'Archived work',
+      summary: 'This must remain unavailable.',
+      clientType: 'Private',
+      categoryTagIds: [],
+      timeline: '2026',
+      role: 'Engineering',
+      technologyIds: [],
+      relatedBuildIds: [],
+      relatedBlueprintIds: [],
+    } as Work & { summary: string };
+    let documentReads = 0;
+    const source = fakeSource({ entities: [entity('work', work)] });
+    source.findDocuments = async () => {
+      documentReads += 1;
+      return [];
+    };
+    const repository = createPublicRepository(source);
+    expect(await repository.findDetail('work', work.slug)).toBeNull();
+    expect(documentReads).toBe(0);
   });
 
   it('resolves User to Team to visible Profile without exposing the User', async () => {
@@ -226,5 +259,70 @@ describe('public repository boundary', () => {
       name: 'HubZero',
       url: '/about',
     });
+  });
+
+  it('resolves Team-only authors and fails closed for hidden Team or missing User links', async () => {
+    const user: User = {
+      _id: new ObjectId(),
+      name: 'Internal',
+      email: 'private@example.com',
+      role: 'admin',
+      createdAt: now,
+      updatedAt: now,
+    };
+    const team: Team = {
+      _id: new ObjectId(),
+      referenceId: 'HZ-TM-001',
+      name: 'Public Engineer',
+      role: 'Engineer',
+      bio: 'Builds durable systems.',
+      group: 'Engineering',
+      publicProfile: true,
+      userId: user._id,
+      createdAt: now,
+      updatedAt: now,
+    };
+    const note: Note = {
+      _id: new ObjectId(),
+      createdAt: now,
+      updatedAt: now,
+      createdByUserId: creator,
+      status: 'published',
+      slug: 'team-only-author',
+      referenceId: 'HZ-NT-002',
+      title: 'Team-only author',
+      authorId: user._id,
+      summary: 'A note with an About-linked public author.',
+      technologyIds: [],
+      relatedEntries: [],
+      publicationDate: now,
+      featured: false,
+      galleryImageIds: [],
+    };
+    const noteEntity = entity('note', note);
+
+    const teamOnly = await createPublicRepository(
+      fakeSource({ entities: [noteEntity], users: [user], teamsByUser: [team] }),
+    ).findSummary('note', note.slug);
+    expect(teamOnly?.type === 'note' ? teamOnly.author : null).toMatchObject({
+      kind: 'person',
+      name: 'Public Engineer',
+      url: '/about',
+      profileAvailable: false,
+    });
+
+    const hiddenTeam = await createPublicRepository(
+      fakeSource({
+        entities: [noteEntity],
+        users: [user],
+        teamsByUser: [{ ...team, publicProfile: false }],
+      }),
+    ).findSummary('note', note.slug);
+    expect(hiddenTeam?.type === 'note' ? hiddenTeam.author.kind : null).toBe('organization');
+
+    const missingUser = await createPublicRepository(
+      fakeSource({ entities: [noteEntity], teamsByUser: [team] }),
+    ).findSummary('note', note.slug);
+    expect(missingUser?.type === 'note' ? missingUser.author.kind : null).toBe('organization');
   });
 });
