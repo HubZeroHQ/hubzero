@@ -2,7 +2,12 @@ import { GoogleGenAI } from '@google/genai';
 import type { Block } from '@/lib/documents/blocks';
 import { serverEnv } from '@/lib/env';
 import { buildPrompt } from '../editorial';
-import { AiEmptyResponseError, AiMalformedResponseError, AiProviderError } from '../errors';
+import {
+  AiEmptyResponseError,
+  AiMalformedResponseError,
+  AiProviderError,
+  AiTimeoutError,
+} from '../errors';
 import type { ContentGenerationProvider } from '../provider';
 import { BLOCKS_RESPONSE_SCHEMA, TEXT_RESPONSE_SCHEMA } from '../response-schema';
 import type {
@@ -51,20 +56,19 @@ async function fetchImagePart(
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), IMAGE_FETCH_TIMEOUT_MS);
-    const response = await fetch(image.url, { signal: controller.signal });
-    clearTimeout(timeout);
-    if (!response.ok) {
-      return null;
+    try {
+      const response = await fetch(image.url, { signal: controller.signal });
+      if (!response.ok) return null;
+      const contentType = response.headers.get('content-type') ?? 'image/jpeg';
+      if (!contentType.startsWith('image/')) return null;
+      const buffer = await response.arrayBuffer();
+      if (buffer.byteLength > MAX_IMAGE_BYTES) return null;
+      return {
+        inlineData: { mimeType: contentType, data: Buffer.from(buffer).toString('base64') },
+      };
+    } finally {
+      clearTimeout(timeout);
     }
-    const contentType = response.headers.get('content-type') ?? 'image/jpeg';
-    if (!contentType.startsWith('image/')) {
-      return null;
-    }
-    const buffer = await response.arrayBuffer();
-    if (buffer.byteLength > MAX_IMAGE_BYTES) {
-      return null;
-    }
-    return { inlineData: { mimeType: contentType, data: Buffer.from(buffer).toString('base64') } };
   } catch {
     return null;
   }
@@ -99,6 +103,9 @@ export class GeminiProvider implements ContentGenerationProvider {
         : [];
 
     let responseText: string | undefined;
+    const timeoutMs = serverEnv().AI_PROVIDER_TIMEOUT_MS;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
     try {
       const client = getClient();
       const response = await client.models.generateContent({
@@ -110,6 +117,8 @@ export class GeminiProvider implements ContentGenerationProvider {
           },
         ],
         config: {
+          abortSignal: controller.signal,
+          httpOptions: { timeout: timeoutMs },
           systemInstruction,
           responseMimeType: 'application/json',
           responseSchema: isBlocksAction ? BLOCKS_RESPONSE_SCHEMA : TEXT_RESPONSE_SCHEMA,
@@ -118,7 +127,12 @@ export class GeminiProvider implements ContentGenerationProvider {
       });
       responseText = response.text;
     } catch (error) {
+      if (controller.signal.aborted) {
+        throw new AiTimeoutError();
+      }
       throw new AiProviderError('The Gemini API request failed.', error);
+    } finally {
+      clearTimeout(timeout);
     }
 
     if (!responseText || responseText.trim().length === 0) {

@@ -2,7 +2,7 @@ import { blockSchema, type Block } from '@/lib/documents/blocks';
 import { createBlockId } from '@/lib/documents/block-ops';
 import { AiEmptyResponseError, AiMalformedResponseError, AiRateLimitError } from './errors';
 import type { ContentGenerationProvider } from './provider';
-import { checkRateLimit } from './rate-limit';
+import { aiRateLimiter, type AiRateLimiter } from './rate-limit';
 import type {
   BlockGenerationResult,
   GenerationRequest,
@@ -21,8 +21,8 @@ import type {
  * - **Result validation** — every returned block is re-parsed against the
  *   real `blockSchema` (not the looser Gemini-dialect schema used only to
  *   steer generation, `response-schema.ts`). A block that fails validation
- *   is dropped, never silently coerced into a fake-valid shape (§31); the
- *   whole result only fails if *nothing* survives.
+ *   rejects the entire provider result, so the editor never receives a
+ *   silently incomplete draft (§31).
  */
 
 function reviveBlocks(rawBlocks: unknown[]): { blocks: Block[]; rejectedCount: number } {
@@ -42,13 +42,17 @@ function reviveBlocks(rawBlocks: unknown[]): { blocks: Block[]; rejectedCount: n
 }
 
 function validateBlockResult(result: BlockGenerationResult): BlockGenerationResult {
+  if (result.blocks.length > 100 || JSON.stringify(result.blocks).length > 200_000) {
+    throw new AiMalformedResponseError('The AI response exceeded the safe block-output limit.');
+  }
   const { blocks, rejectedCount } = reviveBlocks(result.blocks as unknown[]);
+  if (rejectedCount > 0) {
+    throw new AiMalformedResponseError(
+      `${rejectedCount} block(s) the AI returned did not match the Document Engine's schema.`,
+    );
+  }
   if (blocks.length === 0) {
-    throw rejectedCount > 0
-      ? new AiMalformedResponseError(
-          `None of the ${rejectedCount} block(s) the AI returned matched the Document Engine's schema.`,
-        )
-      : new AiEmptyResponseError();
+    throw new AiEmptyResponseError();
   }
   return { kind: 'blocks', blocks, containsPlaceholders: result.containsPlaceholders };
 }
@@ -57,6 +61,9 @@ function validateTextResult(result: TextGenerationResult): TextGenerationResult 
   const text = result.text.trim();
   if (text.length === 0) {
     throw new AiEmptyResponseError();
+  }
+  if (text.length > 100_000) {
+    throw new AiMalformedResponseError('The AI response exceeded the safe text-output limit.');
   }
   return { kind: 'text', text };
 }
@@ -72,8 +79,9 @@ export async function generateWithProvider<R extends GenerationRequest>(
   provider: ContentGenerationProvider,
   request: R,
   userId: string,
+  rateLimiter: AiRateLimiter = aiRateLimiter,
 ): Promise<GenerationResultFor<R>> {
-  const rateLimit = checkRateLimit(userId);
+  const rateLimit = await rateLimiter.consume(userId);
   if (!rateLimit.allowed) {
     throw new AiRateLimitError('Too many AI requests in a short window.', rateLimit.retryAfterMs);
   }

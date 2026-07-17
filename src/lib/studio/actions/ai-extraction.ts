@@ -33,6 +33,13 @@ export async function extractReferenceFileTextAction(
     return { ok: false, error: 'No file was supplied.' };
   }
 
+  if (file.name.length > 255) {
+    return { ok: false, error: 'The file name is too long.' };
+  }
+  if (file.size > 10 * 1024 * 1024) {
+    return { ok: false, error: 'That file is larger than the 10MB reference-file limit.' };
+  }
+
   try {
     const buffer = Buffer.from(await file.arrayBuffer());
     const text = await extractTextFromFile(buffer, file.type, file.name);

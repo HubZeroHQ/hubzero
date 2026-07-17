@@ -58,7 +58,7 @@ describe('generateWithProvider', () => {
     expect(result.blocks[0]).toMatchObject({ type: 'paragraph', data: { text: 'Hello.' } });
   });
 
-  it('drops individually invalid blocks but keeps the valid ones', async () => {
+  it('rejects the entire result when any returned block is invalid', async () => {
     resetRateLimitForTests('user-2');
     const valid = { id: 'a', type: 'paragraph', data: { text: 'Real content.' } };
     const invalid = { id: 'b', type: 'paragraph', data: { text: 123 } }; // wrong type for `text`
@@ -68,9 +68,9 @@ describe('generateWithProvider', () => {
       containsPlaceholders: false,
     });
 
-    const result = await generateWithProvider(provider, documentRequest, 'user-2');
-    expect(result.blocks).toHaveLength(1);
-    expect(result.blocks[0]).toMatchObject({ data: { text: 'Real content.' } });
+    await expect(generateWithProvider(provider, documentRequest, 'user-2')).rejects.toBeInstanceOf(
+      AiMalformedResponseError,
+    );
   });
 
   it('throws AiMalformedResponseError when every returned block is invalid', async () => {

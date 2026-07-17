@@ -18,7 +18,7 @@ vi.mock('@google/genai', () => ({
 }));
 
 vi.mock('@/lib/env', () => ({
-  serverEnv: () => ({ GEMINI_API_KEY: 'test-api-key' }),
+  serverEnv: () => ({ GEMINI_API_KEY: 'test-api-key', AI_PROVIDER_TIMEOUT_MS: 30_000 }),
 }));
 
 const { GeminiProvider } = await import('./gemini-provider');
@@ -100,6 +100,15 @@ describe('GeminiProvider', () => {
     generateContentMock.mockRejectedValue(new Error('network exploded'));
     const provider = new GeminiProvider();
     await expect(provider.generate(documentRequest)).rejects.toBeInstanceOf(AiProviderError);
+  });
+
+  it('passes a configurable timeout and cancellation signal to the SDK', async () => {
+    generateContentMock.mockResolvedValue({ text: JSON.stringify({ text: 'Done.' }) });
+    await new GeminiProvider().generate(selectionRequest);
+
+    const config = generateContentMock.mock.calls[0]![0].config;
+    expect(config.httpOptions.timeout).toBe(30_000);
+    expect(config.abortSignal).toBeInstanceOf(AbortSignal);
   });
 
   it('passes systemInstruction and the structured response schema to the underlying SDK call', async () => {

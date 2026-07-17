@@ -8,6 +8,20 @@
 
 export class AiGenerationError extends Error {}
 
+export class AiInvalidRequestError extends AiGenerationError {
+  constructor(message = 'The AI request was invalid or too large.') {
+    super(message);
+    this.name = 'AiInvalidRequestError';
+  }
+}
+
+export class AiTimeoutError extends AiGenerationError {
+  constructor(message = 'The AI request timed out.') {
+    super(message);
+    this.name = 'AiTimeoutError';
+  }
+}
+
 /** The provider itself failed — network error, non-2xx response, SDK exception. Never exposes the provider's raw error shape past this boundary. */
 export class AiProviderError extends AiGenerationError {
   constructor(
@@ -51,6 +65,12 @@ export class AiRateLimitError extends AiGenerationError {
 
 /** Converts any thrown value into a plain, user-facing message — the one place server actions translate an AI failure into copy an author reads. */
 export function describeAiError(error: unknown): string {
+  if (error instanceof AiInvalidRequestError) {
+    return error.message;
+  }
+  if (error instanceof AiTimeoutError) {
+    return 'The AI request took too long, so it was cancelled. Nothing was changed. Try again with less context.';
+  }
   if (error instanceof AiRateLimitError) {
     const seconds = Math.ceil(error.retryAfterMs / 1000);
     return `You're generating content too quickly. Try again in about ${seconds}s.`;

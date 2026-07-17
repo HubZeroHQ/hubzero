@@ -1,5 +1,5 @@
 import { type OwnableEntry, requireEntryCapability } from '@/lib/auth/permissions';
-import { describeAiError } from '@/lib/ai/errors';
+import { AiInvalidRequestError, describeAiError } from '@/lib/ai/errors';
 import { getContentGenerationProvider } from '@/lib/ai/registry';
 import { generateWithProvider } from '@/lib/ai/service';
 import type {
@@ -12,6 +12,13 @@ import type {
 } from '@/lib/ai/types';
 import type { Block, BlockType } from '@/lib/documents/blocks';
 import type { DocumentRole, OwnerType } from '@/lib/documents/schema';
+import {
+  generateBlockInputSchema,
+  generateDocumentInputSchema,
+  ownerIdSchema,
+  transformBlockInputSchema,
+  transformSelectionInputSchema,
+} from '@/lib/ai/validation';
 import { mediaRepository } from '@/lib/db/repositories/media';
 import { buildGenerationEntryMetadata } from './ai-context';
 
@@ -84,6 +91,17 @@ async function authorize<TOwner extends OwnableEntry>(
   return userId;
 }
 
+function validateActionInput<T>(
+  schema: { safeParse: (value: unknown) => { success: true; data: T } | { success: false } },
+  value: unknown,
+): T {
+  const parsed = schema.safeParse(value);
+  if (!parsed.success) {
+    throw new AiInvalidRequestError();
+  }
+  return parsed.data;
+}
+
 export interface GenerateDocumentInput extends EditorialOptions {
   contentType: string;
   freeformText?: string;
@@ -100,12 +118,18 @@ export function createGenerateDocumentAction<TOwner extends OwnableEntry>(
     input: GenerateDocumentInput,
   ): Promise<GenerateBlocksActionResult> {
     try {
-      const userId = await authorize(config, ownerId);
-      const entry = await buildGenerationEntryMetadata(config.ownerType, ownerId, config.role);
-      const images = await resolveTrustedImages(input.images);
+      const trustedOwnerId = validateActionInput(ownerIdSchema, ownerId);
+      const validatedInput = validateActionInput(generateDocumentInputSchema, input);
+      const userId = await authorize(config, trustedOwnerId);
+      const entry = await buildGenerationEntryMetadata(
+        config.ownerType,
+        trustedOwnerId,
+        config.role,
+      );
+      const images = await resolveTrustedImages(validatedInput.images);
       const result = await generateWithProvider(
         getContentGenerationProvider(),
-        { action: 'document', entry, ...input, images },
+        { action: 'document', entry, ...validatedInput, images },
         userId,
       );
       return { ok: true, blocks: result.blocks, containsPlaceholders: result.containsPlaceholders };
@@ -130,11 +154,17 @@ export function createGenerateBlockAction<TOwner extends OwnableEntry>(
     input: GenerateBlockInput,
   ): Promise<GenerateBlocksActionResult> {
     try {
-      const userId = await authorize(config, ownerId);
-      const entry = await buildGenerationEntryMetadata(config.ownerType, ownerId, config.role);
+      const trustedOwnerId = validateActionInput(ownerIdSchema, ownerId);
+      const validatedInput = validateActionInput(generateBlockInputSchema, input);
+      const userId = await authorize(config, trustedOwnerId);
+      const entry = await buildGenerationEntryMetadata(
+        config.ownerType,
+        trustedOwnerId,
+        config.role,
+      );
       const result = await generateWithProvider(
         getContentGenerationProvider(),
-        { action: 'block', entry, ...input },
+        { action: 'block', entry, ...validatedInput },
         userId,
       );
       return { ok: true, blocks: result.blocks, containsPlaceholders: result.containsPlaceholders };
@@ -160,11 +190,17 @@ export function createTransformBlockAction<TOwner extends OwnableEntry>(
     input: TransformBlockInput,
   ): Promise<GenerateBlocksActionResult> {
     try {
-      const userId = await authorize(config, ownerId);
-      const entry = await buildGenerationEntryMetadata(config.ownerType, ownerId, config.role);
+      const trustedOwnerId = validateActionInput(ownerIdSchema, ownerId);
+      const validatedInput = validateActionInput(transformBlockInputSchema, input);
+      const userId = await authorize(config, trustedOwnerId);
+      const entry = await buildGenerationEntryMetadata(
+        config.ownerType,
+        trustedOwnerId,
+        config.role,
+      );
       const result = await generateWithProvider(
         getContentGenerationProvider(),
-        { action: 'transform-block', entry, ...input },
+        { action: 'transform-block', entry, ...validatedInput },
         userId,
       );
       return { ok: true, blocks: result.blocks, containsPlaceholders: result.containsPlaceholders };
@@ -190,11 +226,17 @@ export function createTransformSelectionAction<TOwner extends OwnableEntry>(
     input: TransformSelectionInput,
   ): Promise<GenerateTextActionResult> {
     try {
-      const userId = await authorize(config, ownerId);
-      const entry = await buildGenerationEntryMetadata(config.ownerType, ownerId, config.role);
+      const trustedOwnerId = validateActionInput(ownerIdSchema, ownerId);
+      const validatedInput = validateActionInput(transformSelectionInputSchema, input);
+      const userId = await authorize(config, trustedOwnerId);
+      const entry = await buildGenerationEntryMetadata(
+        config.ownerType,
+        trustedOwnerId,
+        config.role,
+      );
       const result = await generateWithProvider(
         getContentGenerationProvider(),
-        { action: 'transform-selection', entry, ...input },
+        { action: 'transform-selection', entry, ...validatedInput },
         userId,
       );
       return { ok: true, text: result.text };
