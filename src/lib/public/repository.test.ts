@@ -184,7 +184,7 @@ describe('public repository boundary', () => {
     expect(documentReads).toBe(0);
   });
 
-  it('resolves User to Team to visible Profile without exposing the User', async () => {
+  it('resolves User to Team without linking a published but ineligible Profile', async () => {
     const user: User = {
       _id: new ObjectId(),
       name: 'Internal account',
@@ -259,7 +259,8 @@ describe('public repository boundary', () => {
     expect(result.author).toMatchObject({
       kind: 'person',
       name: 'Public Engineer',
-      profileAvailable: true,
+      url: '/about',
+      profileAvailable: false,
     });
     expect(JSON.stringify(result)).not.toContain(user.email);
     expect(JSON.stringify(result)).not.toContain('Internal account');
@@ -431,5 +432,110 @@ describe('public repository boundary', () => {
       fakeSource({ entities: [noteEntity], teamsByUser: [team] }),
     ).findSummary('note', note.slug);
     expect(missingUser?.type === 'note' ? missingUser.author.kind : null).toBe('organization');
+  });
+
+  it('publishes only earned Engineering Profiles and keeps ineligible details fail-closed', async () => {
+    const team = (name: string): Team => ({
+      _id: new ObjectId(),
+      referenceId: 'HZ-TM-101',
+      name,
+      role: 'Systems engineer',
+      bio: 'Builds explicit public systems.',
+      group: 'Engineering',
+      publicProfile: true,
+      createdAt: now,
+      updatedAt: now,
+    });
+    const eligibleTeam = team('Eligible engineer');
+    const thinTeam = team('Thin engineer');
+    const work = (title: string, referenceId: `HZ-WK-${string}`): Work => ({
+      _id: new ObjectId(),
+      createdAt: now,
+      updatedAt: now,
+      createdByUserId: creator,
+      status: 'published',
+      slug: title.toLowerCase().replaceAll(' ', '-'),
+      referenceId,
+      title,
+      summary: `${title} is a complete public evidence record.`,
+      clientType: 'Product team',
+      categoryTagIds: [],
+      timeline: '12 weeks',
+      role: 'Product engineering',
+      technologyIds: [],
+      relatedBuildIds: [],
+      relatedBlueprintIds: [],
+      relatedLabIds: [],
+      contributorProfileIds: [],
+    });
+    const firstWork = work('First evidence', 'HZ-WK-101');
+    const secondWork = work('Second evidence', 'HZ-WK-102');
+    const profile = (
+      teamMemberId: ObjectId,
+      slug: string,
+      featuredWorkIds: ObjectId[],
+    ): EngineeringProfile => ({
+      _id: new ObjectId(),
+      createdAt: now,
+      updatedAt: now,
+      createdByUserId: creator,
+      status: 'published',
+      slug,
+      referenceId: slug === 'eligible-engineer' ? 'EP-101' : 'EP-102',
+      teamMemberId,
+      overview: 'Builds public systems around explicit ownership and observable state.',
+      engineeringPhilosophy: 'Make the evidence boundary explicit before implementation.',
+      currentExploration: 'Deterministic public read models',
+      areasOfExpertise: ['Public data architecture'],
+      currentInterests: ['Dependency graphs'],
+      engineeringIdentity: ['State and ownership should remain legible.'],
+      technologyIds: [],
+      featuredWorkIds,
+      featuredBuildIds: [],
+      featuredBlueprintIds: [],
+      featuredLabIds: [],
+      featuredNoteIds: [],
+      galleryImageIds: [],
+    });
+    const eligible = profile(eligibleTeam._id, 'eligible-engineer', [
+      firstWork._id,
+      secondWork._id,
+    ]);
+    firstWork.contributorProfileIds = [eligible._id];
+    secondWork.contributorProfileIds = [eligible._id];
+    const thin = profile(thinTeam._id, 'thin-engineer', []);
+    const substantialText = Array.from({ length: 48 }, (_, index) => `evidence-${index}`).join(' ');
+    const profileDocument: DocumentRecord = {
+      _id: new ObjectId(),
+      ownerType: 'EngineeringProfile',
+      ownerId: eligible._id,
+      role: 'introduction',
+      blocks: [
+        { id: 'one', type: 'paragraph', data: { text: substantialText } },
+        { id: 'two', type: 'paragraph', data: { text: substantialText } },
+      ],
+      createdAt: now,
+      updatedAt: now,
+    };
+    const repository = createPublicRepository(
+      fakeSource({
+        entities: [
+          entity('teamMember', eligibleTeam),
+          entity('teamMember', thinTeam),
+          entity('work', firstWork),
+          entity('work', secondWork),
+          entity('engineeringProfile', eligible),
+          entity('engineeringProfile', thin),
+        ],
+        documents: [profileDocument],
+      }),
+    );
+
+    const entries = await repository.listEngineeringProfileIndexEntries();
+    expect(entries).toHaveLength(1);
+    expect(entries[0]?.profile.title).toBe('Eligible engineer');
+    expect(entries[0]?.relationships).toHaveLength(2);
+    expect(await repository.findDetail('engineeringProfile', thin.slug)).toBeNull();
+    expect(await repository.findSummary('engineeringProfile', thin.slug)).toBeNull();
   });
 });

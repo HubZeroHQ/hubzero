@@ -20,7 +20,10 @@ export const metadata: Metadata = createPublicMetadata({
 });
 
 export default async function LabsIndexPage() {
-  const summaries = await listPublicSummaries('lab');
+  const summaries = await listPublicSummaries('lab').catch((error) => {
+    console.error('Labs public index read failed.', error);
+    return [] as Awaited<ReturnType<typeof listPublicSummaries>>;
+  });
   const labs = summaries.filter((summary): summary is PublicLabSummary => summary.type === 'lab');
   return (
     <>

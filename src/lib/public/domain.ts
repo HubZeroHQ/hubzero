@@ -202,6 +202,12 @@ export interface PublicEngineeringProfileSummary extends PublicSummaryBase {
   portrait?: PublicMedia;
 }
 
+export interface PublicEngineeringProfileIndexEntry {
+  profile: PublicEngineeringProfileSummary;
+  areasOfExpertise: string[];
+  relationships: PublicRelationship[];
+}
+
 export interface PublicTeamMemberSummary extends PublicSummaryBase {
   type: 'teamMember';
   group: string;

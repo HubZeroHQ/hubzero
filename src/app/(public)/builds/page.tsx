@@ -20,7 +20,10 @@ export const metadata: Metadata = createPublicMetadata({
 });
 
 export default async function BuildsIndexPage() {
-  const summaries = await listPublicSummaries('build');
+  const summaries = await listPublicSummaries('build').catch((error) => {
+    console.error('Builds public index read failed.', error);
+    return [] as Awaited<ReturnType<typeof listPublicSummaries>>;
+  });
   const builds = summaries.filter(
     (summary): summary is PublicBuildSummary => summary.type === 'build',
   );

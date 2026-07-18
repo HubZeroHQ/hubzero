@@ -10,7 +10,7 @@ import { getPublicDetail, listPublicSummaries } from '@/lib/public/queries';
 export const revalidate = 86_400;
 
 export async function generateStaticParams() {
-  const entries = await listPublicSummaries('build');
+  const entries = await listPublicSummaries('build').catch(() => []);
   return entries.flatMap((entry) => (entry.type === 'build' ? [{ slug: entry.slug }] : []));
 }
 
