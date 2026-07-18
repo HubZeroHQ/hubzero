@@ -219,6 +219,11 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
           media(record.heroImageId, 'hero'),
           gallery(record.previewAssetIds),
         ]);
+        // Blueprint publication has a stronger editorial gate than workflow visibility:
+        // another team must be able to inspect a real implementation before the record is
+        // presented as reusable. This keeps fixture-only records out of routes, discovery,
+        // relationships, and collection counts through the shared DTO boundary.
+        if (!record.features.length || !previewMedia.length) return null;
         const links = [
           externalLink('live', 'Open live preview', record.liveDeploymentUrl, 'live'),
           externalLink('repository', 'View repository', record.repoUrl),

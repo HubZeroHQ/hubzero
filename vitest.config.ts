@@ -10,6 +10,9 @@ import { defineConfig } from 'vitest/config';
  * logic, not to introduce a full component-testing setup.
  */
 export default defineConfig({
+  oxc: {
+    jsx: { runtime: 'automatic' },
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

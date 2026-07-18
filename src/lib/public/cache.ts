@@ -3,6 +3,9 @@ import 'server-only';
 import { revalidateTag } from 'next/cache';
 import type { PublicEntityType } from './domain';
 
+/** Bump when the serialized public-read contract or editorial eligibility changes. */
+export const PUBLIC_CACHE_VERSION = 'phase-18';
+
 export const PUBLIC_CACHE_TAGS = {
   entity: (type: PublicEntityType, slug: string) => `public:entity:${type}:${slug}`,
   collection: (type: PublicEntityType) => `public:collection:${type}`,

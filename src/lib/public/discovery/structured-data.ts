@@ -2,6 +2,7 @@ import { PUBLIC_SITE } from '@/config/public-site';
 import { publicEnv } from '@/lib/env';
 import type {
   ImmutablePublic,
+  PublicBlueprintSummary,
   PublicBuildSummary,
   PublicLabSummary,
   PublicWorkSummary,
@@ -73,7 +74,9 @@ export function collectionPageJsonLd(input: {
 }
 
 export function publicArtifactJsonLd(
-  entity: ImmutablePublic<PublicWorkSummary | PublicBuildSummary | PublicLabSummary>,
+  entity: ImmutablePublic<
+    PublicWorkSummary | PublicBuildSummary | PublicBlueprintSummary | PublicLabSummary
+  >,
 ): JsonLd {
   const common = {
     '@context': 'https://schema.org',
@@ -99,6 +102,16 @@ export function publicArtifactJsonLd(
       genre: 'Engineering case study',
       creator: { '@id': `${absolute('/')}#organization` },
       about: entity.categories.map((category) => category.label),
+    };
+  }
+  if (entity.type === 'blueprint') {
+    return {
+      ...common,
+      '@type': 'CreativeWork',
+      genre: 'Reusable engineering blueprint',
+      creator: { '@id': `${absolute('/')}#organization` },
+      version: entity.version,
+      about: [entity.architecture, entity.designLanguage],
     };
   }
   return {

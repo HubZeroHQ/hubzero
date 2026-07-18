@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type {
+  PublicBlueprintSummary,
   ImmutablePublic,
   PublicBuildSummary,
   PublicLabSummary,
@@ -10,7 +11,8 @@ import { MetadataRow, PublicationMetadata, TechnologyList } from '../EditorialPr
 import { PageContainer, PublicSection } from '../PageContainer';
 import { PublicImage } from '../PublicImage';
 
-type CollectionSummary = PublicWorkSummary | PublicBuildSummary | PublicLabSummary;
+type CollectionSummary =
+  PublicWorkSummary | PublicBuildSummary | PublicBlueprintSummary | PublicLabSummary;
 
 const COPY = {
   work: {
@@ -34,6 +36,17 @@ const COPY = {
     emptyTitle: 'The product record starts with shipped work.',
     emptyBody:
       'Builds will appear here when a finished HubZero product has a complete public record: product context, technical evidence, and an honest current state.',
+  },
+  blueprint: {
+    eyebrow: 'Blueprints / reusable systems',
+    title: 'Engineering foundations made reusable.',
+    introduction:
+      'Blueprints are versioned foundations for recurring product and website problems. Each publication defines its information architecture, design language, implementation guidance, and evidence of use.',
+    collectionLabel: 'Reusable engineering assets',
+    indexTitle: 'Published foundations',
+    emptyTitle: 'A Blueprint is published when the system is reusable.',
+    emptyBody:
+      'Blueprints will appear here when a versioned foundation has a working implementation, structured documentation, and enough evidence for another team to evaluate and reuse it.',
   },
   lab: {
     eyebrow: 'Labs / current engineering',

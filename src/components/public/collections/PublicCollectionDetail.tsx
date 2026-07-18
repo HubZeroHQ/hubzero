@@ -12,9 +12,10 @@ import { ProseRenderer } from '../ProseRenderer';
 import { PublicImage } from '../PublicImage';
 
 type BuildDetail = Extract<PublicEntityDetail, { type: 'build' }>;
+type BlueprintDetail = Extract<PublicEntityDetail, { type: 'blueprint' }>;
 type LabDetail = Extract<PublicEntityDetail, { type: 'lab' }>;
 type WorkDetail = Extract<PublicEntityDetail, { type: 'work' }>;
-type CollectionDetail = WorkDetail | BuildDetail | LabDetail;
+type CollectionDetail = WorkDetail | BuildDetail | BlueprintDetail | LabDetail;
 
 const DOCUMENT_LABELS: Record<string, { eyebrow: string; title: string }> = {
   caseStudy: { eyebrow: 'Product lens', title: 'Product story' },
@@ -26,9 +27,22 @@ const DOCUMENT_LABELS: Record<string, { eyebrow: string; title: string }> = {
 };
 
 export function PublicCollectionDetail({ entity }: { entity: ImmutablePublic<CollectionDetail> }) {
-  const collection = entity.type === 'work' ? 'Work' : entity.type === 'build' ? 'Builds' : 'Labs';
+  const collection =
+    entity.type === 'work'
+      ? 'Work'
+      : entity.type === 'build'
+        ? 'Builds'
+        : entity.type === 'blueprint'
+          ? 'Blueprints'
+          : 'Labs';
   const collectionHref =
-    entity.type === 'work' ? '/work' : entity.type === 'build' ? '/builds' : '/labs';
+    entity.type === 'work'
+      ? '/work'
+      : entity.type === 'build'
+        ? '/builds'
+        : entity.type === 'blueprint'
+          ? '/blueprints'
+          : '/labs';
   const lineage = entity.relationships.filter(
     (relationship) => relationship.kind === 'labGraduatedToBuild',
   );
@@ -48,6 +62,31 @@ export function PublicCollectionDetail({ entity }: { entity: ImmutablePublic<Col
           },
           {
             title: 'Connected investigations',
+            relationships: connected.filter((item) => item.target.type === 'lab'),
+          },
+          {
+            title: 'Engineering notes',
+            relationships: connected.filter((item) => item.target.type === 'note'),
+          },
+          {
+            title: 'Engineering attribution',
+            relationships: connected.filter((item) => item.target.type === 'engineeringProfile'),
+          },
+        ].filter((group) => group.relationships.length)
+      : [];
+  const blueprintRelationshipGroups =
+    entity.type === 'blueprint'
+      ? [
+          {
+            title: 'Proven in client work',
+            relationships: connected.filter((item) => item.target.type === 'work'),
+          },
+          {
+            title: 'Connected products',
+            relationships: connected.filter((item) => item.target.type === 'build'),
+          },
+          {
+            title: 'Explored in Labs',
             relationships: connected.filter((item) => item.target.type === 'lab'),
           },
           {
@@ -83,7 +122,9 @@ export function PublicCollectionDetail({ entity }: { entity: ImmutablePublic<Col
                   ? 'Work / engineering case study'
                   : entity.type === 'build'
                     ? 'Build / shipped product'
-                    : 'Lab / active investigation'}
+                    : entity.type === 'blueprint'
+                      ? 'Blueprint / reusable engineering asset'
+                      : 'Lab / active investigation'}
               </p>
               <h1>{entity.title}</h1>
               <p className="detail-summary">{entity.summary}</p>
@@ -119,14 +160,21 @@ export function PublicCollectionDetail({ entity }: { entity: ImmutablePublic<Col
 
       {entity.type === 'lab' ? <LabProgress entity={entity} /> : null}
 
+      {entity.type === 'blueprint' ? <BlueprintSpecification entity={entity} /> : null}
+
       {entity.documents.map((document) => {
         const label =
           entity.type === 'work' && document.role === 'caseStudy'
             ? { eyebrow: 'Case study / engineering record', title: 'Context to consequence' }
-            : (DOCUMENT_LABELS[document.role] ?? {
-                eyebrow: 'Document',
-                title: formatMetadata(document.role),
-              });
+            : entity.type === 'blueprint' && document.role === 'caseStudy'
+              ? {
+                  eyebrow: 'Documentation / implementation reference',
+                  title: 'Implementation guidance',
+                }
+              : (DOCUMENT_LABELS[document.role] ?? {
+                  eyebrow: 'Document',
+                  title: formatMetadata(document.role),
+                });
         const sectionId = `document-${document.role}`;
         return (
           <PublicSection
@@ -172,11 +220,37 @@ export function PublicCollectionDetail({ entity }: { entity: ImmutablePublic<Col
         </PublicSection>
       ) : null}
 
-      {entity.type === 'work' && workRelationshipGroups.length ? (
-        <WorkRelationshipSection groups={workRelationshipGroups} />
+      {entity.type === 'blueprint' && entity.previewMedia.length ? (
+        <PublicSection className="detail-gallery" aria-labelledby="blueprint-preview-title">
+          <PageContainer>
+            <header className="detail-section-header">
+              <p className="home-eyebrow">Implementation / recorded views</p>
+              <h2 id="blueprint-preview-title">Preview the system</h2>
+            </header>
+            <div className="detail-gallery-grid">
+              {entity.previewMedia.map((media) => (
+                <PublicImage key={media.url} media={media} />
+              ))}
+            </div>
+          </PageContainer>
+        </PublicSection>
       ) : null}
 
-      {entity.type !== 'work' && connected.length ? (
+      {entity.type === 'work' && workRelationshipGroups.length ? (
+        <GroupedRelationshipSection
+          title="Continue through the engineering record"
+          groups={workRelationshipGroups}
+        />
+      ) : null}
+
+      {entity.type === 'blueprint' && blueprintRelationshipGroups.length ? (
+        <GroupedRelationshipSection
+          title="Evidence and connected systems"
+          groups={blueprintRelationshipGroups}
+        />
+      ) : null}
+
+      {entity.type !== 'work' && entity.type !== 'blueprint' && connected.length ? (
         <RelationshipSection title="Connected records" relationships={connected} />
       ) : null}
 
@@ -215,17 +289,24 @@ function DetailRegister({ entity }: { entity: ImmutablePublic<CollectionDetail> 
               entity.technologies.length ? `${entity.technologies.length} listed` : 'Not listed',
             ],
           ]
-        : [
-            ['Reference', entity.referenceId],
-            ['Stage', formatMetadata(entity.stage)],
-            ['Started', formatPublicDate(entity.startDate)],
-            [
-              'Updated',
-              entity.lastMajorUpdate
-                ? formatPublicDate(entity.lastMajorUpdate)
-                : 'No major update listed',
-            ],
-          ];
+        : entity.type === 'blueprint'
+          ? [
+              ['Reference', entity.referenceId],
+              ['Version', `v${entity.version}`],
+              ['Architecture', entity.architecture],
+              ['Design language', entity.designLanguage],
+            ]
+          : [
+              ['Reference', entity.referenceId],
+              ['Stage', formatMetadata(entity.stage)],
+              ['Started', formatPublicDate(entity.startDate)],
+              [
+                'Updated',
+                entity.lastMajorUpdate
+                  ? formatPublicDate(entity.lastMajorUpdate)
+                  : 'No major update listed',
+              ],
+            ];
   return (
     <aside className="detail-register" aria-label={`${entity.title} publication metadata`}>
       <dl>
@@ -241,6 +322,46 @@ function DetailRegister({ entity }: { entity: ImmutablePublic<CollectionDetail> 
         <TechnologyList technologies={entity.categories} label="Categories" />
       ) : null}
     </aside>
+  );
+}
+
+function BlueprintSpecification({ entity }: { entity: ImmutablePublic<BlueprintDetail> }) {
+  return (
+    <PublicSection
+      className="detail-progress blueprint-specification"
+      aria-labelledby="blueprint-specification-title"
+    >
+      <PageContainer>
+        <header className="detail-section-header">
+          <p className="home-eyebrow">System specification / v{entity.version}</p>
+          <h2 id="blueprint-specification-title">What is designed to be reused</h2>
+        </header>
+        <dl className="blueprint-system-register">
+          <div>
+            <dt>Information architecture</dt>
+            <dd>{entity.architecture}</dd>
+          </div>
+          <div>
+            <dt>Design language</dt>
+            <dd>{entity.designLanguage}</dd>
+          </div>
+          <div>
+            <dt>Revision</dt>
+            <dd>Version {entity.version}</dd>
+          </div>
+        </dl>
+        {entity.features.length ? (
+          <section className="blueprint-features" aria-labelledby="blueprint-features-title">
+            <h3 id="blueprint-features-title">Included capabilities</h3>
+            <ul>
+              {entity.features.map((feature) => (
+                <li key={feature}>{feature}</li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
+      </PageContainer>
+    </PublicSection>
   );
 }
 
@@ -310,20 +431,22 @@ function RelationshipSection({
   );
 }
 
-function WorkRelationshipSection({
+function GroupedRelationshipSection({
+  title,
   groups,
 }: {
+  title: string;
   groups: Array<{
     title: string;
     relationships: readonly ImmutablePublic<PublicRelationship>[];
   }>;
 }) {
   return (
-    <PublicSection className="detail-relations" aria-labelledby="work-connections-title">
+    <PublicSection className="detail-relations" aria-labelledby="grouped-connections-title">
       <PageContainer className="detail-relations-grid">
         <header>
           <p className="home-eyebrow">Relationships / typed links</p>
-          <h2 id="work-connections-title">Continue through the engineering record</h2>
+          <h2 id="grouped-connections-title">{title}</h2>
         </header>
         <div className="detail-relation-groups">
           {groups.map((group) => (
