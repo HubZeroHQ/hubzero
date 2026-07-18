@@ -131,6 +131,14 @@
     pointer-events: auto;
   }
 
+  .public-nav-wrap-home {
+    width: min(100% - 96px, 1300px);
+  }
+
+  .public-nav-wrap-home .public-nav {
+    margin-inline: 0;
+  }
+
   .public-nav-brand,
   .public-nav-link,
   .public-nav-search,
@@ -529,9 +537,8 @@
 
   .home-hero {
     display: grid;
-    min-height: 100svh;
-    align-items: end;
-    padding-block: 132px 64px;
+    align-items: start;
+    padding-block: clamp(112px, 12vw, 152px) clamp(72px, 8vw, 112px);
   }
 
   .home-hero-grid {
@@ -944,7 +951,7 @@
 
 @media (min-width: 1440px) {
   .home-hero {
-    padding-bottom: 80px;
+    padding-bottom: 112px;
   }
 
   .home-section-header {
@@ -965,6 +972,10 @@
   .public-nav-wrap {
     top: 12px;
     width: calc(100% - 24px);
+  }
+
+  .public-nav-wrap-home {
+    width: min(100% - 40px, 1300px);
   }
 
   .public-nav {
