@@ -9,6 +9,7 @@ import type {
   User,
   Work,
 } from '@/types/studio';
+import type { DocumentRecord } from '@/lib/documents/schema';
 import { createPublicRepository } from './repository';
 import type { PublicDataSource, StudioPublicEntity } from './source';
 
@@ -28,6 +29,7 @@ function fakeSource(input: {
   teamsByUser?: Team[];
   profile?: EngineeringProfile | null;
   media?: MediaAsset[];
+  documents?: DocumentRecord[];
 }): PublicDataSource {
   return {
     findEntityBySlug: async (type, slug) =>
@@ -38,7 +40,10 @@ function fakeSource(input: {
       input.entities.find((item) => item.type === type && item.id === id) ?? null,
     listEntities: async (type) => input.entities.filter((item) => item.type === type),
     findInverseEntities: async () => [],
-    findDocuments: async () => [],
+    findDocuments: async (ownerType, ownerId) =>
+      input.documents?.filter(
+        (document) => document.ownerType === ownerType && document.ownerId.toString() === ownerId,
+      ) ?? [],
     findMedia: async (ids) =>
       input.media?.filter((asset) => ids.includes(asset._id.toString())) ?? [],
     findTaxonomy: async () => [],
@@ -312,6 +317,55 @@ describe('public repository boundary', () => {
       name: 'HubZero',
       url: '/about',
     });
+  });
+
+  it('orders Note index entries by publication date and derives detail reading time', async () => {
+    const note = (title: string, slug: string, publicationDate: Date): Note => ({
+      _id: new ObjectId(),
+      createdAt: now,
+      updatedAt: now,
+      createdByUserId: creator,
+      status: 'published',
+      slug,
+      referenceId: `HZ-NT-${slug === 'newer' ? '002' : '001'}`,
+      title,
+      authorId: new ObjectId(),
+      summary: `${title} contains a substantive public summary.`,
+      technologyIds: [],
+      relatedEntries: [],
+      publicationDate,
+      featured: false,
+      galleryImageIds: [],
+    });
+    const older = note('Older note', 'older', new Date('2026-06-01T00:00:00.000Z'));
+    const newer = note('Newer note', 'newer', new Date('2026-07-01T00:00:00.000Z'));
+    const document: DocumentRecord = {
+      _id: new ObjectId(),
+      ownerType: 'Note',
+      ownerId: newer._id,
+      role: 'body',
+      blocks: [
+        {
+          id: 'body',
+          type: 'paragraph',
+          data: { text: Array.from({ length: 210 }, () => 'evidence').join(' ') },
+        },
+      ],
+      createdAt: now,
+      updatedAt: now,
+    };
+    const repository = createPublicRepository(
+      fakeSource({
+        entities: [entity('note', older), entity('note', newer)],
+        documents: [document],
+      }),
+    );
+
+    const entries = await repository.listNoteIndexEntries();
+    expect(entries.map((entry) => entry.note.slug)).toEqual(['newer', 'older']);
+    expect(Object.isFrozen(entries)).toBe(true);
+    const detail = await repository.findDetail('note', 'newer');
+    expect(detail?.type === 'note' ? detail.readingTimeMinutes : null).toBe(1);
   });
 
   it('resolves Team-only authors and fails closed for hidden Team or missing User links', async () => {

@@ -187,6 +187,11 @@ export interface PublicNoteSummary extends PublicSummaryBase {
   author: PublicAuthor;
 }
 
+export interface PublicNoteIndexEntry {
+  note: PublicNoteSummary;
+  relationships: PublicRelationship[];
+}
+
 export interface PublicEngineeringProfileSummary extends PublicSummaryBase {
   type: 'engineeringProfile';
   slug: string;
@@ -247,6 +252,7 @@ export type PublicEntityDetail =
       documents: PublicDocument[];
       relationships: PublicRelationship[];
       gallery: PublicMedia[];
+      readingTimeMinutes: number;
     })
   | (PublicEngineeringProfileSummary & {
       documents: PublicDocument[];

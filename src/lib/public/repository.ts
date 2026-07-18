@@ -29,6 +29,7 @@ import type {
   PublicHomepageProjection,
   PublicLabSummary,
   PublicNoteSummary,
+  PublicNoteIndexEntry,
   PublicRelationship,
   PublicServiceSummary,
   PublicTaxonomyKind,
@@ -36,6 +37,7 @@ import type {
   PublicTeamMemberSummary,
   PublicWorkSummary,
 } from './domain';
+import { estimateReadingTimeMinutes } from '@/lib/documents/reading-time';
 import { isSafePublicUrl, toPublicMedia } from './media';
 import { type RelationshipAssertion, resolvePublicRelationships } from './relationships';
 import type { PublicDataSource, StudioPublicEntity } from './source';
@@ -66,6 +68,7 @@ export interface PublicRepository {
     slug: string,
   ): Promise<ImmutablePublic<PublicEntityDetail> | null>;
   listSummaries(type: PublicEntityType): Promise<ImmutablePublic<PublicEntitySummary[]>>;
+  listNoteIndexEntries(): Promise<ImmutablePublic<PublicNoteIndexEntry[]>>;
   listDiscoveryEntries(
     types?: readonly PublicEntityType[],
   ): Promise<ImmutablePublic<PublicDiscoveryEntry[]>>;
@@ -429,6 +432,22 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
     return summaries.filter((summary): summary is PublicEntitySummary => summary !== null);
   }
 
+  async function listNoteIndexEntries(): Promise<PublicNoteIndexEntry[]> {
+    const entities = await source.listEntities('note');
+    const entries = await Promise.all(
+      entities.map(async (entity): Promise<PublicNoteIndexEntry | null> => {
+        const note = await mapSummary(entity);
+        if (!note || note.type !== 'note') return null;
+        return { note, relationships: await resolveRelations(entity) };
+      }),
+    );
+    return compact(entries).sort(
+      (left, right) =>
+        new Date(right.note.publicationDate).getTime() -
+        new Date(left.note.publicationDate).getTime(),
+    );
+  }
+
   async function findDetail(
     type: PublicDetailEntityType,
     slug: string,
@@ -489,11 +508,14 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
       }
       case 'note': {
         if (summary.type !== 'note' || !hasRoles(documents, ['body'])) return null;
+        const body = documents.find((document) => document.role === 'body');
+        if (!body) return null;
         return {
           ...summary,
           documents,
           relationships,
           gallery: await gallery((entity.record as Note).galleryImageIds),
+          readingTimeMinutes: estimateReadingTimeMinutes(body.blocks),
         };
       }
       case 'engineeringProfile': {
@@ -618,6 +640,9 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
     },
     async listSummaries(type) {
       return freezePublicDto(await listSummaries(type));
+    },
+    async listNoteIndexEntries() {
+      return freezePublicDto(await listNoteIndexEntries());
     },
     async listDiscoveryEntries(types = ALL_PUBLIC_TYPES) {
       const summaries = (await Promise.all(types.map(listSummaries))).flat();

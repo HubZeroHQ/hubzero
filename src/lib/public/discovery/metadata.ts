@@ -14,6 +14,8 @@ export function createPublicMetadata(input: {
   image?: PublicMedia;
   noIndex?: boolean;
   type?: 'website' | 'article';
+  publishedTime?: string;
+  authors?: Array<{ name: string; url?: string }>;
 }): Metadata {
   const socialTitle = input.title ? `${input.title} — ${PUBLIC_SITE.name}` : PUBLIC_SITE.name;
   const canonical = canonicalUrl(input.path);
@@ -33,6 +35,12 @@ export function createPublicMetadata(input: {
       siteName: PUBLIC_SITE.name,
       locale: PUBLIC_SITE.locale,
       type: input.type ?? 'website',
+      ...(input.type === 'article' && input.publishedTime
+        ? { publishedTime: input.publishedTime }
+        : {}),
+      ...(input.type === 'article' && input.authors?.length
+        ? { authors: input.authors.flatMap((author) => (author.url ? [author.url] : [])) }
+        : {}),
       images: [
         {
           url: image,

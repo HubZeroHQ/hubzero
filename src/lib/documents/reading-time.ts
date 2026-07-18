@@ -11,7 +11,11 @@ import type { Block } from './blocks';
  */
 const WORDS_PER_MINUTE = 200;
 
-function blockText(block: Block): string {
+type ReadingTimeBlock =
+  | Exclude<Block, Extract<Block, { type: 'image' | 'imageGallery' | 'technologyStack' }>>
+  | { type: 'image' | 'imageGallery' | 'technologyStack'; data: unknown };
+
+function blockText(block: ReadingTimeBlock): string {
   switch (block.type) {
     case 'heading':
       return block.data.text;
@@ -48,7 +52,7 @@ function blockText(block: Block): string {
 }
 
 /** Rounded, floored at one minute — "< 1 min" reads as an error, not a genuinely short piece. */
-export function estimateReadingTimeMinutes(blocks: Block[]): number {
+export function estimateReadingTimeMinutes(blocks: readonly ReadingTimeBlock[]): number {
   const wordCount = blocks.map(blockText).join(' ').split(/\s+/).filter(Boolean).length;
   return Math.max(1, Math.round(wordCount / WORDS_PER_MINUTE));
 }

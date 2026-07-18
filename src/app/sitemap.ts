@@ -12,6 +12,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { enabled: entries.some((entry) => entry.type === 'build'), path: '/builds' },
     { enabled: PUBLIC_ENTITY_ROUTES.blueprint, path: '/blueprints' },
     { enabled: entries.some((entry) => entry.type === 'lab'), path: '/labs' },
+    { enabled: PUBLIC_ENTITY_ROUTES.note, path: '/notes' },
   ];
   return [
     ...collections
