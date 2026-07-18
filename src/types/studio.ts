@@ -72,10 +72,17 @@ interface PublishableEntity extends WithId, WithTimestamps {
  * different concepts that happen to overlap, not the same type.
  */
 export type EvidenceOwnerType = 'Work' | 'Build' | 'Blueprint' | 'Lab';
+export type ServiceEvidenceOwnerType = EvidenceOwnerType | 'Note';
 
 /** A reference into a Work/Build/Blueprint/Lab entry — evidence links (§13) and Note cross-references (§24). */
 export interface EntryReference {
   ownerType: EvidenceOwnerType;
+  ownerId: ObjectId;
+}
+
+/** Services may also use a published Note when the writing itself is material evidence. */
+export interface ServiceEvidenceReference {
+  ownerType: ServiceEvidenceOwnerType;
   ownerId: ObjectId;
 }
 
@@ -278,7 +285,7 @@ export interface Service extends WithId, WithTimestamps {
   title: string;
   description: string;
   status: ServicePublishStatus;
-  evidenceLinks: EntryReference[];
+  evidenceLinks: ServiceEvidenceReference[];
 }
 
 /** Deliberately minimal — not a CRM (§26.8). No reference ID: internal-only, no citation purpose. */

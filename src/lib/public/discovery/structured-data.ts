@@ -6,6 +6,7 @@ import type {
   PublicBuildSummary,
   PublicLabSummary,
   PublicNoteSummary,
+  PublicServiceSummary,
   PublicEngineeringProfileSummary,
   PublicTeamMemberSummary,
   PublicWorkSummary,
@@ -92,6 +93,45 @@ export function aboutPageJsonLd(team: readonly ImmutablePublic<PublicTeamMemberS
           })),
         }
       : {}),
+  };
+}
+
+export function servicesPageJsonLd(
+  services: readonly ImmutablePublic<PublicServiceSummary>[],
+  description: string,
+): JsonLd {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    '@id': `${absolute('/services')}#services`,
+    name: 'HubZero Services',
+    description,
+    url: absolute('/services'),
+    isPartOf: { '@id': `${absolute('/')}#website` },
+    provider: { '@id': `${absolute('/')}#organization` },
+    ...(services.length
+      ? {
+          hasPart: services.map((service) => ({
+            '@type': 'Service',
+            name: service.title,
+            description: service.summary,
+            provider: { '@id': `${absolute('/')}#organization` },
+          })),
+        }
+      : {}),
+  };
+}
+
+export function contactPageJsonLd(description: string): JsonLd {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ContactPage',
+    '@id': `${absolute('/contact')}#contact`,
+    name: 'Contact HubZero',
+    description,
+    url: absolute('/contact'),
+    isPartOf: { '@id': `${absolute('/')}#website` },
+    about: { '@id': `${absolute('/')}#organization` },
   };
 }
 

@@ -120,4 +120,27 @@ describe('public relationship normalization', () => {
       { kind: 'buildAppliedInWork', label: 'Informed by', target: { type: 'build' } },
     ]);
   });
+
+  it('supports a Note as forward-only Service evidence', async () => {
+    const edge: RelationshipAssertion = {
+      kind: 'serviceProvenBy',
+      fromType: 'service',
+      fromId: 'service-1',
+      toType: 'note',
+      toId: 'note-1',
+    };
+    const resolveLink = async (type: PublicEntityType, id: string) => ({
+      type,
+      title: id,
+      url: `/${type}/${id}`,
+    });
+    await expect(
+      resolvePublicRelationships({ type: 'service', id: 'service-1' }, [edge], resolveLink),
+    ).resolves.toMatchObject([
+      { kind: 'serviceProvenBy', label: 'Proven by', target: { type: 'note' } },
+    ]);
+    await expect(
+      resolvePublicRelationships({ type: 'note', id: 'note-1' }, [edge], resolveLink),
+    ).resolves.toEqual([]);
+  });
 });

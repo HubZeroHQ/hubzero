@@ -57,7 +57,7 @@ export function PublicNavigation() {
           </button>
         ) : null}
         {PUBLIC_SITE.release.contact ? (
-          <Link href="/contact" className="public-nav-contact">
+          <Link href="/contact?from=navigation" className="public-nav-contact">
             Contact
           </Link>
         ) : null}

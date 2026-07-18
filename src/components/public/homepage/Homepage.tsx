@@ -1,6 +1,10 @@
 import Link from 'next/link';
 import { PUBLIC_ENTITY_ROUTES, PUBLIC_HOME, PUBLIC_SITE } from '@/config/public-site';
-import type { ImmutablePublic, PublicHomepageProjection } from '@/lib/public/domain';
+import type {
+  ImmutablePublic,
+  PublicHomepageProjection,
+  PublicServiceSummary,
+} from '@/lib/public/domain';
 import { PageContainer, PublicSection } from '../PageContainer';
 import { SectionHeader } from '../EditorialPrimitives';
 import { EditorialCard } from './EditorialCard';
@@ -9,8 +13,10 @@ const relationshipRoutes: Readonly<Record<string, boolean>> = PUBLIC_ENTITY_ROUT
 
 export function Homepage({
   projection,
+  services = [],
 }: {
   projection: ImmutablePublic<PublicHomepageProjection>;
+  services?: readonly ImmutablePublic<PublicServiceSummary>[];
 }) {
   const work = PUBLIC_ENTITY_ROUTES.work ? projection.work : [];
   const builds = PUBLIC_ENTITY_ROUTES.build ? projection.builds : [];
@@ -176,8 +182,42 @@ export function Homepage({
         </PublicSection>
       ) : null}
 
+      <ServicesPassage services={services} />
       <Closing />
     </main>
+  );
+}
+
+function ServicesPassage({
+  services,
+}: {
+  services: readonly ImmutablePublic<PublicServiceSummary>[];
+}) {
+  return (
+    <PublicSection className="home-services">
+      <PageContainer className="home-services-grid">
+        <div>
+          <p className="home-eyebrow">Services / evidence by need</p>
+          <h2>Capability follows the engineering record.</h2>
+        </div>
+        <div>
+          <p>
+            Services organize public evidence around a problem without turning products, client
+            work, research, or reusable foundations into sales claims.
+          </p>
+          {services.length ? (
+            <ul aria-label="Published evidence-backed services">
+              {services.slice(0, 4).map((service) => (
+                <li key={service.title}>{service.title}</li>
+              ))}
+            </ul>
+          ) : null}
+          <Link href="/services" className="home-text-link">
+            Review services <span aria-hidden="true">→</span>
+          </Link>
+        </div>
+      </PageContainer>
+    </PublicSection>
   );
 }
 
@@ -269,7 +309,7 @@ function Closing() {
           <h2>{PUBLIC_HOME.closing.title}</h2>
           <p>{PUBLIC_HOME.closing.body}</p>
           {PUBLIC_SITE.release.contact ? (
-            <Link href="/contact" className="home-primary-link">
+            <Link href="/contact?from=home" className="home-primary-link">
               Start a project conversation <span aria-hidden="true">→</span>
             </Link>
           ) : null}

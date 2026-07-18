@@ -6,9 +6,11 @@ import { renderRssFeed } from './feed';
 import {
   breadcrumbJsonLd,
   collectionPageJsonLd,
+  contactPageJsonLd,
   organizationJsonLd,
   publicArtifactJsonLd,
   publicNoteJsonLd,
+  servicesPageJsonLd,
   websiteJsonLd,
 } from './structured-data';
 import { PUBLIC_MOTION } from '../motion';
@@ -115,6 +117,43 @@ describe('public discovery foundations', () => {
         numberOfItems: 1,
         itemListElement: [{ position: 1, name: 'Release Ledger' }],
       },
+    });
+  });
+
+  it('describes Services evidence and Contact without inventing operational details', () => {
+    expect(
+      servicesPageJsonLd(
+        [
+          {
+            type: 'service',
+            title: 'Publishing systems',
+            url: '/services',
+            summary: 'Editorial systems with explicit publishing boundaries.',
+            technologies: [],
+            evidence: [
+              {
+                kind: 'serviceProvenBy',
+                label: 'Proven by',
+                target: {
+                  type: 'note',
+                  title: 'Publishing boundaries',
+                  url: '/notes/publishing-boundaries',
+                },
+              },
+            ],
+          },
+        ],
+        'Evidence-backed engineering services.',
+      ),
+    ).toMatchObject({
+      '@type': 'CollectionPage',
+      url: 'https://hubzero.in/services',
+      hasPart: [{ '@type': 'Service', name: 'Publishing systems' }],
+    });
+    expect(contactPageJsonLd('Start with the problem.')).toMatchObject({
+      '@type': 'ContactPage',
+      url: 'https://hubzero.in/contact',
+      about: { '@id': 'https://hubzero.in/#organization' },
     });
   });
 

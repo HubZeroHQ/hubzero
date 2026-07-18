@@ -172,6 +172,22 @@ async function inverse(type: PublicEntityType, id: string): Promise<StudioPublic
     );
   }
 
+  const serviceEvidenceOwner = type === 'note' ? 'Note' : evidenceOwner;
+  if (serviceEvidenceOwner && !evidenceOwner) {
+    queries.push(
+      wrapped(
+        'service',
+        (await collections.services())
+          .find({
+            evidenceLinks: {
+              $elemMatch: { ownerType: serviceEvidenceOwner, ownerId: targetId },
+            },
+          } as never)
+          .toArray(),
+      ),
+    );
+  }
+
   const profileField =
     type === 'work'
       ? 'featuredWorkIds'

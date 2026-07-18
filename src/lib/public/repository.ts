@@ -4,6 +4,7 @@ import type {
   Build,
   EngineeringProfile,
   EntryReference,
+  ServiceEvidenceReference,
   Lab,
   Note,
   Service,
@@ -888,12 +889,13 @@ function isHomepageEligible(detail: PublicEntityDetail, now: Date): boolean {
   }
 }
 
-function evidenceType(reference: EntryReference): PublicEntityType {
+function evidenceType(reference: EntryReference | ServiceEvidenceReference): PublicEntityType {
   return {
     Work: 'work',
     Build: 'build',
     Blueprint: 'blueprint',
     Lab: 'lab',
+    Note: 'note',
   }[reference.ownerType] as PublicEntityType;
 }
 
