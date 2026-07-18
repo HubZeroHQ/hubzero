@@ -60,7 +60,7 @@ export function TechnologyList({
   if (!technologies.length) return null;
   return (
     <ul className="home-technologies" aria-label="Technologies">
-      {technologies.slice(0, 5).map((technology) => (
+      {technologies.slice(0, 8).map((technology) => (
         <li key={`${technology.kind}-${technology.slug}`}>{technology.label}</li>
       ))}
     </ul>
@@ -72,18 +72,22 @@ export function PublicationMetadata({ entity }: { entity: ImmutablePublic<Public
     return (
       <p className="home-publication-meta">
         <span>{entity.author.name}</span>
-        <time dateTime={entity.publicationDate}>{formatDate(entity.publicationDate)}</time>
+        <time dateTime={entity.publicationDate}>{formatPublicDate(entity.publicationDate)}</time>
       </p>
     );
   }
-  if (entity.type === 'lab' && entity.lastMajorUpdate) {
+  if (entity.type === 'lab') {
     return (
       <p className="home-publication-meta">
         <span>{formatMetadata(entity.stage)}</span>
-        <span>
-          Updated{' '}
-          <time dateTime={entity.lastMajorUpdate}>{formatDate(entity.lastMajorUpdate)}</time>
-        </span>
+        {entity.lastMajorUpdate ? (
+          <span>
+            Updated{' '}
+            <time dateTime={entity.lastMajorUpdate}>
+              {formatPublicDate(entity.lastMajorUpdate)}
+            </time>
+          </span>
+        ) : null}
       </p>
     );
   }
@@ -113,11 +117,11 @@ export function RelationshipCard({
   );
 }
 
-function formatMetadata(value: string): string {
+export function formatMetadata(value: string): string {
   return value.replace(/([a-z])([A-Z])/g, '$1 $2');
 }
 
-function formatDate(value: string): string {
+export function formatPublicDate(value: string): string {
   return new Intl.DateTimeFormat('en', {
     day: '2-digit',
     month: 'short',

@@ -59,18 +59,18 @@ export const PUBLIC_HOME = {
 
 export const PUBLIC_NAVIGATION = [
   { label: 'Work', href: '/work', type: 'work', enabled: false },
-  { label: 'Builds', href: '/builds', type: 'build', enabled: false },
+  { label: 'Builds', href: '/builds', type: 'build', enabled: true },
   { label: 'Blueprints', href: '/blueprints', type: 'blueprint', enabled: false },
-  { label: 'Labs', href: '/labs', type: 'lab', enabled: false },
+  { label: 'Labs', href: '/labs', type: 'lab', enabled: true },
   { label: 'Services', href: '/services', type: 'service', enabled: false },
   { label: 'About', href: '/about', type: 'teamMember', enabled: false },
 ] as const;
 
 export const PUBLIC_ENTITY_ROUTES = {
   work: false,
-  build: false,
+  build: true,
   blueprint: false,
-  lab: false,
+  lab: true,
   note: false,
   engineeringProfile: false,
   teamMember: false,

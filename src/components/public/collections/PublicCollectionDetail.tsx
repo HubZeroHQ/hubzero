@@ -1,0 +1,262 @@
+import Link from 'next/link';
+import { PUBLIC_ENTITY_ROUTES } from '@/config/public-site';
+import type { ImmutablePublic, PublicEntityDetail, PublicRelationship } from '@/lib/public/domain';
+import {
+  formatMetadata,
+  formatPublicDate,
+  RelationshipCard,
+  TechnologyList,
+} from '../EditorialPrimitives';
+import { PageContainer, PublicSection } from '../PageContainer';
+import { ProseRenderer } from '../ProseRenderer';
+import { PublicImage } from '../PublicImage';
+
+type BuildDetail = Extract<PublicEntityDetail, { type: 'build' }>;
+type LabDetail = Extract<PublicEntityDetail, { type: 'lab' }>;
+type CollectionDetail = BuildDetail | LabDetail;
+
+const DOCUMENT_LABELS: Record<string, { eyebrow: string; title: string }> = {
+  caseStudy: { eyebrow: 'Product lens', title: 'Product story' },
+  technical: { eyebrow: 'Technical lens', title: 'Architecture and decisions' },
+  overview: { eyebrow: 'Research record', title: 'Overview' },
+  engineeringJournal: { eyebrow: 'Research record', title: 'Engineering journal' },
+  findings: { eyebrow: 'Research record', title: 'Findings' },
+  researchNotes: { eyebrow: 'Research record', title: 'Research notes' },
+};
+
+export function PublicCollectionDetail({ entity }: { entity: ImmutablePublic<CollectionDetail> }) {
+  const collection = entity.type === 'build' ? 'Builds' : 'Labs';
+  const collectionHref = entity.type === 'build' ? '/builds' : '/labs';
+  const lineage = entity.relationships.filter(
+    (relationship) => relationship.kind === 'labGraduatedToBuild',
+  );
+  const connected = entity.relationships.filter(
+    (relationship) => relationship.kind !== 'labGraduatedToBuild',
+  );
+
+  return (
+    <main id="main-content" tabIndex={-1} className="collection-main detail-main">
+      <header className="detail-hero">
+        <PageContainer>
+          <nav className="detail-breadcrumbs" aria-label="Breadcrumb">
+            <ol>
+              <li>
+                <Link href="/">HubZero</Link>
+              </li>
+              <li>
+                <Link href={collectionHref}>{collection}</Link>
+              </li>
+              <li aria-current="page">{entity.title}</li>
+            </ol>
+          </nav>
+          <div className="detail-hero-grid">
+            <div className="detail-title-block">
+              <p className="home-eyebrow">
+                {entity.type === 'build' ? 'Build / shipped product' : 'Lab / active investigation'}
+              </p>
+              <h1>{entity.title}</h1>
+              <p className="detail-summary">{entity.summary}</p>
+              {entity.links.length ? (
+                <ul className="detail-actions" aria-label="External destinations">
+                  {entity.links.map((link) => (
+                    <li key={`${link.kind}-${link.url}`}>
+                      <a href={link.url} target="_blank" rel="noreferrer">
+                        {link.label} <span aria-hidden="true">↗</span>
+                        <span className="sr-only"> (opens in a new tab)</span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
+            <DetailRegister entity={entity} />
+          </div>
+        </PageContainer>
+      </header>
+
+      {entity.hero ? (
+        <PublicSection className="detail-hero-media" aria-label="Lead media">
+          <PageContainer>
+            <PublicImage media={entity.hero} priority />
+          </PageContainer>
+        </PublicSection>
+      ) : null}
+
+      {lineage.length ? (
+        <RelationshipSection title="Product lineage" relationships={lineage} />
+      ) : null}
+
+      {entity.type === 'lab' ? <LabProgress entity={entity} /> : null}
+
+      {entity.documents.map((document) => {
+        const label = DOCUMENT_LABELS[document.role] ?? {
+          eyebrow: 'Document',
+          title: formatMetadata(document.role),
+        };
+        return (
+          <PublicSection key={document.role} className="detail-document">
+            <PageContainer className="detail-document-grid">
+              <header>
+                <p className="home-eyebrow">{label.eyebrow}</p>
+                <h2>{label.title}</h2>
+                {document.outline?.length && document.outline.length > 1 ? (
+                  <nav aria-label={`${label.title} contents`} className="detail-outline">
+                    <ol>
+                      {document.outline.map((item) => (
+                        <li key={item.id}>
+                          <a href={`#${item.id}`}>{item.text}</a>
+                        </li>
+                      ))}
+                    </ol>
+                  </nav>
+                ) : null}
+              </header>
+              <ProseRenderer document={document} headingOffset={1} />
+            </PageContainer>
+          </PublicSection>
+        );
+      })}
+
+      {entity.gallery.length ? (
+        <PublicSection className="detail-gallery" aria-labelledby="detail-gallery-title">
+          <PageContainer>
+            <header className="detail-section-header">
+              <p className="home-eyebrow">Media / evidence</p>
+              <h2 id="detail-gallery-title">Recorded views</h2>
+            </header>
+            <div className="detail-gallery-grid">
+              {entity.gallery.map((media) => (
+                <PublicImage key={media.url} media={media} />
+              ))}
+            </div>
+          </PageContainer>
+        </PublicSection>
+      ) : null}
+
+      {connected.length ? (
+        <RelationshipSection title="Connected records" relationships={connected} />
+      ) : null}
+
+      <footer className="detail-footer">
+        <PageContainer className="detail-footer-grid">
+          <div>
+            <p className="home-eyebrow">Publication record</p>
+            <p>
+              {entity.referenceId} / {formatMetadata(entity.state ?? entity.type)}
+            </p>
+          </div>
+          <Link href={collectionHref}>
+            Return to {collection} <span aria-hidden="true">→</span>
+          </Link>
+        </PageContainer>
+      </footer>
+    </main>
+  );
+}
+
+function DetailRegister({ entity }: { entity: ImmutablePublic<CollectionDetail> }) {
+  const values =
+    entity.type === 'build'
+      ? [
+          ['Reference', entity.referenceId],
+          ['State', formatMetadata(entity.deploymentState)],
+          [
+            'Technology',
+            entity.technologies.length ? `${entity.technologies.length} listed` : 'Not listed',
+          ],
+        ]
+      : [
+          ['Reference', entity.referenceId],
+          ['Stage', formatMetadata(entity.stage)],
+          ['Started', formatPublicDate(entity.startDate)],
+          [
+            'Updated',
+            entity.lastMajorUpdate
+              ? formatPublicDate(entity.lastMajorUpdate)
+              : 'No major update listed',
+          ],
+        ];
+  return (
+    <aside className="detail-register" aria-label={`${entity.title} publication metadata`}>
+      <dl>
+        {values.map(([term, value]) => (
+          <div key={term}>
+            <dt>{term}</dt>
+            <dd>{value}</dd>
+          </div>
+        ))}
+      </dl>
+      <TechnologyList technologies={entity.technologies} />
+    </aside>
+  );
+}
+
+function LabProgress({ entity }: { entity: ImmutablePublic<LabDetail> }) {
+  return (
+    <PublicSection className="detail-progress" aria-labelledby="detail-progress-title">
+      <PageContainer>
+        <header className="detail-section-header">
+          <p className="home-eyebrow">Current state / {formatMetadata(entity.stage)}</p>
+          <h2 id="detail-progress-title">What the investigation is moving toward</h2>
+        </header>
+        <div className="detail-progress-grid">
+          <section>
+            <h3>Research direction</h3>
+            <p>{entity.researchDirection}</p>
+          </section>
+          <section>
+            <h3>Current milestone</h3>
+            <p>{entity.currentMilestone}</p>
+          </section>
+          <section>
+            <h3>Graduation criteria</h3>
+            <p>{entity.graduationCriteria}</p>
+          </section>
+        </div>
+        {entity.milestones.length ? (
+          <ol className="detail-milestones" aria-label="Lab milestones">
+            {entity.milestones.map((milestone) => (
+              <li key={`${milestone.date}-${milestone.title}`}>
+                <time dateTime={milestone.date}>{formatPublicDate(milestone.date)}</time>
+                <h3>{milestone.title}</h3>
+                <p>{milestone.summary}</p>
+              </li>
+            ))}
+          </ol>
+        ) : null}
+      </PageContainer>
+    </PublicSection>
+  );
+}
+
+function RelationshipSection({
+  title,
+  relationships,
+}: {
+  title: string;
+  relationships: readonly ImmutablePublic<PublicRelationship>[];
+}) {
+  return (
+    <PublicSection className="detail-relations" aria-labelledby={`relations-${slugify(title)}`}>
+      <PageContainer className="detail-relations-grid">
+        <header>
+          <p className="home-eyebrow">Relationships / typed links</p>
+          <h2 id={`relations-${slugify(title)}`}>{title}</h2>
+        </header>
+        <div className="home-relationships" aria-label={title}>
+          {relationships.map((relationship) => (
+            <RelationshipCard
+              key={`${relationship.kind}-${relationship.target.url}`}
+              relationship={relationship}
+              enabled={PUBLIC_ENTITY_ROUTES[relationship.target.type]}
+            />
+          ))}
+        </div>
+      </PageContainer>
+    </PublicSection>
+  );
+}
+
+function slugify(value: string) {
+  return value.toLowerCase().replaceAll(' ', '-');
+}
