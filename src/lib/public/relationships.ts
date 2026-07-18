@@ -71,6 +71,10 @@ export function relationshipLabel(
       return forward ? 'Graduated into' : 'Originated in';
     case 'buildAppliedInWork':
       return forward ? 'Applied in client work' : 'Informed by';
+    case 'workRelatedLab':
+      return forward ? 'Related investigation' : 'Related client work';
+    case 'profileContributedToWork':
+      return forward ? 'Engineering contributor' : 'Contributed to';
     case 'artifactUsesBlueprint':
       if (!forward) return 'Proven in';
       if (edge.blueprintMeaning === 'builtOn') return 'Built on';

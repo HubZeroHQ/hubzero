@@ -53,9 +53,17 @@ function PublicBlockView({
       );
     case 'code':
       return (
-        <pre className="public-code" data-language={block.data.language}>
-          <code>{block.data.code}</code>
-        </pre>
+        <figure className="public-code-figure">
+          <figcaption>{block.data.language}</figcaption>
+          <pre
+            className="public-code"
+            data-language={block.data.language}
+            tabIndex={0}
+            aria-label={`${block.data.language} code example`}
+          >
+            <code>{block.data.code}</code>
+          </pre>
+        </figure>
       );
     case 'image':
       return <PublicImage media={block.data.media} />;
@@ -71,6 +79,7 @@ function PublicBlockView({
       return (
         <a className="public-resource-link" href={block.data.url} target="_blank" rel="noreferrer">
           {block.data.caption ?? 'Watch video'} <span aria-hidden>↗</span>
+          <span className="sr-only"> (opens in a new tab)</span>
         </a>
       );
     case 'divider':
@@ -139,6 +148,7 @@ function PublicBlockView({
       return (
         <a className="public-resource-link" href={block.data.url} target="_blank" rel="noreferrer">
           {block.data.fileName} <span aria-hidden>↓</span>
+          <span className="sr-only"> (opens document in a new tab)</span>
         </a>
       );
     case 'metrics':
@@ -180,6 +190,7 @@ function PublicBlockView({
             <li key={index}>
               <a href={link.url} target="_blank" rel="noreferrer">
                 {link.label} <span aria-hidden>↗</span>
+                <span className="sr-only"> (opens in a new tab)</span>
               </a>
             </li>
           ))}
@@ -193,6 +204,7 @@ function PublicBlockView({
               {citation.url ? (
                 <a href={citation.url} target="_blank" rel="noreferrer">
                   {citation.label}
+                  <span className="sr-only"> (opens in a new tab)</span>
                 </a>
               ) : (
                 citation.label

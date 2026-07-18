@@ -8,8 +8,14 @@ export const metadata: Metadata = { title: 'New Work entry — HubZero Studio' }
 
 /** Every authenticated role holds `createOwnEntry` (§29) — the create action itself is the enforcement point, not this route. */
 export default async function NewWorkPage() {
-  const { categoryOptions, technologyOptions, buildOptions, blueprintOptions } =
-    await getWorkRelationOptions();
+  const {
+    categoryOptions,
+    technologyOptions,
+    buildOptions,
+    blueprintOptions,
+    labOptions,
+    contributorOptions,
+  } = await getWorkRelationOptions();
 
   return (
     <div className="flex flex-col gap-6">
@@ -24,6 +30,8 @@ export default async function NewWorkPage() {
         technologyOptions={technologyOptions}
         buildOptions={buildOptions}
         blueprintOptions={blueprintOptions}
+        labOptions={labOptions}
+        contributorOptions={contributorOptions}
       />
     </div>
   );
