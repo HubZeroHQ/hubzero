@@ -75,7 +75,7 @@ describe('public repository boundary', () => {
   });
 
   it('does not invent missing required summaries', async () => {
-    const work: Work = {
+    const work = {
       _id: new ObjectId(),
       createdAt: now,
       updatedAt: now,
@@ -91,7 +91,7 @@ describe('public repository boundary', () => {
       technologyIds: [],
       relatedBuildIds: [],
       relatedBlueprintIds: [],
-    };
+    } as unknown as Work;
     const repository = createPublicRepository(fakeSource({ entities: [entity('work', work)] }));
     expect(await repository.findSummary('work', 'work')).toBeNull();
   });
@@ -114,7 +114,9 @@ describe('public repository boundary', () => {
       technologyIds: [],
       relatedBuildIds: [],
       relatedBlueprintIds: [],
-    } as Work & { summary: string };
+      relatedLabIds: [],
+      contributorProfileIds: [],
+    } as Work;
     let documentReads = 0;
     const source = fakeSource({ entities: [entity('work', work)] });
     source.findDocuments = async () => {

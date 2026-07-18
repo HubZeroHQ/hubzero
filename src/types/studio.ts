@@ -129,6 +129,8 @@ export interface Team extends WithId, WithTimestamps {
 export interface Work extends PublishableEntity {
   referenceId: ReferenceId<'WK'>;
   title: string;
+  /** Concise public/editorial summary for indexes, metadata, search, and relationship context. */
+  summary: string;
   clientType: string;
   categoryTagIds: ObjectId[];
   timeline: string;
@@ -136,6 +138,9 @@ export interface Work extends PublishableEntity {
   technologyIds: ObjectId[];
   relatedBuildIds: ObjectId[];
   relatedBlueprintIds: ObjectId[];
+  relatedLabIds: ObjectId[];
+  /** Explicit public credit only; `createdByUserId` remains internal provenance. */
+  contributorProfileIds: ObjectId[];
   heroImageId?: ObjectId;
   /** Additive beyond §26.1 — mirrors Build's `repoUrl` (§26.2). */
   repoUrl?: string;

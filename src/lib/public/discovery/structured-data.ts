@@ -1,6 +1,11 @@
 import { PUBLIC_SITE } from '@/config/public-site';
 import { publicEnv } from '@/lib/env';
-import type { ImmutablePublic, PublicBuildSummary, PublicLabSummary } from '../domain';
+import type {
+  ImmutablePublic,
+  PublicBuildSummary,
+  PublicLabSummary,
+  PublicWorkSummary,
+} from '../domain';
 
 export type JsonLd = Record<string, unknown>;
 
@@ -68,7 +73,7 @@ export function collectionPageJsonLd(input: {
 }
 
 export function publicArtifactJsonLd(
-  entity: ImmutablePublic<PublicBuildSummary | PublicLabSummary>,
+  entity: ImmutablePublic<PublicWorkSummary | PublicBuildSummary | PublicLabSummary>,
 ): JsonLd {
   const common = {
     '@context': 'https://schema.org',
@@ -79,18 +84,28 @@ export function publicArtifactJsonLd(
     keywords: entity.technologies.map((technology) => technology.label),
     ...(entity.hero ? { image: entity.hero.url } : {}),
   };
-  return entity.type === 'build'
-    ? {
-        ...common,
-        '@type': 'Product',
-        brand: { '@id': `${absolute('/')}#organization` },
-        manufacturer: { '@id': `${absolute('/')}#organization` },
-      }
-    : {
-        ...common,
-        '@type': 'CreativeWork',
-        creator: { '@id': `${absolute('/')}#organization` },
-        dateCreated: entity.startDate,
-        ...(entity.lastMajorUpdate ? { dateModified: entity.lastMajorUpdate } : {}),
-      };
+  if (entity.type === 'build') {
+    return {
+      ...common,
+      '@type': 'Product',
+      brand: { '@id': `${absolute('/')}#organization` },
+      manufacturer: { '@id': `${absolute('/')}#organization` },
+    };
+  }
+  if (entity.type === 'work') {
+    return {
+      ...common,
+      '@type': 'CreativeWork',
+      genre: 'Engineering case study',
+      creator: { '@id': `${absolute('/')}#organization` },
+      about: entity.categories.map((category) => category.label),
+    };
+  }
+  return {
+    ...common,
+    '@type': 'CreativeWork',
+    creator: { '@id': `${absolute('/')}#organization` },
+    dateCreated: entity.startDate,
+    ...(entity.lastMajorUpdate ? { dateModified: entity.lastMajorUpdate } : {}),
+  };
 }

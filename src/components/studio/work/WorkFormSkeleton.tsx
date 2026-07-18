@@ -13,6 +13,7 @@ export function WorkFormSkeleton() {
   return (
     <div className="flex max-w-2xl flex-col gap-6">
       <Skeleton className="h-16 w-full" />
+      <Skeleton className="h-28 w-full" />
       <Skeleton className="h-16 w-full" />
       <div className="grid gap-4 sm:grid-cols-3">
         <Skeleton className="h-16 w-full" />
@@ -20,6 +21,8 @@ export function WorkFormSkeleton() {
         <Skeleton className="h-16 w-full" />
       </div>
       <Skeleton className="h-16 w-full" />
+      <Skeleton className="h-24 w-full" />
+      <Skeleton className="h-24 w-full" />
       <Skeleton className="h-24 w-full" />
       <Skeleton className="h-24 w-full" />
       <Skeleton className="h-11 w-40" />

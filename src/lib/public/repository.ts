@@ -156,7 +156,7 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
 
     switch (entity.type) {
       case 'work': {
-        const record = entity.record as Work & { summary?: unknown };
+        const record = entity.record as Work;
         if (typeof record.summary !== 'string' || !record.summary.trim()) return null;
         const [technologies, categories, hero] = await Promise.all([
           terms(record.technologyIds, 'technology'),
@@ -787,6 +787,20 @@ function assertionsFrom(entity: StudioPublicEntity): RelationshipAssertion[] {
         fromId: id,
         toType: 'blueprint' as const,
         toId: blueprintId.toString(),
+      })),
+      ...(record.relatedLabIds ?? []).map((labId) => ({
+        kind: 'workRelatedLab' as const,
+        fromType: 'work' as const,
+        fromId: id,
+        toType: 'lab' as const,
+        toId: labId.toString(),
+      })),
+      ...(record.contributorProfileIds ?? []).map((profileId) => ({
+        kind: 'profileContributedToWork' as const,
+        fromType: 'work' as const,
+        fromId: id,
+        toType: 'engineeringProfile' as const,
+        toId: profileId.toString(),
       })),
     ];
   }

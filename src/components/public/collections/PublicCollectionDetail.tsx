@@ -13,7 +13,8 @@ import { PublicImage } from '../PublicImage';
 
 type BuildDetail = Extract<PublicEntityDetail, { type: 'build' }>;
 type LabDetail = Extract<PublicEntityDetail, { type: 'lab' }>;
-type CollectionDetail = BuildDetail | LabDetail;
+type WorkDetail = Extract<PublicEntityDetail, { type: 'work' }>;
+type CollectionDetail = WorkDetail | BuildDetail | LabDetail;
 
 const DOCUMENT_LABELS: Record<string, { eyebrow: string; title: string }> = {
   caseStudy: { eyebrow: 'Product lens', title: 'Product story' },
@@ -25,14 +26,40 @@ const DOCUMENT_LABELS: Record<string, { eyebrow: string; title: string }> = {
 };
 
 export function PublicCollectionDetail({ entity }: { entity: ImmutablePublic<CollectionDetail> }) {
-  const collection = entity.type === 'build' ? 'Builds' : 'Labs';
-  const collectionHref = entity.type === 'build' ? '/builds' : '/labs';
+  const collection = entity.type === 'work' ? 'Work' : entity.type === 'build' ? 'Builds' : 'Labs';
+  const collectionHref =
+    entity.type === 'work' ? '/work' : entity.type === 'build' ? '/builds' : '/labs';
   const lineage = entity.relationships.filter(
     (relationship) => relationship.kind === 'labGraduatedToBuild',
   );
   const connected = entity.relationships.filter(
     (relationship) => relationship.kind !== 'labGraduatedToBuild',
   );
+  const workRelationshipGroups =
+    entity.type === 'work'
+      ? [
+          {
+            title: 'Engineering foundations',
+            relationships: connected.filter((item) => item.target.type === 'build'),
+          },
+          {
+            title: 'Reusable foundations',
+            relationships: connected.filter((item) => item.target.type === 'blueprint'),
+          },
+          {
+            title: 'Connected investigations',
+            relationships: connected.filter((item) => item.target.type === 'lab'),
+          },
+          {
+            title: 'Engineering notes',
+            relationships: connected.filter((item) => item.target.type === 'note'),
+          },
+          {
+            title: 'Engineering attribution',
+            relationships: connected.filter((item) => item.target.type === 'engineeringProfile'),
+          },
+        ].filter((group) => group.relationships.length)
+      : [];
 
   return (
     <main id="main-content" tabIndex={-1} className="collection-main detail-main">
@@ -52,7 +79,11 @@ export function PublicCollectionDetail({ entity }: { entity: ImmutablePublic<Col
           <div className="detail-hero-grid">
             <div className="detail-title-block">
               <p className="home-eyebrow">
-                {entity.type === 'build' ? 'Build / shipped product' : 'Lab / active investigation'}
+                {entity.type === 'work'
+                  ? 'Work / engineering case study'
+                  : entity.type === 'build'
+                    ? 'Build / shipped product'
+                    : 'Lab / active investigation'}
               </p>
               <h1>{entity.title}</h1>
               <p className="detail-summary">{entity.summary}</p>
@@ -89,16 +120,24 @@ export function PublicCollectionDetail({ entity }: { entity: ImmutablePublic<Col
       {entity.type === 'lab' ? <LabProgress entity={entity} /> : null}
 
       {entity.documents.map((document) => {
-        const label = DOCUMENT_LABELS[document.role] ?? {
-          eyebrow: 'Document',
-          title: formatMetadata(document.role),
-        };
+        const label =
+          entity.type === 'work' && document.role === 'caseStudy'
+            ? { eyebrow: 'Case study / engineering record', title: 'Context to consequence' }
+            : (DOCUMENT_LABELS[document.role] ?? {
+                eyebrow: 'Document',
+                title: formatMetadata(document.role),
+              });
+        const sectionId = `document-${document.role}`;
         return (
-          <PublicSection key={document.role} className="detail-document">
+          <PublicSection
+            key={document.role}
+            className="detail-document"
+            aria-labelledby={sectionId}
+          >
             <PageContainer className="detail-document-grid">
               <header>
                 <p className="home-eyebrow">{label.eyebrow}</p>
-                <h2>{label.title}</h2>
+                <h2 id={sectionId}>{label.title}</h2>
                 {document.outline?.length && document.outline.length > 1 ? (
                   <nav aria-label={`${label.title} contents`} className="detail-outline">
                     <ol>
@@ -117,7 +156,7 @@ export function PublicCollectionDetail({ entity }: { entity: ImmutablePublic<Col
         );
       })}
 
-      {entity.gallery.length ? (
+      {'gallery' in entity && entity.gallery.length ? (
         <PublicSection className="detail-gallery" aria-labelledby="detail-gallery-title">
           <PageContainer>
             <header className="detail-section-header">
@@ -133,7 +172,11 @@ export function PublicCollectionDetail({ entity }: { entity: ImmutablePublic<Col
         </PublicSection>
       ) : null}
 
-      {connected.length ? (
+      {entity.type === 'work' && workRelationshipGroups.length ? (
+        <WorkRelationshipSection groups={workRelationshipGroups} />
+      ) : null}
+
+      {entity.type !== 'work' && connected.length ? (
         <RelationshipSection title="Connected records" relationships={connected} />
       ) : null}
 
@@ -156,26 +199,33 @@ export function PublicCollectionDetail({ entity }: { entity: ImmutablePublic<Col
 
 function DetailRegister({ entity }: { entity: ImmutablePublic<CollectionDetail> }) {
   const values =
-    entity.type === 'build'
+    entity.type === 'work'
       ? [
           ['Reference', entity.referenceId],
-          ['State', formatMetadata(entity.deploymentState)],
-          [
-            'Technology',
-            entity.technologies.length ? `${entity.technologies.length} listed` : 'Not listed',
-          ],
+          ['Client', entity.clientType],
+          ['Timeline', entity.timeline],
+          ['HubZero role', entity.hubZeroRole],
         ]
-      : [
-          ['Reference', entity.referenceId],
-          ['Stage', formatMetadata(entity.stage)],
-          ['Started', formatPublicDate(entity.startDate)],
-          [
-            'Updated',
-            entity.lastMajorUpdate
-              ? formatPublicDate(entity.lastMajorUpdate)
-              : 'No major update listed',
-          ],
-        ];
+      : entity.type === 'build'
+        ? [
+            ['Reference', entity.referenceId],
+            ['State', formatMetadata(entity.deploymentState)],
+            [
+              'Technology',
+              entity.technologies.length ? `${entity.technologies.length} listed` : 'Not listed',
+            ],
+          ]
+        : [
+            ['Reference', entity.referenceId],
+            ['Stage', formatMetadata(entity.stage)],
+            ['Started', formatPublicDate(entity.startDate)],
+            [
+              'Updated',
+              entity.lastMajorUpdate
+                ? formatPublicDate(entity.lastMajorUpdate)
+                : 'No major update listed',
+            ],
+          ];
   return (
     <aside className="detail-register" aria-label={`${entity.title} publication metadata`}>
       <dl>
@@ -187,6 +237,9 @@ function DetailRegister({ entity }: { entity: ImmutablePublic<CollectionDetail> 
         ))}
       </dl>
       <TechnologyList technologies={entity.technologies} />
+      {entity.type === 'work' ? (
+        <TechnologyList technologies={entity.categories} label="Categories" />
+      ) : null}
     </aside>
   );
 }
@@ -250,6 +303,42 @@ function RelationshipSection({
               relationship={relationship}
               enabled={PUBLIC_ENTITY_ROUTES[relationship.target.type]}
             />
+          ))}
+        </div>
+      </PageContainer>
+    </PublicSection>
+  );
+}
+
+function WorkRelationshipSection({
+  groups,
+}: {
+  groups: Array<{
+    title: string;
+    relationships: readonly ImmutablePublic<PublicRelationship>[];
+  }>;
+}) {
+  return (
+    <PublicSection className="detail-relations" aria-labelledby="work-connections-title">
+      <PageContainer className="detail-relations-grid">
+        <header>
+          <p className="home-eyebrow">Relationships / typed links</p>
+          <h2 id="work-connections-title">Continue through the engineering record</h2>
+        </header>
+        <div className="detail-relation-groups">
+          {groups.map((group) => (
+            <section key={group.title} className="detail-relation-group">
+              <h3>{group.title}</h3>
+              <div className="home-relationships" aria-label={group.title}>
+                {group.relationships.map((relationship) => (
+                  <RelationshipCard
+                    key={`${relationship.kind}-${relationship.target.url}`}
+                    relationship={relationship}
+                    enabled={PUBLIC_ENTITY_ROUTES[relationship.target.type]}
+                  />
+                ))}
+              </div>
+            </section>
           ))}
         </div>
       </PageContainer>

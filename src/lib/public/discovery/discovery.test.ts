@@ -133,6 +133,29 @@ describe('public discovery foundations', () => {
     ).toMatchObject({ '@type': 'Product', name: 'Release Ledger' });
   });
 
+  it('describes Work as an organization-authored engineering case study', () => {
+    expect(
+      publicArtifactJsonLd({
+        type: 'work',
+        title: 'Operational release review',
+        slug: 'operational-release-review',
+        url: '/work/operational-release-review',
+        referenceId: 'HZ-WK-101',
+        summary: 'A release workflow rebuilt around explicit evidence.',
+        clientType: 'Product team',
+        timeline: '12 weeks',
+        hubZeroRole: 'Product engineering',
+        technologies: [{ kind: 'technology', label: 'TypeScript', slug: 'typescript' }],
+        categories: [{ kind: 'category', label: 'Developer tools', slug: 'developer-tools' }],
+      }),
+    ).toMatchObject({
+      '@type': 'CreativeWork',
+      genre: 'Engineering case study',
+      about: ['Developer tools'],
+      creator: { '@id': 'https://hubzero.in/#organization' },
+    });
+  });
+
   it('keeps robots closed while the public release gate is disabled', () => {
     expect(robots()).toEqual({ rules: { userAgent: '*', disallow: '/' } });
   });

@@ -22,6 +22,7 @@ const workDetailPath = (id: string) => `/studio/content/work/${id}`;
 function readWorkMetadataFields(formData: FormData) {
   return {
     title: String(formData.get('title') ?? ''),
+    summary: String(formData.get('summary') ?? ''),
     slug: String(formData.get('slug') ?? ''),
     clientType: String(formData.get('clientType') ?? ''),
     timeline: String(formData.get('timeline') ?? ''),
@@ -30,6 +31,8 @@ function readWorkMetadataFields(formData: FormData) {
     technologyIds: formData.getAll('technologyIds').map(String),
     relatedBuildIds: formData.getAll('relatedBuildIds').map(String),
     relatedBlueprintIds: formData.getAll('relatedBlueprintIds').map(String),
+    relatedLabIds: formData.getAll('relatedLabIds').map(String),
+    contributorProfileIds: formData.getAll('contributorProfileIds').map(String),
   };
 }
 

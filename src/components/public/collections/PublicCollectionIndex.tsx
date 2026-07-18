@@ -1,12 +1,29 @@
 import Link from 'next/link';
-import type { ImmutablePublic, PublicBuildSummary, PublicLabSummary } from '@/lib/public/domain';
+import type {
+  ImmutablePublic,
+  PublicBuildSummary,
+  PublicLabSummary,
+  PublicTaxonomyTerm,
+  PublicWorkSummary,
+} from '@/lib/public/domain';
 import { MetadataRow, PublicationMetadata, TechnologyList } from '../EditorialPrimitives';
 import { PageContainer, PublicSection } from '../PageContainer';
 import { PublicImage } from '../PublicImage';
 
-type CollectionSummary = PublicBuildSummary | PublicLabSummary;
+type CollectionSummary = PublicWorkSummary | PublicBuildSummary | PublicLabSummary;
 
 const COPY = {
+  work: {
+    eyebrow: 'Work / client engineering',
+    title: 'Consequences, decisions, and the work between them.',
+    introduction:
+      'Work documents how a real constraint was understood, what HubZero was responsible for, and which engineering decisions changed the outcome.',
+    collectionLabel: 'Client case studies',
+    indexTitle: 'Published case studies',
+    emptyTitle: 'The public record begins with verified evidence.',
+    emptyBody:
+      'Case studies will appear here when the client work is approved for publication and its context, decisions, outcome, and lessons form a complete engineering record.',
+  },
   build: {
     eyebrow: 'Builds / product portfolio',
     title: 'Products built to remain useful.',
@@ -34,9 +51,13 @@ const COPY = {
 export function PublicCollectionIndex({
   type,
   entries,
+  categoryFilters = [],
+  activeCategory,
 }: {
   type: CollectionSummary['type'];
   entries: readonly ImmutablePublic<CollectionSummary>[];
+  categoryFilters?: readonly ImmutablePublic<PublicTaxonomyTerm>[];
+  activeCategory?: string;
 }) {
   const copy = COPY[type];
   const taxonomyCount = new Set(
@@ -80,6 +101,28 @@ export function PublicCollectionIndex({
               </p>
             ) : null}
           </header>
+
+          {type === 'work' && categoryFilters.length ? (
+            <nav className="collection-filters" aria-label="Filter Work by category">
+              <Link
+                href="/work"
+                className="collection-filter"
+                aria-current={!activeCategory ? 'page' : undefined}
+              >
+                All
+              </Link>
+              {categoryFilters.map((category) => (
+                <Link
+                  key={category.slug}
+                  href={`/work?category=${encodeURIComponent(category.slug)}`}
+                  className="collection-filter"
+                  aria-current={activeCategory === category.slug ? 'page' : undefined}
+                >
+                  {category.label}
+                </Link>
+              ))}
+            </nav>
+          ) : null}
 
           {entries.length ? (
             <div className="collection-grid">

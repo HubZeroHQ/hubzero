@@ -5,10 +5,12 @@ import { RelationMultiSelect } from '@/components/studio/collection/RelationMult
 import { Button } from '@/components/ui/Button';
 import { Field } from '@/components/ui/Field';
 import { Input } from '@/components/ui/Input';
+import { fieldClassName } from '@/components/ui/Input';
 import type { EntryActionState } from '@/lib/studio/entry-actions';
 
 export interface WorkFormValues {
   title: string;
+  summary: string;
   slug: string;
   clientType: string;
   timeline: string;
@@ -18,6 +20,8 @@ export interface WorkFormValues {
   technologyIds: string[];
   relatedBuildIds: string[];
   relatedBlueprintIds: string[];
+  relatedLabIds: string[];
+  contributorProfileIds: string[];
 }
 
 interface RelationOption {
@@ -43,6 +47,8 @@ export function WorkForm({
   technologyOptions,
   buildOptions,
   blueprintOptions,
+  labOptions,
+  contributorOptions,
 }: {
   action: (prevState: EntryActionState, formData: FormData) => Promise<EntryActionState>;
   submitLabel: string;
@@ -51,6 +57,8 @@ export function WorkForm({
   technologyOptions: RelationOption[];
   buildOptions: RelationOption[];
   blueprintOptions: RelationOption[];
+  labOptions: RelationOption[];
+  contributorOptions: RelationOption[];
 }) {
   const [state, formAction, pending] = useActionState(action, emptyActionState);
 
@@ -64,6 +72,23 @@ export function WorkForm({
 
       <Field label="Title" name="title" error={state.fieldErrors?.title}>
         <Input id="title" name="title" defaultValue={initialValues?.title} required />
+      </Field>
+
+      <Field
+        label="Public summary"
+        name="summary"
+        error={state.fieldErrors?.summary}
+        hint="A concise account of the problem and engineering consequence. Used in public indexes, metadata, and search."
+      >
+        <textarea
+          id="summary"
+          name="summary"
+          rows={4}
+          maxLength={320}
+          defaultValue={initialValues?.summary}
+          className={fieldClassName}
+          required
+        />
       </Field>
 
       <Field
@@ -160,6 +185,35 @@ export function WorkForm({
           options={blueprintOptions}
           selectedIds={initialValues?.relatedBlueprintIds ?? []}
           emptyMessage="No Blueprints exist yet."
+        />
+      </Field>
+
+      <Field
+        label="Related Labs"
+        name="relatedLabIds"
+        error={state.fieldErrors?.relatedLabIds}
+        asFieldset
+      >
+        <RelationMultiSelect
+          name="relatedLabIds"
+          options={labOptions}
+          selectedIds={initialValues?.relatedLabIds ?? []}
+          emptyMessage="No Labs exist yet."
+        />
+      </Field>
+
+      <Field
+        label="Engineering contributors"
+        name="contributorProfileIds"
+        error={state.fieldErrors?.contributorProfileIds}
+        hint="Explicit public credit. Select only Engineering Profiles for people who contributed to this Work."
+        asFieldset
+      >
+        <RelationMultiSelect
+          name="contributorProfileIds"
+          options={contributorOptions}
+          selectedIds={initialValues?.contributorProfileIds ?? []}
+          emptyMessage="No Engineering Profiles exist yet."
         />
       </Field>
 

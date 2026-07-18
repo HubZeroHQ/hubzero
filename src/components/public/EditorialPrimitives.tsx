@@ -54,12 +54,14 @@ export function MetadataRow({ entity }: { entity: ImmutablePublic<PublicEntitySu
 
 export function TechnologyList({
   technologies,
+  label = 'Technologies',
 }: {
   technologies: readonly ImmutablePublic<PublicTaxonomyTerm>[];
+  label?: string;
 }) {
   if (!technologies.length) return null;
   return (
-    <ul className="home-technologies" aria-label="Technologies">
+    <ul className="home-technologies" aria-label={label}>
       {technologies.slice(0, 8).map((technology) => (
         <li key={`${technology.kind}-${technology.slug}`}>{technology.label}</li>
       ))}

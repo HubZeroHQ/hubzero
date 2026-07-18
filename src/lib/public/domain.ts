@@ -62,6 +62,8 @@ export interface PublicEntityLink {
 export type PublicRelationshipKind =
   | 'labGraduatedToBuild'
   | 'buildAppliedInWork'
+  | 'workRelatedLab'
+  | 'profileContributedToWork'
   | 'artifactUsesBlueprint'
   | 'labRelatedBuild'
   | 'labRelatedBlueprint'

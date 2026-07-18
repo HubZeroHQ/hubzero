@@ -46,11 +46,20 @@ export default async function EditWorkPage({ params }: { params: Promise<{ id: s
     );
   }
 
-  const [document, { categoryOptions, technologyOptions, buildOptions, blueprintOptions }] =
-    await Promise.all([
-      documentRepository.findByOwnerAndRole('Work', id, 'caseStudy'),
-      getWorkRelationOptions(),
-    ]);
+  const [
+    document,
+    {
+      categoryOptions,
+      technologyOptions,
+      buildOptions,
+      blueprintOptions,
+      labOptions,
+      contributorOptions,
+    },
+  ] = await Promise.all([
+    documentRepository.findByOwnerAndRole('Work', id, 'caseStudy'),
+    getWorkRelationOptions(),
+  ]);
 
   const boundUpdateAction = updateWorkAction.bind(null, id);
   const boundSaveDocumentAction = saveWorkCaseStudyAction.bind(null, id);
@@ -74,6 +83,7 @@ export default async function EditWorkPage({ params }: { params: Promise<{ id: s
         submitLabel="Save changes"
         initialValues={{
           title: work.title,
+          summary: work.summary,
           slug: work.slug,
           clientType: work.clientType,
           timeline: work.timeline,
@@ -83,11 +93,15 @@ export default async function EditWorkPage({ params }: { params: Promise<{ id: s
           technologyIds: work.technologyIds.map((id) => id.toString()),
           relatedBuildIds: work.relatedBuildIds.map((id) => id.toString()),
           relatedBlueprintIds: work.relatedBlueprintIds.map((id) => id.toString()),
+          relatedLabIds: (work.relatedLabIds ?? []).map((id) => id.toString()),
+          contributorProfileIds: (work.contributorProfileIds ?? []).map((id) => id.toString()),
         }}
         categoryOptions={categoryOptions}
         technologyOptions={technologyOptions}
         buildOptions={buildOptions}
         blueprintOptions={blueprintOptions}
+        labOptions={labOptions}
+        contributorOptions={contributorOptions}
       />
 
       <section className="flex flex-col gap-3">

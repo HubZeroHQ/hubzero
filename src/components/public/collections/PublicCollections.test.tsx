@@ -1,6 +1,11 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import type { PublicBuildSummary, PublicEntityDetail, PublicLabSummary } from '@/lib/public/domain';
+import type {
+  PublicBuildSummary,
+  PublicEntityDetail,
+  PublicLabSummary,
+  PublicWorkSummary,
+} from '@/lib/public/domain';
 import { PublicCollectionDetail } from './PublicCollectionDetail';
 import { PublicCollectionIndex } from './PublicCollectionIndex';
 
@@ -34,6 +39,20 @@ const labSummary: PublicLabSummary = {
   links: [],
 };
 
+const workSummary: PublicWorkSummary = {
+  type: 'work',
+  title: 'Operational release review',
+  slug: 'operational-release-review',
+  url: '/work/operational-release-review',
+  referenceId: 'HZ-WK-101',
+  summary: 'A release workflow rebuilt around explicit evidence and review responsibility.',
+  clientType: 'Product team',
+  timeline: '12 weeks',
+  hubZeroRole: 'Product engineering',
+  technologies: [{ kind: 'technology', label: 'TypeScript', slug: 'typescript' }],
+  categories: [{ kind: 'category', label: 'Developer tools', slug: 'developer-tools' }],
+};
+
 describe('Builds and Labs public collections', () => {
   it('renders an editorial collection empty state without fabricated records', () => {
     const markup = renderToStaticMarkup(<PublicCollectionIndex type="build" entries={[]} />);
@@ -52,6 +71,100 @@ describe('Builds and Labs public collections', () => {
     expect(markup).toContain('href="/builds/release-ledger"');
     expect(markup).toContain('HZ-BL-101');
     expect(markup).toContain('TypeScript');
+  });
+
+  it('renders Work category filters as URL-addressable server navigation', () => {
+    const markup = renderToStaticMarkup(
+      <PublicCollectionIndex
+        type="work"
+        entries={[workSummary]}
+        categoryFilters={workSummary.categories}
+        activeCategory="developer-tools"
+      />,
+    );
+
+    expect(markup).toContain('aria-label="Filter Work by category"');
+    expect(markup).toContain('href="/work?category=developer-tools"');
+    expect(markup).toContain('aria-current="page"');
+    expect(markup).toContain('Product engineering');
+  });
+
+  it('renders Work as a long-form engineering publication with typed continuation paths', () => {
+    const detail: Extract<PublicEntityDetail, { type: 'work' }> = {
+      ...workSummary,
+      links: [],
+      documents: [
+        {
+          role: 'caseStudy',
+          outline: [{ id: 'constraint', level: 2, text: 'Constraint' }],
+          blocks: [
+            { id: 'constraint', type: 'heading', data: { level: 2, text: 'Constraint' } },
+            {
+              id: 'decision',
+              type: 'paragraph',
+              data: { text: 'The review boundary was made explicit before implementation.' },
+            },
+            {
+              id: 'milestones',
+              type: 'timeline',
+              data: {
+                events: [
+                  {
+                    date: '2026-06',
+                    title: 'Review boundary agreed',
+                    description: 'The decision record became the source of truth.',
+                  },
+                ],
+              },
+            },
+            {
+              id: 'decision-record',
+              type: 'fileAttachment',
+              data: { url: 'https://example.com/decision.pdf', fileName: 'Decision record.pdf' },
+            },
+          ],
+        },
+      ],
+      relationships: [
+        {
+          kind: 'buildAppliedInWork',
+          label: 'Informed by',
+          target: { type: 'build', title: 'Release Ledger', url: '/builds/release-ledger' },
+        },
+        {
+          kind: 'noteDiscussesArtifact',
+          label: 'Engineering notes',
+          target: { type: 'note', title: 'Review boundaries', url: '/notes/review-boundaries' },
+        },
+        {
+          kind: 'workRelatedLab',
+          label: 'Related investigation',
+          target: { type: 'lab', title: 'Review systems Lab', url: '/labs/review-systems' },
+        },
+        {
+          kind: 'profileContributedToWork',
+          label: 'Engineering contributor',
+          target: {
+            type: 'engineeringProfile',
+            title: 'Public Engineer',
+            url: '/engineering/public-engineer',
+          },
+        },
+      ],
+    };
+    const markup = renderToStaticMarkup(<PublicCollectionDetail entity={detail} />);
+
+    expect(markup).toContain('Work / engineering case study');
+    expect(markup).toContain('Context to consequence');
+    expect(markup).toContain('Review boundary agreed');
+    expect(markup).toContain('Decision record.pdf');
+    expect(markup).toContain('Continue through the engineering record');
+    expect(markup).toContain('Engineering foundations');
+    expect(markup).toContain('Engineering notes');
+    expect(markup).toContain('Connected investigations');
+    expect(markup).toContain('Engineering attribution');
+    expect(markup).toContain('Engineering contributor');
+    expect(markup).toContain('Return to Work');
   });
 
   it('renders Build Documents, external destinations, and typed lineage', () => {
