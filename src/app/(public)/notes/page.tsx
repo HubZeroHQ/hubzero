@@ -17,6 +17,7 @@ export const metadata: Metadata = createPublicMetadata({
   description,
   path: '/notes',
   noIndex: !PUBLIC_SITE.release.live,
+  feed: true,
 });
 
 export default async function NotesIndexPage() {

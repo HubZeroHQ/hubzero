@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import robots from '@/app/robots';
 import { canonicalUrl, createPublicMetadata } from './metadata';
-import { createPublicSearchEntryPoint } from './search';
+import { createInMemoryPublicSearchProvider, createPublicSearchEntryPoint } from './search';
 import { renderRssFeed } from './feed';
 import {
   breadcrumbJsonLd,
@@ -39,6 +39,66 @@ describe('public discovery foundations', () => {
     expect(calls).toBe(0);
     await entry.search({ query: '  build  ' });
     expect(calls).toBe(1);
+  });
+
+  it('ranks titles above relationship matches and reports why secondary records matched', async () => {
+    const relationships = [
+      {
+        kind: 'buildAppliedInWork' as const,
+        label: 'Informed by',
+        target: { type: 'build' as const, title: 'Release Ledger', url: '/builds/release-ledger' },
+      },
+    ];
+    const search = createPublicSearchEntryPoint(
+      createInMemoryPublicSearchProvider([
+        {
+          type: 'build',
+          title: 'Release Ledger',
+          url: '/builds/release-ledger',
+          summary: 'A bounded release record.',
+          referenceId: 'HZ-BL-101',
+          taxonomy: ['TypeScript'],
+          state: 'live',
+          relationships: [],
+        },
+        {
+          type: 'work',
+          title: 'Operational release review',
+          url: '/work/operational-release-review',
+          summary: 'A release workflow rebuilt around explicit evidence.',
+          referenceId: 'HZ-WK-101',
+          taxonomy: ['Next.js'],
+          relationships,
+        },
+      ]),
+    );
+
+    const results = await search.search({ query: 'release ledger' });
+    expect(results.map((result) => result.title)).toEqual([
+      'Release Ledger',
+      'Operational release review',
+    ]);
+    expect(results[1]?.matchedRelationships).toEqual([
+      { label: 'Informed by', title: 'Release Ledger', url: '/builds/release-ledger' },
+    ]);
+  });
+
+  it('supports fuzzy title lookup and exposes technology matches', async () => {
+    const search = createPublicSearchEntryPoint(
+      createInMemoryPublicSearchProvider([
+        {
+          type: 'build',
+          title: 'Release Ledger',
+          url: '/builds/release-ledger',
+          summary: 'A bounded release record.',
+          taxonomy: ['TypeScript'],
+          relationships: [],
+        },
+      ]),
+    );
+
+    expect((await search.search({ query: 'relase ledgr' }))[0]?.title).toBe('Release Ledger');
+    expect((await search.search({ query: 'typescript' }))[0]?.matchedTerms).toEqual(['TypeScript']);
   });
 
   it('escapes RSS content and uses canonical URLs as GUIDs', () => {

@@ -727,8 +727,34 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
       return freezePublicDto(await listEngineeringProfileIndexEntries());
     },
     async listDiscoveryEntries(types = ALL_PUBLIC_TYPES) {
-      const summaries = (await Promise.all(types.map(listSummaries))).flat();
-      return freezePublicDto(summaries.map(toDiscoveryEntry));
+      const entities = (await Promise.all(types.map((type) => source.listEntities(type)))).flat();
+      const projected = await Promise.all(
+        entities.map(async (entity) => {
+          const summary = await mapSummary(entity);
+          return summary ? { entity, summary } : null;
+        }),
+      );
+      const visible = compact(projected);
+      const links = new Map(
+        visible.map(({ entity, summary }) => [
+          `${entity.type}:${entity.id}`,
+          toEntityLink(summary),
+        ]),
+      );
+      const assertions = entities.flatMap(assertionsFrom);
+      const entries = await Promise.all(
+        visible.map(async ({ entity, summary }) =>
+          toDiscoveryEntry(
+            summary,
+            await resolvePublicRelationships(
+              { type: entity.type, id: entity.id },
+              assertions,
+              async (type, id) => links.get(`${type}:${id}`) ?? null,
+            ),
+          ),
+        ),
+      );
+      return freezePublicDto(entries);
     },
     async getHomepage(now) {
       return freezePublicDto(await getHomepage(now));
@@ -777,7 +803,10 @@ function toEntityLink(summary: PublicEntitySummary): PublicEntityLink {
   };
 }
 
-function toDiscoveryEntry(summary: PublicEntitySummary): PublicDiscoveryEntry {
+function toDiscoveryEntry(
+  summary: PublicEntitySummary,
+  relationships: readonly PublicRelationship[],
+): PublicDiscoveryEntry {
   return {
     type: summary.type,
     title: summary.title,
@@ -786,8 +815,14 @@ function toDiscoveryEntry(summary: PublicEntitySummary): PublicDiscoveryEntry {
     ...(summary.referenceId ? { referenceId: summary.referenceId } : {}),
     taxonomy: summary.technologies.map((term) => term.label),
     ...(summary.state ? { state: summary.state } : {}),
+    ...(summary.type === 'note'
+      ? { lastModified: summary.publicationDate }
+      : summary.type === 'lab' && summary.lastMajorUpdate
+        ? { lastModified: summary.lastMajorUpdate }
+        : {}),
     ...(summary.type === 'note' ? { author: summary.author } : {}),
     ...(summary.hero ? { media: summary.hero } : {}),
+    relationships: [...relationships],
   };
 }
 
@@ -904,14 +939,14 @@ function assertionsFrom(entity: StudioPublicEntity): RelationshipAssertion[] {
   if (type === 'work') {
     const record = entity.record as Work;
     return [
-      ...record.relatedBuildIds.map((buildId) => ({
+      ...(record.relatedBuildIds ?? []).map((buildId) => ({
         kind: 'buildAppliedInWork' as const,
         fromType: 'build' as const,
         fromId: buildId.toString(),
         toType: 'work' as const,
         toId: id,
       })),
-      ...record.relatedBlueprintIds.map((blueprintId) => ({
+      ...(record.relatedBlueprintIds ?? []).map((blueprintId) => ({
         kind: 'artifactUsesBlueprint' as const,
         fromType: 'work' as const,
         fromId: id,
@@ -937,7 +972,7 @@ function assertionsFrom(entity: StudioPublicEntity): RelationshipAssertion[] {
   if (type === 'build') {
     const record = entity.record as Build;
     return [
-      ...record.relatedWorkIds.map((workId) => ({
+      ...(record.relatedWorkIds ?? []).map((workId) => ({
         kind: 'buildAppliedInWork' as const,
         fromType: 'build' as const,
         fromId: id,
@@ -971,14 +1006,14 @@ function assertionsFrom(entity: StudioPublicEntity): RelationshipAssertion[] {
             },
           ]
         : []),
-      ...record.relatedBuildIds.map((buildId) => ({
+      ...(record.relatedBuildIds ?? []).map((buildId) => ({
         kind: 'labRelatedBuild' as const,
         fromType: 'lab' as const,
         fromId: id,
         toType: 'build' as const,
         toId: buildId.toString(),
       })),
-      ...record.relatedBlueprintIds.map((blueprintId) => ({
+      ...(record.relatedBlueprintIds ?? []).map((blueprintId) => ({
         kind: 'labRelatedBlueprint' as const,
         fromType: 'lab' as const,
         fromId: id,
@@ -988,7 +1023,7 @@ function assertionsFrom(entity: StudioPublicEntity): RelationshipAssertion[] {
     ];
   }
   if (type === 'note') {
-    return (entity.record as Note).relatedEntries.map((reference) => ({
+    return ((entity.record as Note).relatedEntries ?? []).map((reference) => ({
       kind: 'noteDiscussesArtifact' as const,
       fromType: 'note' as const,
       fromId: id,
@@ -997,7 +1032,7 @@ function assertionsFrom(entity: StudioPublicEntity): RelationshipAssertion[] {
     }));
   }
   if (type === 'service') {
-    return (entity.record as Service).evidenceLinks.map((reference) => ({
+    return ((entity.record as Service).evidenceLinks ?? []).map((reference) => ({
       kind: 'serviceProvenBy' as const,
       fromType: 'service' as const,
       fromId: id,
@@ -1008,11 +1043,11 @@ function assertionsFrom(entity: StudioPublicEntity): RelationshipAssertion[] {
   if (type === 'engineeringProfile') {
     const record = entity.record as EngineeringProfile;
     const entries = [
-      ...record.featuredWorkIds.map((target) => ['work', target] as const),
-      ...record.featuredBuildIds.map((target) => ['build', target] as const),
-      ...record.featuredBlueprintIds.map((target) => ['blueprint', target] as const),
-      ...record.featuredLabIds.map((target) => ['lab', target] as const),
-      ...record.featuredNoteIds.map((target) => ['note', target] as const),
+      ...(record.featuredWorkIds ?? []).map((target) => ['work', target] as const),
+      ...(record.featuredBuildIds ?? []).map((target) => ['build', target] as const),
+      ...(record.featuredBlueprintIds ?? []).map((target) => ['blueprint', target] as const),
+      ...(record.featuredLabIds ?? []).map((target) => ['lab', target] as const),
+      ...(record.featuredNoteIds ?? []).map((target) => ['note', target] as const),
     ];
     return entries.map(([toType, target]) => ({
       kind: 'profileFeaturesEvidence' as const,

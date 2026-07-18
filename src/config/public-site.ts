@@ -6,9 +6,9 @@ export const PUBLIC_SITE = {
   organizationUrl: 'https://hubzero.in',
   socialImage: '/web-app-manifest-512x512.png',
   release: {
-    /** Phase 15 owns the first public release surface. Phase 14 stays closed to crawlers. */
+    /** Keep crawler and feed release gates closed until LAUNCH_READINESS.md is approved. */
     live: false,
-    search: false,
+    search: true,
     feed: false,
     contact: true,
   },
@@ -243,3 +243,14 @@ export const PUBLIC_ENTITY_ROUTES = {
   teamMember: true,
   service: true,
 } as const;
+
+export const PUBLIC_SEARCH_GROUPS = [
+  { type: 'work', label: 'Work' },
+  { type: 'build', label: 'Builds' },
+  { type: 'blueprint', label: 'Blueprints' },
+  { type: 'lab', label: 'Labs' },
+  { type: 'note', label: 'Notes' },
+  { type: 'engineeringProfile', label: 'Engineering profiles' },
+  { type: 'teamMember', label: 'Team' },
+  { type: 'service', label: 'Services' },
+] as const;

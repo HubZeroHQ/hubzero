@@ -16,6 +16,7 @@ export function createPublicMetadata(input: {
   type?: 'website' | 'article';
   publishedTime?: string;
   authors?: Array<{ name: string; url?: string }>;
+  feed?: boolean;
 }): Metadata {
   const socialTitle = input.title ? `${input.title} — ${PUBLIC_SITE.name}` : PUBLIC_SITE.name;
   const canonical = canonicalUrl(input.path);
@@ -26,8 +27,15 @@ export function createPublicMetadata(input: {
     // Supplying only the page title here prevents the site name being appended twice.
     ...(input.title ? { title: input.title } : {}),
     description: input.description,
-    alternates: { canonical },
-    robots: input.noIndex ? { index: false, follow: false } : { index: true, follow: true },
+    alternates: {
+      canonical,
+      ...(input.feed && PUBLIC_SITE.release.feed
+        ? { types: { 'application/rss+xml': canonicalUrl('/feed.xml').toString() } }
+        : {}),
+    },
+    robots: input.noIndex
+      ? { index: false, follow: PUBLIC_SITE.release.live }
+      : { index: true, follow: true },
     openGraph: {
       title: socialTitle,
       description: input.description,

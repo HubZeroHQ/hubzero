@@ -30,6 +30,52 @@ export function SectionHeader({
   );
 }
 
+export function PublicBreadcrumbs({
+  items,
+}: {
+  items: readonly { label: string; href?: string }[];
+}) {
+  return (
+    <nav className="detail-breadcrumbs" aria-label="Breadcrumb">
+      <ol>
+        {items.map((item, index) => {
+          const current = index === items.length - 1;
+          return (
+            <li
+              key={`${item.href ?? 'current'}-${item.label}`}
+              aria-current={current ? 'page' : undefined}
+            >
+              {!current && item.href ? <Link href={item.href}>{item.label}</Link> : item.label}
+            </li>
+          );
+        })}
+      </ol>
+    </nav>
+  );
+}
+
+export function PublicEmptyState({
+  id,
+  eyebrow,
+  title,
+  children,
+  className,
+}: {
+  id: string;
+  eyebrow: string;
+  title: ReactNode;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <section className={cn('collection-empty', className)} aria-labelledby={id}>
+      <p className="home-eyebrow">{eyebrow}</p>
+      <h3 id={id}>{title}</h3>
+      <p>{children}</p>
+    </section>
+  );
+}
+
 export function MetadataRow({ entity }: { entity: ImmutablePublic<PublicEntitySummary> }) {
   const values: string[] = [];
   if (entity.referenceId) values.push(entity.referenceId);

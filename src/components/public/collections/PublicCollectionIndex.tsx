@@ -7,7 +7,12 @@ import type {
   PublicTaxonomyTerm,
   PublicWorkSummary,
 } from '@/lib/public/domain';
-import { MetadataRow, PublicationMetadata, TechnologyList } from '../EditorialPrimitives';
+import {
+  MetadataRow,
+  PublicationMetadata,
+  PublicEmptyState,
+  TechnologyList,
+} from '../EditorialPrimitives';
 import { PageContainer, PublicSection } from '../PageContainer';
 import { PublicImage } from '../PublicImage';
 
@@ -144,11 +149,13 @@ export function PublicCollectionIndex({
               ))}
             </div>
           ) : (
-            <section className="collection-empty" aria-labelledby="collection-empty-title">
-              <p className="home-eyebrow">Public record / no eligible entries</p>
-              <h3 id="collection-empty-title">{copy.emptyTitle}</h3>
-              <p>{copy.emptyBody}</p>
-            </section>
+            <PublicEmptyState
+              id="collection-empty-title"
+              eyebrow="Public record / no eligible entries"
+              title={copy.emptyTitle}
+            >
+              {copy.emptyBody}
+            </PublicEmptyState>
           )}
         </PageContainer>
       </PublicSection>

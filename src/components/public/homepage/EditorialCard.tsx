@@ -13,11 +13,13 @@ export function EditorialCard({
   routeEnabled,
   relationshipRoutes,
   prominent = false,
+  priority = false,
 }: {
   feature: ImmutablePublic<PublicHomepageFeature>;
   routeEnabled: boolean;
   relationshipRoutes: Readonly<Record<string, boolean>>;
   prominent?: boolean;
+  priority?: boolean;
 }) {
   const { entity, relationships } = feature;
   const heading = <h3>{entity.title}</h3>;
@@ -26,7 +28,7 @@ export function EditorialCard({
     <article className={prominent ? 'home-card home-card-prominent' : 'home-card'}>
       {entity.hero ? (
         <div className="home-card-media">
-          <PublicImage media={entity.hero} priority={prominent} />
+          <PublicImage media={entity.hero} priority={priority} />
         </div>
       ) : null}
       <div className="home-card-body">

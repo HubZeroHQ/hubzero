@@ -4,6 +4,7 @@ import type { ImmutablePublic, PublicEntityDetail, PublicRelationship } from '@/
 import {
   formatMetadata,
   formatPublicDate,
+  PublicBreadcrumbs,
   RelationshipCard,
   TechnologyList,
 } from '../EditorialPrimitives';
@@ -104,17 +105,13 @@ export function PublicCollectionDetail({ entity }: { entity: ImmutablePublic<Col
     <main id="main-content" tabIndex={-1} className="collection-main detail-main">
       <header className="detail-hero">
         <PageContainer>
-          <nav className="detail-breadcrumbs" aria-label="Breadcrumb">
-            <ol>
-              <li>
-                <Link href="/">HubZero</Link>
-              </li>
-              <li>
-                <Link href={collectionHref}>{collection}</Link>
-              </li>
-              <li aria-current="page">{entity.title}</li>
-            </ol>
-          </nav>
+          <PublicBreadcrumbs
+            items={[
+              { label: 'HubZero', href: '/' },
+              { label: collection, href: collectionHref },
+              { label: entity.title },
+            ]}
+          />
           <div className="detail-hero-grid">
             <div className="detail-title-block">
               <p className="home-eyebrow">

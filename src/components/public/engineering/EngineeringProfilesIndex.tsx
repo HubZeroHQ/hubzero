@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { PUBLIC_ENTITY_ROUTES } from '@/config/public-site';
 import type { ImmutablePublic, PublicEngineeringProfileIndexEntry } from '@/lib/public/domain';
-import { TechnologyList } from '../EditorialPrimitives';
+import { PublicEmptyState, TechnologyList } from '../EditorialPrimitives';
 import { PageContainer, PublicSection } from '../PageContainer';
 import { PublicImage } from '../PublicImage';
 
@@ -106,20 +106,16 @@ export function EngineeringProfilesIndex({
               ))}
             </ol>
           ) : (
-            <section
-              className="collection-empty engineering-empty"
-              aria-labelledby="engineering-empty-title"
+            <PublicEmptyState
+              id="engineering-empty-title"
+              eyebrow="Profiles / no eligible entries"
+              title="A profile is published when the evidence earns it."
+              className="engineering-empty"
             >
-              <p className="home-eyebrow">Profiles / no eligible entries</p>
-              <h3 id="engineering-empty-title">
-                A profile is published when the evidence earns it.
-              </h3>
-              <p>
-                Eligible profiles require an approved public Team identity, a clear engineering
-                position, current exploration, substantive long-form writing, and at least two
-                visible contributions. Nothing is inferred from an internal account or résumé.
-              </p>
-            </section>
+              Eligible profiles require an approved public Team identity, a clear engineering
+              position, current exploration, substantive long-form writing, and at least two visible
+              contributions. Nothing is inferred from an internal account or résumé.
+            </PublicEmptyState>
           )}
         </PageContainer>
       </PublicSection>

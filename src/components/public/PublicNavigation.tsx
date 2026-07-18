@@ -2,10 +2,10 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { Search } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef } from 'react';
 import { PUBLIC_NAVIGATION, PUBLIC_SITE } from '@/config/public-site';
+import { PublicSearchDialog } from './search/PublicSearchDialog';
 
 const activeItems = PUBLIC_NAVIGATION.filter((item) => item.enabled);
 
@@ -49,13 +49,7 @@ export function PublicNavigation() {
             })}
           </div>
         ) : null}
-        {PUBLIC_SITE.release.search ? (
-          <button type="button" className="public-nav-search" aria-label="Search HubZero">
-            <Search className="h-3.5 w-3.5" aria-hidden />
-            <span>Search</span>
-            <kbd>⌘K</kbd>
-          </button>
-        ) : null}
+        {PUBLIC_SITE.release.search ? <PublicSearchDialog /> : null}
         {PUBLIC_SITE.release.contact ? (
           <Link href="/contact?from=navigation" className="public-nav-contact">
             Contact

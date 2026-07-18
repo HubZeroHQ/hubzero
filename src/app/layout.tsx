@@ -32,6 +32,9 @@ export const metadata: Metadata = {
     template: `%s — ${PUBLIC_SITE.name}`,
   },
   description: PUBLIC_SITE.description,
+  alternates: PUBLIC_SITE.release.feed
+    ? { types: { 'application/rss+xml': '/feed.xml' } }
+    : undefined,
   robots: PUBLIC_SITE.release.live
     ? { index: true, follow: true }
     : { index: false, follow: false },

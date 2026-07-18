@@ -5,6 +5,7 @@ import type {
   PublicEngineeringProfileIndexEntry,
   PublicTeamMemberSummary,
 } from '@/lib/public/domain';
+import { PublicEmptyState } from '../EditorialPrimitives';
 import { PageContainer, PublicSection } from '../PageContainer';
 import { PublicImage } from '../PublicImage';
 
@@ -135,14 +136,15 @@ export function About({
               })}
             </div>
           ) : (
-            <section className="collection-empty about-empty" aria-labelledby="about-empty-title">
-              <p className="home-eyebrow">Roster / no approved public records</p>
-              <h3 id="about-empty-title">People appear when their public identity is approved.</h3>
-              <p>
-                HubZero does not infer a public team from internal accounts or publish provisional
-                biographies. The operating model remains available without inventing a roster.
-              </p>
-            </section>
+            <PublicEmptyState
+              id="about-empty-title"
+              eyebrow="Roster / no approved public records"
+              title="People appear when their public identity is approved."
+              className="about-empty"
+            >
+              HubZero does not infer a public team from internal accounts or publish provisional
+              biographies. The operating model remains available without inventing a roster.
+            </PublicEmptyState>
           )}
         </PageContainer>
       </PublicSection>
