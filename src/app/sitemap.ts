@@ -13,11 +13,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { enabled: PUBLIC_ENTITY_ROUTES.blueprint, path: '/blueprints' },
     { enabled: entries.some((entry) => entry.type === 'lab'), path: '/labs' },
     { enabled: PUBLIC_ENTITY_ROUTES.note, path: '/notes' },
+    { enabled: PUBLIC_ENTITY_ROUTES.engineeringProfile, path: '/engineering' },
+    { enabled: PUBLIC_ENTITY_ROUTES.teamMember, path: '/about' },
+    { enabled: PUBLIC_ENTITY_ROUTES.service, path: '/services' },
+    { enabled: PUBLIC_SITE.release.contact, path: '/contact' },
   ];
-  return [
-    ...collections
-      .filter((collection) => collection.enabled)
-      .map((collection) => ({ url: canonicalUrl(collection.path).toString() })),
-    ...entries.map((entry) => ({ url: canonicalUrl(entry.url).toString() })),
+  const paths = [
+    ...collections.filter((collection) => collection.enabled).map((collection) => collection.path),
+    ...entries.map((entry) => entry.url),
   ];
+  return [...new Set(paths)].map((path) => ({ url: canonicalUrl(path).toString() }));
 }

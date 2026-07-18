@@ -10,8 +10,105 @@ export const PUBLIC_SITE = {
     live: false,
     search: false,
     feed: false,
-    contact: false,
+    contact: true,
   },
+} as const;
+
+export const PUBLIC_SERVICES = {
+  eyebrow: 'Services / evidence by need',
+  title: {
+    lead: 'Build the system the',
+    emphasis: 'problem',
+    close: 'requires.',
+  },
+  introduction:
+    'HubZero designs and builds software, products, developer tools, AI systems, websites, and digital infrastructure. The useful starting point is the constraint—not a predetermined package.',
+  buildAreas: [
+    {
+      label: 'Products and platforms',
+      description:
+        'New software systems shaped around a clear operating problem, the people using them, and the conditions they must survive.',
+    },
+    {
+      label: 'Developer tools and infrastructure',
+      description:
+        'Internal and public tooling that makes technical work easier to understand, operate, and maintain.',
+    },
+    {
+      label: 'AI systems and workflows',
+      description:
+        'Model-backed capabilities designed with explicit boundaries, validation, failure behaviour, and human review.',
+    },
+    {
+      label: 'Websites and digital publications',
+      description:
+        'Content-rich public systems where information architecture, editorial structure, accessibility, and performance are part of the engineering.',
+    },
+  ],
+  engagementModels: [
+    {
+      title: 'Focused investigation',
+      body: 'Make an uncertain technical problem precise, test the important assumptions, and leave a useful decision record.',
+    },
+    {
+      title: 'Product or system delivery',
+      body: 'Define, implement, and verify a bounded product or engineering system against its real constraints.',
+    },
+    {
+      title: 'Ongoing engineering collaboration',
+      body: 'Continue an existing system through deliberate improvements, current documentation, and explicit ownership.',
+    },
+  ],
+  process: [
+    {
+      label: 'Orient',
+      body: 'Understand the problem, the people affected, and what already exists.',
+    },
+    {
+      label: 'Constrain',
+      body: 'Name the boundaries, risks, dependencies, and definition of a useful result.',
+    },
+    {
+      label: 'Decide',
+      body: 'Compare viable approaches and record the trade-offs behind the chosen direction.',
+    },
+    {
+      label: 'Build',
+      body: 'Implement the smallest complete system that satisfies the agreed constraints.',
+    },
+    {
+      label: 'Verify',
+      body: 'Test correctness, accessibility, performance, failure behaviour, and operational fit.',
+    },
+    {
+      label: 'Continue',
+      body: 'Leave the system understandable, maintainable, and ready for its next decision.',
+    },
+  ],
+  collaboration: {
+    title: 'Work begins with shared context.',
+    body: 'A useful first conversation covers the problem, who it affects, the current system, known constraints, and what has already been tried. Decisions remain visible as the work changes.',
+    boundaries: [
+      'Evidence determines fit; the service definition does not extend beyond the work that supports it.',
+      'Scope and technical boundaries are made explicit before implementation begins.',
+      'Changes in direction are treated as engineering decisions, not hidden inside delivery.',
+    ],
+  },
+} as const;
+
+export const PUBLIC_CONTACT = {
+  eyebrow: 'Contact / initial context',
+  title: {
+    lead: 'Start with the',
+    emphasis: 'problem',
+    close: 'as it exists today.',
+  },
+  introduction:
+    'Share the constraint, the people affected, and what has already been tried. A prepared specification is not required for an initial conversation.',
+  reviewStatement:
+    "Every enquiry is reviewed carefully. If additional discussion would be valuable, we'll get in touch.",
+  privacy:
+    'Your name, email, message, and the public page that led here are stored so HubZero can review the enquiry. They are not published.',
 } as const;
 
 export const PUBLIC_HOME = {
@@ -144,5 +241,5 @@ export const PUBLIC_ENTITY_ROUTES = {
   note: true,
   engineeringProfile: true,
   teamMember: true,
-  service: false,
+  service: true,
 } as const;
