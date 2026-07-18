@@ -60,7 +60,7 @@ export const PUBLIC_HOME = {
 export const PUBLIC_NAVIGATION = [
   { label: 'Work', href: '/work', type: 'work', enabled: true },
   { label: 'Builds', href: '/builds', type: 'build', enabled: true },
-  { label: 'Blueprints', href: '/blueprints', type: 'blueprint', enabled: false },
+  { label: 'Blueprints', href: '/blueprints', type: 'blueprint', enabled: true },
   { label: 'Labs', href: '/labs', type: 'lab', enabled: true },
   { label: 'Services', href: '/services', type: 'service', enabled: false },
   { label: 'About', href: '/about', type: 'teamMember', enabled: false },
@@ -69,7 +69,7 @@ export const PUBLIC_NAVIGATION = [
 export const PUBLIC_ENTITY_ROUTES = {
   work: true,
   build: true,
-  blueprint: false,
+  blueprint: true,
   lab: true,
   note: false,
   engineeringProfile: false,

@@ -1,6 +1,14 @@
 import { ObjectId } from 'mongodb';
 import { describe, expect, it } from 'vitest';
-import type { EngineeringProfile, Note, Team, User, Work, Blueprint } from '@/types/studio';
+import type {
+  Blueprint,
+  EngineeringProfile,
+  MediaAsset,
+  Note,
+  Team,
+  User,
+  Work,
+} from '@/types/studio';
 import { createPublicRepository } from './repository';
 import type { PublicDataSource, StudioPublicEntity } from './source';
 
@@ -19,6 +27,7 @@ function fakeSource(input: {
   users?: User[];
   teamsByUser?: Team[];
   profile?: EngineeringProfile | null;
+  media?: MediaAsset[];
 }): PublicDataSource {
   return {
     findEntityBySlug: async (type, slug) =>
@@ -30,7 +39,8 @@ function fakeSource(input: {
     listEntities: async (type) => input.entities.filter((item) => item.type === type),
     findInverseEntities: async () => [],
     findDocuments: async () => [],
-    findMedia: async () => [],
+    findMedia: async (ids) =>
+      input.media?.filter((asset) => ids.includes(asset._id.toString())) ?? [],
     findTaxonomy: async () => [],
     findUser: async (id) => input.users?.find((user) => user._id.toString() === id) ?? null,
     findTeamsByUserId: async () => input.teamsByUser ?? [],
@@ -40,6 +50,18 @@ function fakeSource(input: {
 
 describe('public repository boundary', () => {
   it('returns allow-listed public objects without Studio identifiers or workflow metadata', async () => {
+    const previewAsset: MediaAsset = {
+      _id: new ObjectId(),
+      createdAt: now,
+      updatedAt: now,
+      cloudinaryPublicId: 'blueprints/saas-editorial-preview',
+      url: 'https://res.cloudinary.com/hubzero/image/upload/blueprints/saas-editorial-preview.png',
+      altText: 'SaaS editorial Blueprint preview',
+      width: 1600,
+      height: 1000,
+      folder: 'blueprints',
+      reuseTags: [],
+    };
     const blueprint: Blueprint = {
       _id: new ObjectId(),
       createdAt: now,
@@ -55,12 +77,12 @@ describe('public repository boundary', () => {
       features: ['Documentation'],
       technologyIds: [],
       liveDeploymentUrl: 'https://example.com/preview',
-      previewAssetIds: [],
+      previewAssetIds: [previewAsset._id],
       featured: false,
       version: '1.0.0',
     };
     const repository = createPublicRepository(
-      fakeSource({ entities: [entity('blueprint', blueprint)] }),
+      fakeSource({ entities: [entity('blueprint', blueprint)], media: [previewAsset] }),
     );
     const result = await repository.findSummary('blueprint', blueprint.slug);
     const serialized = JSON.stringify(result);
@@ -94,6 +116,35 @@ describe('public repository boundary', () => {
     } as unknown as Work;
     const repository = createPublicRepository(fakeSource({ entities: [entity('work', work)] }));
     expect(await repository.findSummary('work', 'work')).toBeNull();
+  });
+
+  it('keeps published Blueprints without inspectable preview evidence out of public DTOs', async () => {
+    const blueprint: Blueprint = {
+      _id: new ObjectId(),
+      createdAt: now,
+      updatedAt: now,
+      createdByUserId: creator,
+      status: 'published',
+      slug: 'blueprint-saas-editorial',
+      referenceId: 'HZ-BP-002',
+      name: 'Blueprint-SaaS-Editorial',
+      architecture: 'SaaS',
+      designLanguage: 'Editorial',
+      shortDescription: 'A reusable product documentation foundation.',
+      features: ['Documentation'],
+      technologyIds: [],
+      liveDeploymentUrl: 'https://example.com/preview',
+      previewAssetIds: [],
+      featured: false,
+      version: '1.0.0',
+    };
+    const repository = createPublicRepository(
+      fakeSource({ entities: [entity('blueprint', blueprint)] }),
+    );
+
+    expect(await repository.findSummary('blueprint', blueprint.slug)).toBeNull();
+    expect(await repository.findDetail('blueprint', blueprint.slug)).toBeNull();
+    expect(await repository.listSummaries('blueprint')).toEqual([]);
   });
 
   it('does not resolve Documents for a non-visible owner', async () => {

@@ -45,7 +45,7 @@ export function MetadataRow({ entity }: { entity: ImmutablePublic<PublicEntitySu
       {values.map((value, index) => (
         <div key={`${value}-${index}`}>
           <dt className="sr-only">Metadata</dt>
-          <dd>{formatMetadata(value)}</dd>
+          <dd>{entity.type === 'blueprint' && index > 0 ? value : formatMetadata(value)}</dd>
         </div>
       ))}
     </dl>

@@ -156,6 +156,30 @@ describe('public discovery foundations', () => {
     });
   });
 
+  it('describes a Blueprint as a versioned reusable engineering publication', () => {
+    expect(
+      publicArtifactJsonLd({
+        type: 'blueprint',
+        title: 'Blueprint-SaaS-Editorial',
+        slug: 'blueprint-saas-editorial',
+        url: '/blueprints/blueprint-saas-editorial',
+        referenceId: 'HZ-BP-101',
+        summary: 'A reusable software documentation foundation.',
+        architecture: 'SaaS',
+        designLanguage: 'Editorial',
+        version: '1.2.0',
+        technologies: [],
+        links: [],
+        previewMedia: [],
+      }),
+    ).toMatchObject({
+      '@type': 'CreativeWork',
+      genre: 'Reusable engineering blueprint',
+      version: '1.2.0',
+      about: ['SaaS', 'Editorial'],
+    });
+  });
+
   it('keeps robots closed while the public release gate is disabled', () => {
     expect(robots()).toEqual({ rules: { userAgent: '*', disallow: '/' } });
   });
