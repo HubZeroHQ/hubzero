@@ -67,3 +67,5 @@ coverage/
 .mcp.json
 
 tsconfig.tsbuildinfo
+
+.codex/
