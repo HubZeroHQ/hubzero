@@ -1,6 +1,7 @@
 export const PUBLIC_SITE = {
   name: 'HubZero',
-  description: 'HubZero builds products, software, AI systems, and digital infrastructure.',
+  description:
+    'HubZero builds software, hardware, AI systems, and the infrastructure that connects them.',
   locale: 'en_IN',
   language: 'en',
   organizationUrl: 'https://hubzero.in',
@@ -22,12 +23,17 @@ export const PUBLIC_SERVICES = {
     close: 'requires.',
   },
   introduction:
-    'HubZero designs and builds software, products, developer tools, AI systems, websites, and digital infrastructure. The useful starting point is the constraint—not a predetermined package.',
+    'HubZero designs and builds software, hardware, developer tools, AI systems, websites, and digital infrastructure. The useful starting point is the constraint—not a predetermined package.',
   buildAreas: [
     {
       label: 'Products and platforms',
       description:
         'New software systems shaped around a clear operating problem, the people using them, and the conditions they must survive.',
+    },
+    {
+      label: 'Hardware and embedded systems',
+      description:
+        'Electronics, embedded firmware, and physical systems engineered with the same rigor as software—where the constraint is a circuit, a signal, or a device, not just code.',
     },
     {
       label: 'Developer tools and infrastructure',
@@ -115,11 +121,11 @@ export const PUBLIC_HOME = {
   eyebrow: 'Independent technology studio',
   title: {
     lead: 'We build',
-    emphasis: 'software',
-    close: 'that holds up.',
+    emphasis: 'systems',
+    close: 'that hold up.',
   },
   introduction:
-    'HubZero designs products, developer tools, AI systems, websites, and digital infrastructure. The work is documented through its constraints, decisions, and outcomes.',
+    'HubZero designs software, hardware, AI systems, and the digital infrastructure that connects them. The work is documented through its constraints, decisions, and outcomes.',
   pillars: [
     {
       label: 'Labs',
