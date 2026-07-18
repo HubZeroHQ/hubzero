@@ -275,10 +275,12 @@ export interface PublicDiscoveryEntry {
   url: string;
   summary: string;
   referenceId?: string;
-  taxonomy: string[];
+  taxonomy: readonly string[];
   state?: string;
+  lastModified?: string;
   author?: PublicAuthor;
   media?: PublicMedia;
+  relationships: readonly PublicRelationship[];
 }
 
 export interface PublicHomepageFeature<Summary extends PublicEntitySummary = PublicEntitySummary> {

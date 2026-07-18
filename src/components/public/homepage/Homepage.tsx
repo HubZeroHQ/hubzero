@@ -52,6 +52,7 @@ export function Homepage({
                   routeEnabled
                   relationshipRoutes={relationshipRoutes}
                   prominent={index === 0}
+                  priority={index === 0}
                 />
               ))}
             </div>

@@ -3,6 +3,10 @@ import 'server-only';
 import { unstable_cache } from 'next/cache';
 import { PUBLIC_ENTITY_ROUTES } from '@/config/public-site';
 import { PUBLIC_CACHE_TAGS, PUBLIC_CACHE_VERSION } from './cache';
+import {
+  createInMemoryPublicSearchProvider,
+  createPublicSearchEntryPoint,
+} from './discovery/search';
 import type { PublicDetailEntityType, PublicEntityType } from './domain';
 import { mongoPublicDataSource } from './mongodb-source';
 import { createPublicRepository } from './repository';
@@ -77,6 +81,14 @@ export function listPublicDiscoveryEntries() {
     [PUBLIC_CACHE_VERSION, 'public-discovery', ...activeTypes],
     { tags: [PUBLIC_CACHE_TAGS.discovery, PUBLIC_CACHE_TAGS.relations] },
   )();
+}
+
+export async function searchPublicContent(query: string, limit = 24) {
+  const entries = await listPublicDiscoveryEntries();
+  return createPublicSearchEntryPoint(createInMemoryPublicSearchProvider(entries)).search({
+    query,
+    limit,
+  });
 }
 
 export function getPublicHomepage(now = new Date()) {

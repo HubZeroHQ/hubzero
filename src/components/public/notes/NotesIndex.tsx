@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { PUBLIC_ENTITY_ROUTES } from '@/config/public-site';
 import type { ImmutablePublic, PublicNoteIndexEntry } from '@/lib/public/domain';
-import { formatPublicDate, TechnologyList } from '../EditorialPrimitives';
+import { formatPublicDate, PublicEmptyState, TechnologyList } from '../EditorialPrimitives';
 import { PageContainer, PublicSection } from '../PageContainer';
 
 export function NotesIndex({
@@ -95,15 +95,16 @@ export function NotesIndex({
               ))}
             </ol>
           ) : (
-            <section className="collection-empty notes-empty" aria-labelledby="notes-empty-title">
-              <p className="home-eyebrow">Journal / no eligible entries</p>
-              <h3 id="notes-empty-title">The journal begins with a useful record.</h3>
-              <p>
-                Notes will appear here when a published entry contains a specific question or claim,
-                substantive reasoning, accountable authorship, and the references its conclusions
-                require.
-              </p>
-            </section>
+            <PublicEmptyState
+              id="notes-empty-title"
+              eyebrow="Journal / no eligible entries"
+              title="The journal begins with a useful record."
+              className="notes-empty"
+            >
+              Notes will appear here when a published entry contains a specific question or claim,
+              substantive reasoning, accountable authorship, and the references its conclusions
+              require.
+            </PublicEmptyState>
           )}
         </PageContainer>
       </PublicSection>

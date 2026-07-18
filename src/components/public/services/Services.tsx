@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { PUBLIC_ENTITY_ROUTES, PUBLIC_SERVICES } from '@/config/public-site';
 import type { ImmutablePublic, PublicServiceSummary } from '@/lib/public/domain';
+import { PublicEmptyState } from '../EditorialPrimitives';
 import { PageContainer, PublicSection } from '../PageContainer';
 
 export function Services({
@@ -108,17 +109,15 @@ export function Services({
               ))}
             </ol>
           ) : (
-            <section
-              className="collection-empty services-empty"
-              aria-labelledby="services-empty-title"
+            <PublicEmptyState
+              id="services-empty-title"
+              eyebrow="Services / no eligible public definitions"
+              title="The engineering approach remains the useful record."
+              className="services-empty"
             >
-              <p className="home-eyebrow">Services / no eligible public definitions</p>
-              <h3 id="services-empty-title">The engineering approach remains the useful record.</h3>
-              <p>
-                Service definitions appear only when published Studio content is supported by
-                sufficient visible evidence. Nothing is added here to fill a catalogue.
-              </p>
-            </section>
+              Service definitions appear only when published Studio content is supported by
+              sufficient visible evidence. Nothing is added here to fill a catalogue.
+            </PublicEmptyState>
           )}
         </PageContainer>
       </PublicSection>

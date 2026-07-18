@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { PUBLIC_ENTITY_ROUTES } from '@/config/public-site';
 import type { ImmutablePublic, PublicEntityDetail, PublicRelationship } from '@/lib/public/domain';
-import { RelationshipCard, TechnologyList } from '../EditorialPrimitives';
+import { PublicBreadcrumbs, RelationshipCard, TechnologyList } from '../EditorialPrimitives';
 import { PageContainer, PublicSection } from '../PageContainer';
 import { ProseRenderer } from '../ProseRenderer';
 import { PublicImage } from '../PublicImage';
@@ -42,20 +42,16 @@ export function EngineeringProfileDetail({ profile }: { profile: ImmutablePublic
   })).filter((group) => group.relationships.length);
 
   return (
-    <article id="main-content" tabIndex={-1} className="collection-main profile-detail">
+    <article id="main-content" role="main" tabIndex={-1} className="collection-main profile-detail">
       <header className="profile-hero">
         <PageContainer>
-          <nav className="detail-breadcrumbs" aria-label="Breadcrumb">
-            <ol>
-              <li>
-                <Link href="/">HubZero</Link>
-              </li>
-              <li>
-                <Link href="/engineering">Engineering Profiles</Link>
-              </li>
-              <li aria-current="page">{profile.title}</li>
-            </ol>
-          </nav>
+          <PublicBreadcrumbs
+            items={[
+              { label: 'HubZero', href: '/' },
+              { label: 'Engineering profiles', href: '/engineering' },
+              { label: profile.title },
+            ]}
+          />
           <div className="profile-hero-grid">
             <div className="profile-identity">
               <p className="home-eyebrow">Engineering Profile / {profile.referenceId}</p>
@@ -90,7 +86,7 @@ export function EngineeringProfileDetail({ profile }: { profile: ImmutablePublic
       {profile.hero ? (
         <PublicSection className="profile-hero-media" aria-label="Profile lead media">
           <PageContainer>
-            <PublicImage media={profile.hero} priority />
+            <PublicImage media={profile.hero} />
           </PageContainer>
         </PublicSection>
       ) : null}

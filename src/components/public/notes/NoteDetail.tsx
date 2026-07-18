@@ -1,7 +1,12 @@
 import Link from 'next/link';
 import { PUBLIC_ENTITY_ROUTES } from '@/config/public-site';
 import type { ImmutablePublic, PublicEntityDetail, PublicRelationship } from '@/lib/public/domain';
-import { formatPublicDate, RelationshipCard, TechnologyList } from '../EditorialPrimitives';
+import {
+  formatPublicDate,
+  PublicBreadcrumbs,
+  RelationshipCard,
+  TechnologyList,
+} from '../EditorialPrimitives';
 import { PageContainer, PublicSection } from '../PageContainer';
 import { ProseRenderer } from '../ProseRenderer';
 import { PublicImage } from '../PublicImage';
@@ -29,20 +34,16 @@ export function NoteDetail({ note }: { note: ImmutablePublic<Note> }) {
     PUBLIC_ENTITY_ROUTES.engineeringProfile;
 
   return (
-    <article id="main-content" tabIndex={-1} className="collection-main note-detail">
+    <article id="main-content" role="main" tabIndex={-1} className="collection-main note-detail">
       <header className="note-hero">
         <PageContainer>
-          <nav className="detail-breadcrumbs" aria-label="Breadcrumb">
-            <ol>
-              <li>
-                <Link href="/">HubZero</Link>
-              </li>
-              <li>
-                <Link href="/notes">Notes</Link>
-              </li>
-              <li aria-current="page">{note.title}</li>
-            </ol>
-          </nav>
+          <PublicBreadcrumbs
+            items={[
+              { label: 'HubZero', href: '/' },
+              { label: 'Notes', href: '/notes' },
+              { label: note.title },
+            ]}
+          />
           <div className="note-hero-grid">
             <div className="note-title-block">
               <p className="home-eyebrow">Note / engineering record</p>
