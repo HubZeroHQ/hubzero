@@ -47,4 +47,18 @@ export function listPublicDiscoveryEntries() {
   )();
 }
 
+export function getPublicHomepage(now = new Date()) {
+  const day = now.toISOString().slice(0, 10);
+  return unstable_cache(() => repository.getHomepage(now), ['public-homepage', day], {
+    tags: [
+      PUBLIC_CACHE_TAGS.homepage,
+      PUBLIC_CACHE_TAGS.relations,
+      ...Object.keys(PUBLIC_ENTITY_ROUTES).map((type) =>
+        PUBLIC_CACHE_TAGS.collection(type as PublicEntityType),
+      ),
+    ],
+    revalidate: 86_400,
+  })();
+}
+
 export { repository as uncachedPublicRepository };

@@ -266,3 +266,18 @@ export interface PublicDiscoveryEntry {
   author?: PublicAuthor;
   media?: PublicMedia;
 }
+
+export interface PublicHomepageFeature<Summary extends PublicEntitySummary = PublicEntitySummary> {
+  entity: Summary;
+  relationships: PublicRelationship[];
+}
+
+/** A purpose-shaped, bounded projection. Homepage consumers never receive Studio curation fields. */
+export interface PublicHomepageProjection {
+  work: PublicHomepageFeature<PublicWorkSummary>[];
+  builds: PublicHomepageFeature<PublicBuildSummary>[];
+  labs: PublicHomepageFeature<PublicLabSummary>[];
+  notes: PublicHomepageFeature<PublicNoteSummary>[];
+  blueprint?: PublicHomepageFeature<PublicBlueprintSummary>;
+  profiles: PublicHomepageFeature<PublicEngineeringProfileSummary>[];
+}

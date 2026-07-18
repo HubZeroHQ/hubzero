@@ -10,8 +10,9 @@ const activeItems = PUBLIC_NAVIGATION.filter((item) => item.enabled);
 
 export function PublicNavigation() {
   const pathname = usePathname();
+  const isHomepage = pathname === '/';
   return (
-    <header className="public-nav-wrap">
+    <header className={isHomepage ? 'public-nav-wrap public-nav-wrap-home' : 'public-nav-wrap'}>
       <nav className="public-nav" aria-label="Primary navigation">
         <Link href="/" className="public-nav-brand" aria-label="HubZero home">
           <Image
