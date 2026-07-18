@@ -1,4 +1,7 @@
+'use client';
+
 import Image from 'next/image';
+import { useState } from 'react';
 import type { PublicMedia } from '@/lib/public/domain';
 import { cn } from '@/lib/utils/cn';
 
@@ -11,9 +14,12 @@ export function PublicImage({
   className?: string;
   priority?: boolean;
 }) {
+  const [loaded, setLoaded] = useState(false);
+
   return (
     <figure
       className={cn('public-media', className)}
+      data-loaded={loaded || undefined}
       style={{ backgroundColor: media.placeholder.value }}
     >
       <Image
@@ -24,6 +30,7 @@ export function PublicImage({
         sizes={media.responsive.sizes}
         priority={priority}
         className="h-auto w-full"
+        onLoad={() => setLoaded(true)}
       />
       {media.caption || media.credit ? (
         <figcaption>

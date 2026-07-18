@@ -84,7 +84,20 @@
 @keyframes public-settle {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(8px);
+  }
+}
+
+/**
+ * §Motion refinement — a smaller, shared settle for content that reveals
+ * itself in place rather than replacing a whole route (relationship
+ * evidence, gallery groups). Same duration/easing tokens as public-settle,
+ * a shorter travel distance since it is not standing in for a full page.
+ */
+@keyframes public-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
   }
 }
 
@@ -131,14 +144,6 @@
     pointer-events: auto;
   }
 
-  .public-nav-wrap-home {
-    width: min(100% - 96px, 1300px);
-  }
-
-  .public-nav-wrap-home .public-nav {
-    margin-inline: 0;
-  }
-
   .public-nav-brand,
   .public-nav-link,
   .public-nav-search,
@@ -163,7 +168,6 @@
   }
 
   .public-nav-link,
-  .public-nav-search,
   .public-nav-contact {
     padding-inline: clamp(12px, 1.35vw, 18px);
   }
@@ -198,17 +202,44 @@
   }
 
   .public-nav-search {
-    gap: 8px;
+    width: 44px;
+    gap: 0;
     border: 0;
     background: transparent;
     cursor: pointer;
+    transition:
+      width var(--duration-fast) var(--ease-standard),
+      color var(--duration-fast) var(--ease-standard),
+      background-color var(--duration-fast) var(--ease-standard),
+      transform 110ms linear;
+  }
+
+  .public-nav-search:hover,
+  .public-nav-search:focus-visible {
+    width: auto;
+    gap: 6px;
+    padding-inline-end: 14px;
   }
 
   .public-nav-search kbd {
+    display: inline-block;
+    max-width: 0;
+    overflow: hidden;
+    opacity: 0;
     color: var(--color-text-muted);
     font-family: var(--font-mono);
     font-size: 10px;
     letter-spacing: 0.05em;
+    white-space: nowrap;
+    transition:
+      max-width var(--duration-fast) var(--ease-standard),
+      opacity var(--duration-fast) var(--ease-standard);
+  }
+
+  .public-nav-search:hover kbd,
+  .public-nav-search:focus-visible kbd {
+    max-width: 32px;
+    opacity: 1;
   }
 
   .public-nav-contact {
@@ -316,6 +347,21 @@
   .public-media {
     overflow: hidden;
     border-radius: var(--radius-card);
+  }
+
+  /*
+   * Load reveal — the placeholder swatch (inline `background-color`) stays
+   * visible until the real image finishes loading, then the image fades in
+   * over it. No blur-up/zoom gimmick; dimensions are already reserved via
+   * the required width/height props, so this never shifts layout.
+   */
+  .public-media img {
+    opacity: 0;
+    transition: opacity var(--duration-fast) var(--ease-standard);
+  }
+
+  .public-media[data-loaded] img {
+    opacity: 1;
   }
 
   .public-media figcaption {
@@ -867,6 +913,7 @@
     margin-top: 24px;
     padding-top: 16px;
     border-top: 1px solid var(--color-border-muted);
+    animation: public-reveal var(--duration-considered) var(--ease-standard);
   }
 
   .home-relationship-card {
@@ -875,8 +922,20 @@
     gap: 12px;
     align-items: center;
     min-height: 44px;
+    padding-inline: 12px;
+    margin-inline: -12px;
+    border-radius: 6px;
     color: var(--color-text-secondary);
     font-size: 13px;
+    transition:
+      background-color var(--duration-fast) var(--ease-standard),
+      color var(--duration-fast) var(--ease-standard);
+  }
+
+  a.home-relationship-card:hover,
+  a.home-relationship-card:focus-visible {
+    background: var(--color-surface-elevated);
+    color: var(--color-text-primary);
   }
 
   .home-relationship-card > span:first-child {
@@ -889,6 +948,21 @@
 
   .home-relationship-card strong {
     font-weight: 500;
+    transition: color var(--duration-fast) var(--ease-standard);
+  }
+
+  a.home-relationship-card:hover strong,
+  a.home-relationship-card:focus-visible strong {
+    color: var(--color-text-primary);
+  }
+
+  a.home-relationship-card:hover span[aria-hidden='true']:last-child,
+  a.home-relationship-card:focus-visible span[aria-hidden='true']:last-child {
+    transform: translateX(2px);
+  }
+
+  .home-relationship-card span[aria-hidden='true']:last-child {
+    transition: transform var(--duration-fast) var(--ease-standard);
   }
 
   .home-subsection-title {
@@ -1802,24 +1876,18 @@
     width: calc(100% - 24px);
   }
 
-  .public-nav-wrap-home {
-    width: min(100% - 40px, 1300px);
-  }
-
   .public-nav {
     margin-left: 0;
   }
 
   .public-nav-link,
-  .public-nav-search,
   .public-nav-contact {
     padding-inline: 13px;
     font-size: 13px;
   }
 
-  .public-nav-search span,
-  .public-nav-search kbd {
-    display: none;
+  .public-nav-search {
+    font-size: 13px;
   }
 
   .public-footer-inner {
@@ -1873,30 +1941,43 @@
 
 @layer components {
   .public-search-dialog {
-    width: min(calc(100% - 32px), 680px);
-    max-height: min(760px, calc(100svh - 48px));
-    margin: auto;
-    padding: 0;
-    overflow: hidden;
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    padding: 16px;
+    display: grid;
+    place-items: center;
+    overflow: visible;
     border: 0;
-    border-radius: var(--radius-overlay);
     background: transparent;
     color: var(--color-text-primary);
-    box-shadow: 0 32px 80px -24px rgb(0 0 0 / 0.85);
   }
 
   .public-search-dialog::backdrop {
+    background: transparent;
+  }
+
+  .public-search-scrim {
+    position: fixed;
+    inset: 0;
     background: rgb(0 0 0 / 0.7);
     backdrop-filter: blur(8px);
   }
 
   .public-search-dialog-surface {
+    position: relative;
     display: grid;
+    width: min(calc(100vw - 32px), 680px);
     max-height: min(760px, calc(100svh - 48px));
     overflow: hidden;
     border: 1px solid var(--color-border-default);
     border-radius: var(--radius-overlay);
     background: var(--color-surface-overlay);
+    box-shadow: 0 32px 80px -24px rgb(0 0 0 / 0.85);
   }
 
   .public-search-dialog-header {
@@ -2879,6 +2960,10 @@
   }
 
   .collection-main {
+    animation: none;
+  }
+
+  .home-relationships {
     animation: none;
   }
 

@@ -130,7 +130,7 @@ Each step up the hierarchy is reached by exactly one of: a lighter fill, a borde
 
 **Scroll behavior.** The nav never hides on scroll and never changes size/opacity based on scroll position. Constant availability is the point — it should be as reliable as a desktop app's title bar.
 
-**Search button (⌘K entry point).** Always visible as a labeled button ("Search" + a visible `⌘K` glyph) inside the nav — never a hidden or undiscoverable shortcut. The visible affordance is mandatory; the keyboard shortcut is an accelerant for returning/power users, not the only way in.
+**Search button (⌘K entry point).** A quiet, always-visible icon-only button inside the nav — never a hidden or undiscoverable shortcut. At rest it shows only the search glyph (`aria-label="Search HubZero"` carries the accessible name); hover/focus reveals the `⌘K` glyph inline within the same control before committing to the click, so the shortcut stays discoverable without the nav carrying three simultaneous signals (icon, label, and badge) at all times. The visible affordance is mandatory; the keyboard shortcut is an accelerant for returning/power users, not the only way in.
 
 **⌘K palette.** Opens as a centered modal over a blurred scrim. Behavior contract:
 - Autofocused text input, fuzzy-matches pages, projects, and team members by name/category.
