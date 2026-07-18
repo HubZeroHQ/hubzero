@@ -5,6 +5,7 @@ import type {
   PublicBlueprintSummary,
   PublicBuildSummary,
   PublicLabSummary,
+  PublicNoteSummary,
   PublicWorkSummary,
 } from '../domain';
 
@@ -20,6 +21,31 @@ export function organizationJsonLd(): JsonLd {
     name: PUBLIC_SITE.name,
     url: absolute('/'),
     logo: absolute('/brand/hubzero-logo-black.png'),
+  };
+}
+
+export function publicNoteJsonLd(entity: ImmutablePublic<PublicNoteSummary>): JsonLd {
+  const author =
+    entity.author.kind === 'person'
+      ? {
+          '@type': 'Person',
+          name: entity.author.name,
+          url: absolute(entity.author.url),
+        }
+      : { '@id': `${absolute('/')}#organization` };
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'TechArticle',
+    '@id': `${absolute(entity.url)}#article`,
+    headline: entity.title,
+    description: entity.summary,
+    url: absolute(entity.url),
+    mainEntityOfPage: absolute(entity.url),
+    datePublished: entity.publicationDate,
+    author,
+    publisher: { '@id': `${absolute('/')}#organization` },
+    keywords: entity.technologies.map((technology) => technology.label),
+    ...(entity.hero ? { image: entity.hero.url } : {}),
   };
 }
 

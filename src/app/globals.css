@@ -1373,6 +1373,248 @@
   .detail-footer a:hover {
     text-decoration-color: currentColor;
   }
+
+  .notes-index,
+  .note-body,
+  .note-gallery,
+  .note-relations {
+    padding-block: clamp(72px, 8vw, 112px);
+    border-top: 1px solid var(--color-border-muted);
+  }
+
+  .notes-ledger {
+    border-top: 1px solid var(--color-border-muted);
+  }
+
+  .notes-ledger > li {
+    display: grid;
+    gap: 20px;
+    padding-block: clamp(32px, 4vw, 48px);
+    border-bottom: 1px solid var(--color-border-muted);
+  }
+
+  .notes-ledger > li > time {
+    color: var(--color-text-muted);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .notes-ledger article {
+    display: grid;
+    min-width: 0;
+    gap: 20px;
+  }
+
+  .notes-ledger-heading {
+    display: grid;
+    gap: 12px;
+  }
+
+  .notes-ledger-heading > a {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 24px;
+    align-items: baseline;
+  }
+
+  .notes-ledger-heading h3 {
+    max-width: 24ch;
+    font-size: clamp(26px, 4vw, 40px);
+    font-weight: 600;
+    line-height: 1.12;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  .notes-ledger-heading > a > span {
+    color: var(--color-text-muted);
+    transition:
+      color var(--duration-fast) var(--ease-standard),
+      transform var(--duration-fast) var(--ease-standard);
+  }
+
+  .notes-ledger-heading > a:hover > span,
+  .notes-ledger-heading > a:focus-visible > span {
+    color: var(--color-text-primary);
+    transform: translateX(4px);
+  }
+
+  .notes-ledger article > p {
+    max-width: 68ch;
+    color: var(--color-text-secondary);
+    font-size: 15px;
+    line-height: 1.7;
+  }
+
+  .notes-ledger-relations {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 16px;
+    align-items: baseline;
+    padding-top: 18px;
+    border-top: 1px solid var(--color-border-muted);
+  }
+
+  .notes-ledger-relations > span {
+    color: var(--color-text-muted);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .notes-ledger-relations ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+  }
+
+  .notes-ledger-relations li {
+    color: var(--color-text-secondary);
+    font-size: 13px;
+  }
+
+  .notes-ledger-relations a {
+    text-decoration: underline;
+    text-decoration-color: var(--color-border-strong);
+    text-underline-offset: 4px;
+  }
+
+  .notes-ledger-relations a:hover {
+    color: var(--color-text-primary);
+    text-decoration-color: currentColor;
+  }
+
+  .note-hero {
+    padding-block: clamp(120px, 13vw, 176px) clamp(72px, 8vw, 112px);
+  }
+
+  .note-hero-grid,
+  .note-body-grid,
+  .note-relations-grid,
+  .note-author-grid {
+    display: grid;
+    gap: 48px;
+    align-items: start;
+  }
+
+  .note-title-block h1 {
+    max-width: 18ch;
+    margin-top: 24px;
+    font-size: clamp(42px, 10vw, 76px);
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -0.035em;
+    text-wrap: balance;
+  }
+
+  .note-register {
+    align-self: end;
+  }
+
+  .note-register dl {
+    border-top: 1px solid var(--color-border-muted);
+  }
+
+  .note-register dl > div {
+    display: grid;
+    grid-template-columns: minmax(96px, 0.6fr) 1fr;
+    gap: 16px;
+    padding-block: 15px;
+    border-bottom: 1px solid var(--color-border-muted);
+  }
+
+  .note-register dt {
+    color: var(--color-text-muted);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+  }
+
+  .note-register dd {
+    color: var(--color-text-secondary);
+    font-size: 13px;
+  }
+
+  .note-register .home-technologies {
+    margin-top: 24px;
+  }
+
+  .note-hero-media {
+    padding-block: clamp(40px, 6vw, 80px);
+    border-top: 1px solid var(--color-border-muted);
+  }
+
+  .note-hero-media .public-media img {
+    max-height: min(720px, 72vh);
+    object-fit: cover;
+  }
+
+  .note-body-grid > header,
+  .note-relations-grid > header {
+    display: grid;
+    gap: 18px;
+  }
+
+  .note-body-grid > header h2,
+  .note-relations-grid > header h2,
+  .note-author h2 {
+    max-width: 18ch;
+    font-size: clamp(30px, 5vw, 46px);
+    font-weight: 600;
+    line-height: 1.08;
+    letter-spacing: -0.025em;
+    text-wrap: balance;
+  }
+
+  .note-body .public-prose {
+    max-width: 720px;
+    font-size: clamp(16px, 1.3vw, 18px);
+    line-height: 1.78;
+  }
+
+  .note-relations-grid > header > p:last-child,
+  .note-author-grid > div:first-child > p:last-child {
+    max-width: 52ch;
+    color: var(--color-text-secondary);
+    font-size: 15px;
+    line-height: 1.65;
+  }
+
+  .note-author {
+    padding-block: clamp(72px, 8vw, 112px);
+    border-top: 1px solid var(--color-border-muted);
+  }
+
+  .note-author-grid > div:first-child {
+    display: grid;
+    gap: 16px;
+  }
+
+  .note-author-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 24px;
+  }
+
+  .note-author-actions a {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: underline;
+    text-decoration-color: var(--color-border-strong);
+    text-underline-offset: 6px;
+  }
+
+  .note-author-actions a:hover {
+    text-decoration-color: currentColor;
+  }
 }
 
 @media (min-width: 768px) {
@@ -1447,6 +1689,11 @@
   .detail-gallery-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .notes-ledger > li {
+    grid-template-columns: minmax(120px, 0.32fr) minmax(0, 1.68fr);
+    gap: 40px;
+  }
 }
 
 @media (min-width: 900px) {
@@ -1489,6 +1736,11 @@
     gap: 80px;
   }
 
+  .note-hero-grid {
+    grid-template-columns: minmax(0, 1.7fr) minmax(280px, 0.7fr);
+    gap: 80px;
+  }
+
   .collection-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -1497,6 +1749,22 @@
   .detail-relations-grid {
     grid-template-columns: minmax(220px, 0.7fr) minmax(0, 1.6fr);
     gap: clamp(64px, 8vw, 128px);
+  }
+
+  .note-body-grid,
+  .note-relations-grid,
+  .note-author-grid {
+    grid-template-columns: minmax(220px, 0.65fr) minmax(0, 1.55fr);
+    gap: clamp(64px, 8vw, 128px);
+  }
+
+  .note-body-grid > header {
+    position: sticky;
+    top: 112px;
+  }
+
+  .note-author-actions {
+    justify-content: flex-start;
   }
 
   .detail-document-grid .public-prose {

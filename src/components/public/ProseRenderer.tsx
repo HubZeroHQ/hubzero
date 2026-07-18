@@ -12,16 +12,19 @@ function safeInlineHtml(html: string): string {
 export function ProseRenderer({
   document,
   headingOffset = 0,
+  as = 'article',
 }: {
   document: ImmutablePublic<PublicDocument>;
   headingOffset?: 0 | 1;
+  as?: 'article' | 'div';
 }) {
+  const Root = as;
   return (
-    <article className="public-prose" data-document-role={document.role}>
+    <Root className="public-prose" data-document-role={document.role}>
       {document.blocks.map((block) => (
         <PublicBlockView key={block.id} block={block} headingOffset={headingOffset} />
       ))}
-    </article>
+    </Root>
   );
 }
 

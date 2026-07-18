@@ -47,6 +47,16 @@ export function listPublicSummaries(type: PublicEntityType) {
   )();
 }
 
+export function listPublicNoteIndexEntries() {
+  return unstable_cache(
+    () => repository.listNoteIndexEntries(),
+    [PUBLIC_CACHE_VERSION, 'public-note-index'],
+    {
+      tags: [PUBLIC_CACHE_TAGS.collection('note'), PUBLIC_CACHE_TAGS.relations],
+    },
+  )();
+}
+
 export function listPublicDiscoveryEntries() {
   const activeTypes = (Object.entries(PUBLIC_ENTITY_ROUTES) as Array<[PublicEntityType, boolean]>)
     .filter(([, enabled]) => enabled)

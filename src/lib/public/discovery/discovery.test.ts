@@ -8,6 +8,7 @@ import {
   collectionPageJsonLd,
   organizationJsonLd,
   publicArtifactJsonLd,
+  publicNoteJsonLd,
   websiteJsonLd,
 } from './structured-data';
 import { PUBLIC_MOTION } from '../motion';
@@ -177,6 +178,28 @@ describe('public discovery foundations', () => {
       genre: 'Reusable engineering blueprint',
       version: '1.2.0',
       about: ['SaaS', 'Editorial'],
+    });
+  });
+
+  it('describes a Note as an attributed technical article', () => {
+    expect(
+      publicNoteJsonLd({
+        type: 'note',
+        title: 'Cache ownership',
+        slug: 'cache-ownership',
+        url: '/notes/cache-ownership',
+        referenceId: 'HZ-NT-101',
+        summary: 'Why cache invalidation begins with ownership.',
+        publicationDate: '2026-07-18T00:00:00.000Z',
+        author: { kind: 'organization', name: 'HubZero', url: '/about' },
+        technologies: [{ kind: 'technology', label: 'Next.js', slug: 'nextjs' }],
+      }),
+    ).toMatchObject({
+      '@type': 'TechArticle',
+      headline: 'Cache ownership',
+      datePublished: '2026-07-18T00:00:00.000Z',
+      author: { '@id': 'https://hubzero.in/#organization' },
+      keywords: ['Next.js'],
     });
   });
 
