@@ -3,7 +3,13 @@ import robots from '@/app/robots';
 import { canonicalUrl, createPublicMetadata } from './metadata';
 import { createPublicSearchEntryPoint } from './search';
 import { renderRssFeed } from './feed';
-import { breadcrumbJsonLd, organizationJsonLd, websiteJsonLd } from './structured-data';
+import {
+  breadcrumbJsonLd,
+  collectionPageJsonLd,
+  organizationJsonLd,
+  publicArtifactJsonLd,
+  websiteJsonLd,
+} from './structured-data';
 import { PUBLIC_MOTION } from '../motion';
 
 describe('public discovery foundations', () => {
@@ -91,6 +97,40 @@ describe('public discovery foundations', () => {
         { '@type': 'ListItem', position: 1, name: 'Labs', item: 'https://hubzero.in/labs' },
       ],
     });
+  });
+
+  it('describes collection membership without inventing records', () => {
+    expect(
+      collectionPageJsonLd({
+        name: 'HubZero Builds',
+        description: 'Published products.',
+        path: '/builds',
+        entries: [{ title: 'Release Ledger', url: '/builds/release-ledger' }],
+      }),
+    ).toMatchObject({
+      '@type': 'CollectionPage',
+      mainEntity: {
+        '@type': 'ItemList',
+        numberOfItems: 1,
+        itemListElement: [{ position: 1, name: 'Release Ledger' }],
+      },
+    });
+  });
+
+  it('uses a truthful product type for Build structured data', () => {
+    expect(
+      publicArtifactJsonLd({
+        type: 'build',
+        title: 'Release Ledger',
+        slug: 'release-ledger',
+        url: '/builds/release-ledger',
+        referenceId: 'HZ-BL-101',
+        summary: 'A release record.',
+        technologies: [],
+        deploymentState: 'live',
+        links: [],
+      }),
+    ).toMatchObject({ '@type': 'Product', name: 'Release Ledger' });
   });
 
   it('keeps robots closed while the public release gate is disabled', () => {

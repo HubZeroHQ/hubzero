@@ -6,7 +6,7 @@ import {
   PublicationMetadata,
   RelationshipCard,
   TechnologyList,
-} from './EditorialPrimitives';
+} from '../EditorialPrimitives';
 
 export function EditorialCard({
   feature,

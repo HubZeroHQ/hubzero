@@ -1,5 +1,5 @@
 import DOMPurify from 'isomorphic-dompurify';
-import type { PublicBlock, PublicDocument } from '@/lib/public/domain';
+import type { ImmutablePublic, PublicBlock, PublicDocument } from '@/lib/public/domain';
 import { PublicImage } from './PublicImage';
 
 function safeInlineHtml(html: string): string {
@@ -9,20 +9,33 @@ function safeInlineHtml(html: string): string {
   });
 }
 
-export function ProseRenderer({ document }: { document: PublicDocument }) {
+export function ProseRenderer({
+  document,
+  headingOffset = 0,
+}: {
+  document: ImmutablePublic<PublicDocument>;
+  headingOffset?: 0 | 1;
+}) {
   return (
     <article className="public-prose" data-document-role={document.role}>
       {document.blocks.map((block) => (
-        <PublicBlockView key={block.id} block={block} />
+        <PublicBlockView key={block.id} block={block} headingOffset={headingOffset} />
       ))}
     </article>
   );
 }
 
-function PublicBlockView({ block }: { block: PublicBlock }) {
+function PublicBlockView({
+  block,
+  headingOffset,
+}: {
+  block: ImmutablePublic<PublicBlock>;
+  headingOffset: 0 | 1;
+}) {
   switch (block.type) {
     case 'heading': {
-      const Heading = block.data.level === 2 ? 'h2' : block.data.level === 3 ? 'h3' : 'h4';
+      const level = block.data.level + headingOffset;
+      const Heading = level === 2 ? 'h2' : level === 3 ? 'h3' : level === 4 ? 'h4' : 'h5';
       return <Heading id={block.id}>{block.data.text}</Heading>;
     }
     case 'paragraph':

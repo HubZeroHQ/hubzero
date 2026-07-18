@@ -1,5 +1,6 @@
 import { PUBLIC_SITE } from '@/config/public-site';
 import { publicEnv } from '@/lib/env';
+import type { ImmutablePublic, PublicBuildSummary, PublicLabSummary } from '../domain';
 
 export type JsonLd = Record<string, unknown>;
 
@@ -38,4 +39,58 @@ export function breadcrumbJsonLd(items: readonly { name: string; path: string }[
       item: absolute(item.path),
     })),
   };
+}
+
+export function collectionPageJsonLd(input: {
+  name: string;
+  description: string;
+  path: string;
+  entries: readonly { title: string; url: string }[];
+}): JsonLd {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: input.name,
+    description: input.description,
+    url: absolute(input.path),
+    isPartOf: { '@id': `${absolute('/')}#website` },
+    mainEntity: {
+      '@type': 'ItemList',
+      numberOfItems: input.entries.length,
+      itemListElement: input.entries.map((entry, index) => ({
+        '@type': 'ListItem',
+        position: index + 1,
+        name: entry.title,
+        url: absolute(entry.url),
+      })),
+    },
+  };
+}
+
+export function publicArtifactJsonLd(
+  entity: ImmutablePublic<PublicBuildSummary | PublicLabSummary>,
+): JsonLd {
+  const common = {
+    '@context': 'https://schema.org',
+    '@id': `${absolute(entity.url)}#artifact`,
+    name: entity.title,
+    description: entity.summary,
+    url: absolute(entity.url),
+    keywords: entity.technologies.map((technology) => technology.label),
+    ...(entity.hero ? { image: entity.hero.url } : {}),
+  };
+  return entity.type === 'build'
+    ? {
+        ...common,
+        '@type': 'Product',
+        brand: { '@id': `${absolute('/')}#organization` },
+        manufacturer: { '@id': `${absolute('/')}#organization` },
+      }
+    : {
+        ...common,
+        '@type': 'CreativeWork',
+        creator: { '@id': `${absolute('/')}#organization` },
+        dateCreated: entity.startDate,
+        ...(entity.lastMajorUpdate ? { dateModified: entity.lastMajorUpdate } : {}),
+      };
 }

@@ -2,8 +2,8 @@ import Link from 'next/link';
 import { PUBLIC_ENTITY_ROUTES, PUBLIC_HOME, PUBLIC_SITE } from '@/config/public-site';
 import type { ImmutablePublic, PublicHomepageProjection } from '@/lib/public/domain';
 import { PageContainer, PublicSection } from '../PageContainer';
+import { SectionHeader } from '../EditorialPrimitives';
 import { EditorialCard } from './EditorialCard';
-import { SectionHeader } from './EditorialPrimitives';
 
 const relationshipRoutes: Readonly<Record<string, boolean>> = PUBLIC_ENTITY_ROUTES;
 
