@@ -20,6 +20,7 @@ import type {
   PublicDetailEntityType,
   PublicDiscoveryEntry,
   PublicEngineeringProfileSummary,
+  PublicEngineeringProfileIndexEntry,
   PublicEntityDetail,
   PublicEntityLink,
   PublicEntitySummary,
@@ -69,6 +70,9 @@ export interface PublicRepository {
   ): Promise<ImmutablePublic<PublicEntityDetail> | null>;
   listSummaries(type: PublicEntityType): Promise<ImmutablePublic<PublicEntitySummary[]>>;
   listNoteIndexEntries(): Promise<ImmutablePublic<PublicNoteIndexEntry[]>>;
+  listEngineeringProfileIndexEntries(): Promise<
+    ImmutablePublic<PublicEngineeringProfileIndexEntry[]>
+  >;
   listDiscoveryEntries(
     types?: readonly PublicEntityType[],
   ): Promise<ImmutablePublic<PublicDiscoveryEntry[]>>;
@@ -135,13 +139,11 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
     if (matches.length !== 1 || !matches[0]?.publicProfile) return ORGANIZATION_AUTHOR;
     const team = matches[0];
     const profile = await source.findProfileByTeamId(team._id.toString());
+    const profileEntity = profile
+      ? await source.findEntityById('engineeringProfile', profile._id.toString())
+      : null;
     const profileAvailable = Boolean(
-      profile &&
-      isPubliclyVisible({
-        type: 'engineeringProfile',
-        status: profile.status,
-        teamPublic: team.publicProfile,
-      }),
+      profileEntity && (await isEligibleEngineeringProfile(profileEntity, team)),
     );
     const portrait = await media(team.portraitId, 'portrait');
     return {
@@ -152,6 +154,60 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
       url: profileAvailable && profile ? `/engineering/${profile.slug}` : '/about',
       profileAvailable,
     };
+  }
+
+  async function isEligibleEngineeringProfile(
+    entity: StudioPublicEntity,
+    team: Team,
+  ): Promise<boolean> {
+    if (entity.type !== 'engineeringProfile') return false;
+    const record = entity.record as EngineeringProfile;
+    if (
+      !isPubliclyVisible({
+        type: 'engineeringProfile',
+        status: record.status,
+        teamPublic: team.publicProfile,
+      }) ||
+      !record.overview?.trim() ||
+      !record.engineeringPhilosophy?.trim() ||
+      !record.currentExploration?.trim() ||
+      !record.engineeringIdentity.some((statement) => statement.trim())
+    ) {
+      return false;
+    }
+
+    const documents = await publicDocuments('engineeringProfile', entity.id);
+    if (!hasSubstantiveDocument(documents)) return false;
+
+    const storedTargets: Array<readonly [PublicEntityType, string]> = [
+      ...record.featuredWorkIds.map((id) => ['work', id.toString()] as const),
+      ...record.featuredBuildIds.map((id) => ['build', id.toString()] as const),
+      ...record.featuredBlueprintIds.map((id) => ['blueprint', id.toString()] as const),
+      ...record.featuredLabIds.map((id) => ['lab', id.toString()] as const),
+      ...record.featuredNoteIds.map((id) => ['note', id.toString()] as const),
+    ];
+    const inverseContributions = await source.findInverseEntities('engineeringProfile', entity.id);
+    const explicitTargets = [
+      ...storedTargets,
+      ...inverseContributions.flatMap((target): Array<readonly [PublicEntityType, string]> =>
+        target.type === 'work' ? [['work', target.id]] : [],
+      ),
+    ];
+    const distinctTargets = new Map(
+      explicitTargets.map(([type, id]) => [`${type}:${id}`, [type, id] as const]),
+    );
+    const resolved = await Promise.all(
+      [...distinctTargets.values()].map(async ([type, id]) => {
+        const target = await source.findEntityById(type, id);
+        if (!target || !(await visible(target))) return false;
+        if (target.type === 'note') {
+          const note = target.record as Note;
+          return Boolean(note.summary?.trim() && note.publicationDate instanceof Date);
+        }
+        return Boolean(await mapSummary(target));
+      }),
+    );
+    return resolved.filter(Boolean).length >= 2;
   }
 
   async function mapSummary(entity: StudioPublicEntity): Promise<PublicEntitySummary | null> {
@@ -321,6 +377,7 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
         );
         if (!teamEntity || !(await visible(teamEntity))) return null;
         const team = teamEntity.record as Team;
+        if (!(await isEligibleEngineeringProfile(entity, team))) return null;
         const [technologies, portrait, hero] = await Promise.all([
           terms(record.technologyIds, 'technology'),
           media(record.portraitId ?? team.portraitId, 'portrait'),
@@ -448,6 +505,27 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
     );
   }
 
+  async function listEngineeringProfileIndexEntries(): Promise<
+    PublicEngineeringProfileIndexEntry[]
+  > {
+    const entities = await source.listEntities('engineeringProfile');
+    const entries = await Promise.all(
+      sortEntities(entities).map(
+        async (entity): Promise<PublicEngineeringProfileIndexEntry | null> => {
+          if (!('slug' in entity.record)) return null;
+          const detail = await findDetail('engineeringProfile', entity.record.slug);
+          if (!detail || detail.type !== 'engineeringProfile') return null;
+          return {
+            profile: detail,
+            areasOfExpertise: [...detail.areasOfExpertise],
+            relationships: [...detail.relationships],
+          };
+        },
+      ),
+    );
+    return compact(entries);
+  }
+
   async function findDetail(
     type: PublicDetailEntityType,
     slug: string,
@@ -524,7 +602,7 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
         return {
           ...summary,
           documents,
-          relationships,
+          relationships: deduplicateProfileEvidence(relationships),
           engineeringPhilosophy: record.engineeringPhilosophy,
           currentInterests: [...record.currentInterests],
           areasOfExpertise: [...record.areasOfExpertise],
@@ -644,6 +722,9 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
     async listNoteIndexEntries() {
       return freezePublicDto(await listNoteIndexEntries());
     },
+    async listEngineeringProfileIndexEntries() {
+      return freezePublicDto(await listEngineeringProfileIndexEntries());
+    },
     async listDiscoveryEntries(types = ALL_PUBLIC_TYPES) {
       const summaries = (await Promise.all(types.map(listSummaries))).flat();
       return freezePublicDto(summaries.map(toDiscoveryEntry));
@@ -715,6 +796,23 @@ function hasRoles(documents: readonly { role: string }[], roles: readonly string
 
 function compact<T>(values: readonly (T | null)[]): T[] {
   return values.filter((value): value is T => value !== null);
+}
+
+function deduplicateProfileEvidence(
+  relationships: readonly PublicRelationship[],
+): PublicRelationship[] {
+  const byTarget = new Map<string, PublicRelationship>();
+  for (const relationship of relationships) {
+    const current = byTarget.get(relationship.target.url);
+    if (
+      !current ||
+      (current.kind === 'profileFeaturesEvidence' &&
+        relationship.kind === 'profileContributedToWork')
+    ) {
+      byTarget.set(relationship.target.url, relationship);
+    }
+  }
+  return [...byTarget.values()];
 }
 
 function hasFeaturedFlag(entity: StudioPublicEntity): boolean {

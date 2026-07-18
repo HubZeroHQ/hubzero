@@ -6,6 +6,8 @@ import type {
   PublicBuildSummary,
   PublicLabSummary,
   PublicNoteSummary,
+  PublicEngineeringProfileSummary,
+  PublicTeamMemberSummary,
   PublicWorkSummary,
 } from '../domain';
 
@@ -46,6 +48,50 @@ export function publicNoteJsonLd(entity: ImmutablePublic<PublicNoteSummary>): Js
     publisher: { '@id': `${absolute('/')}#organization` },
     keywords: entity.technologies.map((technology) => technology.label),
     ...(entity.hero ? { image: entity.hero.url } : {}),
+  };
+}
+
+export function publicEngineeringProfileJsonLd(
+  entity: ImmutablePublic<PublicEngineeringProfileSummary> & {
+    areasOfExpertise?: readonly string[];
+  },
+): JsonLd {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    '@id': `${absolute(entity.url)}#person`,
+    name: entity.title,
+    jobTitle: entity.role,
+    description: entity.summary,
+    url: absolute(entity.url),
+    worksFor: { '@id': `${absolute('/')}#organization` },
+    knowsAbout: [
+      ...(entity.areasOfExpertise ?? []),
+      ...entity.technologies.map((technology) => technology.label),
+    ],
+    ...(entity.portrait ? { image: entity.portrait.url } : {}),
+  };
+}
+
+export function aboutPageJsonLd(team: readonly ImmutablePublic<PublicTeamMemberSummary>[]): JsonLd {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'AboutPage',
+    '@id': `${absolute('/about')}#about`,
+    name: 'About HubZero',
+    url: absolute('/about'),
+    isPartOf: { '@id': `${absolute('/')}#website` },
+    mainEntity: { '@id': `${absolute('/')}#organization` },
+    ...(team.length
+      ? {
+          mentions: team.map((member) => ({
+            '@type': 'Person',
+            name: member.title,
+            jobTitle: member.role,
+            ...(member.profile ? { url: absolute(member.profile.url) } : {}),
+          })),
+        }
+      : {}),
   };
 }
 
