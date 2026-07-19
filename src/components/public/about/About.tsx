@@ -1,5 +1,10 @@
 import Link from 'next/link';
 import { PUBLIC_ABOUT } from '@/config/public-site';
+import {
+  founderAccentStyle,
+  founderMotifViewTransitionStyle,
+  getFounderIdentity,
+} from '@/config/founder-identity';
 import type {
   ImmutablePublic,
   PublicEngineeringProfileIndexEntry,
@@ -8,6 +13,9 @@ import type {
 import { PublicEmptyState } from '../EditorialPrimitives';
 import { PageContainer, PublicSection } from '../PageContainer';
 import { PublicImage } from '../PublicImage';
+import { FounderMotif } from '../engineering/motifs';
+import { FounderProfileLink } from '../engineering/FounderProfileLink';
+import { slugFromProfileUrl } from '../engineering/profile-url';
 
 export function About({
   team,
@@ -17,6 +25,7 @@ export function About({
   profiles: readonly ImmutablePublic<PublicEngineeringProfileIndexEntry>[];
 }) {
   const eligibleProfileUrls = new Set(profiles.map(({ profile }) => profile.url));
+  const profileByUrl = new Map(profiles.map((entry) => [entry.profile.url, entry.profile]));
 
   return (
     <main id="main-content" tabIndex={-1} className="collection-main about-main">
@@ -111,8 +120,17 @@ export function About({
                   member.profile && eligibleProfileUrls.has(member.profile.url)
                     ? member.profile
                     : undefined;
+                const identity = profile
+                  ? getFounderIdentity(slugFromProfileUrl(profile.url) ?? '')
+                  : undefined;
+                const fullProfile = profile ? profileByUrl.get(profile.url) : undefined;
+
                 return (
-                  <article key={`${member.group}-${member.title}`} className="about-person">
+                  <article
+                    key={`${member.group}-${member.title}`}
+                    className="about-person"
+                    style={identity ? founderAccentStyle(identity.accent) : undefined}
+                  >
                     {member.portrait ? (
                       <PublicImage media={member.portrait} />
                     ) : (
@@ -125,7 +143,23 @@ export function About({
                       <h3>{member.title}</h3>
                       <p className="about-person-role">{member.role}</p>
                       <p>{member.summary}</p>
-                      {profile ? (
+                      {identity && fullProfile && fullProfile.technologies.length ? (
+                        <div
+                          className="founder-card-motif"
+                          style={founderMotifViewTransitionStyle(identity.slug)}
+                        >
+                          <FounderMotif
+                            motif={identity.motif}
+                            technologies={fullProfile.technologies}
+                            description={identity.motifDescription}
+                          />
+                        </div>
+                      ) : null}
+                      {profile && identity ? (
+                        <FounderProfileLink href={profile.url}>
+                          Read engineering profile <span aria-hidden="true">→</span>
+                        </FounderProfileLink>
+                      ) : profile ? (
                         <Link href={profile.url}>
                           Read engineering profile <span aria-hidden="true">→</span>
                         </Link>

@@ -3245,6 +3245,60 @@
     border: 1px solid var(--color-border-default);
     border-radius: var(--radius-card);
     background: var(--color-surface-default);
+    transition:
+      transform var(--duration-considered) var(--ease-standard),
+      border-color var(--duration-fast) var(--ease-standard),
+      background-color var(--duration-fast) var(--ease-standard);
+  }
+
+  .about-person:hover,
+  .about-person:focus-within {
+    transform: translateY(-2px);
+    border-color: var(--founder-accent, var(--color-border-strong));
+    background: var(--founder-accent-subtle, var(--color-surface-elevated));
+  }
+
+  .founder-card-motif {
+    width: 100%;
+    max-width: 260px;
+    margin-top: 20px;
+  }
+
+  /*
+   * Quiet until engaged — the About card's motif only draws on hover/focus,
+   * "before navigation" (ENGINEERING_IDENTITY brief). The Profile page's
+   * own copy of the same motif (profile-shared compositions) draws on
+   * mount instead; a matching `view-transition-name` is what makes the two
+   * read as one continuing animation in a browser that supports it.
+   */
+  .founder-card-motif .founder-motif-trace {
+    animation: none;
+    stroke-dashoffset: 1200;
+  }
+
+  .founder-card-motif .founder-motif-node,
+  .founder-card-motif .founder-motif-hub,
+  .founder-card-motif .founder-motif-label,
+  .founder-card-motif .founder-motif-index {
+    animation: none;
+    opacity: 0;
+  }
+
+  .about-person:hover .founder-card-motif .founder-motif-trace,
+  .about-person:focus-within .founder-card-motif .founder-motif-trace {
+    animation: founder-motif-draw var(--duration-motif) var(--ease-standard) forwards;
+  }
+
+  .about-person:hover .founder-card-motif .founder-motif-node,
+  .about-person:hover .founder-card-motif .founder-motif-hub,
+  .about-person:hover .founder-card-motif .founder-motif-label,
+  .about-person:hover .founder-card-motif .founder-motif-index,
+  .about-person:focus-within .founder-card-motif .founder-motif-node,
+  .about-person:focus-within .founder-card-motif .founder-motif-hub,
+  .about-person:focus-within .founder-card-motif .founder-motif-label,
+  .about-person:focus-within .founder-card-motif .founder-motif-index {
+    animation: founder-motif-appear var(--duration-considered) var(--ease-standard) forwards;
+    animation-delay: calc(var(--duration-motif) * 0.7);
   }
 
   .about-person .public-media,
