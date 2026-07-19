@@ -21,7 +21,7 @@ describe('public About experience', () => {
     expect(markup).toContain('Investigate');
     expect(markup).toContain('Ship');
     expect(markup).toContain('Apply');
-    expect(markup).toContain('Generalize');
+    expect(markup).toContain('Generalise');
     expect(markup).toContain('Roster / no approved public records');
   });
 

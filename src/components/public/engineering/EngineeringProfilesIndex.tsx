@@ -24,7 +24,7 @@ export function EngineeringProfilesIndex({
             <p className="home-eyebrow">Engineering Profiles / earned identity</p>
             <h1>Expertise documented through the work.</h1>
             <p>
-              Profiles connect engineering judgment, current investigation, and authored records to
+              Profiles connect engineering judgement, current investigation, and authored records to
               the products and systems that demonstrate them.
             </p>
           </div>

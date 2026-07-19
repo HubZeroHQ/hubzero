@@ -17,7 +17,7 @@ export const DOCUMENT_LABELS = {
     eyebrow: 'Introduction / engineering context',
     title: 'Position and practice',
   },
-  interview: { eyebrow: 'Interview / specific judgment', title: 'Questions from the work' },
+  interview: { eyebrow: 'Interview / specific judgement', title: 'Questions from the work' },
   quotes: { eyebrow: 'Principles / concise record', title: 'Working positions' },
   timeline: { eyebrow: 'Timeline / meaningful change', title: 'Changes in practice' },
   achievements: { eyebrow: 'Outcomes / verified record', title: 'Documented outcomes' },

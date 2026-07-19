@@ -5,7 +5,11 @@ export const PUBLIC_SITE = {
   locale: 'en_IN',
   language: 'en',
   organizationUrl: 'https://hubzero.in',
-  socialImage: '/web-app-manifest-512x512.png',
+  socialImage: '/og-default.png',
+  // Actual pixel dimensions of the default social image above — the standard 1.91:1 OG ratio, kept as a named
+  // constant so layout.tsx and createPublicMetadata() don't each hardcode it.
+  socialImageWidth: 1200,
+  socialImageHeight: 630,
   release: {
     /** Keep crawler and feed release gates closed until LAUNCH_READINESS.md is approved. */
     live: false,
@@ -142,7 +146,7 @@ export const PUBLIC_HOME = {
     },
     {
       label: 'Work',
-      description: 'Client problems resolved through engineering judgment.',
+      description: 'Client problems resolved through engineering judgement.',
       href: '/work',
       type: 'work',
     },
@@ -199,7 +203,7 @@ export const PUBLIC_ABOUT = {
     },
     {
       label: 'Blueprints',
-      verb: 'Generalize',
+      verb: 'Generalise',
       description:
         'Patterns that hold up become reusable foundations with an explicit information architecture and design language.',
       href: '/blueprints',
@@ -213,7 +217,7 @@ export const PUBLIC_ABOUT = {
     },
     {
       label: 'Decisions',
-      title: 'Record judgment, not just output.',
+      title: 'Record judgement, not just output.',
       body: 'Constraints, alternatives, trade-offs, and lessons explain why an implementation took its final shape.',
     },
     {

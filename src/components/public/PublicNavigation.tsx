@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef } from 'react';
 import { PUBLIC_NAVIGATION, PUBLIC_SITE } from '@/config/public-site';
+import { PublicMobileNav } from './PublicMobileNav';
 import { PublicSearchDialog } from './search/PublicSearchDialog';
 
 const activeItems = PUBLIC_NAVIGATION.filter((item) => item.enabled);
@@ -48,6 +49,7 @@ export function PublicNavigation() {
             })}
           </div>
         ) : null}
+        <PublicMobileNav items={activeItems} />
         {PUBLIC_SITE.release.search ? <PublicSearchDialog /> : null}
         {PUBLIC_SITE.release.contact ? (
           <Link href="/contact?from=navigation" className="public-nav-contact">
