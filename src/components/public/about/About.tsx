@@ -150,6 +150,7 @@ export function About({
                             motif={identity.motif}
                             technologies={technologies}
                             description={identity.motifDescription}
+                            edgeAnchored
                           />
                         </div>
                       ) : null}
