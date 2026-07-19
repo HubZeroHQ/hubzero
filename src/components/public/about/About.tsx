@@ -136,30 +136,27 @@ export function About({
                     className="about-person"
                     style={identity ? founderAccentStyle(identity.accent) : undefined}
                   >
-                    <div className="about-person-header">
-                      <div className="about-person-portrait">
-                        {member.portrait ? <PublicImage media={member.portrait} /> : null}
-                      </div>
-                      <div className="about-person-identity">
-                        <p className="home-eyebrow">{member.group}</p>
-                        <h3>{member.title}</h3>
-                        <p className="about-person-role">{member.role}</p>
-                      </div>
+                    <div className="about-person-portrait">
+                      {member.portrait ? <PublicImage media={member.portrait} /> : null}
                     </div>
-                    {identity && technologies.length ? (
-                      <div
-                        className="founder-card-motif"
-                        style={founderMotifViewTransitionStyle(identity.slug)}
-                      >
-                        <FounderMotif
-                          motif={identity.motif}
-                          technologies={technologies}
-                          description={identity.motifDescription}
-                        />
-                      </div>
-                    ) : null}
-                    <div className="about-person-copy">
-                      <p>{member.summary}</p>
+                    <div className="about-person-content">
+                      {identity && technologies.length ? (
+                        <div
+                          className="about-person-motif"
+                          aria-hidden="true"
+                          style={founderMotifViewTransitionStyle(identity.slug)}
+                        >
+                          <FounderMotif
+                            motif={identity.motif}
+                            technologies={technologies}
+                            description={identity.motifDescription}
+                          />
+                        </div>
+                      ) : null}
+                      <p className="home-eyebrow">{member.group}</p>
+                      <h3>{member.title}</h3>
+                      <p className="about-person-role">{member.role}</p>
+                      <p className="about-person-intro">{member.summary}</p>
                       {linkEligible && member.profile ? (
                         identity ? (
                           <FounderProfileLink href={member.profile.url}>
