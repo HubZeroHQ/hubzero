@@ -3253,13 +3253,20 @@
 
   .about-roster {
     display: grid;
-    gap: 32px;
+    gap: 24px;
   }
 
+  /*
+   * The card is one coherent object built around a compact identity row
+   * (portrait + name/role, sized to match each other) followed by full-width
+   * editorial content — not a tall portrait column running the full card
+   * height beside unrelated copy. Nothing here sizes independently of
+   * anything else.
+   */
   .about-person {
     display: grid;
-    grid-template-columns: 1fr;
-    align-items: start;
+    gap: 24px;
+    padding: clamp(24px, 3.5vw, 36px);
     overflow: hidden;
     border: 1px solid var(--color-border-default);
     border-radius: var(--radius-card);
@@ -3277,65 +3284,80 @@
     background: var(--founder-accent-subtle, var(--color-surface-elevated));
   }
 
-  /* An understated compositional divider between role and bio, not an appended illustration. */
+  .about-person-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+  }
+
+  /* An understated compositional divider between the identity row and the bio, not an appended illustration. */
   .founder-card-motif {
     width: 100%;
-    max-width: 220px;
-    margin-top: 4px;
-    padding-top: 14px;
+    max-width: 280px;
+    padding-top: 18px;
     border-top: 1px solid var(--color-border-muted);
   }
 
   /*
-   * Quiet until engaged — the About card's motif only draws on hover/focus,
-   * "before navigation" (ENGINEERING_IDENTITY brief). The Profile page's
-   * own copy of the same motif (profile-shared compositions) draws on
-   * mount instead; a matching `view-transition-name` is what makes the two
-   * read as one continuing animation in a browser that supports it.
+   * The card should already hint at the engineering identity, not withhold
+   * it until hover — so the structure (lines/nodes) stays quietly visible
+   * at rest instead of reserving a blank box. Only the reading detail
+   * (technology labels) is reserved for hover/focus, so the resting state
+   * reads as a real, restrained diagram rather than illustration. The
+   * Profile page's own copy of the same motif draws itself on mount;
+   * `view-transition-name` is what makes the two read as one continuing
+   * object across the navigation, independent of exactly how each side
+   * animates internally.
    */
-  .founder-card-motif .founder-motif-trace {
+  .founder-card-motif .founder-motif-trace,
+  .founder-card-motif .founder-motif-node,
+  .founder-card-motif .founder-motif-hub {
+    stroke-dashoffset: 0;
     animation: none;
-    stroke-dashoffset: 1200;
+    opacity: 0.4;
+    transition: opacity var(--duration-fast) var(--ease-standard);
   }
 
-  .founder-card-motif .founder-motif-node,
-  .founder-card-motif .founder-motif-hub,
   .founder-card-motif .founder-motif-label,
   .founder-card-motif .founder-motif-index {
     animation: none;
     opacity: 0;
+    transition: opacity var(--duration-fast) var(--ease-standard);
   }
 
   .about-person:hover .founder-card-motif .founder-motif-trace,
-  .about-person:focus-within .founder-card-motif .founder-motif-trace {
-    animation: founder-motif-draw var(--duration-motif) var(--ease-standard) forwards;
-  }
-
   .about-person:hover .founder-card-motif .founder-motif-node,
   .about-person:hover .founder-card-motif .founder-motif-hub,
+  .about-person:focus-within .founder-card-motif .founder-motif-trace,
+  .about-person:focus-within .founder-card-motif .founder-motif-node,
+  .about-person:focus-within .founder-card-motif .founder-motif-hub {
+    opacity: 1;
+  }
+
   .about-person:hover .founder-card-motif .founder-motif-label,
   .about-person:hover .founder-card-motif .founder-motif-index,
-  .about-person:focus-within .founder-card-motif .founder-motif-node,
-  .about-person:focus-within .founder-card-motif .founder-motif-hub,
   .about-person:focus-within .founder-card-motif .founder-motif-label,
   .about-person:focus-within .founder-card-motif .founder-motif-index {
-    animation: founder-motif-appear var(--duration-considered) var(--ease-standard) forwards;
-    animation-delay: calc(var(--duration-motif) * 0.7);
+    opacity: 1;
   }
 
   /*
-   * Real portraits are naturally portrait-oriented (roughly 3:2 vertical).
-   * The frame is a modest, self-contained box sized by its own
-   * aspect-ratio — never stretched to match the copy column's height —
-   * so a photo is respectfully cropped, not forced into a landscape slot.
+   * A compact, self-normalizing frame — real portraits vary in source
+   * resolution, but every one renders at the same width and the same
+   * 3:4 aspect-ratio, cropped identically via object-fit: cover. The
+   * frame's height is fixed by its own aspect-ratio, not by whatever sits
+   * beside it, and it never runs the full card height: the identity block
+   * beside it is sized to match a compact portrait, and everything below
+   * (motif, bio) spans the full card width instead of continuing beside a
+   * short image.
    */
   .about-person-portrait {
-    width: 100%;
-    max-width: 260px;
+    flex: 0 0 auto;
+    width: clamp(88px, 12vw, 120px);
     aspect-ratio: 3 / 4;
     overflow: hidden;
+    border-radius: 10px;
     background: var(--color-surface-elevated);
-    justify-self: start;
   }
 
   .about-person-portrait .public-media,
@@ -3348,37 +3370,37 @@
     object-fit: cover;
   }
 
-  .about-person-copy {
-    display: grid;
-    align-content: start;
-    justify-items: start;
-    gap: 10px;
-    padding: clamp(28px, 5vw, 48px);
+  .about-person-identity {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding-top: 4px;
   }
 
-  .about-person-copy h3 {
-    margin-top: 2px;
-    font-size: clamp(28px, 4.2vw, 42px);
+  .about-person-identity h3 {
+    margin-top: 6px;
+    font-size: clamp(24px, 3.2vw, 34px);
     font-weight: 600;
-    line-height: 1.08;
+    line-height: 1.1;
   }
 
   .about-person-role {
+    margin-top: 6px;
     color: var(--color-text-primary) !important;
     font-size: 15px !important;
     font-weight: 500;
   }
 
-  .about-person-copy > p:not(.home-eyebrow):not(.about-person-role) {
-    max-width: 60ch;
-    margin-top: 6px;
+  .about-person-copy {
+    display: grid;
+    gap: 14px;
+    justify-items: start;
+  }
+
+  .about-person-copy > p {
+    max-width: 68ch;
     color: var(--color-text-secondary);
     font-size: 15px;
     line-height: 1.7;
-  }
-
-  .about-person-copy a {
-    margin-top: 14px;
   }
 
   .about-close {
@@ -3649,14 +3671,6 @@
 
   .about-principle-grid article:nth-child(even) {
     padding-left: 32px;
-  }
-
-  .about-person {
-    grid-template-columns: 220px minmax(0, 1fr);
-  }
-
-  .about-person-portrait {
-    max-width: none;
   }
 
   .engineering-ledger nav li {
