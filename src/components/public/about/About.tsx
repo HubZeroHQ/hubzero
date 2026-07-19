@@ -25,7 +25,13 @@ export function About({
   profiles: readonly ImmutablePublic<PublicEngineeringProfileIndexEntry>[];
 }) {
   const eligibleProfileUrls = new Set(profiles.map(({ profile }) => profile.url));
-  const profileByUrl = new Map(profiles.map((entry) => [entry.profile.url, entry.profile]));
+  /**
+   * Prefer omission over approximation: a Team record with no real portrait
+   * has nothing to show here and simply doesn't appear, rather than falling
+   * back to an initials placeholder. This also removes any sample/
+   * verification records that predate real photography.
+   */
+  const roster = team.filter((member) => member.portrait);
 
   return (
     <main id="main-content" tabIndex={-1} className="collection-main about-main">
@@ -113,17 +119,16 @@ export function About({
             </p>
           </header>
 
-          {team.length ? (
+          {roster.length ? (
             <div className="about-roster">
-              {team.map((member) => {
-                const profile =
-                  member.profile && eligibleProfileUrls.has(member.profile.url)
-                    ? member.profile
-                    : undefined;
-                const identity = profile
-                  ? getFounderIdentity(slugFromProfileUrl(profile.url) ?? '')
+              {roster.map((member) => {
+                const identity = member.profile
+                  ? getFounderIdentity(slugFromProfileUrl(member.profile.url) ?? '')
                   : undefined;
-                const fullProfile = profile ? profileByUrl.get(profile.url) : undefined;
+                const linkEligible = Boolean(
+                  member.profile && eligibleProfileUrls.has(member.profile.url),
+                );
+                const technologies = member.profile?.technologies ?? [];
 
                 return (
                   <article
@@ -131,38 +136,36 @@ export function About({
                     className="about-person"
                     style={identity ? founderAccentStyle(identity.accent) : undefined}
                   >
-                    {member.portrait ? (
-                      <PublicImage media={member.portrait} />
-                    ) : (
-                      <div className="about-person-no-media" aria-hidden="true">
-                        <span>{member.title.slice(0, 1)}</span>
-                      </div>
-                    )}
+                    <div className="about-person-portrait">
+                      {member.portrait ? <PublicImage media={member.portrait} /> : null}
+                    </div>
                     <div className="about-person-copy">
                       <p className="home-eyebrow">{member.group}</p>
                       <h3>{member.title}</h3>
                       <p className="about-person-role">{member.role}</p>
-                      <p>{member.summary}</p>
-                      {identity && fullProfile && fullProfile.technologies.length ? (
+                      {identity && technologies.length ? (
                         <div
                           className="founder-card-motif"
                           style={founderMotifViewTransitionStyle(identity.slug)}
                         >
                           <FounderMotif
                             motif={identity.motif}
-                            technologies={fullProfile.technologies}
+                            technologies={technologies}
                             description={identity.motifDescription}
                           />
                         </div>
                       ) : null}
-                      {profile && identity ? (
-                        <FounderProfileLink href={profile.url}>
-                          Read engineering profile <span aria-hidden="true">→</span>
-                        </FounderProfileLink>
-                      ) : profile ? (
-                        <Link href={profile.url}>
-                          Read engineering profile <span aria-hidden="true">→</span>
-                        </Link>
+                      <p>{member.summary}</p>
+                      {linkEligible && member.profile ? (
+                        identity ? (
+                          <FounderProfileLink href={member.profile.url}>
+                            Read engineering profile <span aria-hidden="true">→</span>
+                          </FounderProfileLink>
+                        ) : (
+                          <Link href={member.profile.url}>
+                            Read engineering profile <span aria-hidden="true">→</span>
+                          </Link>
+                        )
                       ) : null}
                     </div>
                   </article>

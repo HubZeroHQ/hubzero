@@ -238,13 +238,21 @@ export const mongoPublicDataSource: PublicDataSource = {
     const _id = objectId(id);
     return _id ? (await collections.users()).findOne({ _id }) : null;
   },
+  /*
+   * `Team.userId` and `EngineeringProfile.teamMemberId` are validated via
+   * `objectIdString` (lib/validation/shared.ts) — a regex-checked string,
+   * never converted to a real BSON ObjectId before insert
+   * (lib/db/repository.ts's generic `create()` spreads `input` as-is). Both
+   * fields are therefore stored as plain strings, not ObjectIds — querying
+   * with a constructed `ObjectId` instance here would never match by BSON
+   * type, so these look up by the validated string form instead.
+   */
   findTeamsByUserId: async (userId) => {
-    const id = objectId(userId);
-    if (!id) return [];
-    return (await collections.team()).find({ userId: id }).toArray();
+    if (!objectId(userId)) return [];
+    return (await collections.team()).find({ userId } as never).toArray();
   },
   findProfileByTeamId: async (teamId) => {
-    const id = objectId(teamId);
-    return id ? (await collections.engineeringProfiles()).findOne({ teamMemberId: id }) : null;
+    if (!objectId(teamId)) return null;
+    return (await collections.engineeringProfiles()).findOne({ teamMemberId: teamId } as never);
   },
 };

@@ -57,6 +57,8 @@ export interface PublicEntityLink {
   referenceId?: string;
   summary?: string;
   state?: string;
+  /** Only populated for an engineeringProfile link — the linked Profile's own real technologies (never fabricated). */
+  technologies?: readonly PublicTaxonomyTerm[];
 }
 
 export type PublicRelationshipKind =

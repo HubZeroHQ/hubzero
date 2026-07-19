@@ -416,6 +416,8 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
           }),
         );
         const portrait = await media(record.portraitId, 'portrait');
+        const profileTechnologies =
+          profileVisible && profile ? await terms(profile.technologyIds, 'technology') : [];
         const summary: PublicTeamMemberSummary = {
           type: 'teamMember',
           title: record.name,
@@ -434,6 +436,7 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
                   referenceId: profile.referenceId,
                   summary: profile.overview,
                   state: profile.currentExploration,
+                  ...(profileTechnologies.length ? { technologies: profileTechnologies } : {}),
                 },
               }
             : {}),

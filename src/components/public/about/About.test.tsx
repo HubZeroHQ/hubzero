@@ -1,7 +1,17 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import type { PublicTeamMemberSummary } from '@/lib/public/domain';
+import type { PublicMedia, PublicTeamMemberSummary } from '@/lib/public/domain';
 import { About } from './About';
+
+const portrait: PublicMedia = {
+  url: 'https://example.com/portrait.jpg',
+  width: 900,
+  height: 1200,
+  alt: 'Portrait of Ari Rao',
+  role: 'portrait',
+  responsive: { srcSet: '', sizes: '' },
+  placeholder: { kind: 'color', value: '#141414' },
+};
 
 describe('public About experience', () => {
   it('keeps the operating model complete when no public Team records exist', () => {
@@ -15,7 +25,7 @@ describe('public About experience', () => {
     expect(markup).toContain('Roster / no approved public records');
   });
 
-  it('renders only approved Team identity and withholds an ineligible Profile link', () => {
+  it('omits a Team record with no real portrait rather than showing a placeholder identity', () => {
     const member: PublicTeamMemberSummary = {
       type: 'teamMember',
       title: 'Ari Rao',
@@ -24,6 +34,22 @@ describe('public About experience', () => {
       role: 'Systems engineer',
       group: 'Engineering',
       technologies: [],
+    };
+    const markup = renderToStaticMarkup(<About team={[member]} profiles={[]} />);
+    expect(markup).not.toContain('Ari Rao');
+    expect(markup).toContain('Roster / no approved public records');
+  });
+
+  it('renders a photographed Team identity and withholds an ineligible Profile link', () => {
+    const member: PublicTeamMemberSummary = {
+      type: 'teamMember',
+      title: 'Ari Rao',
+      url: '/about',
+      summary: 'Builds systems around explicit ownership.',
+      role: 'Systems engineer',
+      group: 'Engineering',
+      technologies: [],
+      portrait,
       profile: {
         type: 'engineeringProfile',
         title: 'Ari Rao',
