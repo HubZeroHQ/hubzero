@@ -3332,30 +3332,34 @@
   }
 
   /*
-   * Environmental, not content: the motif is an absolutely positioned layer
-   * behind the editorial content, anchored to the card's own right edge —
-   * it never occupies a row in the flow, never pushes text, and never adds
-   * its own spacing. A soft right-to-left mask keeps it clear of the type
-   * even at full strength. Labels are the one piece of the shared motif
-   * component that read as content rather than environment, so they're
-   * suppressed here — the annotated version belongs to the Engineering
-   * Profile hero, not the card.
+   * Environmental infrastructure, not content: the motif is an absolutely
+   * positioned layer pinned to the card's own right edge — it never
+   * occupies a row in the flow, never pushes text, never adds its own
+   * spacing, and never participates in the card's sizing. At rest every
+   * stroke is fully undrawn (stroke-dashoffset, not opacity) so nothing
+   * fades or scales in; hover reveals the system by drawing each stroke
+   * from the right edge inward, as if it already existed beyond the frame.
+   * A soft mask keeps the draw clear of the type even at full strength.
+   * Labels are the one piece of the shared motif component that read as
+   * content rather than environment, so they're suppressed here — the
+   * annotated version belongs to the Engineering Profile hero, not the
+   * card.
    */
   .about-person-motif {
     position: absolute;
-    inset: 0;
-    left: 30%;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 23%;
     display: flex;
     align-items: center;
     pointer-events: none;
-    opacity: 0;
-    mask-image: linear-gradient(to left, black 55%, transparent 100%);
-    transition: opacity var(--duration-fast) var(--ease-standard);
+    mask-image: linear-gradient(to left, black 60%, transparent 100%);
   }
 
   .about-person-motif .founder-motif {
     width: 100%;
-    height: auto;
+    height: 100%;
   }
 
   .about-person-motif .founder-motif-label,
@@ -3365,9 +3369,9 @@
 
   /*
    * Overrides the shared component's draw-on-mount animation (used by the
-   * Profile hero) — on the card, the system stays fully invisible at rest
-   * and only draws itself on hover/focus, driven by transition rather than
-   * an autoplaying keyframe.
+   * Profile hero) — on the card, the system stays fully undrawn at rest and
+   * only draws itself on hover/focus, driven by transition rather than an
+   * autoplaying keyframe.
    */
   .about-person-motif .founder-motif-trace,
   .about-person-motif .founder-motif-node,
@@ -3375,9 +3379,15 @@
     animation: none;
   }
 
+  /*
+   * The rest-state dashoffset comes from each path's own strokeDashoffset
+   * attribute (its true length, set in motifs.tsx) — nothing to override
+   * here. transition-delay/-duration are also set per-element inline
+   * (asyncDraw); this just supplies the property + easing to transition.
+   */
   .about-person-motif .founder-motif-trace {
-    stroke-dashoffset: 1200;
-    transition: stroke-dashoffset var(--duration-motif) var(--ease-standard);
+    transition-property: stroke-dashoffset;
+    transition-timing-function: var(--ease-standard);
   }
 
   .about-person-motif .founder-motif-node,
@@ -3385,11 +3395,6 @@
     opacity: 0;
     transition: opacity var(--duration-considered) var(--ease-standard);
     transition-delay: calc(var(--duration-motif) * 0.55);
-  }
-
-  .about-person:hover .about-person-motif,
-  .about-person:focus-within .about-person-motif {
-    opacity: 0.55;
   }
 
   .about-person:hover .about-person-motif .founder-motif-trace,
@@ -3418,10 +3423,6 @@
   @media (max-width: 640px) {
     .about-person {
       grid-template-columns: 1fr;
-    }
-
-    .about-person-motif {
-      left: 0;
     }
   }
 
@@ -3766,14 +3767,29 @@
     overflow: visible;
   }
 
+  /*
+   * Technical-drawing weight, not illustration: stroke-dasharray/-dashoffset
+   * are set per-element (PathBuilder computes each stroke's true length in
+   * motifs.tsx), so the reveal is proportional to that stroke's own length
+   * rather than one shared oversized constant. Delay and duration are also
+   * set per-element (asyncDraw) so strokes don't all draw in lockstep.
+   */
   .founder-motif-trace {
     fill: none;
     stroke: var(--founder-accent, var(--color-focus-ring));
-    stroke-width: 1.5;
+    stroke-width: 0.7;
     stroke-linecap: round;
-    stroke-dasharray: 1200;
-    stroke-dashoffset: 1200;
     animation: founder-motif-draw var(--duration-motif) var(--ease-standard) forwards;
+  }
+
+  /* Structural lines (a shared bus, a platform/system spine) read slightly heavier than individual signal lines. */
+  .founder-motif-bus {
+    stroke-width: 1.1;
+  }
+
+  /* A necked-down, fine-pitch trace threading between dense pins — thinner than the board's standard trace width. */
+  .founder-motif-fine {
+    stroke-width: 0.45;
   }
 
   .founder-motif-node,

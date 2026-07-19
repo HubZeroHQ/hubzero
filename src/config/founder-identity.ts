@@ -29,31 +29,31 @@ export const FOUNDER_IDENTITIES: readonly FounderIdentity[] = [
     slug: 'rifaque',
     accent: '#4d8dff',
     motif: 'network',
-    motifDescription: 'A network of connected systems radiating from a central node.',
+    motifDescription: 'A distributed system of routing lines splitting, merging, and terminating.',
   },
   {
     slug: 'raif',
     accent: '#22d3ee',
     motif: 'dependencyGraph',
-    motifDescription: 'A layered dependency graph connecting foundational systems upward.',
+    motifDescription: 'Parallel systems routing through fixed checkpoints into shared pipelines.',
   },
   {
     slug: 'iyad',
     accent: '#a78bfa',
     motif: 'curve',
-    motifDescription: 'A continuous curve connecting stages of a product lifecycle.',
+    motifDescription: 'Flowing paths tracing the stages of a product journey, crossing once.',
   },
   {
     slug: 'sultan',
     accent: '#f5943b',
     motif: 'editorialGrid',
-    motifDescription: 'An editorial grid structuring topics into a documentation outline.',
+    motifDescription: 'A set of long horizontal rules structuring an editorial layout.',
   },
   {
     slug: 'salsabeel',
     accent: '#34d399',
     motif: 'pcbTrace',
-    motifDescription: 'Right-angled circuit traces routing between component pads.',
+    motifDescription: 'Right-angled circuit traces routing between board vias.',
   },
 ] as const;
 
