@@ -57,6 +57,8 @@ export interface PublicEntityLink {
   referenceId?: string;
   summary?: string;
   state?: string;
+  /** Only populated for an engineeringProfile link — the linked Profile's own real technologies (never fabricated). */
+  technologies?: readonly PublicTaxonomyTerm[];
 }
 
 export type PublicRelationshipKind =
@@ -86,6 +88,8 @@ export type PersonAuthor = {
   portrait?: PublicMedia;
   url: string;
   profileAvailable: boolean;
+  /** Only populated when `profileAvailable` — the linked Profile's own real technologies, for cross-site founder identity (never fabricated). */
+  technologies?: readonly PublicTaxonomyTerm[];
 };
 
 export type OrganizationAuthor = {

@@ -1,5 +1,10 @@
 import Link from 'next/link';
 import { PUBLIC_ABOUT } from '@/config/public-site';
+import {
+  founderAccentStyle,
+  founderMotifViewTransitionStyle,
+  getFounderIdentity,
+} from '@/config/founder-identity';
 import type {
   ImmutablePublic,
   PublicEngineeringProfileIndexEntry,
@@ -8,6 +13,9 @@ import type {
 import { PublicEmptyState } from '../EditorialPrimitives';
 import { PageContainer, PublicSection } from '../PageContainer';
 import { PublicImage } from '../PublicImage';
+import { FounderMotif } from '../engineering/motifs';
+import { FounderProfileLink } from '../engineering/FounderProfileLink';
+import { slugFromProfileUrl } from '../engineering/profile-url';
 
 export function About({
   team,
@@ -17,6 +25,13 @@ export function About({
   profiles: readonly ImmutablePublic<PublicEngineeringProfileIndexEntry>[];
 }) {
   const eligibleProfileUrls = new Set(profiles.map(({ profile }) => profile.url));
+  /**
+   * Prefer omission over approximation: a Team record with no real portrait
+   * has nothing to show here and simply doesn't appear, rather than falling
+   * back to an initials placeholder. This also removes any sample/
+   * verification records that predate real photography.
+   */
+  const roster = team.filter((member) => member.portrait);
 
   return (
     <main id="main-content" tabIndex={-1} className="collection-main about-main">
@@ -104,31 +119,57 @@ export function About({
             </p>
           </header>
 
-          {team.length ? (
+          {roster.length ? (
             <div className="about-roster">
-              {team.map((member) => {
-                const profile =
-                  member.profile && eligibleProfileUrls.has(member.profile.url)
-                    ? member.profile
-                    : undefined;
+              {roster.map((member) => {
+                const identity = member.profile
+                  ? getFounderIdentity(slugFromProfileUrl(member.profile.url) ?? '')
+                  : undefined;
+                const linkEligible = Boolean(
+                  member.profile && eligibleProfileUrls.has(member.profile.url),
+                );
+                const technologies = member.profile?.technologies ?? [];
+
                 return (
-                  <article key={`${member.group}-${member.title}`} className="about-person">
-                    {member.portrait ? (
-                      <PublicImage media={member.portrait} />
-                    ) : (
-                      <div className="about-person-no-media" aria-hidden="true">
-                        <span>{member.title.slice(0, 1)}</span>
+                  <article
+                    key={`${member.group}-${member.title}`}
+                    className="about-person"
+                    style={identity ? founderAccentStyle(identity.accent) : undefined}
+                  >
+                    <div className="about-person-header">
+                      <div className="about-person-portrait">
+                        {member.portrait ? <PublicImage media={member.portrait} /> : null}
                       </div>
-                    )}
+                      <div className="about-person-identity">
+                        <p className="home-eyebrow">{member.group}</p>
+                        <h3>{member.title}</h3>
+                        <p className="about-person-role">{member.role}</p>
+                      </div>
+                    </div>
+                    {identity && technologies.length ? (
+                      <div
+                        className="founder-card-motif"
+                        style={founderMotifViewTransitionStyle(identity.slug)}
+                      >
+                        <FounderMotif
+                          motif={identity.motif}
+                          technologies={technologies}
+                          description={identity.motifDescription}
+                        />
+                      </div>
+                    ) : null}
                     <div className="about-person-copy">
-                      <p className="home-eyebrow">{member.group}</p>
-                      <h3>{member.title}</h3>
-                      <p className="about-person-role">{member.role}</p>
                       <p>{member.summary}</p>
-                      {profile ? (
-                        <Link href={profile.url}>
-                          Read engineering profile <span aria-hidden="true">→</span>
-                        </Link>
+                      {linkEligible && member.profile ? (
+                        identity ? (
+                          <FounderProfileLink href={member.profile.url}>
+                            Read engineering profile <span aria-hidden="true">→</span>
+                          </FounderProfileLink>
+                        ) : (
+                          <Link href={member.profile.url}>
+                            Read engineering profile <span aria-hidden="true">→</span>
+                          </Link>
+                        )
                       ) : null}
                     </div>
                   </article>

@@ -1,39 +1,46 @@
-import { getFounderIdentity } from '@/config/founder-identity';
+import {
+  founderAccentStyle,
+  founderMotifViewTransitionStyle,
+  type FounderIdentity,
+} from '@/config/founder-identity';
 import type { ImmutablePublic } from '@/lib/public/domain';
-import { PublicBreadcrumbs, TechnologyList } from '../EditorialPrimitives';
-import { PageContainer, PublicSection } from '../PageContainer';
-import { ProseRenderer } from '../ProseRenderer';
-import { PublicImage } from '../PublicImage';
-import { FOUNDER_COMPOSITIONS } from './compositions';
+import { PublicBreadcrumbs } from '../../EditorialPrimitives';
+import { PageContainer, PublicSection } from '../../PageContainer';
+import { ProseRenderer } from '../../ProseRenderer';
+import { PublicImage } from '../../PublicImage';
+import { FounderMotif } from '../motifs';
 import {
   ProfileFooter,
   RelationshipGroup,
   resolveDocuments,
   resolveRelationshipGroups,
-  type EngineeringProfile as Profile,
-} from './profile-shared';
+  type EngineeringProfile,
+} from '../profile-shared';
 
 /**
- * Every profile passes through this component. A profile whose slug has an
- * entry in `FOUNDER_IDENTITIES` (Phase 23's founders, today) delegates to
- * its bespoke composition; every other profile — including any future
- * Engineering Profile leadership hasn't yet designed an identity for —
- * renders through this generic template. This is deliberate: a new profile
- * is complete and launch-ready the moment it's published, with or without
- * a designed identity.
+ * Salsabeel — Hardware Precision. Technologies render as a routed pinout
+ * table, not a pill list — each entry numbered like a component pad. The
+ * PCB trace motif sits above it as the routing diagram those pads belong
+ * to. Tight grid, monospace-forward, minimal motion beyond the trace draw.
  */
-export function EngineeringProfileDetail({ profile }: { profile: ImmutablePublic<Profile> }) {
-  const identity = getFounderIdentity(profile.slug);
-  if (identity) {
-    const Composition = FOUNDER_COMPOSITIONS[identity.motif];
-    return <Composition profile={profile} identity={identity} />;
-  }
-
+export function SalsabeelComposition({
+  profile,
+  identity,
+}: {
+  profile: ImmutablePublic<EngineeringProfile>;
+  identity: FounderIdentity;
+}) {
   const documents = resolveDocuments(profile);
   const groups = resolveRelationshipGroups(profile);
 
   return (
-    <article id="main-content" role="main" tabIndex={-1} className="collection-main profile-detail">
+    <article
+      id="main-content"
+      role="main"
+      tabIndex={-1}
+      className="collection-main profile-detail founder-profile founder-profile-pcb-trace"
+      style={founderAccentStyle(identity.accent)}
+    >
       <header className="profile-hero">
         <PageContainer>
           <PublicBreadcrumbs
@@ -43,50 +50,66 @@ export function EngineeringProfileDetail({ profile }: { profile: ImmutablePublic
               { label: profile.title },
             ]}
           />
-          <div className="profile-hero-grid">
+          <div className="profile-hero-grid founder-hero-compact">
             <div className="profile-identity">
-              <p className="home-eyebrow">Engineering Profile / {profile.referenceId}</p>
+              <p className="home-eyebrow founder-eyebrow">
+                Engineering Profile / {profile.referenceId}
+              </p>
               <h1>{profile.title}</h1>
               <p className="profile-role">{profile.role}</p>
               <p className="detail-summary">{profile.summary}</p>
             </div>
             {profile.portrait ? (
-              <PublicImage media={profile.portrait} priority />
-            ) : (
-              <aside className="profile-register" aria-label={`${profile.title} profile metadata`}>
-                <dl>
-                  <div>
-                    <dt>Reference</dt>
-                    <dd>{profile.referenceId}</dd>
-                  </div>
-                  <div>
-                    <dt>Role</dt>
-                    <dd>{profile.role}</dd>
-                  </div>
-                  <div>
-                    <dt>Evidence</dt>
-                    <dd>{profile.relationships.length} selected links</dd>
-                  </div>
-                </dl>
-              </aside>
-            )}
+              <div className="founder-portrait-small">
+                <PublicImage media={profile.portrait} priority />
+              </div>
+            ) : null}
           </div>
         </PageContainer>
       </header>
 
-      {profile.hero ? (
-        <PublicSection className="profile-hero-media" aria-label="Profile lead media">
-          <PageContainer>
-            <PublicImage media={profile.hero} />
-          </PageContainer>
-        </PublicSection>
-      ) : null}
+      <PublicSection className="founder-routing" aria-labelledby="founder-routing-title">
+        <PageContainer>
+          <header>
+            <p className="home-eyebrow">Routing / component pads</p>
+            <h2 id="founder-routing-title">Precision is the constraint.</h2>
+          </header>
+          <div
+            className="founder-motif-frame founder-motif-frame-pcb-trace"
+            style={founderMotifViewTransitionStyle(identity.slug)}
+          >
+            <FounderMotif
+              motif={identity.motif}
+              technologies={profile.technologies}
+              description={identity.motifDescription}
+            />
+          </div>
+          {profile.technologies.length ? (
+            <table className="founder-pinout" aria-label="Technology pinout">
+              <thead>
+                <tr>
+                  <th scope="col">Pad</th>
+                  <th scope="col">Technology</th>
+                </tr>
+              </thead>
+              <tbody>
+                {profile.technologies.map((technology, index) => (
+                  <tr key={`${technology.kind}-${technology.slug}`}>
+                    <td>{String(index + 1).padStart(2, '0')}</td>
+                    <td>{technology.label}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : null}
+        </PageContainer>
+      </PublicSection>
 
       <PublicSection className="profile-position" aria-labelledby="profile-position-title">
         <PageContainer className="profile-position-grid">
           <header>
             <p className="home-eyebrow">Engineering position / current practice</p>
-            <h2 id="profile-position-title">How the work is approached.</h2>
+            <h2 id="profile-position-title">Understand before you build.</h2>
           </header>
           <div className="profile-position-copy">
             <p>{profile.engineeringPhilosophy}</p>
@@ -128,17 +151,24 @@ export function EngineeringProfileDetail({ profile }: { profile: ImmutablePublic
                 </ul>
               </section>
             ) : null}
-            <TechnologyList technologies={profile.technologies} />
           </div>
         </PageContainer>
       </PublicSection>
+
+      {profile.hero ? (
+        <PublicSection className="profile-hero-media" aria-label="Profile lead media">
+          <PageContainer>
+            <PublicImage media={profile.hero} />
+          </PageContainer>
+        </PublicSection>
+      ) : null}
 
       {groups.length ? (
         <PublicSection className="profile-evidence" aria-labelledby="profile-evidence-title">
           <PageContainer className="profile-evidence-grid">
             <header>
               <p className="home-eyebrow">Evidence / demonstrated contribution</p>
-              <h2 id="profile-evidence-title">Follow the contribution into the work.</h2>
+              <h2 id="profile-evidence-title">Follow the routing into the work.</h2>
               <p>
                 Every connection below is explicit in the public record. Internal creator metadata
                 is never treated as contribution credit.

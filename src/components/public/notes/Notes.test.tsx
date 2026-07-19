@@ -42,7 +42,7 @@ describe('public Notes experience', () => {
     };
     const markup = renderToStaticMarkup(<NotesIndex entries={[entry]} />);
     expect(markup).toContain('Chronology / newest first');
-    expect(markup).toContain('datetime="2026-07-18T00:00:00.000Z"');
+    expect(markup).toContain('dateTime="2026-07-18T00:00:00.000Z"');
     expect(markup).toContain('HZ-NT-101 / HubZero');
     expect(markup).toContain('Next.js');
     expect(markup).toContain('href="/builds/release-ledger"');

@@ -18,13 +18,20 @@ The website may evolve, but the written content originates here.
 
 ## Current Profiles
 
-| Engineering Profile | Founder              | Status |
-| ------------------- | -------------------- | ------ |
-| EP-001              | Rifaque Ahmed        | Draft  |
-| EP-002              | Raif Karani          | Draft  |
-| EP-003              | Mohammed Iyad        | Draft  |
-| EP-004              | Syed Mohammed Sultan | Draft  |
-| EP-005              | Salsabeel Kobattey   | Draft  |
+| Engineering Profile | Founder              | Status    |
+| -------------------- | --------------------- | --------- |
+| EP-003               | Rifaque Ahmed         | Published |
+| EP-004               | Raif Karani           | Published |
+| EP-005               | Mohammed Iyad         | Published |
+| EP-006               | Syed Mohammed Sultan  | Published |
+| EP-007               | Salsabeel Kobattey    | Published |
+
+EP-001 and EP-002 are permanently reserved by pre-existing Studio
+verification records created before this content import — reference IDs are
+never reused (see "Permanent Identifier" below), so the founders' real
+identifiers begin at EP-003 rather than EP-001. Those two records are a
+separate, unrelated `LAUNCH_READINESS.md` cleanup item, not part of this
+directory.
 
 ---
 
@@ -64,11 +71,11 @@ Every Engineering Profile receives a permanent identifier.
 
 Examples:
 
-- EP-001 — Rifaque Ahmed
-- EP-002 — Raif Karani
-- EP-003 — Mohammed Iyad
-- EP-004 — Syed Mohammed Sultan
-- EP-005 — Salsabeel Kobattey
+- EP-003 — Rifaque Ahmed
+- EP-004 — Raif Karani
+- EP-005 — Mohammed Iyad
+- EP-006 — Syed Mohammed Sultan
+- EP-007 — Salsabeel Kobattey
 
 Profile identifiers are never reused.
 

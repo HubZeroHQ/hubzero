@@ -86,7 +86,7 @@ describe('Builds and Labs public collections', () => {
     expect(markup).toContain('aria-label="Filter Work by category"');
     expect(markup).toContain('href="/work?category=developer-tools"');
     expect(markup).toContain('aria-current="page"');
-    expect(markup).toContain('Product engineering');
+    expect(markup).toContain('Developer tools');
   });
 
   it('renders Work as a long-form engineering publication with typed continuation paths', () => {

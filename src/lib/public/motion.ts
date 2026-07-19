@@ -9,7 +9,8 @@ export const PUBLIC_MOTION = {
     standard: [0.2, 0.8, 0.2, 1] as const,
     css: 'cubic-bezier(.2,.8,.2,1)',
   },
-  settle: { y: 10 },
+  settle: { y: 8 },
+  reveal: { y: 6 },
   press: { scale: 0.97 },
 } as const;
 

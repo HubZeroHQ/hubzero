@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { PUBLIC_ENTITY_ROUTES } from '@/config/public-site';
+import { founderAccentStyle, getFounderIdentity } from '@/config/founder-identity';
 import type { ImmutablePublic, PublicEntityDetail, PublicRelationship } from '@/lib/public/domain';
 import {
   formatPublicDate,
@@ -7,6 +8,8 @@ import {
   RelationshipCard,
   TechnologyList,
 } from '../EditorialPrimitives';
+import { FounderCrossLink } from '../engineering/FounderCrossLink';
+import { slugFromProfileUrl } from '../engineering/profile-url';
 import { PageContainer, PublicSection } from '../PageContainer';
 import { ProseRenderer } from '../ProseRenderer';
 import { PublicImage } from '../PublicImage';
@@ -32,6 +35,10 @@ export function NoteDetail({ note }: { note: ImmutablePublic<Note> }) {
     note.author.kind === 'person' &&
     note.author.profileAvailable &&
     PUBLIC_ENTITY_ROUTES.engineeringProfile;
+  const authorIdentity =
+    note.author.kind === 'person' && authorDestinationAvailable
+      ? getFounderIdentity(slugFromProfileUrl(note.author.url) ?? '')
+      : undefined;
 
   return (
     <article id="main-content" role="main" tabIndex={-1} className="collection-main note-detail">
@@ -147,11 +154,16 @@ export function NoteDetail({ note }: { note: ImmutablePublic<Note> }) {
         </PublicSection>
       ) : null}
 
-      <footer className="note-author">
+      <footer
+        className="note-author"
+        style={authorIdentity ? founderAccentStyle(authorIdentity.accent) : undefined}
+      >
         <PageContainer className="note-author-grid">
           <div>
             <p className="home-eyebrow">Attribution / engineering profile</p>
-            <h2>{note.author.name}</h2>
+            <h2 className={authorIdentity ? 'founder-accent-text' : undefined}>
+              {note.author.name}
+            </h2>
             <p>
               {note.author.kind === 'person'
                 ? (note.author.role ?? 'HubZero engineering')
@@ -159,10 +171,10 @@ export function NoteDetail({ note }: { note: ImmutablePublic<Note> }) {
             </p>
           </div>
           <div className="note-author-actions">
-            {authorDestinationAvailable ? (
-              <Link href={note.author.url}>
+            {authorDestinationAvailable && note.author.kind === 'person' ? (
+              <FounderCrossLink href={note.author.url} technologies={note.author.technologies}>
                 View engineering profile <span aria-hidden="true">→</span>
-              </Link>
+              </FounderCrossLink>
             ) : null}
             <Link href="/notes">
               Return to Notes <span aria-hidden="true">→</span>

@@ -52,6 +52,13 @@
   --ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
   --duration-fast: 200ms;
   --duration-considered: 400ms;
+
+  /*
+   * The one documented chapter-specific exception to the 500ms motion
+   * budget (MOTION_GUIDELINES.md): a founder motif is a single signature
+   * moment per profile, drawn once, not a recurring interaction.
+   */
+  --duration-motif: 900ms;
 }
 
 @layer base {
@@ -84,7 +91,20 @@
 @keyframes public-settle {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(8px);
+  }
+}
+
+/**
+ * §Motion refinement — a smaller, shared settle for content that reveals
+ * itself in place rather than replacing a whole route (relationship
+ * evidence, gallery groups). Same duration/easing tokens as public-settle,
+ * a shorter travel distance since it is not standing in for a full page.
+ */
+@keyframes public-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
   }
 }
 
@@ -131,14 +151,6 @@
     pointer-events: auto;
   }
 
-  .public-nav-wrap-home {
-    width: min(100% - 96px, 1300px);
-  }
-
-  .public-nav-wrap-home .public-nav {
-    margin-inline: 0;
-  }
-
   .public-nav-brand,
   .public-nav-link,
   .public-nav-search,
@@ -163,7 +175,6 @@
   }
 
   .public-nav-link,
-  .public-nav-search,
   .public-nav-contact {
     padding-inline: clamp(12px, 1.35vw, 18px);
   }
@@ -198,17 +209,44 @@
   }
 
   .public-nav-search {
-    gap: 8px;
+    width: 44px;
+    gap: 0;
     border: 0;
     background: transparent;
     cursor: pointer;
+    transition:
+      width var(--duration-fast) var(--ease-standard),
+      color var(--duration-fast) var(--ease-standard),
+      background-color var(--duration-fast) var(--ease-standard),
+      transform 110ms linear;
+  }
+
+  .public-nav-search:hover,
+  .public-nav-search:focus-visible {
+    width: auto;
+    gap: 6px;
+    padding-inline-end: 14px;
   }
 
   .public-nav-search kbd {
+    display: inline-block;
+    max-width: 0;
+    overflow: hidden;
+    opacity: 0;
     color: var(--color-text-muted);
     font-family: var(--font-mono);
     font-size: 10px;
     letter-spacing: 0.05em;
+    white-space: nowrap;
+    transition:
+      max-width var(--duration-fast) var(--ease-standard),
+      opacity var(--duration-fast) var(--ease-standard);
+  }
+
+  .public-nav-search:hover kbd,
+  .public-nav-search:focus-visible kbd {
+    max-width: 32px;
+    opacity: 1;
   }
 
   .public-nav-contact {
@@ -316,6 +354,21 @@
   .public-media {
     overflow: hidden;
     border-radius: var(--radius-card);
+  }
+
+  /*
+   * Load reveal — the placeholder swatch (inline `background-color`) stays
+   * visible until the real image finishes loading, then the image fades in
+   * over it. No blur-up/zoom gimmick; dimensions are already reserved via
+   * the required width/height props, so this never shifts layout.
+   */
+  .public-media img {
+    opacity: 0;
+    transition: opacity var(--duration-fast) var(--ease-standard);
+  }
+
+  .public-media[data-loaded] img {
+    opacity: 1;
   }
 
   .public-media figcaption {
@@ -867,6 +920,7 @@
     margin-top: 24px;
     padding-top: 16px;
     border-top: 1px solid var(--color-border-muted);
+    animation: public-reveal var(--duration-considered) var(--ease-standard);
   }
 
   .home-relationship-card {
@@ -875,8 +929,20 @@
     gap: 12px;
     align-items: center;
     min-height: 44px;
+    padding-inline: 12px;
+    margin-inline: -12px;
+    border-radius: 6px;
     color: var(--color-text-secondary);
     font-size: 13px;
+    transition:
+      background-color var(--duration-fast) var(--ease-standard),
+      color var(--duration-fast) var(--ease-standard);
+  }
+
+  a.home-relationship-card:hover,
+  a.home-relationship-card:focus-visible {
+    background: var(--color-surface-elevated);
+    color: var(--color-text-primary);
   }
 
   .home-relationship-card > span:first-child {
@@ -889,6 +955,21 @@
 
   .home-relationship-card strong {
     font-weight: 500;
+    transition: color var(--duration-fast) var(--ease-standard);
+  }
+
+  a.home-relationship-card:hover strong,
+  a.home-relationship-card:focus-visible strong {
+    color: var(--color-text-primary);
+  }
+
+  a.home-relationship-card:hover span[aria-hidden='true']:last-child,
+  a.home-relationship-card:focus-visible span[aria-hidden='true']:last-child {
+    transform: translateX(2px);
+  }
+
+  .home-relationship-card span[aria-hidden='true']:last-child {
+    transition: transform var(--duration-fast) var(--ease-standard);
   }
 
   .home-subsection-title {
@@ -1802,24 +1883,18 @@
     width: calc(100% - 24px);
   }
 
-  .public-nav-wrap-home {
-    width: min(100% - 40px, 1300px);
-  }
-
   .public-nav {
     margin-left: 0;
   }
 
   .public-nav-link,
-  .public-nav-search,
   .public-nav-contact {
     padding-inline: 13px;
     font-size: 13px;
   }
 
-  .public-nav-search span,
-  .public-nav-search kbd {
-    display: none;
+  .public-nav-search {
+    font-size: 13px;
   }
 
   .public-footer-inner {
@@ -1872,31 +1947,61 @@
 }
 
 @layer components {
+  /*
+   * Base rule intentionally does NOT set `display`/`position`/sizing — a
+   * closed <dialog> must fall through to the UA default
+   * (`dialog:not([open]) { display: none }`). An author rule that sets
+   * those properties unconditionally overrides that default regardless of
+   * specificity (author always beats UA for normal-priority declarations),
+   * which previously left a full-viewport `position: fixed` box in the
+   * layout at all times — including while closed — intercepting clicks
+   * across the entire site. Everything layout-related below is scoped to
+   * `[open]`, matching only while `showModal()` has actually shown it (and
+   * placing it in the top layer, which is why it renders correctly
+   * relative to the true viewport instead of `.public-nav-wrap`'s
+   * transformed containing block).
+   */
   .public-search-dialog {
-    width: min(calc(100% - 32px), 680px);
-    max-height: min(760px, calc(100svh - 48px));
-    margin: auto;
-    padding: 0;
-    overflow: hidden;
     border: 0;
-    border-radius: var(--radius-overlay);
     background: transparent;
     color: var(--color-text-primary);
-    box-shadow: 0 32px 80px -24px rgb(0 0 0 / 0.85);
+  }
+
+  .public-search-dialog[open] {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    padding: 16px;
+    display: grid;
+    place-items: center;
+    overflow: visible;
   }
 
   .public-search-dialog::backdrop {
+    background: transparent;
+  }
+
+  .public-search-scrim {
+    position: fixed;
+    inset: 0;
     background: rgb(0 0 0 / 0.7);
     backdrop-filter: blur(8px);
   }
 
   .public-search-dialog-surface {
+    position: relative;
     display: grid;
+    width: min(calc(100vw - 32px), 680px);
     max-height: min(760px, calc(100svh - 48px));
     overflow: hidden;
     border: 1px solid var(--color-border-default);
     border-radius: var(--radius-overlay);
     background: var(--color-surface-overlay);
+    box-shadow: 0 32px 80px -24px rgb(0 0 0 / 0.85);
   }
 
   .public-search-dialog-header {
@@ -2334,7 +2439,7 @@
 }
 
 @media (max-width: 767px) {
-  .public-search-dialog {
+  .public-search-dialog[open] {
     width: calc(100% - 24px);
     max-height: calc(100svh - 24px);
   }
@@ -2882,6 +2987,10 @@
     animation: none;
   }
 
+  .home-relationships {
+    animation: none;
+  }
+
   .home-card:hover,
   .home-card:has(a:focus-visible) {
     transform: none;
@@ -3147,66 +3256,151 @@
     gap: 24px;
   }
 
+  /*
+   * The card is one coherent object built around a compact identity row
+   * (portrait + name/role, sized to match each other) followed by full-width
+   * editorial content — not a tall portrait column running the full card
+   * height beside unrelated copy. Nothing here sizes independently of
+   * anything else.
+   */
   .about-person {
     display: grid;
+    gap: 24px;
+    padding: clamp(24px, 3.5vw, 36px);
     overflow: hidden;
     border: 1px solid var(--color-border-default);
     border-radius: var(--radius-card);
     background: var(--color-surface-default);
+    transition:
+      transform var(--duration-considered) var(--ease-standard),
+      border-color var(--duration-fast) var(--ease-standard),
+      background-color var(--duration-fast) var(--ease-standard);
   }
 
-  .about-person .public-media,
-  .about-person .public-media img,
-  .about-person-no-media {
+  .about-person:hover,
+  .about-person:focus-within {
+    transform: translateY(-2px);
+    border-color: var(--founder-accent, var(--color-border-strong));
+    background: var(--founder-accent-subtle, var(--color-surface-elevated));
+  }
+
+  .about-person-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+  }
+
+  /* An understated compositional divider between the identity row and the bio, not an appended illustration. */
+  .founder-card-motif {
+    width: 100%;
+    max-width: 280px;
+    padding-top: 18px;
+    border-top: 1px solid var(--color-border-muted);
+  }
+
+  /*
+   * The card should already hint at the engineering identity, not withhold
+   * it until hover — so the structure (lines/nodes) stays quietly visible
+   * at rest instead of reserving a blank box. Only the reading detail
+   * (technology labels) is reserved for hover/focus, so the resting state
+   * reads as a real, restrained diagram rather than illustration. The
+   * Profile page's own copy of the same motif draws itself on mount;
+   * `view-transition-name` is what makes the two read as one continuing
+   * object across the navigation, independent of exactly how each side
+   * animates internally.
+   */
+  .founder-card-motif .founder-motif-trace,
+  .founder-card-motif .founder-motif-node,
+  .founder-card-motif .founder-motif-hub {
+    stroke-dashoffset: 0;
+    animation: none;
+    opacity: 0.4;
+    transition: opacity var(--duration-fast) var(--ease-standard);
+  }
+
+  .founder-card-motif .founder-motif-label,
+  .founder-card-motif .founder-motif-index {
+    animation: none;
+    opacity: 0;
+    transition: opacity var(--duration-fast) var(--ease-standard);
+  }
+
+  .about-person:hover .founder-card-motif .founder-motif-trace,
+  .about-person:hover .founder-card-motif .founder-motif-node,
+  .about-person:hover .founder-card-motif .founder-motif-hub,
+  .about-person:focus-within .founder-card-motif .founder-motif-trace,
+  .about-person:focus-within .founder-card-motif .founder-motif-node,
+  .about-person:focus-within .founder-card-motif .founder-motif-hub {
+    opacity: 1;
+  }
+
+  .about-person:hover .founder-card-motif .founder-motif-label,
+  .about-person:hover .founder-card-motif .founder-motif-index,
+  .about-person:focus-within .founder-card-motif .founder-motif-label,
+  .about-person:focus-within .founder-card-motif .founder-motif-index {
+    opacity: 1;
+  }
+
+  /*
+   * A compact, self-normalizing frame — real portraits vary in source
+   * resolution, but every one renders at the same width and the same
+   * 3:4 aspect-ratio, cropped identically via object-fit: cover. The
+   * frame's height is fixed by its own aspect-ratio, not by whatever sits
+   * beside it, and it never runs the full card height: the identity block
+   * beside it is sized to match a compact portrait, and everything below
+   * (motif, bio) spans the full card width instead of continuing beside a
+   * short image.
+   */
+  .about-person-portrait {
+    flex: 0 0 auto;
+    width: clamp(88px, 12vw, 120px);
+    aspect-ratio: 3 / 4;
+    overflow: hidden;
+    border-radius: 10px;
+    background: var(--color-surface-elevated);
+  }
+
+  .about-person-portrait .public-media,
+  .about-person-portrait .public-media img {
+    width: 100%;
     height: 100%;
-    min-height: 300px;
   }
 
-  .about-person .public-media img {
+  .about-person-portrait .public-media img {
     object-fit: cover;
   }
 
-  .about-person-no-media {
-    display: grid;
-    place-items: center;
-    background: var(--color-surface-elevated);
-    color: var(--color-text-muted);
-    font-family: var(--font-serif);
-    font-size: 96px;
-    font-style: italic;
+  .about-person-identity {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding-top: 4px;
   }
 
-  .about-person-copy {
-    display: grid;
-    align-content: center;
-    justify-items: start;
-    padding: clamp(28px, 5vw, 56px);
-  }
-
-  .about-person-copy h3 {
-    margin-top: 16px;
-    font-size: clamp(32px, 5vw, 52px);
+  .about-person-identity h3 {
+    margin-top: 6px;
+    font-size: clamp(24px, 3.2vw, 34px);
     font-weight: 600;
-    line-height: 1.05;
+    line-height: 1.1;
   }
 
   .about-person-role {
-    margin-top: 8px;
+    margin-top: 6px;
     color: var(--color-text-primary) !important;
     font-size: 15px !important;
     font-weight: 500;
   }
 
-  .about-person-copy > p:not(.home-eyebrow):not(.about-person-role) {
-    max-width: 56ch;
-    margin-top: 24px;
+  .about-person-copy {
+    display: grid;
+    gap: 14px;
+    justify-items: start;
+  }
+
+  .about-person-copy > p {
+    max-width: 68ch;
     color: var(--color-text-secondary);
     font-size: 15px;
     line-height: 1.7;
-  }
-
-  .about-person-copy a {
-    margin-top: 28px;
   }
 
   .about-close {
@@ -3479,10 +3673,6 @@
     padding-left: 32px;
   }
 
-  .about-person {
-    grid-template-columns: minmax(240px, 0.75fr) minmax(0, 1.25fr);
-  }
-
   .engineering-ledger nav li {
     grid-template-columns: minmax(130px, 0.65fr) minmax(0, 1.35fr);
     gap: 24px;
@@ -3546,5 +3736,280 @@
 
   .profile-hero-grid > .public-media {
     max-width: 360px;
+  }
+}
+
+/*
+ * Founder Engineering Identity System (Phase 23) — the one deliberate,
+ * scoped exception to the single-amber-accent rule. `--founder-accent` is
+ * only ever set inline, on a founder composition's own root or an About
+ * founder card, by `founderAccentStyle()` (config/founder-identity.ts).
+ * Nothing here is reachable unless that variable is already in scope.
+ */
+@layer components {
+  .founder-motif {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+
+  .founder-motif-trace {
+    fill: none;
+    stroke: var(--founder-accent, var(--color-focus-ring));
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-dasharray: 1200;
+    stroke-dashoffset: 1200;
+    animation: founder-motif-draw var(--duration-motif) var(--ease-standard) forwards;
+  }
+
+  .founder-motif-node,
+  .founder-motif-hub {
+    fill: var(--founder-accent, var(--color-focus-ring));
+    opacity: 0;
+    animation: founder-motif-appear var(--duration-considered) var(--ease-standard) forwards;
+    animation-delay: calc(var(--duration-motif) * 0.7);
+  }
+
+  .founder-motif-hub {
+    fill: var(--color-text-primary);
+  }
+
+  .founder-motif-label,
+  .founder-motif-index {
+    fill: var(--color-text-muted);
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.03em;
+    opacity: 0;
+    animation: founder-motif-appear var(--duration-considered) var(--ease-standard) forwards;
+    animation-delay: calc(var(--duration-motif) * 0.85);
+  }
+
+  .founder-motif-index {
+    fill: var(--founder-accent, var(--color-focus-ring));
+    font-size: 10px;
+  }
+}
+
+@keyframes founder-motif-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes founder-motif-appear {
+  to {
+    opacity: 1;
+  }
+}
+
+/*
+ * Founder composition layouts — one block per founder, each a genuinely
+ * different arrangement of the same shared primitives (profile-hero,
+ * profile-position, profile-current, profile-evidence, profile-document
+ * all stay as-is; only the founder-specific sections below diverge).
+ * Portrait stays capped and secondary everywhere (~10% emphasis) per the
+ * Founder Engineering Identity brief.
+ */
+@layer components {
+  .founder-eyebrow {
+    color: var(--founder-accent, var(--color-text-muted));
+  }
+
+  .founder-portrait-small {
+    width: clamp(96px, 12vw, 140px);
+  }
+
+  .founder-portrait-small .public-media {
+    aspect-ratio: 1;
+  }
+
+  .founder-motif-frame {
+    padding-block: 24px;
+  }
+
+  /* Rifaque — network hero: identity and the motif share one frame. */
+  .founder-hero-network-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 0.9fr);
+    align-items: center;
+    gap: clamp(32px, 5vw, 64px);
+    margin-top: 32px;
+  }
+
+  /* Raif — architecture-first: the graph precedes the philosophy. */
+  .founder-architecture {
+    border-top: 1px solid var(--color-border-muted);
+  }
+
+  .founder-motif-frame-dependency-graph {
+    max-width: 720px;
+    margin-inline: auto;
+  }
+
+  .founder-decision-list {
+    display: grid;
+    gap: 16px;
+    margin-top: 16px;
+    counter-reset: none;
+  }
+
+  .founder-decision-list > li {
+    display: grid;
+    grid-template-columns: 32px 1fr;
+    gap: 12px;
+    padding: 16px;
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-card);
+  }
+
+  .founder-decision-list > li > span:first-child {
+    color: var(--founder-accent);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.05em;
+  }
+
+  /* Iyad — one flowing column, no sidebar register. */
+  .founder-hero-spine {
+    display: grid;
+    gap: 20px;
+  }
+
+  .founder-spine-column {
+    max-width: 68ch;
+  }
+
+  .founder-spine-column p {
+    line-height: 1.75;
+  }
+
+  .founder-portrait-inline {
+    width: clamp(72px, 8vw, 96px);
+  }
+
+  /* Sultan — the motif is the functional outline, not an illustration. */
+  .founder-editorial-grid {
+    display: grid;
+    grid-template-columns: minmax(200px, 0.3fr) minmax(0, 1fr);
+    gap: clamp(32px, 5vw, 64px);
+    align-items: start;
+  }
+
+  .founder-editorial-outline {
+    position: sticky;
+    top: 96px;
+    display: grid;
+    gap: 20px;
+  }
+
+  .founder-editorial-outline ol {
+    display: grid;
+    gap: 10px;
+    border-top: 1px solid var(--color-border-muted);
+    padding-top: 16px;
+  }
+
+  .founder-editorial-outline li {
+    display: grid;
+    grid-template-columns: 24px 1fr;
+    gap: 8px;
+    align-items: baseline;
+    font-size: 13px;
+  }
+
+  .founder-editorial-outline li > span {
+    color: var(--founder-accent);
+    font-family: var(--font-mono);
+    font-size: 10px;
+  }
+
+  .founder-editorial-outline a {
+    color: var(--color-text-secondary);
+  }
+
+  .founder-editorial-outline a:hover,
+  .founder-editorial-outline a:focus-visible {
+    color: var(--color-text-primary);
+  }
+
+  .founder-editorial-content {
+    display: grid;
+    gap: clamp(48px, 6vw, 80px);
+  }
+
+  /* Salsabeel — precision routing: technologies read as a pinout table. */
+  .founder-motif-frame-pcb-trace {
+    max-width: 640px;
+  }
+
+  .founder-pinout {
+    width: 100%;
+    margin-top: 24px;
+    border-collapse: collapse;
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+
+  .founder-pinout th,
+  .founder-pinout td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--color-border-muted);
+    text-align: left;
+  }
+
+  .founder-pinout th {
+    color: var(--color-text-muted);
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .founder-pinout td:first-child {
+    color: var(--founder-accent);
+  }
+}
+
+@media (max-width: 900px) {
+  .founder-hero-network-grid,
+  .founder-editorial-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .founder-editorial-outline {
+    position: static;
+  }
+}
+
+/*
+ * Cross-site founder identity (Phase 23) — wherever a founder's name
+ * appears outside their own profile (Notes byline today), it carries the
+ * same accent + a miniature version of their real motif, never a
+ * decoration invented for the context.
+ */
+@layer components {
+  .founder-accent-text {
+    color: var(--founder-accent, var(--color-text-primary));
+  }
+
+  .founder-cross-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .founder-motif-compact text {
+    display: none;
+  }
+
+  .founder-motif-mini {
+    width: 40px;
+    height: 16px;
+  }
+
+  .founder-motif-mini .founder-motif-trace {
+    stroke-width: 2;
   }
 }

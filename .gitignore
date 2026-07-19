@@ -69,3 +69,7 @@ coverage/
 tsconfig.tsbuildinfo
 
 .codex/
+
+# Local-only seed source (uploaded to Cloudinary by scripts/seed-engineering-profiles.ts;
+# Cloudinary is the only place media binaries live — see lib/media/cloudinary.ts).
+/team-portraits/

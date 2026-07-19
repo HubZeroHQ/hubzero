@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
+import { founderAccentStyle, getFounderIdentity } from '@/config/founder-identity';
 import type {
   ImmutablePublic,
   PublicEntitySummary,
@@ -7,6 +8,7 @@ import type {
   PublicTaxonomyTerm,
 } from '@/lib/public/domain';
 import { cn } from '@/lib/utils/cn';
+import { slugFromProfileUrl } from './engineering/profile-url';
 
 export function SectionHeader({
   eyebrow,
@@ -149,19 +151,28 @@ export function RelationshipCard({
   relationship: ImmutablePublic<PublicRelationship>;
   enabled: boolean;
 }) {
+  const identity =
+    relationship.target.type === 'engineeringProfile'
+      ? getFounderIdentity(slugFromProfileUrl(relationship.target.url) ?? '')
+      : undefined;
   const content = (
     <>
       <span>{relationship.label}</span>
-      <strong>{relationship.target.title}</strong>
+      <strong className={identity ? 'founder-accent-text' : undefined}>
+        {relationship.target.title}
+      </strong>
       {enabled ? <span aria-hidden="true">→</span> : null}
     </>
   );
+  const style = identity ? founderAccentStyle(identity.accent) : undefined;
   return enabled ? (
-    <Link href={relationship.target.url} className="home-relationship-card">
+    <Link href={relationship.target.url} className="home-relationship-card" style={style}>
       {content}
     </Link>
   ) : (
-    <div className="home-relationship-card">{content}</div>
+    <div className="home-relationship-card" style={style}>
+      {content}
+    </div>
   );
 }
 

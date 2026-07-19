@@ -147,6 +147,8 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
       profileEntity && (await isEligibleEngineeringProfile(profileEntity, team)),
     );
     const portrait = await media(team.portraitId, 'portrait');
+    const technologies =
+      profileAvailable && profile ? await terms(profile.technologyIds, 'technology') : [];
     return {
       kind: 'person',
       name: team.name,
@@ -154,6 +156,7 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
       ...(portrait ? { portrait } : {}),
       url: profileAvailable && profile ? `/engineering/${profile.slug}` : '/about',
       profileAvailable,
+      ...(technologies.length ? { technologies } : {}),
     };
   }
 
@@ -413,6 +416,8 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
           }),
         );
         const portrait = await media(record.portraitId, 'portrait');
+        const profileTechnologies =
+          profileVisible && profile ? await terms(profile.technologyIds, 'technology') : [];
         const summary: PublicTeamMemberSummary = {
           type: 'teamMember',
           title: record.name,
@@ -431,6 +436,7 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
                   referenceId: profile.referenceId,
                   summary: profile.overview,
                   state: profile.currentExploration,
+                  ...(profileTechnologies.length ? { technologies: profileTechnologies } : {}),
                 },
               }
             : {}),

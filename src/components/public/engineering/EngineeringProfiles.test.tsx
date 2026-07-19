@@ -96,4 +96,29 @@ describe('public Engineering Profiles experience', () => {
     expect(markup).toContain('<h3 id="boundaries">Boundaries before implementation</h3>');
     expect(markup).toContain('How HubZero operates');
   });
+
+  it('delegates a founder slug to its bespoke composition instead of the generic template', () => {
+    const detail: Extract<PublicEntityDetail, { type: 'engineeringProfile' }> = {
+      ...summary,
+      title: 'Rifaque Ahmed',
+      slug: 'rifaque',
+      technologies: [
+        { kind: 'technology', label: 'TypeScript', slug: 'typescript' },
+        { kind: 'technology', label: 'Next.js', slug: 'nextjs' },
+      ],
+      engineeringPhilosophy: 'Systems should stay legible as they grow.',
+      currentInterests: [],
+      areasOfExpertise: ['Systems design'],
+      relationships,
+      gallery: [],
+      documents: [],
+    };
+    const markup = renderToStaticMarkup(<EngineeringProfileDetail profile={detail} />);
+    expect(markup.match(/<article/g)).toHaveLength(1);
+    expect(markup).toContain('<h1>Rifaque Ahmed</h1>');
+    expect(markup).toContain('founder-profile-network');
+    expect(markup).toContain('founder-motif-network');
+    expect(markup).toContain('TypeScript');
+    expect(markup).toContain('How HubZero operates');
+  });
 });

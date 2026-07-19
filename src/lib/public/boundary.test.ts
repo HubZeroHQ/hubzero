@@ -68,4 +68,22 @@ describe('public consumer boundary', () => {
     expect(image).toContain('height={media.height}');
     expect(image).toContain('sizes={media.responsive.sizes}');
   });
+
+  it('never lets the closed search dialog intercept clicks across the whole page', () => {
+    // A native <dialog> defaults to `display: none` while closed. An author
+    // rule that sets `display`/`position: fixed`/full-viewport sizing on the
+    // base `.public-search-dialog` selector (unqualified by `[open]`)
+    // overrides that UA default regardless of specificity, leaving a
+    // full-viewport, invisible, click-intercepting box in the page at all
+    // times — this exact regression once made the entire public site
+    // unclickable. Layout-affecting rules must stay scoped to `[open]`.
+    const styles = readFileSync(join(process.cwd(), 'src', 'app', 'globals.css'), 'utf8');
+    const baseRuleStart = styles.indexOf('.public-search-dialog {');
+    expect(baseRuleStart).toBeGreaterThan(-1);
+    const baseRuleEnd = styles.indexOf('}', baseRuleStart);
+    const baseRule = styles.slice(baseRuleStart, baseRuleEnd);
+    expect(baseRule).not.toMatch(/display\s*:/);
+    expect(baseRule).not.toMatch(/position\s*:\s*fixed/);
+    expect(styles).toContain('.public-search-dialog[open] {');
+  });
 });
