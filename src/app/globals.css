@@ -1947,7 +1947,27 @@
 }
 
 @layer components {
+  /*
+   * Base rule intentionally does NOT set `display`/`position`/sizing — a
+   * closed <dialog> must fall through to the UA default
+   * (`dialog:not([open]) { display: none }`). An author rule that sets
+   * those properties unconditionally overrides that default regardless of
+   * specificity (author always beats UA for normal-priority declarations),
+   * which previously left a full-viewport `position: fixed` box in the
+   * layout at all times — including while closed — intercepting clicks
+   * across the entire site. Everything layout-related below is scoped to
+   * `[open]`, matching only while `showModal()` has actually shown it (and
+   * placing it in the top layer, which is why it renders correctly
+   * relative to the true viewport instead of `.public-nav-wrap`'s
+   * transformed containing block).
+   */
   .public-search-dialog {
+    border: 0;
+    background: transparent;
+    color: var(--color-text-primary);
+  }
+
+  .public-search-dialog[open] {
     position: fixed;
     inset: 0;
     width: 100vw;
@@ -1959,9 +1979,6 @@
     display: grid;
     place-items: center;
     overflow: visible;
-    border: 0;
-    background: transparent;
-    color: var(--color-text-primary);
   }
 
   .public-search-dialog::backdrop {
@@ -2422,7 +2439,7 @@
 }
 
 @media (max-width: 767px) {
-  .public-search-dialog {
+  .public-search-dialog[open] {
     width: calc(100% - 24px);
     max-height: calc(100svh - 24px);
   }
