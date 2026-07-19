@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "bootstrap:dev-admin": "tsx --env-file=.env.local scripts/bootstrap-dev-admin.ts",
+    "seed:engineering-profiles": "tsx --env-file=.env.local scripts/seed-engineering-profiles.ts",
     "prepare": "husky"
   },
   "dependencies": {
