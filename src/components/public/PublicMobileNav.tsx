@@ -44,6 +44,7 @@ export function PublicMobileNav({ items }: PublicMobileNavProps) {
         <Dialog.Content
           className="overlay-panel public-mobile-nav-panel"
           aria-label="Primary navigation"
+          aria-describedby={undefined}
         >
           <Dialog.Title className="sr-only">Primary navigation</Dialog.Title>
           <Dialog.Close asChild>
