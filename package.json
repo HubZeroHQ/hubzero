@@ -13,6 +13,7 @@
     "test": "vitest run",
     "bootstrap:dev-admin": "tsx --env-file=.env.local scripts/bootstrap-dev-admin.ts",
     "seed:engineering-profiles": "tsx --env-file=.env.local scripts/seed-engineering-profiles.ts",
+    "reimport:team-portraits": "tsx --env-file=.env.local scripts/reimport-team-portraits.ts",
     "prepare": "husky"
   },
   "dependencies": {
