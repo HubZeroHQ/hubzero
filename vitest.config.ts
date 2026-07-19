@@ -2,12 +2,15 @@ import path from 'node:path';
 import { defineConfig } from 'vitest/config';
 
 /**
- * Pure-logic coverage only (no React rendering, no jsdom) — the Document
- * Engine's editing behavior (`lib/documents/*`) is deliberately implemented
- * as plain functions over `Block[]` precisely so it's testable without a
- * DOM or a component harness. UI coverage stays manual/browser-verified per
- * the repo's existing conventions; this config exists to unit-test the
- * logic, not to introduce a full component-testing setup.
+ * `environment: 'node'`, not jsdom — the Document Engine's editing behavior
+ * (`lib/documents/*`) is deliberately implemented as plain functions over
+ * `Block[]` precisely so it's testable without a DOM or a component
+ * harness. Public component tests (`**\/*.test.tsx`) render through
+ * `react-dom/server`'s `renderToStaticMarkup`, which needs no DOM either,
+ * so they run under this same `node` environment rather than requiring a
+ * separate jsdom-based config. `include` covers both extensions — a
+ * narrower `*.test.ts`-only pattern previously left every `.test.tsx` file
+ * unrun by `npm test` silently.
  */
 export default defineConfig({
   oxc: {
@@ -20,6 +23,6 @@ export default defineConfig({
   },
   test: {
     environment: 'node',
-    include: ['src/**/*.test.ts'],
+    include: ['src/**/*.test.{ts,tsx}'],
   },
 });

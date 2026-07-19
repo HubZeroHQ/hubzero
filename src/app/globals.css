@@ -52,6 +52,13 @@
   --ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
   --duration-fast: 200ms;
   --duration-considered: 400ms;
+
+  /*
+   * The one documented chapter-specific exception to the 500ms motion
+   * budget (MOTION_GUIDELINES.md): a founder motif is a single signature
+   * moment per profile, drawn once, not a recurring interaction.
+   */
+  --duration-motif: 900ms;
 }
 
 @layer base {
@@ -3631,5 +3638,249 @@
 
   .profile-hero-grid > .public-media {
     max-width: 360px;
+  }
+}
+
+/*
+ * Founder Engineering Identity System (Phase 23) — the one deliberate,
+ * scoped exception to the single-amber-accent rule. `--founder-accent` is
+ * only ever set inline, on a founder composition's own root or an About
+ * founder card, by `founderAccentStyle()` (config/founder-identity.ts).
+ * Nothing here is reachable unless that variable is already in scope.
+ */
+@layer components {
+  .founder-motif {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+
+  .founder-motif-trace {
+    fill: none;
+    stroke: var(--founder-accent, var(--color-focus-ring));
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-dasharray: 1200;
+    stroke-dashoffset: 1200;
+    animation: founder-motif-draw var(--duration-motif) var(--ease-standard) forwards;
+  }
+
+  .founder-motif-node,
+  .founder-motif-hub {
+    fill: var(--founder-accent, var(--color-focus-ring));
+    opacity: 0;
+    animation: founder-motif-appear var(--duration-considered) var(--ease-standard) forwards;
+    animation-delay: calc(var(--duration-motif) * 0.7);
+  }
+
+  .founder-motif-hub {
+    fill: var(--color-text-primary);
+  }
+
+  .founder-motif-label,
+  .founder-motif-index {
+    fill: var(--color-text-muted);
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.03em;
+    opacity: 0;
+    animation: founder-motif-appear var(--duration-considered) var(--ease-standard) forwards;
+    animation-delay: calc(var(--duration-motif) * 0.85);
+  }
+
+  .founder-motif-index {
+    fill: var(--founder-accent, var(--color-focus-ring));
+    font-size: 10px;
+  }
+}
+
+@keyframes founder-motif-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes founder-motif-appear {
+  to {
+    opacity: 1;
+  }
+}
+
+/*
+ * Founder composition layouts — one block per founder, each a genuinely
+ * different arrangement of the same shared primitives (profile-hero,
+ * profile-position, profile-current, profile-evidence, profile-document
+ * all stay as-is; only the founder-specific sections below diverge).
+ * Portrait stays capped and secondary everywhere (~10% emphasis) per the
+ * Founder Engineering Identity brief.
+ */
+@layer components {
+  .founder-eyebrow {
+    color: var(--founder-accent, var(--color-text-muted));
+  }
+
+  .founder-portrait-small {
+    width: clamp(96px, 12vw, 140px);
+  }
+
+  .founder-portrait-small .public-media {
+    aspect-ratio: 1;
+  }
+
+  .founder-motif-frame {
+    padding-block: 24px;
+  }
+
+  /* Rifaque — network hero: identity and the motif share one frame. */
+  .founder-hero-network-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 0.9fr);
+    align-items: center;
+    gap: clamp(32px, 5vw, 64px);
+    margin-top: 32px;
+  }
+
+  /* Raif — architecture-first: the graph precedes the philosophy. */
+  .founder-architecture {
+    border-top: 1px solid var(--color-border-muted);
+  }
+
+  .founder-motif-frame-dependency-graph {
+    max-width: 720px;
+    margin-inline: auto;
+  }
+
+  .founder-decision-list {
+    display: grid;
+    gap: 16px;
+    margin-top: 16px;
+    counter-reset: none;
+  }
+
+  .founder-decision-list > li {
+    display: grid;
+    grid-template-columns: 32px 1fr;
+    gap: 12px;
+    padding: 16px;
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-card);
+  }
+
+  .founder-decision-list > li > span:first-child {
+    color: var(--founder-accent);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.05em;
+  }
+
+  /* Iyad — one flowing column, no sidebar register. */
+  .founder-hero-spine {
+    display: grid;
+    gap: 20px;
+  }
+
+  .founder-spine-column {
+    max-width: 68ch;
+  }
+
+  .founder-spine-column p {
+    line-height: 1.75;
+  }
+
+  .founder-portrait-inline {
+    width: clamp(72px, 8vw, 96px);
+  }
+
+  /* Sultan — the motif is the functional outline, not an illustration. */
+  .founder-editorial-grid {
+    display: grid;
+    grid-template-columns: minmax(200px, 0.3fr) minmax(0, 1fr);
+    gap: clamp(32px, 5vw, 64px);
+    align-items: start;
+  }
+
+  .founder-editorial-outline {
+    position: sticky;
+    top: 96px;
+    display: grid;
+    gap: 20px;
+  }
+
+  .founder-editorial-outline ol {
+    display: grid;
+    gap: 10px;
+    border-top: 1px solid var(--color-border-muted);
+    padding-top: 16px;
+  }
+
+  .founder-editorial-outline li {
+    display: grid;
+    grid-template-columns: 24px 1fr;
+    gap: 8px;
+    align-items: baseline;
+    font-size: 13px;
+  }
+
+  .founder-editorial-outline li > span {
+    color: var(--founder-accent);
+    font-family: var(--font-mono);
+    font-size: 10px;
+  }
+
+  .founder-editorial-outline a {
+    color: var(--color-text-secondary);
+  }
+
+  .founder-editorial-outline a:hover,
+  .founder-editorial-outline a:focus-visible {
+    color: var(--color-text-primary);
+  }
+
+  .founder-editorial-content {
+    display: grid;
+    gap: clamp(48px, 6vw, 80px);
+  }
+
+  /* Salsabeel — precision routing: technologies read as a pinout table. */
+  .founder-motif-frame-pcb-trace {
+    max-width: 640px;
+  }
+
+  .founder-pinout {
+    width: 100%;
+    margin-top: 24px;
+    border-collapse: collapse;
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+
+  .founder-pinout th,
+  .founder-pinout td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--color-border-muted);
+    text-align: left;
+  }
+
+  .founder-pinout th {
+    color: var(--color-text-muted);
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .founder-pinout td:first-child {
+    color: var(--founder-accent);
+  }
+}
+
+@media (max-width: 900px) {
+  .founder-hero-network-grid,
+  .founder-editorial-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .founder-editorial-outline {
+    position: static;
   }
 }
