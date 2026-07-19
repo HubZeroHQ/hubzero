@@ -1,9 +1,11 @@
 import Link from 'next/link';
 import { Search } from 'lucide-react';
 import { PUBLIC_SEARCH_GROUPS } from '@/config/public-site';
+import { founderAccentStyle, getFounderIdentity } from '@/config/founder-identity';
 import type { PublicSearchResult } from '@/lib/public/discovery/search';
 import type { ImmutablePublic } from '@/lib/public/domain';
 import { formatMetadata, formatPublicDate, PublicEmptyState } from '../EditorialPrimitives';
+import { slugFromProfileUrl } from '../engineering/profile-url';
 import { PageContainer, PublicSection } from '../PageContainer';
 
 export function SearchPage({
@@ -128,6 +130,10 @@ function SearchResultRow({ result }: { result: ImmutablePublic<PublicSearchResul
         : formatMetadata(result.state)
       : undefined,
   ].filter(Boolean);
+  const identity =
+    result.type === 'engineeringProfile'
+      ? getFounderIdentity(slugFromProfileUrl(result.url) ?? '')
+      : undefined;
 
   return (
     <article className="search-result-row">
@@ -135,8 +141,8 @@ function SearchResultRow({ result }: { result: ImmutablePublic<PublicSearchResul
         <span>{metadata.join(' / ') || formatMetadata(result.type)}</span>
       </div>
       <div className="search-result-copy">
-        <Link href={result.url}>
-          <h4>{result.title}</h4>
+        <Link href={result.url} style={identity ? founderAccentStyle(identity.accent) : undefined}>
+          <h4 className={identity ? 'founder-accent-text' : undefined}>{result.title}</h4>
           <span aria-hidden="true">→</span>
         </Link>
         <p>{result.summary}</p>

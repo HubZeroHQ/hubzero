@@ -6,8 +6,10 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useId, useRef, useState } from 'react';
 import { PUBLIC_SEARCH_GROUPS } from '@/config/public-site';
+import { founderAccentStyle, getFounderIdentity } from '@/config/founder-identity';
 import type { PublicSearchResult } from '@/lib/public/discovery/search';
 import { PUBLIC_TRANSITIONS } from '@/lib/public/motion';
+import { slugFromProfileUrl } from '../engineering/profile-url';
 
 export function PublicSearchDialog() {
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -275,6 +277,10 @@ export function PublicSearchDialog() {
                         <ul>
                           {group.results.map((result) => {
                             const index = orderedResults.indexOf(result);
+                            const identity =
+                              result.type === 'engineeringProfile'
+                                ? getFounderIdentity(slugFromProfileUrl(result.url) ?? '')
+                                : undefined;
                             return (
                               <li key={`${result.type}-${result.url}-${result.title}`}>
                                 <Link
@@ -285,9 +291,14 @@ export function PublicSearchDialog() {
                                   data-active={activeIndex === index ? 'true' : undefined}
                                   onMouseEnter={() => setActiveIndex(index)}
                                   onClick={() => setOpen(false)}
+                                  style={identity ? founderAccentStyle(identity.accent) : undefined}
                                 >
                                   <span>
-                                    <strong>{result.title}</strong>
+                                    <strong
+                                      className={identity ? 'founder-accent-text' : undefined}
+                                    >
+                                      {result.title}
+                                    </strong>
                                     <small>{result.summary}</small>
                                   </span>
                                   <span aria-hidden="true">→</span>

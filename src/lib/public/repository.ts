@@ -147,6 +147,8 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
       profileEntity && (await isEligibleEngineeringProfile(profileEntity, team)),
     );
     const portrait = await media(team.portraitId, 'portrait');
+    const technologies =
+      profileAvailable && profile ? await terms(profile.technologyIds, 'technology') : [];
     return {
       kind: 'person',
       name: team.name,
@@ -154,6 +156,7 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
       ...(portrait ? { portrait } : {}),
       url: profileAvailable && profile ? `/engineering/${profile.slug}` : '/about',
       profileAvailable,
+      ...(technologies.length ? { technologies } : {}),
     };
   }
 

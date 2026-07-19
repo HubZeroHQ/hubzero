@@ -3938,3 +3938,34 @@
     position: static;
   }
 }
+
+/*
+ * Cross-site founder identity (Phase 23) — wherever a founder's name
+ * appears outside their own profile (Notes byline today), it carries the
+ * same accent + a miniature version of their real motif, never a
+ * decoration invented for the context.
+ */
+@layer components {
+  .founder-accent-text {
+    color: var(--founder-accent, var(--color-text-primary));
+  }
+
+  .founder-cross-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .founder-motif-compact text {
+    display: none;
+  }
+
+  .founder-motif-mini {
+    width: 40px;
+    height: 16px;
+  }
+
+  .founder-motif-mini .founder-motif-trace {
+    stroke-width: 2;
+  }
+}
