@@ -50,12 +50,19 @@ export function createPublicMetadata(input: {
         ? { authors: input.authors.flatMap((author) => (author.url ? [author.url] : [])) }
         : {}),
       images: [
-        {
-          url: image,
-          ...(input.image
-            ? { width: input.image.width, height: input.image.height, alt: input.image.alt }
-            : {}),
-        },
+        input.image
+          ? {
+              url: image,
+              width: input.image.width,
+              height: input.image.height,
+              alt: input.image.alt,
+            }
+          : {
+              url: image,
+              width: PUBLIC_SITE.socialImageWidth,
+              height: PUBLIC_SITE.socialImageHeight,
+              alt: PUBLIC_SITE.name,
+            },
       ],
     },
     twitter: {

@@ -164,7 +164,7 @@ export function Homepage({
               eyebrow="Engineering profiles"
               title={
                 <>
-                  Judgment has an <em>owner.</em>
+                  Judgement has an <em>owner.</em>
                 </>
               }
               description="Profiles connect engineering positions to the evidence that supports them."
@@ -203,7 +203,7 @@ function ServicesPassage({
         </div>
         <div>
           <p>
-            Services organize public evidence around a problem without turning products, client
+            Services organise public evidence around a problem without turning products, client
             work, research, or reusable foundations into sales claims.
           </p>
           {services.length ? (

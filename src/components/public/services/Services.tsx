@@ -69,7 +69,7 @@ export function Services({
             <h2 id="services-evidence-title">Definitions supported by public artifacts.</h2>
             <p>
               Evidence may come from client work, shipped products, active investigations, reusable
-              foundations, or engineering notes. Editorial judgment determines whether the record
+              foundations, or engineering notes. Editorial judgement determines whether the record
               supports the definition.
             </p>
           </header>

@@ -43,10 +43,17 @@ export const metadata: Metadata = {
     siteName: PUBLIC_SITE.name,
     title: PUBLIC_SITE.name,
     description: PUBLIC_SITE.description,
-    images: [{ url: PUBLIC_SITE.socialImage, width: 512, height: 512, alt: 'HubZero' }],
+    images: [
+      {
+        url: PUBLIC_SITE.socialImage,
+        width: PUBLIC_SITE.socialImageWidth,
+        height: PUBLIC_SITE.socialImageHeight,
+        alt: PUBLIC_SITE.name,
+      },
+    ],
   },
   appleWebApp: {
-    title: 'Hub Zero',
+    title: PUBLIC_SITE.name,
   },
 };
 

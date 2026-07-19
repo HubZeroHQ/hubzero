@@ -78,7 +78,7 @@ export function relationshipLabel(
     case 'artifactUsesBlueprint':
       if (!forward) return 'Proven in';
       if (edge.blueprintMeaning === 'builtOn') return 'Built on';
-      if (edge.blueprintMeaning === 'generalizedAs') return 'Generalized as';
+      if (edge.blueprintMeaning === 'generalizedAs') return 'Generalised as';
       return 'Blueprint';
     case 'labRelatedBuild':
       return forward ? 'Related Build' : 'Related Lab';
