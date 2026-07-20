@@ -17,13 +17,12 @@ import type { FounderMotifId } from '@/config/founder-identity';
  * - Raif's software architecture reads as modules docking into one shared,
  *   precisely gridded bus — deterministic, orthogonal, nothing left to
  *   chance. The benchmark for the rest of this file.
- * - Iyad's product systems read as a cropped fragment of a design-tool
- *   canvas (Figma/FigJam): two frames open on the right (they continue
- *   off-frame), a prototype flow connector between them, and a spacing
- *   guide that touches both frames exactly. The bezier handle extends
- *   along the connector's own tangent, so it reads as that anchor's
- *   control handle, not a floating symbol — one working document, not
- *   separate icons.
+ * - Iyad's product operations read as a manufacturing traveler's own
+ *   ruling: a field of short, independent, unremarkable rows (plain
+ *   records, going nowhere in particular) with one line drawn heavier
+ *   and longer than the rest — the one that keeps turning through
+ *   several operations without ever lifting, while everything around
+ *   it stays flat and quiet. The quietest motif in the set, by design.
  * - Sultan's editorial system reads as reading rules and registration
  *   marks from a publication grid.
  * - Salsabeel's PCB has real hierarchy: the differential pair is the area
@@ -86,7 +85,7 @@ export function FounderMotif({
 const MOTIF_COMPONENTS: Record<FounderMotifId, (props: { count: number }) => JSX.Element> = {
   network: NetworkMotif,
   dependencyGraph: DependencyGraphMotif,
-  curve: CurveMotif,
+  traveler: TravelerMotif,
   editorialGrid: EditorialGridMotif,
   pcbTrace: PCBTraceMotif,
 };
@@ -377,136 +376,54 @@ function DependencyGraphMotif({ count }: { count: number }) {
 }
 
 /**
- * Iyad — product systems, drawn as a cropped fragment of a design-tool
- * canvas (Figma/FigJam), not an engineering diagram: two frames, each
- * drawn open on the right (their right edge is the card's own edge —
- * they continue off-frame, not self-contained boxes), a prototype flow
- * connector between them, and a spacing guide that touches both frames
- * exactly — the measured gap itself, not a floating ruler. The bezier
- * handle at the connector's start anchor extends along the curve's own
- * tangent (straight into frame A, the direction the curve actually
- * leaves from), so it reads as that anchor's own control handle rather
- * than an unrelated appendage. Nothing floats independently; every mark
- * belongs to the same working document.
+ * Iyad — product operations. Most rows are plain, independent, and short:
+ * unremarkable records going nowhere, the quiet background any ruled
+ * sheet has. One line is different — heavier, and it never lifts: it
+ * keeps turning through several operations in one unbroken run while
+ * everything else around it stays flat. No convergence, no fork, no
+ * fallback — the quietest motif in the set on purpose.
  */
-function CurveMotif({ count }: { count: number }) {
+function TravelerMotif({ count }: { count: number }) {
+  const ys = laneYs(count);
   const elements: JSX.Element[] = [];
   const nodes: JSX.Element[] = [];
   let seed = 0;
 
-  const frameATop = 22;
-  const frameABottom = 62;
-  const frameALeftX = 440;
-  elements.push(
-    <Trace
-      key={`iyad-fa-top-${seed}`}
-      seed={seed++}
-      builder={new PathBuilder().moveTo(VIEW_WIDTH, frameATop).h(frameALeftX)}
-    />,
-  );
-  elements.push(
-    <Trace
-      key={`iyad-fa-left-${seed}`}
-      seed={seed++}
-      builder={new PathBuilder().moveTo(frameALeftX, frameATop).v(frameABottom)}
-    />,
-  );
-  elements.push(
-    <Trace
-      key={`iyad-fa-bottom-${seed}`}
-      seed={seed++}
-      builder={new PathBuilder().moveTo(frameALeftX, frameABottom).h(VIEW_WIDTH)}
-    />,
-  );
+  ys.forEach((y, i) => {
+    const endX = 400 + ((i * 43) % 80);
+    const row = new PathBuilder().moveTo(VIEW_WIDTH, y).h(endX);
+    elements.push(<Trace key={`iyad-row-${i}`} seed={seed++} builder={row} />);
+  });
 
-  const frameBTop = 102;
-  const frameBBottom = 172;
-  const frameBLeftX = 370;
+  const travel = new PathBuilder().moveTo(VIEW_WIDTH, 34).h(340).v(90).h(230);
+  let endX = 230;
+  let endY = 90;
+  if (count >= 4) {
+    travel.v(138).h(150);
+    endX = 150;
+    endY = 138;
+  }
+  if (count >= 6) {
+    travel.v(160).h(96);
+    endX = 96;
+    endY = 160;
+  }
   elements.push(
     <Trace
-      key={`iyad-fb-top-${seed}`}
+      key={`iyad-travel-${seed}`}
       seed={seed++}
-      builder={new PathBuilder().moveTo(VIEW_WIDTH, frameBTop).h(frameBLeftX)}
-    />,
-  );
-  elements.push(
-    <Trace
-      key={`iyad-fb-left-${seed}`}
-      seed={seed++}
-      builder={new PathBuilder().moveTo(frameBLeftX, frameBTop).v(frameBBottom)}
-    />,
-  );
-  elements.push(
-    <Trace
-      key={`iyad-fb-bottom-${seed}`}
-      seed={seed++}
-      builder={new PathBuilder().moveTo(frameBLeftX, frameBBottom).h(VIEW_WIDTH)}
-    />,
-  );
-
-  const anchorAX = 480;
-  const anchorAY = frameABottom;
-  const anchorBX = 420;
-  const anchorBY = frameBTop;
-  const flow = new PathBuilder()
-    .moveTo(anchorAX, anchorAY)
-    .curveTo(anchorAX, anchorAY + 20, anchorBX, anchorBY - 20, anchorBX, anchorBY);
-  elements.push(<Trace key={`iyad-flow-${seed}`} seed={seed++} builder={flow} />);
-  nodes.push(
-    <circle
-      key="iyad-anchor-a"
-      className="founder-motif-node"
-      cx={anchorAX}
-      cy={anchorAY}
-      r={2.2}
+      builder={travel}
+      extraClassName="founder-motif-bus"
     />,
   );
   nodes.push(
-    <circle
-      key="iyad-anchor-b"
+    <rect
+      key="iyad-travel-node"
       className="founder-motif-node"
-      cx={anchorBX}
-      cy={anchorBY}
-      r={2.2}
-    />,
-  );
-
-  // Tangent to the curve's own departure direction (straight down from anchorA) — its control handle, not a floating line.
-  const handleY = anchorAY - 22;
-  const handle = new PathBuilder().moveTo(anchorAX, anchorAY).lineTo(anchorAX, handleY);
-  elements.push(<Trace key={`iyad-handle-${seed}`} seed={seed++} builder={handle} />);
-  nodes.push(
-    <circle
-      key="iyad-handle-dot"
-      className="founder-motif-node"
-      cx={anchorAX}
-      cy={handleY}
-      r={1.4}
-    />,
-  );
-
-  const guideX = 500;
-  const guideTop = frameABottom;
-  const guideBottom = frameBTop;
-  elements.push(
-    <Trace
-      key={`iyad-tick1-${seed}`}
-      seed={seed++}
-      builder={new PathBuilder().moveTo(guideX - 4, guideTop).lineTo(guideX + 4, guideTop)}
-    />,
-  );
-  elements.push(
-    <Trace
-      key={`iyad-guideline-${seed}`}
-      seed={seed++}
-      builder={new PathBuilder().moveTo(guideX, guideTop).lineTo(guideX, guideBottom)}
-    />,
-  );
-  elements.push(
-    <Trace
-      key={`iyad-tick2-${seed}`}
-      seed={seed++}
-      builder={new PathBuilder().moveTo(guideX - 4, guideBottom).lineTo(guideX + 4, guideBottom)}
+      x={endX - 2}
+      y={endY - 2}
+      width={4}
+      height={4}
     />,
   );
 

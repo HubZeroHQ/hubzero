@@ -14,7 +14,8 @@
  * until leadership deliberately designs an identity for them.
  */
 
-export type FounderMotifId = 'network' | 'dependencyGraph' | 'curve' | 'editorialGrid' | 'pcbTrace';
+export type FounderMotifId =
+  'network' | 'dependencyGraph' | 'traveler' | 'editorialGrid' | 'pcbTrace';
 
 export interface FounderIdentity {
   slug: string;
@@ -40,8 +41,9 @@ export const FOUNDER_IDENTITIES: readonly FounderIdentity[] = [
   {
     slug: 'iyad',
     accent: '#a78bfa',
-    motif: 'curve',
-    motifDescription: 'Flowing paths tracing the stages of a product journey, crossing once.',
+    motif: 'traveler',
+    motifDescription:
+      'One routed line turning through several stages, set among short independent records.',
   },
   {
     slug: 'sultan',

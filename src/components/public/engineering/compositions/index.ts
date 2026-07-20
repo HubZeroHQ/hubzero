@@ -17,7 +17,7 @@ type Composition = (props: {
 export const FOUNDER_COMPOSITIONS: Record<FounderIdentity['motif'], Composition> = {
   network: RifaqueComposition,
   dependencyGraph: RaifComposition,
-  curve: IyadComposition,
+  traveler: IyadComposition,
   editorialGrid: SultanComposition,
   pcbTrace: SalsabeelComposition,
 };

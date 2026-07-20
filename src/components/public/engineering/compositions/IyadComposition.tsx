@@ -18,7 +18,7 @@ import {
 } from '../profile-shared';
 
 /**
- * Iyad — Product Engineering. The curve motif opens the page as a single
+ * Iyad — Product Operations. The traveler motif opens the page as a single
  * continuous spine the whole profile follows — one flowing column (no
  * sidebar register, no grid split) reads as a lifecycle: position, current
  * work, evidence, then the long-form record, each stage following the last.
@@ -38,7 +38,7 @@ export function IyadComposition({
       id="main-content"
       role="main"
       tabIndex={-1}
-      className="collection-main profile-detail founder-profile founder-profile-curve"
+      className="collection-main profile-detail founder-profile founder-profile-traveler"
       style={founderAccentStyle(identity.accent)}
     >
       <header className="profile-hero founder-hero-spine">
@@ -57,7 +57,7 @@ export function IyadComposition({
           <p className="profile-role">{profile.role}</p>
           <p className="detail-summary">{profile.summary}</p>
           <div
-            className="founder-motif-frame founder-motif-frame-curve"
+            className="founder-motif-frame founder-motif-frame-traveler"
             style={founderMotifViewTransitionStyle(identity.slug)}
           >
             <FounderMotif
