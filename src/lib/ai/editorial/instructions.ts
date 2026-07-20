@@ -88,7 +88,7 @@ export const INSTRUCTION_GUIDANCE: Record<BlockInstruction, InstructionGuidance>
   generateCaption: {
     label: 'Generate caption',
     description:
-      "Write a short, factual caption describing what the image shows. Never assert something about the image's content that isn't visible in the description supplied.",
+      'Write a caption that names the engineering decision, tradeoff, or constraint this image demonstrates in context — not a plain visual description of what\'s on screen. "Product page." is a failure; "the separate component tree used instead of a single responsive layout" is the target. Never assert something about the image\'s content that isn\'t visible in the description supplied, and never invent a decision the surrounding document doesn\'t actually support.',
   },
   explainCode: {
     label: 'Explain code',
