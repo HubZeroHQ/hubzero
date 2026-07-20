@@ -54,13 +54,14 @@ const BLOCK_USAGE_GUIDANCE: Record<BlockType, BlockUsageGuidance> = {
     avoidWhen: 'A code sample with no surrounding prose explaining why it matters.',
   },
   image: {
-    useWhen: 'A single supporting image where one exists (from the images supplied in context).',
+    useWhen:
+      'A single supporting image where one exists (from the images supplied in context). Caption it as an engineering fact, not a visual description: name the architectural decision, tradeoff, or constraint the image demonstrates rather than describing what is literally on screen. "Product page." is weak; "The desktop view uses a separate component tree instead of one responsive layout — the tradeoff that kept the mobile bundle small" is the target.',
     avoidWhen:
-      'No image was actually supplied — never invent an image block with a fabricated description; use an explicit placeholder instead (§31) so the author sees exactly what needs resolving.',
+      'No image was actually supplied — never invent an image block with a fabricated description; use an explicit placeholder instead (§31) so the author sees exactly what needs resolving. Also avoid a caption that only restates the alt text in different words with no engineering content added.',
   },
   imageGallery: {
     useWhen:
-      'Multiple related images supplied in context (e.g. several screenshots of the same feature).',
+      "Multiple related images supplied in context (e.g. several screenshots of the same feature). Each image's own caption should still name the specific decision or state it illustrates, not a shared generic label repeated across all of them.",
     avoidWhen: 'Only one image exists — use a single `image` block instead.',
   },
   videoEmbed: {

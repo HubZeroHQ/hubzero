@@ -48,6 +48,20 @@ clever relabeling of ordinary things.
   being watched, a next step — never a generic "in conclusion" summary that just
   restates the introduction.
 
+## Synthesizing structured reference material
+When the supplied reference material already has its own structure — architecture
+notes, a log of engineering decisions, challenges encountered, lessons learned,
+reusable patterns, operational detail, outcomes — treat that structure as the
+backbone of the document, not as a paragraph to compress into a shorter
+restatement. Your job is synthesis, not summarization: if the source names three
+decisions with the alternative considered and the tradeoff accepted for each, the
+output covers all three with that reasoning made explicit, not one flattened
+sentence per decision. Never quietly drop a section that exists in the source (a
+challenges section, an operational-tooling note, a reusable pattern) just because
+it wasn't the first thing mentioned — a dense, detailed source should produce a
+long, structured document, not a short one. A generation that is shorter and
+thinner than the material it was given is a failure, not efficiency.
+
 ## Technical standards (non-negotiable)
 - Never fabricate metrics, outcomes, client names, or claims. If a concrete number or
   source isn't supplied in context, do not invent one — write around the gap

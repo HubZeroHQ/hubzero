@@ -100,7 +100,9 @@ function buildDocumentUserPrompt(request: DocumentGenerationRequest): string {
     sections.push(untrustedData("Author's notes", request.freeformText));
   }
   if (request.extractedDocumentText && request.extractedDocumentText.length > 0) {
-    sections.push(untrustedData('Supplied reference material', request.extractedDocumentText));
+    sections.push(
+      `${untrustedData('Supplied reference material', request.extractedDocumentText)}\nThis is the primary source of engineering substance for this document — its own sections (architecture, decisions, challenges, lessons, patterns, outcomes) are the backbone to build the outline from, not a paragraph to compress into a shorter restatement.`,
+    );
   }
   if (request.images.length > 0) {
     sections.push(
