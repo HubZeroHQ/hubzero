@@ -33,4 +33,20 @@ export const engineeringProfileRepository = {
   },
   update: (id: string, input: Partial<EngineeringProfileInput>) =>
     base.update(id, parsePartialInput(engineeringProfileSchema, input)),
+  /**
+   * Reassigns a permanent `referenceId` in place — used exactly once, by
+   * `scripts/renumber-founder-engineering-profiles.ts`. `generateReferenceId`
+   * (`lib/ids/reference-id.ts`) is explicit that an ID "never changes once
+   * assigned"; this method exists only because that one migration is a
+   * deliberate, human-reviewed exception, and must never be called from any
+   * normal create/update/action path.
+   */
+  reassignReferenceId: async (id: string, referenceId: EngineeringProfile['referenceId']) => {
+    const collection = await collections.engineeringProfiles();
+    return collection.findOneAndUpdate(
+      { _id: new ObjectId(id) },
+      { $set: { referenceId, updatedAt: new Date() } },
+      { returnDocument: 'after' },
+    );
+  },
 };

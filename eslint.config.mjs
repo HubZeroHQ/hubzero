@@ -12,7 +12,11 @@ const compat = new FlatCompat({
 const eslintConfig = [
   ...compat.extends('next/core-web-vitals', 'next/typescript', 'prettier'),
   {
-    ignores: ['client/**', '.next/**', 'node_modules/**', 'next-env.d.ts'],
+    // `.claude/worktrees/**` holds other agent sessions' full nested repo
+    // checkouts (their own `.next/`, `node_modules/`, etc.) — without this,
+    // `eslint .` also lints their build output as if it were this repo's
+    // own source, which is both wrong and enormously noisy.
+    ignores: ['client/**', '.next/**', 'node_modules/**', 'next-env.d.ts', '.claude/**'],
   },
 ];
 

@@ -735,6 +735,8 @@ async function ensureSeedUserId(): Promise<string> {
     email,
     role: 'headAdmin',
     passwordHash: await hashPassword(randomBytes(32).toString('hex')),
+    disabled: false,
+    mustChangePassword: false,
   });
   return created._id.toString();
 }
@@ -824,7 +826,11 @@ async function seedDocument(
   await documentRepository.create({ ownerType: 'EngineeringProfile', ownerId, role, blocks });
 }
 
-async function seedFounder(founder: FounderSeed, createdByUserId: string): Promise<void> {
+async function seedFounder(
+  founder: FounderSeed,
+  createdByUserId: string,
+  order: number,
+): Promise<void> {
   const portraitId = await ensurePortrait(founder, createdByUserId);
   const technologyIds = await Promise.all(founder.technologies.map(ensureTechnology));
 
@@ -845,6 +851,10 @@ async function seedFounder(founder: FounderSeed, createdByUserId: string): Promi
         group: founder.group,
         portraitId,
         publicProfile: true,
+        founder: true,
+        order,
+        socialLinks: [],
+        archived: false,
       });
   if (!team) throw new Error(`Failed to upsert Team record for ${founder.name}`);
 
@@ -902,8 +912,8 @@ async function main(): Promise<void> {
   }
 
   const createdByUserId = await ensureSeedUserId();
-  for (const founder of FOUNDERS) {
-    await seedFounder(founder, createdByUserId);
+  for (const [index, founder] of FOUNDERS.entries()) {
+    await seedFounder(founder, createdByUserId, index);
   }
 
   console.log('\nDone. Note: these profiles will not be publicly visible until at least two real');

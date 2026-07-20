@@ -68,6 +68,7 @@ async function main(): Promise<void> {
       email: email.trim().toLowerCase(),
       role: 'headAdmin',
       passwordHash,
+      disabled: false,
     });
     console.log(`Updated existing Head Admin: ${email} (${existing._id.toString()})`);
   } else {
@@ -76,6 +77,8 @@ async function main(): Promise<void> {
       email: email.trim().toLowerCase(),
       role: 'headAdmin',
       passwordHash,
+      disabled: false,
+      mustChangePassword: false,
     });
     console.log(`Created Head Admin: ${email} (${created._id.toString()})`);
   }

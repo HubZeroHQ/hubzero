@@ -18,10 +18,13 @@ declare module 'next-auth' {
     user: DefaultSession['user'] & {
       id: string;
       role: UserRole;
+      /** Set by Head Admin's "Reset password" action (Users completion sprint, Part 1) — a UX prompt to change it, not a security boundary. See `auth-jwt.ts` for why this is eventually-, not immediately-, consistent. */
+      mustChangePassword: boolean;
     };
   }
 
   interface User {
     role?: UserRole;
+    mustChangePassword?: boolean;
   }
 }

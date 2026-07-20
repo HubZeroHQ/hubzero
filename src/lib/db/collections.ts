@@ -11,6 +11,7 @@ import type {
   MediaAsset,
   Note,
   Service,
+  StudioSettings,
   TaxonomyEntry,
   Team,
   User,
@@ -42,4 +43,5 @@ export const collections = {
   taxonomy: () => collection<TaxonomyEntry>('taxonomy'),
   documents: () => collection<DocumentRecord>('documents'),
   documentVersions: () => collection<DocumentVersionRecord>('documentVersions'),
+  settings: () => collection<StudioSettings>('settings'),
 };

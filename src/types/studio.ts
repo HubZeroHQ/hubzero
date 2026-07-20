@@ -118,6 +118,16 @@ export interface User extends WithId, WithTimestamps {
   role: UserRole;
   passwordHash?: string;
   image?: string;
+  /** A disabled account can no longer sign in (`credentials.ts` checks this at `authorize()`), but is never deleted outright by that alone — Users management §29. */
+  disabled: boolean;
+  /** Set when Head Admin resets this user's password on their behalf; cleared by the user's own successful password change. A UX prompt, not a security boundary — the old password already stopped working the moment it was reset. */
+  mustChangePassword: boolean;
+}
+
+/** One entry in a Team member's public social links list — platform is free-text (e.g. "GitHub", "X") rather than an enum, matching `group`'s "adjustable, never hardcoded" precedent below. */
+export interface TeamSocialLink {
+  platform: string;
+  url: string;
 }
 
 /** A user's public-facing profile, if they have one — optional and separate from system identity (§24, §26.6). */
@@ -131,6 +141,13 @@ export interface Team extends WithId, WithTimestamps {
   portraitId?: ObjectId;
   publicProfile: boolean;
   userId?: ObjectId;
+  /** Distinct from `group === 'Founders'` — a lightweight editorial flag (e.g. for a "Founder" badge) independent of which group a member is currently sorted into. */
+  founder: boolean;
+  /** Lower sorts first, within a group and in the admin list's default order. */
+  order: number;
+  socialLinks: TeamSocialLink[];
+  /** Soft-removed from the public site query and the default admin list, without losing the record (Users management §1's "safeguards" precedent applied to Team). */
+  archived: boolean;
 }
 
 export interface Work extends PublishableEntity {
@@ -286,9 +303,17 @@ export interface Service extends WithId, WithTimestamps {
   description: string;
   status: ServicePublishStatus;
   evidenceLinks: ServiceEvidenceReference[];
+  /** Lower sorts first in the public list and the admin list's default order. */
+  order: number;
+  /** Homepage "Featured" slot, mirroring Build/Blueprint/Lab/Note's existing `featured` flag. */
+  featured: boolean;
 }
 
-/** Deliberately minimal — not a CRM (§26.8). No reference ID: internal-only, no citation purpose. */
+/**
+ * Deliberately minimal — not a CRM (§26.8). No reference ID: internal-only, no citation purpose.
+ * `archived` is orthogonal to `status`: a shelf for leads no longer worth surfacing by default,
+ * not a fourth workflow state — closing a lead and archiving it are independent actions.
+ */
 export interface Lead extends WithId, WithTimestamps {
   name: string;
   email: string;
@@ -297,4 +322,23 @@ export interface Lead extends WithId, WithTimestamps {
   status: LeadStatus;
   assignedToUserId?: ObjectId;
   internalNotes?: string;
+  archived: boolean;
+}
+
+/**
+ * Singleton Studio configuration (§26.9-adjacent, no PLANNING.md section of
+ * its own — this collection didn't exist before the Users/Team/Leads/
+ * Services/Taxonomy/Settings completion sprint). Exactly one document ever
+ * exists, at the fixed `_id` `lib/db/repositories/settings.ts` uses.
+ * Deliberately minimal: only the fields Settings → System's "Studio
+ * information / Branding" section actually needs today. Environment, build,
+ * and integration-status information is derived read-only from existing
+ * config (`src/config/*`, `serverEnv()`) and never persisted here.
+ */
+export interface StudioSettings extends WithId, WithTimestamps {
+  studioName: string;
+  tagline: string;
+  contactEmail: string;
+  logoMediaId?: ObjectId;
+  accentColor?: string;
 }

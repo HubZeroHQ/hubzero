@@ -42,6 +42,12 @@ export const serviceEvidenceReferenceSchema = z.object({
   ownerId: objectIdString,
 });
 
+/** One row of a Team member's public social links (§26.6 extension) — platform is free text, not an enum. */
+export const socialLinkSchema = z.object({
+  platform: z.string().min(1),
+  url: z.string().url(),
+});
+
 /**
  * A single entry in a collection entry's progress timeline (Phase 10's
  * "lightweight progress timeline," built generic enough for a future

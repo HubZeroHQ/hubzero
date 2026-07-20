@@ -118,7 +118,13 @@ export function getVisibleNav(
 const ALL_ENTRIES: StudioNavEntry[] = [DASHBOARD, CONTENT, STUDIO, LEADS, LIBRARY, SETTINGS];
 
 export interface ResolvedNavLocation {
-  group?: string;
+  /**
+   * A group (e.g. "Settings") has no route of its own — `StudioNavGroup`
+   * carries no `href` — so its breadcrumb target is its first child leaf's
+   * page, the same "land on the group's default destination" convention
+   * most admin panels use for a non-page section label.
+   */
+  group?: { label: string; href: string };
   leaf: StudioNavLeaf;
 }
 
@@ -130,9 +136,13 @@ export function resolveNavLocation(pathname: string): ResolvedNavLocation | unde
         return { leaf: entry };
       }
     } else {
+      const firstItem = entry.items[0];
+      if (!firstItem) {
+        continue;
+      }
       for (const item of entry.items) {
         if (pathname === item.href || pathname.startsWith(`${item.href}/`)) {
-          return { group: entry.label, leaf: item };
+          return { group: { label: entry.label, href: firstItem.href }, leaf: item };
         }
       }
     }
@@ -149,7 +159,9 @@ export interface BreadcrumbItem {
  * CMS_PRODUCT_DESIGN.md §2 breadcrumb shape (`Group > Collection > Entry >
  * Document role`), truncated to however deep the current view actually is
  * — Phase 2 has no entry/document detail views yet, so this only ever
- * resolves to `Group > Collection` or a bare top-level destination.
+ * resolves to `Group > Collection` or a bare top-level destination. Every
+ * segment before the last carries an `href` — `Breadcrumbs.tsx` renders
+ * exactly those as links and the last as plain (current-page) text.
  */
 export function getBreadcrumbItems(pathname: string): BreadcrumbItem[] {
   const location = resolveNavLocation(pathname);
@@ -158,7 +170,7 @@ export function getBreadcrumbItems(pathname: string): BreadcrumbItem[] {
   }
   const items: BreadcrumbItem[] = [];
   if (location.group) {
-    items.push({ label: location.group });
+    items.push({ label: location.group.label, href: location.group.href });
   }
   items.push({ label: location.leaf.label, href: location.leaf.href });
   return items;

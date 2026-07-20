@@ -7,6 +7,7 @@ import { leadRepository } from './lead';
 import { mediaRepository } from './media';
 import { noteRepository } from './note';
 import { serviceRepository } from './service';
+import { settingsRepository } from './settings';
 import { taxonomyRepository } from './taxonomy';
 import { teamRepository } from './team';
 import { userRepository } from './user';
@@ -22,6 +23,7 @@ export {
   mediaRepository,
   noteRepository,
   serviceRepository,
+  settingsRepository,
   taxonomyRepository,
   teamRepository,
   userRepository,
@@ -46,4 +48,5 @@ export const repositories = {
   media: mediaRepository,
   taxonomy: taxonomyRepository,
   documents: documentRepository,
+  settings: settingsRepository,
 };

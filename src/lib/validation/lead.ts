@@ -10,6 +10,7 @@ export const leadSchema = z.object({
   status: leadStatusSchema.default('new'),
   assignedToUserId: objectIdString.optional(),
   internalNotes: z.string().optional(),
+  archived: z.boolean().default(false),
 });
 
 export type LeadInput = z.infer<typeof leadSchema>;

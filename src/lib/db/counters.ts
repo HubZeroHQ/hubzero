@@ -27,3 +27,16 @@ export async function nextCounterValue(prefix: string): Promise<number> {
 
   return result.seq;
 }
+
+/**
+ * Sets a prefix's counter to an exact value — used exactly once, by
+ * `scripts/renumber-founder-engineering-profiles.ts`, to reset the `EP`
+ * counter after that script's one-time renumbering. Every normal code path
+ * must keep using `nextCounterValue`'s atomic `$inc`; this bypasses that on
+ * purpose and must never be called from application request handling.
+ */
+export async function setCounterValue(prefix: string, value: number): Promise<void> {
+  const db = await getDb();
+  const counters = db.collection<CounterDocument>('counters');
+  await counters.updateOne({ _id: prefix }, { $set: { seq: value } }, { upsert: true });
+}

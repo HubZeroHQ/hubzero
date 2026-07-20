@@ -1,5 +1,5 @@
-import { compare } from 'bcryptjs';
 import Credentials from 'next-auth/providers/credentials';
+import { verifyPassword } from '@/lib/auth/password';
 import { userRepository } from '@/lib/db/repositories/user';
 
 /**
@@ -21,12 +21,23 @@ export const credentialsProvider = Credentials({
       return null;
     }
 
+    // `userRepository.findByEmail` normalizes (trim + lowercase) before the
+    // exact-match query, matching how every write path stores the email —
+    // so a correct password doesn't fail to sign in over casing/padding.
     const user = await userRepository.findByEmail(email);
     if (!user?.passwordHash) {
       return null;
     }
 
-    const valid = await compare(password, user.passwordHash);
+    // A disabled account can never authenticate, regardless of whether the
+    // password is still correct — Users management's disable/enable toggle
+    // (Users completion sprint, Part 1) has to actually block sign-in, not
+    // just hide the account from the admin list.
+    if (user.disabled) {
+      return null;
+    }
+
+    const valid = await verifyPassword(password, user.passwordHash);
     if (!valid) {
       return null;
     }
@@ -36,6 +47,7 @@ export const credentialsProvider = Credentials({
       name: user.name,
       email: user.email,
       role: user.role,
+      mustChangePassword: user.mustChangePassword,
     };
   },
 });

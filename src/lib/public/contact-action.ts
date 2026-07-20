@@ -41,6 +41,7 @@ export async function submitContact(
       ...parsed.data,
       source: `public:${normalizeContactSource(formData.get('source'))}`,
       status: 'new',
+      archived: false,
     });
     return { status: 'success', values: { name: '', email: '', message: '' } };
   } catch (error) {

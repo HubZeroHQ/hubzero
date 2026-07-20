@@ -16,5 +16,17 @@ declare module 'next-auth/jwt' {
   interface JWT {
     id?: string;
     role?: UserRole;
+    /**
+     * Set once at sign-in from `credentials.ts`'s `authorize()` return value,
+     * same as `role` — so it's read from the JWT on every request (including
+     * inside `middleware.ts`'s Edge runtime, which can't query MongoDB)
+     * without a fresh DB lookup. Like `role`, this is only as fresh as the
+     * session's last sign-in: if Head Admin resets a password while a
+     * session is already active, the prompt won't appear until that session
+     * re-authenticates. That's acceptable here specifically because
+     * `mustChangePassword` is a UX nudge, not the security boundary — the
+     * old password already stopped working the instant it was reset.
+     */
+    mustChangePassword?: boolean;
   }
 }

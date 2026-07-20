@@ -33,12 +33,15 @@ export const authConfig: NextAuthConfig = {
       if (user) {
         token.id = user.id;
         token.role = (user as { role?: UserRole }).role ?? 'teamMember';
+        token.mustChangePassword =
+          (user as { mustChangePassword?: boolean }).mustChangePassword ?? false;
       }
       return token;
     },
     session({ session, token }) {
       session.user.id = token.id ?? '';
       session.user.role = token.role ?? 'teamMember';
+      session.user.mustChangePassword = token.mustChangePassword ?? false;
       return session;
     },
   },

@@ -36,6 +36,21 @@ export default auth((req) => {
     return NextResponse.redirect(loginUrl);
   }
 
+  // Users management's admin-assisted "Reset password" (Part 1) sets this
+  // flag rather than emailing a reset link — there's no mail infrastructure
+  // in this app. The flag lives on the JWT (`auth-jwt.ts`), so it's readable
+  // here on the Edge runtime without a MongoDB round-trip. A page-only
+  // check: it's a UX prompt, not the security boundary, so API routes are
+  // left alone the same way the unauthenticated branch above treats them
+  // differently from pages.
+  if (
+    req.auth.user.mustChangePassword &&
+    !pathname.startsWith('/api/') &&
+    pathname !== '/studio/profile/change-password'
+  ) {
+    return NextResponse.redirect(new URL('/studio/profile/change-password', req.nextUrl.origin));
+  }
+
   return NextResponse.next();
 });
 

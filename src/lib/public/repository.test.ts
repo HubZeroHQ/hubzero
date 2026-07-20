@@ -190,6 +190,8 @@ describe('public repository boundary', () => {
       name: 'Internal account',
       email: 'private@example.com',
       role: 'admin',
+      disabled: false,
+      mustChangePassword: false,
       createdAt: now,
       updatedAt: now,
     };
@@ -202,6 +204,10 @@ describe('public repository boundary', () => {
       group: 'Engineering',
       publicProfile: true,
       userId: user._id,
+      founder: false,
+      order: 0,
+      socialLinks: [],
+      archived: false,
       createdAt: now,
       updatedAt: now,
     };
@@ -273,6 +279,8 @@ describe('public repository boundary', () => {
       name: 'Internal',
       email: 'private@example.com',
       role: 'admin',
+      disabled: false,
+      mustChangePassword: false,
       createdAt: now,
       updatedAt: now,
     };
@@ -285,6 +293,10 @@ describe('public repository boundary', () => {
       group: 'Engineering',
       publicProfile: true,
       userId: user._id,
+      founder: false,
+      order: 0,
+      socialLinks: [],
+      archived: false,
       createdAt: now,
       updatedAt: now,
     });
@@ -375,6 +387,8 @@ describe('public repository boundary', () => {
       name: 'Internal',
       email: 'private@example.com',
       role: 'admin',
+      disabled: false,
+      mustChangePassword: false,
       createdAt: now,
       updatedAt: now,
     };
@@ -387,6 +401,10 @@ describe('public repository boundary', () => {
       group: 'Engineering',
       publicProfile: true,
       userId: user._id,
+      founder: false,
+      order: 0,
+      socialLinks: [],
+      archived: false,
       createdAt: now,
       updatedAt: now,
     };
@@ -443,6 +461,10 @@ describe('public repository boundary', () => {
       bio: 'Builds explicit public systems.',
       group: 'Engineering',
       publicProfile: true,
+      founder: false,
+      order: 0,
+      socialLinks: [],
+      archived: false,
       createdAt: now,
       updatedAt: now,
     });

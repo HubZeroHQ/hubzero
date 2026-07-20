@@ -1,6 +1,6 @@
 'use server';
 
-import { AuthError } from 'next-auth';
+import { AuthError, CredentialsSignin } from 'next-auth';
 import { signIn, signOut } from '@/lib/auth';
 
 export async function signOutAction(): Promise<void> {
@@ -33,8 +33,20 @@ export async function loginAction(
     if (error && typeof error === 'object' && 'digest' in error) {
       throw error;
     }
-    if (error instanceof AuthError) {
+
+    // `authorize()` returning `null` (wrong email, wrong password, disabled
+    // account) is the one case Auth.js reports as `CredentialsSignin` — a
+    // genuine, expected credential failure. Anything else reaching here
+    // (a thrown error, e.g. MongoDB being unreachable) is an infrastructure
+    // failure the user did nothing to cause, and telling them their
+    // password is wrong would be actively misleading. The full error is
+    // still logged server-side so it's not silently lost.
+    if (error instanceof CredentialsSignin) {
       return { error: 'Incorrect email or password.' };
+    }
+    console.error('loginAction: sign-in failed unexpectedly', error);
+    if (error instanceof AuthError) {
+      return { error: 'Unable to sign in at the moment. Please try again later.' };
     }
     return { error: 'Something went wrong. Try again.' };
   }

@@ -1,7 +1,8 @@
 'use client';
 
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import { ChevronDown, LogOut } from 'lucide-react';
+import { ChevronDown, LogOut, UserRound } from 'lucide-react';
+import Link from 'next/link';
 import { signOutAction } from '@/lib/auth/actions';
 import { ROLE_LABEL } from '@/lib/studio/role-label';
 import type { UserRole } from '@/types/studio';
@@ -49,6 +50,16 @@ export function UserMenu({ name, email, role }: UserMenuProps) {
             <p className="text-text-primary truncate text-sm">{name}</p>
             <p className="text-text-muted truncate text-xs">{email}</p>
           </div>
+          <DropdownMenu.Separator className="bg-border-muted my-1 h-px" />
+          <DropdownMenu.Item asChild>
+            <Link
+              href="/studio/profile"
+              className="text-text-secondary duration-fast ease-standard hover:bg-surface-elevated hover:text-text-primary data-[highlighted]:bg-surface-elevated data-[highlighted]:text-text-primary rounded-control flex w-full items-center gap-2 px-2.5 py-2 text-left text-sm transition-colors outline-none"
+            >
+              <UserRound className="h-3.5 w-3.5" aria-hidden />
+              My profile
+            </Link>
+          </DropdownMenu.Item>
           <DropdownMenu.Separator className="bg-border-muted my-1 h-px" />
           <DropdownMenu.Item asChild>
             <form action={signOutAction}>

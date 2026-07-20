@@ -7,6 +7,8 @@ export const serviceSchema = z.object({
   description: z.string().min(1),
   status: servicePublishStatusSchema.default('draft'),
   evidenceLinks: z.array(serviceEvidenceReferenceSchema).default([]),
+  order: z.number().default(0),
+  featured: z.boolean().default(false),
 });
 
 export type ServiceInput = z.infer<typeof serviceSchema>;
