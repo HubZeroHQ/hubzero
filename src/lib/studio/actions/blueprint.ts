@@ -47,6 +47,7 @@ function readBlueprintMetadataFields(formData: FormData) {
     technologyIds: formData.getAll('technologyIds').map(String),
     previewAssetIds: formData.getAll('previewAssetIds').map(String),
     featured: formData.get('featured') === 'on',
+    contributorProfileIds: formData.getAll('contributorProfileIds').map(String),
   };
 }
 

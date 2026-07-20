@@ -1,21 +1,33 @@
+import { engineeringProfileRepository } from '@/lib/db/repositories/engineering-profile';
 import { taxonomyRepository } from '@/lib/db/repositories/taxonomy';
+import { teamRepository } from '@/lib/db/repositories/team';
 import { workRepository } from '@/lib/db/repositories/work';
 
 /**
- * The option list behind Blueprint's one relation picker — technologies
- * (CMS_PRODUCT_DESIGN.md §4/§30's "relationships are pickers, not IDs").
- * Mirrors `build-relations.ts`/`work-relations.ts`'s shape; Blueprint has no
- * Lab/Work-style relation pickers of its own (Work/Build reference *into*
- * Blueprint via `relatedBlueprintIds`, not the other way — §24), so this
- * loader is intentionally the smallest of the three.
+ * The option lists behind Blueprint's relation pickers — technologies and
+ * Engineering contributors (CMS_PRODUCT_DESIGN.md §4/§30's "relationships
+ * are pickers, not IDs"). Mirrors `build-relations.ts`/`work-relations.ts`'s
+ * shape; Blueprint has no Lab/Work-style relation pickers of its own
+ * (Work/Build reference *into* Blueprint via `relatedBlueprintIds`, not the
+ * other way — §24), so this loader stays smaller than the others.
  */
 export async function getBlueprintRelationOptions() {
-  const technologies = await taxonomyRepository.findByKind('technology');
+  const [technologies, profiles, team] = await Promise.all([
+    taxonomyRepository.findByKind('technology'),
+    engineeringProfileRepository.list(),
+    teamRepository.list(),
+  ]);
+  const teamNames = new Map(team.map((member) => [member._id.toString(), member.name]));
 
   return {
     technologyOptions: technologies.map((entry) => ({
       id: entry._id.toString(),
       label: entry.label,
+    })),
+    contributorOptions: profiles.map((entry) => ({
+      id: entry._id.toString(),
+      label: teamNames.get(entry.teamMemberId.toString()) ?? entry.slug,
+      referenceId: entry.referenceId,
     })),
   };
 }

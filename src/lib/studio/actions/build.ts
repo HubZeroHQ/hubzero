@@ -42,6 +42,7 @@ function readBuildMetadataFields(formData: FormData) {
     relatedWorkIds: formData.getAll('relatedWorkIds').map(String),
     galleryImageIds: formData.getAll('galleryImageIds').map(String),
     featured: formData.get('featured') === 'on',
+    contributorProfileIds: formData.getAll('contributorProfileIds').map(String),
   };
 }
 

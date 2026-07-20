@@ -48,6 +48,7 @@ function build(featured = true): Build & { productSummary: string } {
     heroImageId: new ObjectId(),
     galleryImageIds: [],
     featured,
+    contributorProfileIds: [],
   };
 }
 

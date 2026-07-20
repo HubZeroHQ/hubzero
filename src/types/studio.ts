@@ -184,6 +184,8 @@ export interface Build extends PublishableEntity {
   galleryImageIds: ObjectId[];
   /** Additive beyond §26.2 — surfaces a Build on the homepage's "Featured Build" slot (PLANNING.md §8). */
   featured: boolean;
+  /** Explicit public credit only; `createdByUserId` remains internal provenance. */
+  contributorProfileIds: ObjectId[];
 }
 
 export interface Blueprint extends PublishableEntity {
@@ -208,6 +210,8 @@ export interface Blueprint extends PublishableEntity {
   featured: boolean;
   /** Additive beyond §26.3 — a foundation evolves after its first release; free-form so `1.2.0` and `2024.1` both fit. */
   version: string;
+  /** Explicit public credit only; `createdByUserId` remains internal provenance. */
+  contributorProfileIds: ObjectId[];
 }
 
 /**
@@ -255,6 +259,8 @@ export interface Lab extends PublishableEntity {
   featured: boolean;
   /** The Progress Timeline (Phase 10). */
   milestones: ProgressMilestone[];
+  /** Explicit public credit only; `createdByUserId` remains internal provenance. */
+  contributorProfileIds: ObjectId[];
 }
 
 export interface Note extends PublishableEntity {
@@ -274,6 +280,8 @@ export interface Note extends PublishableEntity {
   /** Additive beyond §26.5 — mirrors Build/Blueprint/Lab's optional hero + gallery split. */
   heroImageId?: ObjectId;
   galleryImageIds: ObjectId[];
+  /** Explicit public credit, distinct from `authorId` (the system identity that owns/edits the write-up) — a Note can credit contributors beyond its author. */
+  contributorProfileIds: ObjectId[];
 }
 
 /** An earned, evidence-led record of how one Team Member thinks and works. */

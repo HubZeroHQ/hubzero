@@ -141,6 +141,22 @@ async function inverse(type: PublicEntityType, id: string): Promise<StudioPublic
         'work',
         (await collections.work()).find({ contributorProfileIds: targetId }).toArray(),
       ),
+      wrapped(
+        'build',
+        (await collections.builds()).find({ contributorProfileIds: targetId }).toArray(),
+      ),
+      wrapped(
+        'blueprint',
+        (await collections.blueprints()).find({ contributorProfileIds: targetId }).toArray(),
+      ),
+      wrapped(
+        'lab',
+        (await collections.labs()).find({ contributorProfileIds: targetId }).toArray(),
+      ),
+      wrapped(
+        'note',
+        (await collections.notes()).find({ contributorProfileIds: targetId }).toArray(),
+      ),
     );
   }
 

@@ -18,9 +18,11 @@ import { canUnpublishOverride, getAvailableTransitions } from '@/lib/studio/work
 import { blueprintRepository } from '@/lib/db/repositories/blueprint';
 import { buildRepository } from '@/lib/db/repositories/build';
 import { documentRepository } from '@/lib/db/repositories/document';
+import { engineeringProfileRepository } from '@/lib/db/repositories/engineering-profile';
 import { labRepository } from '@/lib/db/repositories/lab';
 import { resolveHeroAndGallery } from '@/lib/media/resolve';
 import { taxonomyRepository } from '@/lib/db/repositories/taxonomy';
+import { teamRepository } from '@/lib/db/repositories/team';
 import type { DocumentRole } from '@/lib/documents/schema';
 import type { LabStage } from '@/types/studio';
 
@@ -70,18 +72,27 @@ export default async function LabDetailPage({ params }: { params: Promise<{ id: 
   const { role, id: userId } = session!.user;
   const canEdit = canActOnEntry(lab, { role, userId });
 
-  const [labDocuments, technologies, builds, blueprints, { heroAsset, galleryAssets: gallery }] =
-    await Promise.all([
-      Promise.all(
-        LAB_DOCUMENT_SECTIONS.map((section) =>
-          documentRepository.findByOwnerAndRole('Lab', id, section.role),
-        ),
+  const [
+    labDocuments,
+    technologies,
+    builds,
+    blueprints,
+    profiles,
+    team,
+    { heroAsset, galleryAssets: gallery },
+  ] = await Promise.all([
+    Promise.all(
+      LAB_DOCUMENT_SECTIONS.map((section) =>
+        documentRepository.findByOwnerAndRole('Lab', id, section.role),
       ),
-      taxonomyRepository.findByKind('technology'),
-      buildRepository.list(),
-      blueprintRepository.list(),
-      resolveHeroAndGallery(lab.heroImageId, lab.galleryImageIds),
-    ]);
+    ),
+    taxonomyRepository.findByKind('technology'),
+    buildRepository.list(),
+    blueprintRepository.list(),
+    engineeringProfileRepository.list(),
+    teamRepository.list(),
+    resolveHeroAndGallery(lab.heroImageId, lab.galleryImageIds),
+  ]);
 
   const technologyLabels = new Map(
     technologies.map((entry) => [entry._id.toString(), entry.label]),
@@ -96,6 +107,17 @@ export default async function LabDetailPage({ params }: { params: Promise<{ id: 
     blueprints.map((entry) => [
       entry._id.toString(),
       { label: entry.name, referenceId: entry.referenceId },
+    ]),
+  );
+
+  const teamNames = new Map(team.map((member) => [member._id.toString(), member.name]));
+  const contributorLabels = new Map(
+    profiles.map((entry) => [
+      entry._id.toString(),
+      {
+        label: teamNames.get(entry.teamMemberId.toString()) ?? entry.slug,
+        referenceId: entry.referenceId,
+      },
     ]),
   );
 
@@ -278,7 +300,9 @@ export default async function LabDetailPage({ params }: { params: Promise<{ id: 
         />
       </section>
 
-      {lab.relatedBuildIds.length > 0 || lab.relatedBlueprintIds.length > 0 ? (
+      {lab.relatedBuildIds.length > 0 ||
+      lab.relatedBlueprintIds.length > 0 ||
+      (lab.contributorProfileIds?.length ?? 0) > 0 ? (
         <section className="flex flex-col gap-2">
           <h2 className="text-text-muted font-mono text-xs tracking-[0.05em] uppercase">Related</h2>
           <ul className="flex flex-col gap-1 text-sm">
@@ -297,6 +321,16 @@ export default async function LabDetailPage({ params }: { params: Promise<{ id: 
                   {blueprint
                     ? `${blueprint.label} (${blueprint.referenceId})`
                     : 'Unknown Blueprint'}
+                </li>
+              );
+            })}
+            {(lab.contributorProfileIds ?? []).map((profileId) => {
+              const contributor = contributorLabels.get(profileId.toString());
+              return (
+                <li key={profileId.toString()} className="text-text-secondary">
+                  {contributor
+                    ? `${contributor.label} (${contributor.referenceId}) — Engineering contributor`
+                    : 'Unknown Engineering Profile'}
                 </li>
               );
             })}

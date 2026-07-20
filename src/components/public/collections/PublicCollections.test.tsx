@@ -142,7 +142,7 @@ describe('Builds and Labs public collections', () => {
           target: { type: 'lab', title: 'Review systems Lab', url: '/labs/review-systems' },
         },
         {
-          kind: 'profileContributedToWork',
+          kind: 'profileContributedToEntry',
           label: 'Engineering contributor',
           target: {
             type: 'engineeringProfile',

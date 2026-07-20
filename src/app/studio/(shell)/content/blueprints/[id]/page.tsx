@@ -16,8 +16,10 @@ import { getBlueprintReferencingWork } from '@/lib/studio/blueprint-relations';
 import { canUnpublishOverride, getAvailableTransitions } from '@/lib/studio/workflow-permissions';
 import { blueprintRepository } from '@/lib/db/repositories/blueprint';
 import { documentRepository } from '@/lib/db/repositories/document';
+import { engineeringProfileRepository } from '@/lib/db/repositories/engineering-profile';
 import { resolveHeroAndGallery } from '@/lib/media/resolve';
 import { taxonomyRepository } from '@/lib/db/repositories/taxonomy';
+import { teamRepository } from '@/lib/db/repositories/team';
 
 export const metadata: Metadata = { title: 'Blueprints — HubZero Studio' };
 
@@ -32,16 +34,34 @@ export default async function BlueprintDetailPage({ params }: { params: Promise<
   const { role, id: userId } = session!.user;
   const canEdit = canActOnEntry(blueprint, { role, userId });
 
-  const [caseStudyDocument, technologies, { heroAsset, galleryAssets: gallery }, referencingWork] =
-    await Promise.all([
-      documentRepository.findByOwnerAndRole('Blueprint', id, 'caseStudy'),
-      taxonomyRepository.findByKind('technology'),
-      resolveHeroAndGallery(blueprint.heroImageId, blueprint.previewAssetIds),
-      getBlueprintReferencingWork(id),
-    ]);
+  const [
+    caseStudyDocument,
+    technologies,
+    { heroAsset, galleryAssets: gallery },
+    referencingWork,
+    profiles,
+    team,
+  ] = await Promise.all([
+    documentRepository.findByOwnerAndRole('Blueprint', id, 'caseStudy'),
+    taxonomyRepository.findByKind('technology'),
+    resolveHeroAndGallery(blueprint.heroImageId, blueprint.previewAssetIds),
+    getBlueprintReferencingWork(id),
+    engineeringProfileRepository.list(),
+    teamRepository.list(),
+  ]);
 
   const technologyLabels = new Map(
     technologies.map((entry) => [entry._id.toString(), entry.label]),
+  );
+  const teamNames = new Map(team.map((member) => [member._id.toString(), member.name]));
+  const contributorLabels = new Map(
+    profiles.map((entry) => [
+      entry._id.toString(),
+      {
+        label: teamNames.get(entry.teamMemberId.toString()) ?? entry.slug,
+        referenceId: entry.referenceId,
+      },
+    ]),
   );
   const availableTransitions = getAvailableTransitions(blueprint.status, role, canEdit);
   const canOverride = canUnpublishOverride(blueprint.status, role);
@@ -190,6 +210,24 @@ export default async function BlueprintDetailPage({ params }: { params: Promise<
                 {work.title} ({work.referenceId})
               </li>
             ))}
+          </ul>
+        </section>
+      ) : null}
+
+      {(blueprint.contributorProfileIds?.length ?? 0) > 0 ? (
+        <section className="flex flex-col gap-2">
+          <h2 className="text-text-muted font-mono text-xs tracking-[0.05em] uppercase">Related</h2>
+          <ul className="flex flex-col gap-1 text-sm">
+            {(blueprint.contributorProfileIds ?? []).map((profileId) => {
+              const contributor = contributorLabels.get(profileId.toString());
+              return (
+                <li key={profileId.toString()} className="text-text-secondary">
+                  {contributor
+                    ? `${contributor.label} (${contributor.referenceId}) — Engineering contributor`
+                    : 'Unknown Engineering Profile'}
+                </li>
+              );
+            })}
           </ul>
         </section>
       ) : null}

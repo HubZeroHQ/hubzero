@@ -60,7 +60,7 @@ export default async function EditBuildPage({ params }: { params: Promise<{ id: 
       getBuildRelationOptions(),
       resolveHeroAndGallery(build.heroImageId, build.galleryImageIds),
     ]);
-  const { technologyOptions, labOptions, workOptions } = relationOptions;
+  const { technologyOptions, labOptions, workOptions, contributorOptions } = relationOptions;
 
   const boundUpdateAction = updateBuildAction.bind(null, id);
   const boundSaveCaseStudyAction = saveBuildCaseStudyAction.bind(null, id);
@@ -100,12 +100,16 @@ export default async function EditBuildPage({ params }: { params: Promise<{ id: 
           technologyIds: build.technologyIds.map((entryId) => entryId.toString()),
           originatingLabId: build.originatingLabId?.toString(),
           relatedWorkIds: build.relatedWorkIds.map((entryId) => entryId.toString()),
+          contributorProfileIds: (build.contributorProfileIds ?? []).map((entryId) =>
+            entryId.toString(),
+          ),
         }}
         initialHeroAsset={heroAsset ? toMediaAssetDTO(heroAsset) : undefined}
         initialGalleryAssets={galleryAssets.map(toMediaAssetDTO)}
         technologyOptions={technologyOptions}
         labOptions={labOptions}
         workOptions={workOptions}
+        contributorOptions={contributorOptions}
       />
 
       <section className="flex flex-col gap-3">

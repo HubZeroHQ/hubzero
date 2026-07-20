@@ -85,6 +85,7 @@ describe('public repository boundary', () => {
       previewAssetIds: [previewAsset._id],
       featured: false,
       version: '1.0.0',
+      contributorProfileIds: [],
     };
     const repository = createPublicRepository(
       fakeSource({ entities: [entity('blueprint', blueprint)], media: [previewAsset] }),
@@ -142,6 +143,7 @@ describe('public repository boundary', () => {
       previewAssetIds: [],
       featured: false,
       version: '1.0.0',
+      contributorProfileIds: [],
     };
     const repository = createPublicRepository(
       fakeSource({ entities: [entity('blueprint', blueprint)] }),
@@ -250,6 +252,7 @@ describe('public repository boundary', () => {
       publicationDate: now,
       featured: false,
       galleryImageIds: [],
+      contributorProfileIds: [],
     };
     const entities = [
       entity('note', note),
@@ -316,6 +319,7 @@ describe('public repository boundary', () => {
       publicationDate: now,
       featured: false,
       galleryImageIds: [],
+      contributorProfileIds: [],
     };
     const repository = createPublicRepository(
       fakeSource({
@@ -349,6 +353,7 @@ describe('public repository boundary', () => {
       publicationDate,
       featured: false,
       galleryImageIds: [],
+      contributorProfileIds: [],
     });
     const older = note('Older note', 'older', new Date('2026-06-01T00:00:00.000Z'));
     const newer = note('Newer note', 'newer', new Date('2026-07-01T00:00:00.000Z'));
@@ -424,6 +429,7 @@ describe('public repository boundary', () => {
       publicationDate: now,
       featured: false,
       galleryImageIds: [],
+      contributorProfileIds: [],
     };
     const noteEntity = entity('note', note);
 

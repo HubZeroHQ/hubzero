@@ -31,6 +31,7 @@ The stable `kind` values below are direction-neutral identities. Labels vary by 
 | `noteDiscussesArtifact` | Note → pillar entry: **Discusses** or **Documents** | Pillar entry → Note: **Engineering notes** | many-to-many | High: connects technical writing to evidence |
 | `serviceProvenBy` | Service → pillar entry: **Proven by** | No default reverse navigation | many-to-many | High on Services; reverse edge is usually noise |
 | `profileFeaturesEvidence` | Profile → content: **Selected work**, **Authored notes**, or **Current exploration** by target type | No inferred contributor label | many-to-many | High on Profiles; reverse link only for explicit Note authorship |
+| `profileContributedToEntry` | Work/Build/Blueprint/Lab/Note → Profile: **Engineering contributor** | Profile → Work/Build/Blueprint/Lab/Note: **Contributed to** | many-to-many | High: explicit public credit, distinct from `createdByUserId` provenance and from `authorId` (Note's single system author) |
 | `noteAuthoredBy` | Note → Author: **Author** | Profile/Team → Note: **Authored notes** | Note exactly one safe Author | High: accountability |
 | `teamHasProfile` | Team → Profile: **Engineering Profile** | Profile → Team: identity owner | one-to-zero-or-one | High: About/Profile continuity |
 
@@ -151,7 +152,7 @@ The Author DTO is defined in [PUBLIC_DTO_SPECIFICATION.md](PUBLIC_DTO_SPECIFICAT
 | Multiple Team records match User | HubZero organization fallback | Resolve uniqueness violation; do not choose arbitrarily |
 | Team public, Profile draft/archived | Person identity; About destination | Do not leak Profile existence |
 | Note author differs from `createdByUserId` | Use explicit `authorId` path | Correct; creator is provenance only |
-| Work/Build/Lab/Profile creator has public Team | No contributor attribution | Add a future explicit contributor relation if credit is required |
+| Work/Build/Blueprint/Lab/Note creator has public Team | `createdByUserId` alone still confers no public credit | Use the explicit `contributorProfileIds` relation (`profileContributedToEntry`) for public credit |
 
 ### Current snapshot
 

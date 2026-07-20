@@ -1,28 +1,34 @@
 import { blueprintRepository } from '@/lib/db/repositories/blueprint';
 import { buildRepository } from '@/lib/db/repositories/build';
+import { engineeringProfileRepository } from '@/lib/db/repositories/engineering-profile';
 import { labRepository } from '@/lib/db/repositories/lab';
 import { taxonomyRepository } from '@/lib/db/repositories/taxonomy';
+import { teamRepository } from '@/lib/db/repositories/team';
 import { userRepository } from '@/lib/db/repositories/user';
 import { workRepository } from '@/lib/db/repositories/work';
 import type { EntryReference, EvidenceOwnerType } from '@/types/studio';
 
 /**
  * The option lists behind Note's relation pickers — technologies, the
- * author picker, and the four Work/Build/Blueprint/Lab cross-reference
- * pickers that back `relatedEntries` (PLANNING.md §24: "Note → {Work,
- * Build, Blueprint, Lab}"). Mirrors `lab-relations.ts`'s shape; the only
- * addition is `authorOptions`, since Note is the first collection with an
- * explicit author field distinct from `createdByUserId` (§26.5).
+ * author picker, the four Work/Build/Blueprint/Lab cross-reference pickers
+ * that back `relatedEntries` (PLANNING.md §24: "Note → {Work, Build,
+ * Blueprint, Lab}"), and Engineering contributors. Mirrors
+ * `lab-relations.ts`'s shape; the only addition is `authorOptions`, since
+ * Note is the first collection with an explicit author field distinct from
+ * `createdByUserId` (§26.5).
  */
 export async function getNoteRelationOptions() {
-  const [technologies, users, work, builds, blueprints, labs] = await Promise.all([
+  const [technologies, users, work, builds, blueprints, labs, profiles, team] = await Promise.all([
     taxonomyRepository.findByKind('technology'),
     userRepository.list(),
     workRepository.list(),
     buildRepository.list(),
     blueprintRepository.list(),
     labRepository.list(),
+    engineeringProfileRepository.list(),
+    teamRepository.list(),
   ]);
+  const teamNames = new Map(team.map((member) => [member._id.toString(), member.name]));
 
   return {
     technologyOptions: technologies.map((entry) => ({
@@ -48,6 +54,11 @@ export async function getNoteRelationOptions() {
     labOptions: labs.map((entry) => ({
       id: entry._id.toString(),
       label: entry.title,
+      referenceId: entry.referenceId,
+    })),
+    contributorOptions: profiles.map((entry) => ({
+      id: entry._id.toString(),
+      label: teamNames.get(entry.teamMemberId.toString()) ?? entry.slug,
       referenceId: entry.referenceId,
     })),
   };

@@ -24,6 +24,7 @@ export interface BlueprintFormValues {
   features: string[];
   technologyIds: string[];
   previewAssetIds: string[];
+  contributorProfileIds: string[];
 }
 
 interface RelationOption {
@@ -50,6 +51,7 @@ export function BlueprintForm({
   initialHeroAsset,
   initialGalleryAssets,
   technologyOptions,
+  contributorOptions,
 }: {
   action: (prevState: EntryActionState, formData: FormData) => Promise<EntryActionState>;
   submitLabel: string;
@@ -57,6 +59,7 @@ export function BlueprintForm({
   initialHeroAsset?: MediaAssetDTO;
   initialGalleryAssets?: MediaAssetDTO[];
   technologyOptions: RelationOption[];
+  contributorOptions: RelationOption[];
 }) {
   const [state, formAction, pending] = useActionState(action, emptyActionState);
 
@@ -252,6 +255,21 @@ export function BlueprintForm({
           options={technologyOptions}
           selectedIds={initialValues?.technologyIds ?? []}
           emptyMessage="No technologies in Taxonomy yet."
+        />
+      </Field>
+
+      <Field
+        label="Engineering contributors"
+        name="contributorProfileIds"
+        error={state.fieldErrors?.contributorProfileIds}
+        hint="Explicit public credit. Select only Engineering Profiles for people who contributed to this Blueprint."
+        asFieldset
+      >
+        <RelationMultiSelect
+          name="contributorProfileIds"
+          options={contributorOptions}
+          selectedIds={initialValues?.contributorProfileIds ?? []}
+          emptyMessage="No Engineering Profiles exist yet."
         />
       </Field>
 

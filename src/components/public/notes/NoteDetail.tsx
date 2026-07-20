@@ -21,6 +21,7 @@ const RELATIONSHIP_GROUPS = [
   { type: 'build', title: 'Related Builds' },
   { type: 'lab', title: 'Related Labs' },
   { type: 'blueprint', title: 'Related Blueprints' },
+  { type: 'engineeringProfile', title: 'Engineering contributors' },
 ] as const;
 
 export function NoteDetail({ note }: { note: ImmutablePublic<Note> }) {
