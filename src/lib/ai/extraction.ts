@@ -1,5 +1,4 @@
-import mammoth from 'mammoth';
-import { PDFParse } from 'pdf-parse';
+import 'server-only';
 
 /**
  * Server-side text extraction for uploaded reference documents (PLANNING.md
@@ -8,6 +7,12 @@ import { PDFParse } from 'pdf-parse';
  * request — callers must never persist the source file or this extracted
  * text as Media (§26.10); it is discarded once the generation request
  * completes.
+ *
+ * `pdf-parse` and `mammoth` are dynamically imported inside the branches
+ * that need them rather than imported at module top level. Both pull in
+ * heavy, Node-native parsing libraries (pdfjs-dist in particular) that must
+ * never be evaluated just because this module is on an import path — only
+ * when a file of that type is actually being extracted.
  */
 
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
@@ -48,6 +53,7 @@ export async function extractTextFromFile(
   }
 
   if (mimeType === 'application/pdf') {
+    const { PDFParse } = await import('pdf-parse');
     const parser = new PDFParse({ data: buffer });
     try {
       const result = await parser.getText();
@@ -61,6 +67,7 @@ export async function extractTextFromFile(
     mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
     fileName.endsWith('.docx')
   ) {
+    const mammoth = await import('mammoth');
     const result = await mammoth.extractRawText({ buffer });
     return truncate(result.value);
   }
