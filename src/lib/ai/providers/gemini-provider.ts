@@ -4,11 +4,19 @@ import { serverEnv } from '@/lib/env';
 import { buildPrompt } from '../editorial';
 import {
   AiEmptyResponseError,
+  AiInvalidRequestError,
   AiMalformedResponseError,
   AiProviderError,
   AiTimeoutError,
 } from '../errors';
+import {
+  buildGenerationRequestMetrics,
+  logGenerationRequestMetrics,
+  logImagesDropped,
+  logProviderFailure,
+} from '../logging';
 import type { ContentGenerationProvider } from '../provider';
+import { classifyGeminiError } from './gemini-error';
 import { BLOCKS_RESPONSE_SCHEMA, TEXT_RESPONSE_SCHEMA } from '../response-schema';
 import type {
   BlockGenerationResult,
@@ -18,13 +26,35 @@ import type {
   TextGenerationResult,
 } from '../types';
 
-/** Fast, cheap, and JSON-structured-output-capable — the right default for authoring assistance rather than a heavier reasoning model. */
-const DEFAULT_MODEL = 'gemini-2.5-flash';
+/**
+ * Fast, cheap, and JSON-structured-output-capable — the right default for
+ * authoring assistance rather than a heavier reasoning model.
+ *
+ * `gemini-2.5-flash` (the prior default) now returns a 404
+ * ("no longer available to new users") for this project's API key — verified
+ * directly against the live API while debugging why every generation request
+ * was failing. `gemini-3.1-flash-lite` is the current GA flash-lite tier
+ * confirmed to work with this key, including structured JSON output.
+ */
+const DEFAULT_MODEL = 'gemini-3.1-flash-lite';
 
 /** Keeps a single reference image request from stalling generation or blowing past a reasonable payload size. */
 const MAX_IMAGE_INPUTS = 4;
 const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
 const IMAGE_FETCH_TIMEOUT_MS = 8_000;
+
+/**
+ * Gemini's `generateContent` rejects inline (base64) requests above ~20MB —
+ * above that, the API expects the separate File API instead. `MAX_IMAGE_BYTES`
+ * × `MAX_IMAGE_INPUTS` alone (up to 16MB raw, ~21.3MB once base64-inflated by
+ * ~4/3) can already cross that ceiling before the prompt text is even added,
+ * which surfaced as an opaque provider failure with no indication it was a
+ * size problem. This budget caps the *combined* base64 payload across all
+ * reference images, with headroom left for prompt text and JSON overhead;
+ * images beyond the budget are dropped (in supplied order) rather than sent
+ * and left to fail server-side.
+ */
+const MAX_TOTAL_IMAGE_BASE64_BYTES = 12 * 1024 * 1024;
 
 let cachedClient: GoogleGenAI | undefined;
 
@@ -74,6 +104,41 @@ async function fetchImagePart(
   }
 }
 
+type ImagePart = { inlineData: { mimeType: string; data: string } };
+
+/**
+ * Fetches every candidate reference image, then keeps only as many — in
+ * supplied order — as fit under `MAX_TOTAL_IMAGE_BASE64_BYTES`. This is the
+ * guard that stops a document generation request from ever reaching Gemini
+ * with an inline payload the API will reject outright for size.
+ */
+async function selectImageParts(
+  images: GenerationImageInput[],
+): Promise<{
+  parts: ImagePart[];
+  includedCount: number;
+  droppedCount: number;
+  totalBytes: number;
+}> {
+  const fetched = (
+    await Promise.all(images.slice(0, MAX_IMAGE_INPUTS).map((image) => fetchImagePart(image)))
+  ).filter((part): part is ImagePart => part !== null);
+
+  const parts: ImagePart[] = [];
+  let totalBytes = 0;
+  let droppedCount = 0;
+  for (const part of fetched) {
+    const size = part.inlineData.data.length;
+    if (totalBytes + size > MAX_TOTAL_IMAGE_BASE64_BYTES) {
+      droppedCount += 1;
+      continue;
+    }
+    totalBytes += size;
+    parts.push(part);
+  }
+  return { parts, includedCount: parts.length, droppedCount, totalBytes };
+}
+
 /**
  * Translates to and from Gemini's actual request/response shape internally
  * — nothing Gemini-specific (request format, content-part structure, safety
@@ -93,14 +158,31 @@ export class GeminiProvider implements ContentGenerationProvider {
     const { systemInstruction, userPrompt } = buildPrompt(request);
     const isBlocksAction = request.action !== 'transform-selection';
 
-    const imageParts =
+    const imageSelection =
       request.action === 'document'
-        ? (
-            await Promise.all(
-              request.images.slice(0, MAX_IMAGE_INPUTS).map((image) => fetchImagePart(image)),
-            )
-          ).filter((part): part is NonNullable<typeof part> => part !== null)
-        : [];
+        ? await selectImageParts(request.images)
+        : { parts: [] as ImagePart[], includedCount: 0, droppedCount: 0, totalBytes: 0 };
+    const imageParts = imageSelection.parts;
+    if (imageSelection.droppedCount > 0) {
+      logImagesDropped({
+        action: request.action,
+        droppedCount: imageSelection.droppedCount,
+        includedCount: imageSelection.includedCount,
+        budgetBytes: MAX_TOTAL_IMAGE_BASE64_BYTES,
+      });
+    }
+
+    const metrics = buildGenerationRequestMetrics({
+      action: request.action,
+      systemInstruction,
+      userPrompt,
+      extractedDocumentText:
+        request.action === 'document' ? request.extractedDocumentText : undefined,
+      imageCount: imageSelection.includedCount,
+      imageDroppedCount: imageSelection.droppedCount,
+      imageBase64Bytes: imageSelection.totalBytes,
+    });
+    logGenerationRequestMetrics(metrics);
 
     let responseText: string | undefined;
     const timeoutMs = serverEnv().AI_PROVIDER_TIMEOUT_MS;
@@ -129,6 +211,16 @@ export class GeminiProvider implements ContentGenerationProvider {
     } catch (error) {
       if (controller.signal.aborted) {
         throw new AiTimeoutError();
+      }
+      const classified = classifyGeminiError(error);
+      logProviderFailure(
+        { provider: this.name, action: request.action, metrics, ...classified },
+        error,
+      );
+      if (classified.category === 'request-too-large') {
+        throw new AiInvalidRequestError(
+          'The AI request was too large for the provider to process. Try removing some reference material or images.',
+        );
       }
       throw new AiProviderError('The Gemini API request failed.', error);
     } finally {
