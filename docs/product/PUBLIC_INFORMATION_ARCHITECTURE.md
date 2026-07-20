@@ -4,7 +4,7 @@
 
 **Scope:** Public destinations, navigation, relationships, journeys, and Studio-to-public mapping
 
-This architecture treats routes as addressable views over a connected publishing system. It does not treat them as independent marketing pages. [PUBLIC_DATA_LAYER.md](PUBLIC_DATA_LAYER.md) defines the read architecture; [PUBLIC_DTO_SPECIFICATION.md](PUBLIC_DTO_SPECIFICATION.md), [VISIBILITY_RULES.md](VISIBILITY_RULES.md), and [RELATIONSHIP_AUDIT.md](RELATIONSHIP_AUDIT.md) define the Phase 13 field, visibility, and relationship contracts consumed by routes, relationships, indexes, and discovery surfaces.
+This architecture treats routes as addressable views over a connected publishing system. It does not treat them as independent marketing pages. [PUBLIC_DATA_LAYER.md](../architecture/PUBLIC_DATA_LAYER.md) defines the read architecture; [PUBLIC_DTO_SPECIFICATION.md](../architecture/PUBLIC_DTO_SPECIFICATION.md), [VISIBILITY_RULES.md](../architecture/VISIBILITY_RULES.md), and [RELATIONSHIP_AUDIT.md](../architecture/RELATIONSHIP_AUDIT.md) define the Phase 13 field, visibility, and relationship contracts consumed by routes, relationships, indexes, and discovery surfaces.
 
 ## Structural model
 
@@ -125,7 +125,7 @@ Do not infer human contribution from `createdByUserId`. That field is provenance
 Services ─────────────── proven by ─────────► all four pillars
 ```
 
-Relations should be queryable and reciprocal. When Studio stores only one direction, the public read layer derives the inverse. The current Work/Build and Lab/Build models can store both endpoints; [RELATIONSHIP_AUDIT.md](RELATIONSHIP_AUDIT.md) defines deterministic normalization and conflict behavior until Studio establishes one canonical write direction or atomic synchronization.
+Relations should be queryable and reciprocal. When Studio stores only one direction, the public read layer derives the inverse. The current Work/Build and Lab/Build models can store both endpoints; [RELATIONSHIP_AUDIT.md](../architecture/RELATIONSHIP_AUDIT.md) defines deterministic normalization and conflict behavior until Studio establishes one canonical write direction or atomic synchronization.
 
 ## Entry and exit rules
 
@@ -179,7 +179,7 @@ The reusable foundation is evaluated before a sales conversation begins.
 
 ## Studio-to-public mapping
 
-Studio owns records and documents. The public layer owns presentation, sequence, and derived navigation. The mapping below is delivered through public DTOs and resolvers in [PUBLIC_DATA_LAYER.md](PUBLIC_DATA_LAYER.md), never through direct collection access from a route or component.
+Studio owns records and documents. The public layer owns presentation, sequence, and derived navigation. The mapping below is delivered through public DTOs and resolvers in [PUBLIC_DATA_LAYER.md](../architecture/PUBLIC_DATA_LAYER.md), never through direct collection access from a route or component.
 
 | Studio type | Public appearance | Editable in Studio | Handcrafted/derived publicly |
 |---|---|---|---|
@@ -213,7 +213,7 @@ Do not overload Services, Notes, or Documents to simulate global settings. If ed
 
 ## Publishing and visibility rules
 
-[VISIBILITY_RULES.md](VISIBILITY_RULES.md) owns the complete, fail-closed predicate. The rules below summarize its public-information-architecture consequences:
+[VISIBILITY_RULES.md](../architecture/VISIBILITY_RULES.md) owns the complete, fail-closed predicate. The rules below summarize its public-information-architecture consequences:
 
 - Only `published` full-workflow records and `published` Services render publicly.
 - Team requires `publicProfile: true`; Engineering Profiles additionally require their own `published` status.

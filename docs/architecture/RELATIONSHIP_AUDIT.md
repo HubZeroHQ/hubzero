@@ -168,7 +168,7 @@ Media relationships require more than target existence. The mapper must validate
 - block alt text may be contextual but must remain truthful;
 - media used by hidden owners does not expose those owners through reverse usage.
 
-The single current asset fails role suitability for every audited use. See [CONTENT_AUDIT.md](CONTENT_AUDIT.md#media).
+The single current asset fails role suitability for every audited use. See [CONTENT_AUDIT.md](../archive/CONTENT_AUDIT.md#media).
 
 ## Relationship repair priorities
 

@@ -187,7 +187,7 @@ These recommendations are justified by current public consumers; none is specula
 
 ## Public search staging
 
-Search follows the visibility-safe discovery DTO in [PUBLIC_DTO_SPECIFICATION.md](PUBLIC_DTO_SPECIFICATION.md#public-discovery-projections).
+Search follows the visibility-safe discovery DTO in [PUBLIC_DTO_SPECIFICATION.md](../architecture/PUBLIC_DTO_SPECIFICATION.md#public-discovery-projections).
 
 ### Stage 1 — launch metadata index
 

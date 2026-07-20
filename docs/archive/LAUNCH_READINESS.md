@@ -4,7 +4,7 @@
 
 **Snapshot:** 17 July 2026
 
-This matrix answers what can genuinely launch from the current Studio content. It applies [PUBLIC_NARRATIVE.md](PUBLIC_NARRATIVE.md)'s completeness gates after the canonical visibility rules in [VISIBILITY_RULES.md](VISIBILITY_RULES.md).
+This matrix answers what can genuinely launch from the current Studio content. It applies [PUBLIC_NARRATIVE.md](../product/PUBLIC_NARRATIVE.md)'s completeness gates after the canonical visibility rules in [VISIBILITY_RULES.md](../architecture/VISIBILITY_RULES.md).
 
 ## Decision summary
 
@@ -116,8 +116,8 @@ This minimum does not imply that one item per pillar is ideal. It defines the sm
 ### A collection can move from No-go to editorial review when
 
 1. Every launch candidate is confirmed real and approved for publication.
-2. The required Summary and Detail DTO fields in [PUBLIC_DTO_SPECIFICATION.md](PUBLIC_DTO_SPECIFICATION.md) have explicit Studio sources.
-3. Required Documents meet [PUBLIC_NARRATIVE.md](PUBLIC_NARRATIVE.md)'s completeness gate.
+2. The required Summary and Detail DTO fields in [PUBLIC_DTO_SPECIFICATION.md](../architecture/PUBLIC_DTO_SPECIFICATION.md) have explicit Studio sources.
+3. Required Documents meet [PUBLIC_NARRATIVE.md](../product/PUBLIC_NARRATIVE.md)'s completeness gate.
 4. Required media and external destinations are truthful and usable.
 5. Relationships resolve reciprocally without hidden-target leakage.
 6. Attribution resolves without User exposure.

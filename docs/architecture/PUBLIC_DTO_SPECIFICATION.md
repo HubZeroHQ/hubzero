@@ -318,7 +318,7 @@ The fallback never exposes the User name or account image and never fabricates a
 
 Required fields: type, title, canonical URL, approved summary, public reference ID when available, matched public taxonomy labels, and public state where useful. Optional: safe Author identity and lead media thumbnail.
 
-Search does not carry Documents in stage one. See [EDITORIAL_GAP_REPORT.md](EDITORIAL_GAP_REPORT.md#public-search-staging) for staged indexing.
+Search does not carry Documents in stage one. See [EDITORIAL_GAP_REPORT.md](../archive/EDITORIAL_GAP_REPORT.md#public-search-staging) for staged indexing.
 
 ### Sitemap item
 

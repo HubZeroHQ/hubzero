@@ -9,7 +9,7 @@ Implementation order is not release order. No incomplete route, inactive control
 ## Sequencing principles
 
 1. Validate content readiness before designing around missing evidence.
-2. Build the public read architecture in [PUBLIC_DATA_LAYER.md](PUBLIC_DATA_LAYER.md) before any public surface consumes Studio.
+2. Build the public read architecture in [PUBLIC_DATA_LAYER.md](../architecture/PUBLIC_DATA_LAYER.md) before any public surface consumes Studio.
 3. Use the Homepage as the first complete expression of typography, rhythm, spacing, chrome, motion, density, and interaction.
 4. Make collection templates inherit the approved Homepage language rather than independently inventing it.
 5. Build Builds and Labs first among collections so the product-led identity and lifecycle are proven early.
@@ -83,7 +83,7 @@ Decisions:
 - Confirm Services remains public but contextual.
 - Confirm global framing remains handcrafted for the first public implementation.
 - Confirm that public contribution credit waits for explicit contributor data.
-- Approve [PUBLIC_DATA_LAYER.md](PUBLIC_DATA_LAYER.md) as the only supported bridge from Studio to public consumers.
+- Approve [PUBLIC_DATA_LAYER.md](../architecture/PUBLIC_DATA_LAYER.md) as the only supported bridge from Studio to public consumers.
 - Review the Homepage-first sequence and gated chapter behavior.
 
 **Dependencies:** completed Phase 12 documentation review.
@@ -94,7 +94,7 @@ Decisions:
 
 **Goal:** determine what can be published truthfully and approve the public-domain contract before building it.
 
-**Draft deliverables:** [CONTENT_AUDIT.md](CONTENT_AUDIT.md), [PUBLIC_DTO_SPECIFICATION.md](PUBLIC_DTO_SPECIFICATION.md), [VISIBILITY_RULES.md](VISIBILITY_RULES.md), [RELATIONSHIP_AUDIT.md](RELATIONSHIP_AUDIT.md), [EDITORIAL_GAP_REPORT.md](EDITORIAL_GAP_REPORT.md), and [LAUNCH_READINESS.md](LAUNCH_READINESS.md). These remain pending review and do not satisfy the phase exit until approved.
+**Draft deliverables:** [CONTENT_AUDIT.md](CONTENT_AUDIT.md), [PUBLIC_DTO_SPECIFICATION.md](../architecture/PUBLIC_DTO_SPECIFICATION.md), [VISIBILITY_RULES.md](../architecture/VISIBILITY_RULES.md), [RELATIONSHIP_AUDIT.md](../architecture/RELATIONSHIP_AUDIT.md), [EDITORIAL_GAP_REPORT.md](EDITORIAL_GAP_REPORT.md), and [LAUNCH_READINESS.md](LAUNCH_READINESS.md). These remain pending review and do not satisfy the phase exit until approved.
 
 Work:
 
@@ -103,7 +103,7 @@ Work:
 - Identify the first real deployed Blueprint.
 - Apply the completeness gates in `PUBLIC_NARRATIVE.md`.
 - Record which Homepage chapters have qualifying content now and which must initially be omitted.
-- Review the public DTO families, canonical visibility policy, relationship vocabulary, author resolution, and internal-field exclusions in [PUBLIC_DATA_LAYER.md](PUBLIC_DATA_LAYER.md).
+- Review the public DTO families, canonical visibility policy, relationship vocabulary, author resolution, and internal-field exclusions in [PUBLIC_DATA_LAYER.md](../architecture/PUBLIC_DATA_LAYER.md).
 - Map each approved public route and Homepage chapter to the summary/detail/Document DTOs it needs.
 - Confirm which external URLs and repositories are intentionally public.
 - Produce an editorial gap report; never fabricate seed content to satisfy a template.
@@ -118,7 +118,7 @@ Work:
 
 Work:
 
-- Implement the Repository → Public Read Model/DTO → Cache/Revalidation boundary defined in [PUBLIC_DATA_LAYER.md](PUBLIC_DATA_LAYER.md).
+- Implement the Repository → Public Read Model/DTO → Cache/Revalidation boundary defined in [PUBLIC_DATA_LAYER.md](../architecture/PUBLIC_DATA_LAYER.md).
 - Prevent public routes and components from importing MongoDB collections directly.
 - Implement allow-listed summary, detail, Document, Author, and discovery DTOs.
 - Apply one fail-closed visibility policy to routes, Homepage queries, relations, search projections, sitemap, RSS, and structured-data inputs.
@@ -313,7 +313,7 @@ Work:
 
 Work:
 
-- Build search exclusively from the discovery DTO projection in [PUBLIC_DATA_LAYER.md](PUBLIC_DATA_LAYER.md).
+- Build search exclusively from the discovery DTO projection in [PUBLIC_DATA_LAYER.md](../architecture/PUBLIC_DATA_LAYER.md).
 - Cover published routes, public Team/Profile identities, Services, and resolved Taxonomy.
 - Validate result language, type, state, URL, keyboard behavior, and empty states.
 - Complete metadata, structured data, canonical URLs, sitemap, RSS, robots, breadcrumbs, and internal-link verification from the same public read layer.
@@ -359,7 +359,7 @@ Passes:
 
 ### Public data layer
 
-- Every phase consumes the DTO, visibility, relationship, caching, and invalidation contracts in [PUBLIC_DATA_LAYER.md](PUBLIC_DATA_LAYER.md).
+- Every phase consumes the DTO, visibility, relationship, caching, and invalidation contracts in [PUBLIC_DATA_LAYER.md](../architecture/PUBLIC_DATA_LAYER.md).
 - A collection may extend a shared public DTO family, but it cannot bypass the read layer.
 - Changes to a public contract require dependency and invalidation review across Homepage, routes, relations, search, sitemap, RSS, and structured data.
 

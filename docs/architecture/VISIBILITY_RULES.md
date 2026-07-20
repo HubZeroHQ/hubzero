@@ -14,7 +14,7 @@ The two must not be conflated:
 
 - A record does not become public because it is complete, featured, linked, recent, or needed by a layout.
 - A record does not become launch-ready merely because its Studio status is `published`.
-- Completeness gates in [PUBLIC_NARRATIVE.md](PUBLIC_NARRATIVE.md) and [LAUNCH_READINESS.md](LAUNCH_READINESS.md) operate only after visibility succeeds.
+- Completeness gates in [PUBLIC_NARRATIVE.md](../product/PUBLIC_NARRATIVE.md) and [LAUNCH_READINESS.md](../archive/LAUNCH_READINESS.md) operate only after visibility succeeds.
 - A public implementation must not add a second route-specific visibility interpretation to hide editorial problems. Editors must fix or unpublish the record.
 
 ## Canonical predicate

@@ -1,118 +1,104 @@
-# HubZero‑Next ⚛️✨
+# HubZero Public Website
 
-**The official Next.js frontend for the Hub Zero website — a tech-driven collective crafting software, electronics, and design solutions.**
-
----
-
-## 🔗 Table of Contents
-
-1. [About the Project](#️-about-the-project)
-2. [Tech Stack](#️-tech-stack)
-3. [Features](#️-features)
-4. [Getting Started](#️-getting-started)
-5. [Deployment](#️-deployment)
-6. [Contributing](#️-contributing)
-7. [License](#️-license)
+The public HubZero site and the Studio CMS that publishes it, in one Next.js application.
 
 ---
 
-## 📝 About the Project
+## Overview
 
-**HubZero‑Next** is the blazing-fast frontend powering [hubzero.in](https://hubzero.in) — a sleek portfolio and service site built by the **Hub Zero** team: a crew of CSE and ECE engineers merging code and creativity.
+This repository contains HubZero's public-facing website and the first-party Studio CMS used to author everything it publishes. The two are one deployable application: Studio is the authoring surface at `/studio`, and the public routes render what Studio has published.
 
-This project focuses on modern UI/UX, scroll-triggered animations, SEO, and responsiveness — all built with **Next.js** for production-ready performance.
+The site organizes HubZero's engineering output around four permanent collections — Work, Builds, Blueprints, and Labs — alongside Notes, Engineering Profiles, Services, and a Contact surface. Every public page is a read view over Studio content; nothing on the public site is hand-authored inside a component.
 
----
-
-## 🛠️ Tech Stack
-
-| Layer               | Technologies                                  |
-| ------------------- | --------------------------------------------- |
-| **Framework**       | Next.js (App Router)                          |
-| **Styling**         | Tailwind CSS                                  |
-| **Animations**      | GSAP + ScrollTrigger                          |
-| **Assets**          | Cloudinary (for images via URLs)              |
-| **Hosting**         | Ubuntu Server 24.04 LTS, NGINX, Cloudflare    |
-| **Analytics & SEO** | Open Graph Tags, Favicon, Structured Metadata |
+It intentionally does not contain a separate CMS backend, a third-party content platform, or a marketing/growth stack. `client/` is a legacy implementation kept in the repository as historical reference only — it is not part of the current site and shares none of its architecture, routing, or components.
 
 ---
 
-## 🚀 Features
+## Features
 
-* 🧑‍💻 Interactive team showcase with portfolio navigation
-* 🌈 Custom UI with scroll-triggered animations (GSAP)
-* 🖼️ Image delivery via Cloudinary URLs (lightweight & fast)
-* 🧭 Sticky navbar with scroll-to-section navigation
-* 🌐 SEO‑friendly with Open Graph tags and structured data
-* 📱 Fully responsive and optimized for all devices
-* 🌙 Built for dark mode (default styling)
+- **Four permanent content pillars** — Work (client engineering), Builds (internal products), Blueprints (reusable foundations), and Labs (active investigations) — plus Notes, Engineering Profiles, and Services.
+- **Studio CMS** — a Draft → In Review → Approved → Published → Archived workflow, a block-based Document Engine, typed relationships between collections, a shared media library, and taxonomy.
+- **Public DTO layer** — a single fail-closed visibility predicate and field-level read contracts stand between Studio's write model and every public route.
+- **AI-assisted authoring** — provider-abstracted content generation with strict input validation, untrusted-data isolation, and per-user rate limiting.
+- **Role-based access** — authentication and permissions via NextAuth, scoped to Studio.
+- **Structured discoverability** — sitemap, robots, Open Graph metadata, and a web manifest, gated behind a release flag until content is launch-ready.
 
 ---
 
-## ⚙️ Getting Started
+## Architecture
+
+The site is a single Next.js (App Router) application written in TypeScript, styled with Tailwind CSS, and rendered with React.
+
+Content lives in MongoDB and is authored through Studio. Public routes never query the database directly for editorial data — they read through a **Public DTO layer**: a set of field-level, implementation-agnostic contracts derived from Studio records, resolved behind one shared visibility predicate. This keeps the public surface stable even as the Studio data model evolves, and keeps unpublished or restricted content structurally unreachable from public code paths.
+
+The architecture is content-driven throughout: routes, navigation, and metadata are all derived from what Studio has published, not hardcoded per page.
+
+---
+
+## Repository Structure
+
+```
+src/
+  app/            Route handlers: the public site, the Studio CMS, and API routes.
+  components/     UI components, split by surface (public, studio, documents, media, ui).
+  lib/            Core logic: database access, auth, AI, documents, public reads, search.
+  config/         Static configuration: permissions, workflow, taxonomy, navigation.
+docs/             Architecture, design, product, and operations documentation.
+scripts/          One-time and maintenance scripts (admin bootstrap, content seeding).
+team/             Canonical Markdown source for Engineering Profiles, pending Studio import.
+client/           Legacy reference implementation, kept for historical context only.
+public/           Static assets served from the web root.
+.hubzero/         Shared HubZero engineering knowledge base, synced from HubZero Core.
+```
+
+---
+
+## Documentation
+
+Architecture, design, product, and operations documentation lives in [`docs/`](docs/README.md). Start there rather than in this file — this README stays high-level by design.
+
+---
+
+## Development
 
 ```bash
-# Clone the repo
-git clone https://github.com/Rifaque/HubZero-Next.git
-cd HubZero-Next/client
-
 # Install dependencies
 npm install
 
-# Run locally
+# Start the development server
 npm run dev
 
 # Build for production
 npm run build
+
+# Typecheck
+npm run typecheck
+
+# Lint
+npm run lint
+
+# Run tests
+npm run test
 ```
 
----
-
-## 📦 Deployment
-
-This project is deployed on:
-
-* **Ubuntu Server 24.04 LTS**
-* **NGINX** as a reverse proxy for static builds
-* **Cloudflare** for domain, DNS, HTTPS & security
-* **Manual CI/CD:** Deployment via shell script (`deploy.sh`) from project root
-
-To deploy a fresh build:
-
-```bash
-cd client
-npm run build
-cd ..
-./deploy.sh
-```
+Copy `.env.example` to `.env.local` and provide values for MongoDB, authentication, Cloudinary, and the AI provider before running the app.
 
 ---
 
-## 🤝 Contributing
+## Content
 
-We’d love to see improvements or ideas from other developers!
+Public pages do not embed content directly. Every collection — Work, Builds, Blueprints, Labs, Notes, Engineering Profiles, Services — is authored in Studio and rendered through the public DTO layer described above.
 
-### How to Contribute
-
-```bash
-1. Fork this repository
-2. Create a new branch: git checkout -b feature/your-feature
-3. Commit your changes: git commit -m "Add your feature"
-4. Push to your fork: git push origin feature/your-feature
-5. Open a Pull Request 🚀
-```
-
-Let’s build something future-ready together.
+Engineering Profiles are the one exception in transit: they currently originate as Markdown files in [`team/`](team/README.md), which remain the canonical source until they are imported into Studio as first-class records. Once imported, Studio becomes the editing surface and the Markdown files remain as historical source material.
 
 ---
 
-## 📄 License
+## Deployment
 
-This project is licensed under the **MIT License**.
-See the [LICENSE](LICENSE) file for full details.
+This is a standard Next.js application: `npm run build` produces a production build, and `npm run start` serves it. The runtime requires the environment variables listed in `.env.example` (database, authentication, media, and AI provider credentials) to be configured wherever it is deployed.
 
 ---
 
-<p align="center">
-  ⚛️ Powered by <strong>Hub Zero</strong> — Engineering Ideas Into Reality.
-</p>
+## License
+
+This repository is private and unlicensed for external use.

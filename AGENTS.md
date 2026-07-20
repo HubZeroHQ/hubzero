@@ -5,7 +5,7 @@
 Before performing any work, read:
 
 - .hubzero/agents/AGENTS.md
-- DESIGN_SYSTEM.md
+- docs/design/DESIGN_SYSTEM.md
 
 These documents define the engineering philosophy, design language, workflow, quality standards, and repository conventions for this project.
 

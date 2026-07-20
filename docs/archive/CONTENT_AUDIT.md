@@ -6,7 +6,7 @@
 
 **Scope:** Studio content readiness and the source material available to future public read models
 
-This audit evaluates the current Studio database against [PUBLIC_NARRATIVE.md](PUBLIC_NARRATIVE.md), [PUBLIC_DATA_LAYER.md](PUBLIC_DATA_LAYER.md), and the stable contracts in [PUBLIC_DTO_SPECIFICATION.md](PUBLIC_DTO_SPECIFICATION.md). It does not authorize public implementation, change a Studio schema, or treat workflow publication as proof of editorial readiness.
+This audit evaluates the current Studio database against [PUBLIC_NARRATIVE.md](../product/PUBLIC_NARRATIVE.md), [PUBLIC_DATA_LAYER.md](../architecture/PUBLIC_DATA_LAYER.md), and the stable contracts in [PUBLIC_DTO_SPECIFICATION.md](../architecture/PUBLIC_DTO_SPECIFICATION.md). It does not authorize public implementation, change a Studio schema, or treat workflow publication as proof of editorial readiness.
 
 ## Audit method and evidence boundary
 
@@ -86,7 +86,7 @@ Only `HZ-NT-001` is published. Its summary is specific, its publication date and
 
 The other two Notes are in review/draft and own no Documents. The current public threshold requires at least five substantive published Notes with multi-pillar coverage and credible authorship. Current count: one published Note, one author, three related pillar entries, and no launch-ready body.
 
-The published Note's `authorId` resolves to a User without a linked Team record. A future public read may use the organization fallback defined in [PUBLIC_DTO_SPECIFICATION.md](PUBLIC_DTO_SPECIFICATION.md#author-resolution), but the current record cannot receive a person byline.
+The published Note's `authorId` resolves to a User without a linked Team record. A future public read may use the organization fallback defined in [PUBLIC_DTO_SPECIFICATION.md](../architecture/PUBLIC_DTO_SPECIFICATION.md#author-resolution), but the current record cannot receive a person byline.
 
 ### Engineering Profiles
 
@@ -215,4 +215,4 @@ A 404 may mean a private repository rather than a missing one. The public contra
 - Preserve workflow visibility rules but keep editorial eligibility as a separate gate.
 - Do not seed placeholders, fabricate relationships, or infer claims from titles and URLs.
 - Resolve the field and model gaps recorded in [EDITORIAL_GAP_REPORT.md](EDITORIAL_GAP_REPORT.md) before Phase 14 implementation.
-- Use [RELATIONSHIP_AUDIT.md](RELATIONSHIP_AUDIT.md) and [VISIBILITY_RULES.md](VISIBILITY_RULES.md) for all future public resolution.
+- Use [RELATIONSHIP_AUDIT.md](../architecture/RELATIONSHIP_AUDIT.md) and [VISIBILITY_RULES.md](../architecture/VISIBILITY_RULES.md) for all future public resolution.
