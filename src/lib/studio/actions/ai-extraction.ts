@@ -1,10 +1,5 @@
 'use server';
 
-import {
-  extractTextFromFile,
-  FileTooLargeError,
-  UnsupportedFileTypeError,
-} from '@/lib/ai/extraction';
 import { auth } from '@/lib/auth';
 import { UnauthorizedError } from '@/lib/auth/permissions';
 
@@ -40,12 +35,28 @@ export async function extractReferenceFileTextAction(
     return { ok: false, error: 'That file is larger than the 10MB reference-file limit.' };
   }
 
+  // Imported lazily, and only here: the extraction module pulls in
+  // pdf-parse/mammoth, heavy Node-native parsing libraries that must never
+  // be evaluated just because this action exists on an import path (every
+  // collection's document editor references it). Extraction is optional —
+  // if the module fails to load, CRUD on the owning entry must keep
+  // working regardless.
+  let extraction: typeof import('@/lib/ai/extraction');
+  try {
+    extraction = await import('@/lib/ai/extraction');
+  } catch {
+    return { ok: false, error: 'AI extraction is currently unavailable.' };
+  }
+
   try {
     const buffer = Buffer.from(await file.arrayBuffer());
-    const text = await extractTextFromFile(buffer, file.type, file.name);
+    const text = await extraction.extractTextFromFile(buffer, file.type, file.name);
     return { ok: true, text, fileName: file.name };
   } catch (error) {
-    if (error instanceof FileTooLargeError || error instanceof UnsupportedFileTypeError) {
+    if (
+      error instanceof extraction.FileTooLargeError ||
+      error instanceof extraction.UnsupportedFileTypeError
+    ) {
       return { ok: false, error: error.message };
     }
     return { ok: false, error: 'Could not read that file.' };
