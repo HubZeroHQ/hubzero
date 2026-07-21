@@ -48,12 +48,15 @@ export default async function EditBlueprintPage({ params }: { params: Promise<{ 
     );
   }
 
-  const [caseStudyDocument, { technologyOptions }, { heroAsset, galleryAssets }] =
-    await Promise.all([
-      documentRepository.findByOwnerAndRole('Blueprint', id, 'caseStudy'),
-      getBlueprintRelationOptions(),
-      resolveHeroAndGallery(blueprint.heroImageId, blueprint.previewAssetIds),
-    ]);
+  const [
+    caseStudyDocument,
+    { technologyOptions, contributorOptions },
+    { heroAsset, galleryAssets },
+  ] = await Promise.all([
+    documentRepository.findByOwnerAndRole('Blueprint', id, 'caseStudy'),
+    getBlueprintRelationOptions(),
+    resolveHeroAndGallery(blueprint.heroImageId, blueprint.previewAssetIds),
+  ]);
 
   const boundUpdateAction = updateBlueprintAction.bind(null, id);
   const boundSaveCaseStudyAction = saveBlueprintCaseStudyAction.bind(null, id);
@@ -89,10 +92,14 @@ export default async function EditBlueprintPage({ params }: { params: Promise<{ 
           features: blueprint.features,
           technologyIds: blueprint.technologyIds.map((entryId) => entryId.toString()),
           previewAssetIds: blueprint.previewAssetIds.map((entryId) => entryId.toString()),
+          contributorProfileIds: (blueprint.contributorProfileIds ?? []).map((entryId) =>
+            entryId.toString(),
+          ),
         }}
         initialHeroAsset={heroAsset ? toMediaAssetDTO(heroAsset) : undefined}
         initialGalleryAssets={galleryAssets.map(toMediaAssetDTO)}
         technologyOptions={technologyOptions}
+        contributorOptions={contributorOptions}
       />
 
       <section className="flex flex-col gap-3">

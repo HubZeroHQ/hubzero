@@ -8,7 +8,7 @@ export const metadata: Metadata = { title: 'New Blueprint — HubZero Studio' };
 
 /** Every authenticated role holds `createOwnEntry` (§29) — the create action itself is the enforcement point, not this route. */
 export default async function NewBlueprintPage() {
-  const { technologyOptions } = await getBlueprintRelationOptions();
+  const { technologyOptions, contributorOptions } = await getBlueprintRelationOptions();
 
   return (
     <div className="flex flex-col gap-6">
@@ -20,6 +20,7 @@ export default async function NewBlueprintPage() {
         action={createBlueprintAction}
         submitLabel="Create Blueprint"
         technologyOptions={technologyOptions}
+        contributorOptions={contributorOptions}
       />
     </div>
   );

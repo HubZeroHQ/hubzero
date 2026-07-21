@@ -23,6 +23,7 @@ export interface NoteFormValues {
   relatedBlueprintIds: string[];
   relatedLabIds: string[];
   galleryImageIds: string[];
+  contributorProfileIds: string[];
 }
 
 interface RelationOption {
@@ -55,6 +56,7 @@ export function NoteForm({
   buildOptions,
   blueprintOptions,
   labOptions,
+  contributorOptions,
 }: {
   action: (prevState: EntryActionState, formData: FormData) => Promise<EntryActionState>;
   submitLabel: string;
@@ -67,6 +69,7 @@ export function NoteForm({
   buildOptions: RelationOption[];
   blueprintOptions: RelationOption[];
   labOptions: RelationOption[];
+  contributorOptions: RelationOption[];
 }) {
   const [state, formAction, pending] = useActionState(action, emptyActionState);
 
@@ -240,6 +243,21 @@ export function NoteForm({
           options={labOptions}
           selectedIds={initialValues?.relatedLabIds ?? []}
           emptyMessage="No Labs exist yet."
+        />
+      </Field>
+
+      <Field
+        label="Engineering contributors"
+        name="contributorProfileIds"
+        error={state.fieldErrors?.contributorProfileIds}
+        hint="Explicit public credit, distinct from Author above. Select only Engineering Profiles for people who contributed to this Note."
+        asFieldset
+      >
+        <RelationMultiSelect
+          name="contributorProfileIds"
+          options={contributorOptions}
+          selectedIds={initialValues?.contributorProfileIds ?? []}
+          emptyMessage="No Engineering Profiles exist yet."
         />
       </Field>
 

@@ -34,6 +34,7 @@ export interface LabFormValues {
   relatedBlueprintIds: string[];
   galleryImageIds: string[];
   milestones: ProgressTimelineMilestoneValue[];
+  contributorProfileIds: string[];
 }
 
 interface RelationOption {
@@ -68,6 +69,7 @@ export function LabForm({
   technologyOptions,
   buildOptions,
   blueprintOptions,
+  contributorOptions,
 }: {
   action: (prevState: EntryActionState, formData: FormData) => Promise<EntryActionState>;
   submitLabel: string;
@@ -77,6 +79,7 @@ export function LabForm({
   technologyOptions: RelationOption[];
   buildOptions: RelationOption[];
   blueprintOptions: RelationOption[];
+  contributorOptions: RelationOption[];
 }) {
   const [state, formAction, pending] = useActionState(action, emptyActionState);
 
@@ -339,6 +342,21 @@ export function LabForm({
           name="milestones"
           initialMilestones={initialValues?.milestones}
           documentRoleOptions={LAB_DOCUMENT_ROLE_OPTIONS}
+        />
+      </Field>
+
+      <Field
+        label="Engineering contributors"
+        name="contributorProfileIds"
+        error={state.fieldErrors?.contributorProfileIds}
+        hint="Explicit public credit. Select only Engineering Profiles for people who contributed to this Lab."
+        asFieldset
+      >
+        <RelationMultiSelect
+          name="contributorProfileIds"
+          options={contributorOptions}
+          selectedIds={initialValues?.contributorProfileIds ?? []}
+          emptyMessage="No Engineering Profiles exist yet."
         />
       </Field>
 

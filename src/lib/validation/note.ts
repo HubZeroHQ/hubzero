@@ -14,6 +14,7 @@ export const noteSchema = z.object({
   featured: z.boolean().default(false),
   heroImageId: objectIdString.optional(),
   galleryImageIds: z.array(objectIdString).default([]),
+  contributorProfileIds: z.array(objectIdString).default([]),
 });
 
 export type NoteInput = z.infer<typeof noteSchema>;

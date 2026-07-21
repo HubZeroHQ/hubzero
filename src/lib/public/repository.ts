@@ -194,7 +194,13 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
     const explicitTargets = [
       ...storedTargets,
       ...inverseContributions.flatMap((target): Array<readonly [PublicEntityType, string]> =>
-        target.type === 'work' ? [['work', target.id]] : [],
+        target.type === 'work' ||
+        target.type === 'build' ||
+        target.type === 'blueprint' ||
+        target.type === 'lab' ||
+        target.type === 'note'
+          ? [[target.type, target.id]]
+          : [],
       ),
     ];
     const distinctTargets = new Map(
@@ -849,7 +855,7 @@ function deduplicateProfileEvidence(
     if (
       !current ||
       (current.kind === 'profileFeaturesEvidence' &&
-        relationship.kind === 'profileContributedToWork')
+        relationship.kind === 'profileContributedToEntry')
     ) {
       byTarget.set(relationship.target.url, relationship);
     }
@@ -967,7 +973,7 @@ function assertionsFrom(entity: StudioPublicEntity): RelationshipAssertion[] {
         toId: labId.toString(),
       })),
       ...(record.contributorProfileIds ?? []).map((profileId) => ({
-        kind: 'profileContributedToWork' as const,
+        kind: 'profileContributedToEntry' as const,
         fromType: 'work' as const,
         fromId: id,
         toType: 'engineeringProfile' as const,
@@ -996,6 +1002,25 @@ function assertionsFrom(entity: StudioPublicEntity): RelationshipAssertion[] {
             },
           ]
         : []),
+      ...(record.contributorProfileIds ?? []).map((profileId) => ({
+        kind: 'profileContributedToEntry' as const,
+        fromType: 'build' as const,
+        fromId: id,
+        toType: 'engineeringProfile' as const,
+        toId: profileId.toString(),
+      })),
+    ];
+  }
+  if (type === 'blueprint') {
+    const record = entity.record as Blueprint;
+    return [
+      ...(record.contributorProfileIds ?? []).map((profileId) => ({
+        kind: 'profileContributedToEntry' as const,
+        fromType: 'blueprint' as const,
+        fromId: id,
+        toType: 'engineeringProfile' as const,
+        toId: profileId.toString(),
+      })),
     ];
   }
   if (type === 'lab') {
@@ -1026,16 +1051,33 @@ function assertionsFrom(entity: StudioPublicEntity): RelationshipAssertion[] {
         toType: 'blueprint' as const,
         toId: blueprintId.toString(),
       })),
+      ...(record.contributorProfileIds ?? []).map((profileId) => ({
+        kind: 'profileContributedToEntry' as const,
+        fromType: 'lab' as const,
+        fromId: id,
+        toType: 'engineeringProfile' as const,
+        toId: profileId.toString(),
+      })),
     ];
   }
   if (type === 'note') {
-    return ((entity.record as Note).relatedEntries ?? []).map((reference) => ({
-      kind: 'noteDiscussesArtifact' as const,
-      fromType: 'note' as const,
-      fromId: id,
-      toType: evidenceType(reference),
-      toId: reference.ownerId.toString(),
-    }));
+    const record = entity.record as Note;
+    return [
+      ...(record.relatedEntries ?? []).map((reference) => ({
+        kind: 'noteDiscussesArtifact' as const,
+        fromType: 'note' as const,
+        fromId: id,
+        toType: evidenceType(reference),
+        toId: reference.ownerId.toString(),
+      })),
+      ...(record.contributorProfileIds ?? []).map((profileId) => ({
+        kind: 'profileContributedToEntry' as const,
+        fromType: 'note' as const,
+        fromId: id,
+        toType: 'engineeringProfile' as const,
+        toId: profileId.toString(),
+      })),
+    ];
   }
   if (type === 'service') {
     return ((entity.record as Service).evidenceLinks ?? []).map((reference) => ({

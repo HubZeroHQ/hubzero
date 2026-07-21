@@ -76,7 +76,7 @@ describe('public relationship normalization', () => {
     };
     expect(relationshipLabel(blueprint, 'work', 'work-1')).toBe('Blueprint');
     const contributor: RelationshipAssertion = {
-      kind: 'profileContributedToWork',
+      kind: 'profileContributedToEntry',
       fromType: 'work',
       fromId: 'work-1',
       toType: 'engineeringProfile',

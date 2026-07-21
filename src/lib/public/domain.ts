@@ -65,7 +65,7 @@ export type PublicRelationshipKind =
   | 'labGraduatedToBuild'
   | 'buildAppliedInWork'
   | 'workRelatedLab'
-  | 'profileContributedToWork'
+  | 'profileContributedToEntry'
   | 'artifactUsesBlueprint'
   | 'labRelatedBuild'
   | 'labRelatedBlueprint'

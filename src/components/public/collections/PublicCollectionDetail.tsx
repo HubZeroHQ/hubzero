@@ -75,6 +75,40 @@ export function PublicCollectionDetail({ entity }: { entity: ImmutablePublic<Col
           },
         ].filter((group) => group.relationships.length)
       : [];
+  const buildRelationshipGroups =
+    entity.type === 'build'
+      ? [
+          {
+            title: 'Applied in client work',
+            relationships: connected.filter((item) => item.target.type === 'work'),
+          },
+          {
+            title: 'Connected investigations',
+            relationships: connected.filter((item) => item.target.type === 'lab'),
+          },
+          {
+            title: 'Engineering attribution',
+            relationships: connected.filter((item) => item.target.type === 'engineeringProfile'),
+          },
+        ].filter((group) => group.relationships.length)
+      : [];
+  const labRelationshipGroups =
+    entity.type === 'lab'
+      ? [
+          {
+            title: 'Related Builds',
+            relationships: connected.filter((item) => item.target.type === 'build'),
+          },
+          {
+            title: 'Related Blueprints',
+            relationships: connected.filter((item) => item.target.type === 'blueprint'),
+          },
+          {
+            title: 'Engineering attribution',
+            relationships: connected.filter((item) => item.target.type === 'engineeringProfile'),
+          },
+        ].filter((group) => group.relationships.length)
+      : [];
   const blueprintRelationshipGroups =
     entity.type === 'blueprint'
       ? [
@@ -247,8 +281,18 @@ export function PublicCollectionDetail({ entity }: { entity: ImmutablePublic<Col
         />
       ) : null}
 
-      {entity.type !== 'work' && entity.type !== 'blueprint' && connected.length ? (
-        <RelationshipSection title="Connected records" relationships={connected} />
+      {entity.type === 'build' && buildRelationshipGroups.length ? (
+        <GroupedRelationshipSection
+          title="Continue through the engineering record"
+          groups={buildRelationshipGroups}
+        />
+      ) : null}
+
+      {entity.type === 'lab' && labRelationshipGroups.length ? (
+        <GroupedRelationshipSection
+          title="Continue through the engineering record"
+          groups={labRelationshipGroups}
+        />
       ) : null}
 
       <footer className="detail-footer">

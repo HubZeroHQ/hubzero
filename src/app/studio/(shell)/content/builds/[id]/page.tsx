@@ -15,9 +15,11 @@ import { transitionBuildStatusAction } from '@/lib/studio/actions/build';
 import { canUnpublishOverride, getAvailableTransitions } from '@/lib/studio/workflow-permissions';
 import { buildRepository } from '@/lib/db/repositories/build';
 import { documentRepository } from '@/lib/db/repositories/document';
+import { engineeringProfileRepository } from '@/lib/db/repositories/engineering-profile';
 import { labRepository } from '@/lib/db/repositories/lab';
 import { resolveHeroAndGallery } from '@/lib/media/resolve';
 import { taxonomyRepository } from '@/lib/db/repositories/taxonomy';
+import { teamRepository } from '@/lib/db/repositories/team';
 import { workRepository } from '@/lib/db/repositories/work';
 
 export const metadata: Metadata = { title: 'Builds — HubZero Studio' };
@@ -49,6 +51,8 @@ export default async function BuildDetailPage({ params }: { params: Promise<{ id
     technologies,
     labs,
     workEntries,
+    profiles,
+    team,
     { heroAsset, galleryAssets: gallery },
   ] = await Promise.all([
     documentRepository.findByOwnerAndRole('Build', id, 'caseStudy'),
@@ -56,6 +60,8 @@ export default async function BuildDetailPage({ params }: { params: Promise<{ id
     taxonomyRepository.findByKind('technology'),
     labRepository.list(),
     workRepository.list(),
+    engineeringProfileRepository.list(),
+    teamRepository.list(),
     resolveHeroAndGallery(build.heroImageId, build.galleryImageIds),
   ]);
 
@@ -72,6 +78,16 @@ export default async function BuildDetailPage({ params }: { params: Promise<{ id
     workEntries.map((entry) => [
       entry._id.toString(),
       { label: entry.title, referenceId: entry.referenceId },
+    ]),
+  );
+  const teamNames = new Map(team.map((member) => [member._id.toString(), member.name]));
+  const contributorLabels = new Map(
+    profiles.map((entry) => [
+      entry._id.toString(),
+      {
+        label: teamNames.get(entry.teamMemberId.toString()) ?? entry.slug,
+        referenceId: entry.referenceId,
+      },
     ]),
   );
 
@@ -203,7 +219,9 @@ export default async function BuildDetailPage({ params }: { params: Promise<{ id
         </section>
       ) : null}
 
-      {originatingLab || build.relatedWorkIds.length > 0 ? (
+      {originatingLab ||
+      build.relatedWorkIds.length > 0 ||
+      (build.contributorProfileIds?.length ?? 0) > 0 ? (
         <section className="flex flex-col gap-2">
           <h2 className="text-text-muted font-mono text-xs tracking-[0.05em] uppercase">Related</h2>
           <ul className="flex flex-col gap-1 text-sm">
@@ -217,6 +235,16 @@ export default async function BuildDetailPage({ params }: { params: Promise<{ id
               return (
                 <li key={workId.toString()} className="text-text-secondary">
                   {work ? `${work.label} (${work.referenceId})` : 'Unknown Work entry'}
+                </li>
+              );
+            })}
+            {(build.contributorProfileIds ?? []).map((profileId) => {
+              const contributor = contributorLabels.get(profileId.toString());
+              return (
+                <li key={profileId.toString()} className="text-text-secondary">
+                  {contributor
+                    ? `${contributor.label} (${contributor.referenceId}) — Engineering contributor`
+                    : 'Unknown Engineering Profile'}
                 </li>
               );
             })}

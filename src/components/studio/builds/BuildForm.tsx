@@ -21,6 +21,7 @@ export interface BuildFormValues {
   technologyIds: string[];
   originatingLabId?: string;
   relatedWorkIds: string[];
+  contributorProfileIds: string[];
 }
 
 interface RelationOption {
@@ -48,6 +49,7 @@ export function BuildForm({
   technologyOptions,
   labOptions,
   workOptions,
+  contributorOptions,
 }: {
   action: (prevState: EntryActionState, formData: FormData) => Promise<EntryActionState>;
   submitLabel: string;
@@ -57,6 +59,7 @@ export function BuildForm({
   technologyOptions: RelationOption[];
   labOptions: RelationOption[];
   workOptions: RelationOption[];
+  contributorOptions: RelationOption[];
 }) {
   const [state, formAction, pending] = useActionState(action, emptyActionState);
 
@@ -161,11 +164,21 @@ export function BuildForm({
         <span className="text-text-secondary">Featured on the homepage</span>
       </label>
 
-      <Field label="Hero image" name="heroImageId" error={state.fieldErrors?.heroImageId} asFieldset>
+      <Field
+        label="Hero image"
+        name="heroImageId"
+        error={state.fieldErrors?.heroImageId}
+        asFieldset
+      >
         <MediaPickerField name="heroImageId" initialAsset={initialHeroAsset} folder="builds" />
       </Field>
 
-      <Field label="Gallery" name="galleryImageIds" error={state.fieldErrors?.galleryImageIds} asFieldset>
+      <Field
+        label="Gallery"
+        name="galleryImageIds"
+        error={state.fieldErrors?.galleryImageIds}
+        asFieldset
+      >
         <MediaGalleryField
           name="galleryImageIds"
           initialAssets={initialGalleryAssets}
@@ -198,6 +211,21 @@ export function BuildForm({
           options={workOptions}
           selectedIds={initialValues?.relatedWorkIds ?? []}
           emptyMessage="No Work entries exist yet."
+        />
+      </Field>
+
+      <Field
+        label="Engineering contributors"
+        name="contributorProfileIds"
+        error={state.fieldErrors?.contributorProfileIds}
+        hint="Explicit public credit. Select only Engineering Profiles for people who contributed to this Build."
+        asFieldset
+      >
+        <RelationMultiSelect
+          name="contributorProfileIds"
+          options={contributorOptions}
+          selectedIds={initialValues?.contributorProfileIds ?? []}
+          emptyMessage="No Engineering Profiles exist yet."
         />
       </Field>
 

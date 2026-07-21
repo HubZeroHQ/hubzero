@@ -40,6 +40,7 @@ export const labSchema = z.object({
   featured: z.boolean().default(false),
   /** The Progress Timeline (Phase 10) — a lightweight, generic milestone list (`lib/validation/shared.ts`). */
   milestones: z.array(progressMilestoneSchema).default([]),
+  contributorProfileIds: z.array(objectIdString).default([]),
 });
 
 export type LabInput = z.infer<typeof labSchema>;

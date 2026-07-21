@@ -72,7 +72,7 @@ export default async function EditLabPage({ params }: { params: Promise<{ id: st
     engineeringJournalDocument,
     findingsDocument,
     researchNotesDocument,
-    { technologyOptions, buildOptions, blueprintOptions },
+    { technologyOptions, buildOptions, blueprintOptions, contributorOptions },
     { heroAsset, galleryAssets },
   ] = await Promise.all([
     documentRepository.findByOwnerAndRole('Lab', id, 'overview'),
@@ -154,12 +154,16 @@ export default async function EditLabPage({ params }: { params: Promise<{ id: st
             summary: milestone.summary,
             relatedDocumentRole: milestone.relatedDocumentRole,
           })),
+          contributorProfileIds: (lab.contributorProfileIds ?? []).map((entryId) =>
+            entryId.toString(),
+          ),
         }}
         initialHeroAsset={heroAsset ? toMediaAssetDTO(heroAsset) : undefined}
         initialGalleryAssets={galleryAssets.map(toMediaAssetDTO)}
         technologyOptions={technologyOptions}
         buildOptions={buildOptions}
         blueprintOptions={blueprintOptions}
+        contributorOptions={contributorOptions}
       />
 
       <section className="flex flex-col gap-3">
