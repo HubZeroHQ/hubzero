@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { PUBLIC_ENTITY_ROUTES, PUBLIC_SERVICES } from '@/config/public-site';
 import type { ImmutablePublic, PublicServiceSummary } from '@/lib/public/domain';
-import { PublicEmptyState } from '../EditorialPrimitives';
+import { PublicEmptyState, relationshipKey } from '../EditorialPrimitives';
 import { PageContainer, PublicSection } from '../PageContainer';
 
 export function Services({
@@ -91,7 +91,7 @@ export function Services({
                       <p className="home-eyebrow">Proven by / {service.evidence.length}</p>
                       <ul>
                         {service.evidence.map((relationship) => (
-                          <li key={`${relationship.kind}-${relationship.target.url}`}>
+                          <li key={relationshipKey(relationship)}>
                             <span>{relationship.target.type}</span>
                             {PUBLIC_ENTITY_ROUTES[relationship.target.type] ? (
                               <Link href={relationship.target.url}>

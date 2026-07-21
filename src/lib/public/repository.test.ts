@@ -650,4 +650,84 @@ describe('public repository boundary', () => {
       '/engineering/single-credit-engineer',
     );
   });
+
+  it('gives two contributors without an Engineering Profile distinct relationship targets, even though they share the teamMember /about url', async () => {
+    // Every teamMember target's `url` is intentionally the constant '/about'
+    // (see `PublicEntityLink` doc comment) — before this fix, that made two
+    // such contributors resolve to the same React key downstream. Each
+    // target must still carry the Team record's own unique `referenceId` so
+    // consumers have a stable, per-person identifier to key on instead.
+    const teamA: Team = {
+      _id: new ObjectId(),
+      referenceId: 'HZ-TM-301',
+      name: 'First contributor',
+      role: 'Engineer',
+      bio: 'Builds explicit public systems.',
+      group: 'Engineering',
+      publicProfile: true,
+      founder: false,
+      publicCategory: 'team',
+      engineeringProfileEligible: false,
+      order: 0,
+      socialLinks: [],
+      archived: false,
+      createdAt: now,
+      updatedAt: now,
+    };
+    const teamB: Team = {
+      ...teamA,
+      _id: new ObjectId(),
+      referenceId: 'HZ-TM-302',
+      name: 'Second contributor',
+    };
+    const work: Work = {
+      _id: new ObjectId(),
+      createdAt: now,
+      updatedAt: now,
+      createdByUserId: creator,
+      status: 'published',
+      slug: 'two-uncredited-profiles',
+      referenceId: 'HZ-WK-301',
+      title: 'Two contributors without profiles',
+      summary: 'A published case study crediting two people with no Engineering Profile.',
+      clientType: 'Product team',
+      categoryTagIds: [],
+      timeline: '12 weeks',
+      role: 'Product engineering',
+      technologyIds: [],
+      relatedBuildIds: [],
+      relatedBlueprintIds: [],
+      relatedLabIds: [],
+      contributors: [teamA._id, teamB._id],
+    };
+    const substantialText = Array.from({ length: 48 }, (_, index) => `evidence-${index}`).join(' ');
+    const caseStudyDocument: DocumentRecord = {
+      _id: new ObjectId(),
+      ownerType: 'Work',
+      ownerId: work._id,
+      role: 'caseStudy',
+      blocks: [{ id: 'one', type: 'paragraph', data: { text: substantialText } }],
+      createdAt: now,
+      updatedAt: now,
+    };
+    const repository = createPublicRepository(
+      fakeSource({
+        entities: [entity('teamMember', teamA), entity('teamMember', teamB), entity('work', work)],
+        documents: [caseStudyDocument],
+      }),
+    );
+
+    const workDetail = await repository.findDetail('work', work.slug);
+    const contributorRelationships = workDetail?.relationships.filter(
+      (relationship) => relationship.kind === 'teamContributedToEntry',
+    );
+
+    expect(contributorRelationships).toHaveLength(2);
+    const [first, second] = contributorRelationships ?? [];
+    expect(first?.target.url).toBe('/about');
+    expect(second?.target.url).toBe('/about');
+    expect(first?.target.referenceId).toBe('HZ-TM-301');
+    expect(second?.target.referenceId).toBe('HZ-TM-302');
+    expect(first?.target.referenceId).not.toBe(second?.target.referenceId);
+  });
 });

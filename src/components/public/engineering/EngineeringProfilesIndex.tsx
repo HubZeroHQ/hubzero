@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { PUBLIC_ENTITY_ROUTES } from '@/config/public-site';
 import type { ImmutablePublic, PublicEngineeringProfileIndexEntry } from '@/lib/public/domain';
-import { PublicEmptyState, TechnologyList } from '../EditorialPrimitives';
+import { PublicEmptyState, relationshipKey, TechnologyList } from '../EditorialPrimitives';
 import { PageContainer, PublicSection } from '../PageContainer';
 import { PublicImage } from '../PublicImage';
 
@@ -88,7 +88,7 @@ export function EngineeringProfilesIndex({
                       <p className="home-eyebrow">Selected evidence / {relationships.length}</p>
                       <ul>
                         {relationships.slice(0, 5).map((relationship) => (
-                          <li key={`${relationship.kind}-${relationship.target.url}`}>
+                          <li key={relationshipKey(relationship)}>
                             <span>{relationship.label}</span>
                             {PUBLIC_ENTITY_ROUTES[relationship.target.type] ? (
                               <Link href={relationship.target.url}>

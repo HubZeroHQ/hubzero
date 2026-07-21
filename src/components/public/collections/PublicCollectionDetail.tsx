@@ -7,6 +7,7 @@ import {
   formatPublicDate,
   PublicBreadcrumbs,
   RelationshipCard,
+  relationshipKey,
   TechnologyList,
 } from '../EditorialPrimitives';
 import { PageContainer, PublicSection } from '../PageContainer';
@@ -450,7 +451,7 @@ function RelationshipSection({
         <div className="home-relationships" aria-label={title}>
           {relationships.map((relationship) => (
             <RelationshipCard
-              key={`${relationship.kind}-${relationship.target.url}`}
+              key={relationshipKey(relationship)}
               relationship={relationship}
               enabled={PUBLIC_ENTITY_ROUTES[relationship.target.type]}
             />
@@ -485,7 +486,7 @@ function GroupedRelationshipSection({
               <div className="home-relationships" aria-label={group.title}>
                 {group.relationships.map((relationship) => (
                   <RelationshipCard
-                    key={`${relationship.kind}-${relationship.target.url}`}
+                    key={relationshipKey(relationship)}
                     relationship={relationship}
                     enabled={PUBLIC_ENTITY_ROUTES[relationship.target.type]}
                   />
