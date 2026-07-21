@@ -148,6 +148,7 @@ describe('Builds and Labs public collections', () => {
             type: 'engineeringProfile',
             title: 'Public Engineer',
             url: '/engineering/public-engineer',
+            role: 'Founder & Full-Stack Engineer',
           },
         },
       ],
@@ -162,9 +163,18 @@ describe('Builds and Labs public collections', () => {
     expect(markup).toContain('Engineering foundations');
     expect(markup).toContain('Engineering notes');
     expect(markup).toContain('Connected investigations');
-    expect(markup).toContain('Engineering attribution');
-    expect(markup).toContain('Engineering contributor');
     expect(markup).toContain('Return to Work');
+
+    // Engineering contributors render as publication metadata, before the case study body.
+    expect(markup).toContain('Engineering contributors');
+    expect(markup).toContain('Public Engineer');
+    expect(markup).toContain('Founder &amp; Full-Stack Engineer');
+    expect(markup).toContain('href="/engineering/public-engineer"');
+    expect(markup.indexOf('Engineering contributors')).toBeLessThan(
+      markup.indexOf('Context to consequence'),
+    );
+    // No longer duplicated further down as a relationship group.
+    expect(markup).not.toContain('Engineering attribution');
   });
 
   it('renders Build Documents, external destinations, and typed lineage', () => {
@@ -193,6 +203,16 @@ describe('Builds and Labs public collections', () => {
             referenceId: labSummary.referenceId,
           },
         },
+        {
+          kind: 'profileContributedToEntry',
+          label: 'Engineering contributor',
+          target: {
+            type: 'engineeringProfile',
+            title: 'Public Engineer',
+            url: '/engineering/public-engineer',
+            role: 'Backend Engineer',
+          },
+        },
       ],
       gallery: [],
     };
@@ -204,6 +224,14 @@ describe('Builds and Labs public collections', () => {
     expect(markup).toContain('<h3 id="product-context">Context</h3>');
     expect(markup).toContain('href="/labs/cache-consistency-study"');
     expect(markup).toContain('opens in a new tab');
+
+    // Engineering contributors render as publication metadata, before the case study body.
+    expect(markup).toContain('Engineering contributors');
+    expect(markup).toContain('Public Engineer');
+    expect(markup).toContain('Backend Engineer');
+    expect(markup.indexOf('Engineering contributors')).toBeLessThan(
+      markup.indexOf('Product story'),
+    );
   });
 
   it('renders Lab state, milestones, and research Documents in narrative order', () => {
@@ -215,7 +243,18 @@ describe('Builds and Labs public collections', () => {
           blocks: [{ id: 'journal-entry', type: 'paragraph', data: { text: 'Observed result.' } }],
         },
       ],
-      relationships: [],
+      relationships: [
+        {
+          kind: 'profileContributedToEntry',
+          label: 'Engineering contributor',
+          target: {
+            type: 'engineeringProfile',
+            title: 'Public Engineer',
+            url: '/engineering/public-engineer',
+            role: 'Backend Engineer',
+          },
+        },
+      ],
       graduationCriteria: 'The resolver remains deterministic across every visibility transition.',
       gallery: [],
       milestones: [
@@ -233,6 +272,13 @@ describe('Builds and Labs public collections', () => {
     );
     expect(markup).toContain('Conflict matrix complete');
     expect(markup).toContain('Graduation criteria');
+
+    // Engineering contributors render as publication metadata, before the research Documents.
+    expect(markup).toContain('Engineering contributors');
+    expect(markup).toContain('Public Engineer');
+    expect(markup.indexOf('Engineering contributors')).toBeLessThan(
+      markup.indexOf('Engineering journal'),
+    );
     expect(markup).toContain('Updated');
   });
 });

@@ -3,6 +3,7 @@ import { PUBLIC_ENTITY_ROUTES } from '@/config/public-site';
 import { founderAccentStyle, getFounderIdentity } from '@/config/founder-identity';
 import type { ImmutablePublic, PublicEntityDetail, PublicRelationship } from '@/lib/public/domain';
 import {
+  ContributorList,
   formatPublicDate,
   PublicBreadcrumbs,
   RelationshipCard,
@@ -21,7 +22,6 @@ const RELATIONSHIP_GROUPS = [
   { type: 'build', title: 'Related Builds' },
   { type: 'lab', title: 'Related Labs' },
   { type: 'blueprint', title: 'Related Blueprints' },
-  { type: 'engineeringProfile', title: 'Engineering contributors' },
 ] as const;
 
 export function NoteDetail({ note }: { note: ImmutablePublic<Note> }) {
@@ -32,6 +32,9 @@ export function NoteDetail({ note }: { note: ImmutablePublic<Note> }) {
       (relationship) => relationship.target.type === group.type,
     ),
   })).filter((group) => group.relationships.length);
+  const contributors = note.relationships.filter(
+    (relationship) => relationship.target.type === 'engineeringProfile',
+  );
   const authorDestinationAvailable =
     note.author.kind === 'person' &&
     note.author.profileAvailable &&
@@ -82,6 +85,7 @@ export function NoteDetail({ note }: { note: ImmutablePublic<Note> }) {
                 </div>
               </dl>
               <TechnologyList technologies={note.technologies} />
+              <ContributorList contributors={contributors} />
             </aside>
           </div>
         </PageContainer>

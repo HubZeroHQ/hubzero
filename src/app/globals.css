@@ -1315,6 +1315,60 @@
     margin-top: 24px;
   }
 
+  .detail-register-contributors {
+    margin-top: 24px;
+  }
+
+  .detail-register-contributors ul {
+    display: grid;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .detail-register-contributors a {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 8px 12px;
+    margin-inline: -12px;
+    border-radius: 6px;
+    transition: background-color var(--duration-fast) var(--ease-standard);
+  }
+
+  .detail-register-contributors a:hover,
+  .detail-register-contributors a:focus-visible {
+    background: var(--color-surface-elevated);
+  }
+
+  .contributor-name {
+    color: var(--color-text-primary);
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .contributor-role {
+    color: var(--color-text-secondary);
+    font-size: 12px;
+  }
+
+  .contributor-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 4px;
+    color: var(--color-text-muted);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    transition: color var(--duration-fast) var(--ease-standard);
+  }
+
+  .detail-register-contributors a:hover .contributor-link,
+  .detail-register-contributors a:focus-visible .contributor-link {
+    color: var(--color-text-primary);
+  }
+
   .detail-actions {
     display: flex;
     flex-wrap: wrap;

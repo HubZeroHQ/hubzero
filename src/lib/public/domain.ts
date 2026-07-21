@@ -59,6 +59,8 @@ export interface PublicEntityLink {
   state?: string;
   /** Only populated for an engineeringProfile link — the linked Profile's own real technologies (never fabricated). */
   technologies?: readonly PublicTaxonomyTerm[];
+  /** Only populated for an engineeringProfile link — the Team role behind that Profile, for contributor attribution. */
+  role?: string;
 }
 
 export type PublicRelationshipKind =

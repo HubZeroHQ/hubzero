@@ -84,6 +84,16 @@ describe('public Notes experience', () => {
           label: 'Discusses',
           target: { type: 'work', title: 'Release review', url: '/work/release-review' },
         },
+        {
+          kind: 'profileContributedToEntry',
+          label: 'Engineering contributor',
+          target: {
+            type: 'engineeringProfile',
+            title: 'Public Engineer',
+            url: '/engineering/public-engineer',
+            role: 'Backend Engineer',
+          },
+        },
       ],
     };
     const markup = renderToStaticMarkup(<NoteDetail note={detail} />);
@@ -95,5 +105,13 @@ describe('public Notes experience', () => {
     expect(markup).toContain('Related Work');
     expect(markup).toContain('Attribution / engineering profile');
     expect(markup).toContain('Return to Notes');
+
+    // Engineering contributors render as publication metadata, before the write-up body.
+    expect(markup).toContain('Engineering contributors');
+    expect(markup).toContain('Public Engineer');
+    expect(markup).toContain('Backend Engineer');
+    expect(markup.indexOf('Engineering contributors')).toBeLessThan(
+      markup.indexOf('Ownership before invalidation'),
+    );
   });
 });
