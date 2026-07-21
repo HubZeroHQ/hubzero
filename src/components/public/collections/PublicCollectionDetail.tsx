@@ -13,6 +13,7 @@ import {
 import { PageContainer, PublicSection } from '../PageContainer';
 import { ProseRenderer } from '../ProseRenderer';
 import { PublicImage } from '../PublicImage';
+import { BlueprintFeatureList } from './BlueprintFeatureList';
 
 type BuildDetail = Extract<PublicEntityDetail, { type: 'build' }>;
 type BlueprintDetail = Extract<PublicEntityDetail, { type: 'blueprint' }>;
@@ -381,16 +382,7 @@ function BlueprintSpecification({ entity }: { entity: ImmutablePublic<BlueprintD
             <dd>Version {entity.version}</dd>
           </div>
         </dl>
-        {entity.features.length ? (
-          <section className="blueprint-features" aria-labelledby="blueprint-features-title">
-            <h3 id="blueprint-features-title">Included capabilities</h3>
-            <ul>
-              {entity.features.map((feature) => (
-                <li key={feature}>{feature}</li>
-              ))}
-            </ul>
-          </section>
-        ) : null}
+        {entity.features.length ? <BlueprintFeatureList features={entity.features} /> : null}
       </PageContainer>
     </PublicSection>
   );
