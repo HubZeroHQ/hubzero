@@ -566,4 +566,111 @@ describe('public repository boundary', () => {
     expect(await repository.findDetail('engineeringProfile', thin.slug)).toBeNull();
     expect(await repository.findSummary('engineeringProfile', thin.slug)).toBeNull();
   });
+
+  it('still credits a contributor with a real but single-entry public record, even though their own profile page stays gated', async () => {
+    const contributorTeam: Team = {
+      _id: new ObjectId(),
+      referenceId: 'HZ-TM-201',
+      name: 'Single-credit engineer',
+      role: 'Engineer',
+      bio: 'Builds explicit public systems.',
+      group: 'Engineering',
+      publicProfile: true,
+      founder: false,
+      order: 0,
+      socialLinks: [],
+      archived: false,
+      createdAt: now,
+      updatedAt: now,
+    };
+    const contributor: EngineeringProfile = {
+      _id: new ObjectId(),
+      createdAt: now,
+      updatedAt: now,
+      createdByUserId: creator,
+      status: 'published',
+      slug: 'single-credit-engineer',
+      referenceId: 'EP-201',
+      teamMemberId: contributorTeam._id,
+      overview: 'Builds public systems around explicit ownership and observable state.',
+      engineeringPhilosophy: 'Make the evidence boundary explicit before implementation.',
+      currentExploration: 'Deterministic public read models',
+      areasOfExpertise: ['Public data architecture'],
+      currentInterests: ['Dependency graphs'],
+      engineeringIdentity: ['State and ownership should remain legible.'],
+      technologyIds: [],
+      featuredWorkIds: [],
+      featuredBuildIds: [],
+      featuredBlueprintIds: [],
+      featuredLabIds: [],
+      featuredNoteIds: [],
+      galleryImageIds: [],
+    };
+    const substantialText = Array.from({ length: 48 }, (_, index) => `evidence-${index}`).join(' ');
+    const profileDocument: DocumentRecord = {
+      _id: new ObjectId(),
+      ownerType: 'EngineeringProfile',
+      ownerId: contributor._id,
+      role: 'introduction',
+      blocks: [
+        { id: 'one', type: 'paragraph', data: { text: substantialText } },
+        { id: 'two', type: 'paragraph', data: { text: substantialText } },
+      ],
+      createdAt: now,
+      updatedAt: now,
+    };
+    const work: Work = {
+      _id: new ObjectId(),
+      createdAt: now,
+      updatedAt: now,
+      createdByUserId: creator,
+      status: 'published',
+      slug: 'only-public-credit',
+      referenceId: 'HZ-WK-201',
+      title: 'Only public credit',
+      summary: 'A published case study with one credited contributor.',
+      clientType: 'Product team',
+      categoryTagIds: [],
+      timeline: '12 weeks',
+      role: 'Product engineering',
+      technologyIds: [],
+      relatedBuildIds: [],
+      relatedBlueprintIds: [],
+      relatedLabIds: [],
+      contributorProfileIds: [contributor._id],
+    };
+    const caseStudyDocument: DocumentRecord = {
+      _id: new ObjectId(),
+      ownerType: 'Work',
+      ownerId: work._id,
+      role: 'caseStudy',
+      blocks: [{ id: 'one', type: 'paragraph', data: { text: substantialText } }],
+      createdAt: now,
+      updatedAt: now,
+    };
+    const repository = createPublicRepository(
+      fakeSource({
+        entities: [
+          entity('teamMember', contributorTeam),
+          entity('work', work),
+          entity('engineeringProfile', contributor),
+        ],
+        documents: [profileDocument, caseStudyDocument],
+      }),
+    );
+
+    // The contributor's own profile page/listing still requires ≥2 pieces of
+    // evidence — that invariant from the test above is unaffected.
+    expect(await repository.findDetail('engineeringProfile', contributor.slug)).toBeNull();
+
+    // But the Work page they're credited on must still show them as a
+    // contributor: crediting shouldn't depend on how many *other* public
+    // things they've contributed to.
+    const workDetail = await repository.findDetail('work', work.slug);
+    const contributorRelationships = workDetail?.relationships.filter(
+      (relationship) => relationship.target.type === 'engineeringProfile',
+    );
+    expect(contributorRelationships).toHaveLength(1);
+    expect(contributorRelationships?.[0]?.target.title).toBe('Single-credit engineer');
+  });
 });
