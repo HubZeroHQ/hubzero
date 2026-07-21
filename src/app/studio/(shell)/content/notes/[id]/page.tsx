@@ -239,7 +239,7 @@ export default async function NoteDetailPage({ params }: { params: Promise<{ id:
         ) : (
           <EmptyState
             title="No write-up yet."
-            description="The document body hasn't been written yet (PLANNING.md §25)."
+            description="The document body hasn't been written yet."
             action={
               canEdit ? (
                 <ButtonLink href={`/studio/content/notes/${id}/edit`} variant="secondary">

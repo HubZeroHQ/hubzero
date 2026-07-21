@@ -83,7 +83,7 @@ export default async function WorkListPage({
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Work"
-        description="Client engagements — every entry here is a live view of the Work collection (PLANNING.md §26.1)."
+        description="Client engagements — every entry here is a live view of the Work collection."
         actions={<ButtonLink href={`${WORK_LIST_PATH}/new`}>New Work entry</ButtonLink>}
       />
 

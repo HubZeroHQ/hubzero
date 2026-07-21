@@ -122,7 +122,7 @@ export default async function BlueprintsListPage({
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Blueprints"
-        description="Reusable website foundations — every entry here is a live view of the Blueprints collection (PLANNING.md §26.3). The library is actively growing."
+        description="Reusable website foundations — every entry here is a live view of the Blueprints collection. The library is actively growing."
         actions={<ButtonLink href={`${BLUEPRINTS_LIST_PATH}/new`}>New Blueprint</ButtonLink>}
       />
 

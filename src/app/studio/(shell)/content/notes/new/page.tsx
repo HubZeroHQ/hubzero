@@ -20,7 +20,7 @@ export default async function NewNotePage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="New Note"
-        description="Starts as a Draft. A reference ID is assigned automatically on save (§27). This is engineering writing, not a blog post — architecture decisions, implementation notes, research summaries, and debugging write-ups worth publishing."
+        description="Starts as a Draft. A reference ID is assigned automatically on save. This is engineering writing, not a blog post — architecture decisions, implementation notes, research summaries, and debugging write-ups worth publishing."
       />
       <NoteForm
         action={createNoteAction}

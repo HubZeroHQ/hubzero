@@ -1,6 +1,6 @@
 # HubZero Public Experience
 
-**Status:** Phase 12 design proposal, informed by Phase 13 content audit — documentation only
+**Status:** Implemented. Phase 12 design proposal, informed by Phase 13 content audit; this is the shipped public experience.
 
 **Research date:** 17 July 2026
 

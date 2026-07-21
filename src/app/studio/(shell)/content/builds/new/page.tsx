@@ -15,7 +15,7 @@ export default async function NewBuildPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="New Build"
-        description="Starts as a Draft. A reference ID is assigned automatically on save (§27)."
+        description="Starts as a Draft. A reference ID is assigned automatically on save."
       />
       <BuildForm
         action={createBuildAction}

@@ -1,6 +1,6 @@
 # Public Data Layer
 
-**Status:** Phase 12 architecture, refined by Phase 13 public contracts — documentation only
+**Status:** Implemented. Phase 12 architecture, refined by Phase 13 public contracts; this is the canonical reference for the shipped public read layer.
 
 **Scope:** The canonical read architecture between Studio and every public HubZero surface
 

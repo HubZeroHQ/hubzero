@@ -85,7 +85,7 @@ export default async function TeamListPage({
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Team"
-        description="Public-facing Team profiles — separate from Engineering Profiles (PLANNING.md §26.6/§26.9)."
+        description="Public-facing Team profiles — separate from Engineering Profiles."
         actions={<ButtonLink href={`${LIST_PATH}/new`}>New Team member</ButtonLink>}
       />
 

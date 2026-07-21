@@ -121,7 +121,7 @@ export default async function LabsListPage({
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Labs"
-        description="Active engineering exploration — every entry here is a live view of the Labs collection (PLANNING.md §26.4). These are not finished products; each communicates what's being explored, why, and where it currently stands."
+        description="Active engineering exploration — every entry here is a live view of the Labs collection. These are not finished products; each communicates what's being explored, why, and where it currently stands."
         actions={<ButtonLink href={`${LABS_LIST_PATH}/new`}>New Lab</ButtonLink>}
       />
 

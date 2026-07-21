@@ -15,7 +15,7 @@ export default async function NewLabPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="New Lab"
-        description="Starts as a Draft. A reference ID is assigned automatically on save (§27). This is an engineering notebook entry, not a finished product — transparency about direction and progress matters more than polish."
+        description="Starts as a Draft. A reference ID is assigned automatically on save. This is an engineering notebook entry, not a finished product — transparency about direction and progress matters more than polish."
       />
       <LabForm
         action={createLabAction}

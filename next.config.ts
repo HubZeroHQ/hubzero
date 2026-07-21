@@ -23,25 +23,24 @@ const nextConfig: NextConfig = {
     ],
   },
   // The CMS was renamed to Studio (`/studio/**`) — these keep old `/cms/*`
-  // bookmarks/dev links working during the transition. Temporary (302) since
-  // the route structure may still shift; flip to `permanent: true` once
-  // Studio has shipped and old links are no longer expected to update.
+  // bookmarks/dev links working. Studio has shipped and the route structure
+  // is stable, so these are permanent (308) redirects.
   async redirects() {
     return [
       {
         source: '/cms',
         destination: '/studio',
-        permanent: false,
+        permanent: true,
       },
       {
         source: '/cms/:path*',
         destination: '/studio/:path*',
-        permanent: false,
+        permanent: true,
       },
       {
         source: '/api/cms/:path*',
         destination: '/api/studio/:path*',
-        permanent: false,
+        permanent: true,
       },
     ];
   },

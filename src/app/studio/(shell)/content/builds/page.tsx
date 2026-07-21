@@ -102,13 +102,15 @@ export default async function BuildsListPage({
   ];
 
   const hasAnyEntries = allEntries.length > 0;
-  const hasFiltersApplied = Boolean(params.q || params.status || params.technology || params.deployment);
+  const hasFiltersApplied = Boolean(
+    params.q || params.status || params.technology || params.deployment,
+  );
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Builds"
-        description="Finished internal products — every entry here is a live view of the Builds collection (PLANNING.md §26.2)."
+        description="Finished internal products — every entry here is a live view of the Builds collection."
         actions={<ButtonLink href={`${BUILDS_LIST_PATH}/new`}>New Build</ButtonLink>}
       />
 
@@ -167,7 +169,10 @@ export default async function BuildsListPage({
       {technologies.length > 0 ? (
         <div className="flex flex-wrap items-center gap-2">
           <FilterChip
-            href={buildListHref(BUILDS_LIST_PATH, params, { technology: undefined, page: undefined })}
+            href={buildListHref(BUILDS_LIST_PATH, params, {
+              technology: undefined,
+              page: undefined,
+            })}
             active={!params.technology}
           >
             All technologies

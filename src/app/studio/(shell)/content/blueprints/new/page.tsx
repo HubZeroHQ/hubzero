@@ -14,7 +14,7 @@ export default async function NewBlueprintPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="New Blueprint"
-        description="Starts as a Draft. A reference ID is assigned automatically on save (§27). Name must follow the Blueprint-X-Y convention (AGENTS.md)."
+        description="Starts as a Draft. A reference ID is assigned automatically on save. Name must follow the Blueprint-X-Y convention."
       />
       <BlueprintForm
         action={createBlueprintAction}
