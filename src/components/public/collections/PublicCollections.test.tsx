@@ -142,7 +142,7 @@ describe('Builds and Labs public collections', () => {
           target: { type: 'lab', title: 'Review systems Lab', url: '/labs/review-systems' },
         },
         {
-          kind: 'profileContributedToEntry',
+          kind: 'teamContributedToEntry',
           label: 'Engineering contributor',
           target: {
             type: 'engineeringProfile',
@@ -166,13 +166,11 @@ describe('Builds and Labs public collections', () => {
     expect(markup).toContain('Return to Work');
 
     // Engineering contributors render as publication metadata, before the case study body.
-    expect(markup).toContain('Engineering contributors');
+    expect(markup).toContain('Contributors');
     expect(markup).toContain('Public Engineer');
     expect(markup).toContain('Founder &amp; Full-Stack Engineer');
     expect(markup).toContain('href="/engineering/public-engineer"');
-    expect(markup.indexOf('Engineering contributors')).toBeLessThan(
-      markup.indexOf('Context to consequence'),
-    );
+    expect(markup.indexOf('Contributors')).toBeLessThan(markup.indexOf('Context to consequence'));
     // No longer duplicated further down as a relationship group.
     expect(markup).not.toContain('Engineering attribution');
   });
@@ -204,7 +202,7 @@ describe('Builds and Labs public collections', () => {
           },
         },
         {
-          kind: 'profileContributedToEntry',
+          kind: 'teamContributedToEntry',
           label: 'Engineering contributor',
           target: {
             type: 'engineeringProfile',
@@ -226,12 +224,10 @@ describe('Builds and Labs public collections', () => {
     expect(markup).toContain('opens in a new tab');
 
     // Engineering contributors render as publication metadata, before the case study body.
-    expect(markup).toContain('Engineering contributors');
+    expect(markup).toContain('Contributors');
     expect(markup).toContain('Public Engineer');
     expect(markup).toContain('Backend Engineer');
-    expect(markup.indexOf('Engineering contributors')).toBeLessThan(
-      markup.indexOf('Product story'),
-    );
+    expect(markup.indexOf('Contributors')).toBeLessThan(markup.indexOf('Product story'));
   });
 
   it('renders Lab state, milestones, and research Documents in narrative order', () => {
@@ -245,7 +241,7 @@ describe('Builds and Labs public collections', () => {
       ],
       relationships: [
         {
-          kind: 'profileContributedToEntry',
+          kind: 'teamContributedToEntry',
           label: 'Engineering contributor',
           target: {
             type: 'engineeringProfile',
@@ -274,11 +270,9 @@ describe('Builds and Labs public collections', () => {
     expect(markup).toContain('Graduation criteria');
 
     // Engineering contributors render as publication metadata, before the research Documents.
-    expect(markup).toContain('Engineering contributors');
+    expect(markup).toContain('Contributors');
     expect(markup).toContain('Public Engineer');
-    expect(markup.indexOf('Engineering contributors')).toBeLessThan(
-      markup.indexOf('Engineering journal'),
-    );
+    expect(markup.indexOf('Contributors')).toBeLessThan(markup.indexOf('Engineering journal'));
     expect(markup).toContain('Updated');
   });
 });

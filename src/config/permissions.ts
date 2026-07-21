@@ -56,13 +56,7 @@ export const ROLE_CAPABILITIES: Record<UserRole, readonly Capability[]> = {
     'publish',
     'manageMedia',
   ],
-  teamMember: [
-    'createOwnEntry',
-    'editOwnEntry',
-    'editAssignedEntry',
-    'submitForReview',
-    'manageMedia',
-  ],
+  member: ['createOwnEntry', 'editOwnEntry', 'editAssignedEntry', 'submitForReview', 'manageMedia'],
 };
 
 export function roleHasCapability(role: UserRole, capability: Capability): boolean {

@@ -92,9 +92,7 @@ export default async function EditBlueprintPage({ params }: { params: Promise<{ 
           features: blueprint.features,
           technologyIds: blueprint.technologyIds.map((entryId) => entryId.toString()),
           previewAssetIds: blueprint.previewAssetIds.map((entryId) => entryId.toString()),
-          contributorProfileIds: (blueprint.contributorProfileIds ?? []).map((entryId) =>
-            entryId.toString(),
-          ),
+          contributors: (blueprint.contributors ?? []).map((entryId) => entryId.toString()),
         }}
         initialHeroAsset={heroAsset ? toMediaAssetDTO(heroAsset) : undefined}
         initialGalleryAssets={galleryAssets.map(toMediaAssetDTO)}

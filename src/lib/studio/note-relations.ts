@@ -1,6 +1,5 @@
 import { blueprintRepository } from '@/lib/db/repositories/blueprint';
 import { buildRepository } from '@/lib/db/repositories/build';
-import { engineeringProfileRepository } from '@/lib/db/repositories/engineering-profile';
 import { labRepository } from '@/lib/db/repositories/lab';
 import { taxonomyRepository } from '@/lib/db/repositories/taxonomy';
 import { teamRepository } from '@/lib/db/repositories/team';
@@ -18,17 +17,15 @@ import type { EntryReference, EvidenceOwnerType } from '@/types/studio';
  * `createdByUserId` (§26.5).
  */
 export async function getNoteRelationOptions() {
-  const [technologies, users, work, builds, blueprints, labs, profiles, team] = await Promise.all([
+  const [technologies, users, work, builds, blueprints, labs, team] = await Promise.all([
     taxonomyRepository.findByKind('technology'),
     userRepository.list(),
     workRepository.list(),
     buildRepository.list(),
     blueprintRepository.list(),
     labRepository.list(),
-    engineeringProfileRepository.list(),
     teamRepository.list(),
   ]);
-  const teamNames = new Map(team.map((member) => [member._id.toString(), member.name]));
 
   return {
     technologyOptions: technologies.map((entry) => ({
@@ -56,9 +53,9 @@ export async function getNoteRelationOptions() {
       label: entry.title,
       referenceId: entry.referenceId,
     })),
-    contributorOptions: profiles.map((entry) => ({
+    contributorOptions: team.map((entry) => ({
       id: entry._id.toString(),
-      label: teamNames.get(entry.teamMemberId.toString()) ?? entry.slug,
+      label: entry.name,
       referenceId: entry.referenceId,
     })),
   };

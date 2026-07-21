@@ -85,7 +85,7 @@ describe('public Notes experience', () => {
           target: { type: 'work', title: 'Release review', url: '/work/release-review' },
         },
         {
-          kind: 'profileContributedToEntry',
+          kind: 'teamContributedToEntry',
           label: 'Engineering contributor',
           target: {
             type: 'engineeringProfile',
@@ -106,11 +106,11 @@ describe('public Notes experience', () => {
     expect(markup).toContain('Attribution / engineering profile');
     expect(markup).toContain('Return to Notes');
 
-    // Engineering contributors render as publication metadata, before the write-up body.
-    expect(markup).toContain('Engineering contributors');
+    // Contributors render as publication metadata, before the write-up body.
+    expect(markup).toContain('Contributors');
     expect(markup).toContain('Public Engineer');
     expect(markup).toContain('Backend Engineer');
-    expect(markup.indexOf('Engineering contributors')).toBeLessThan(
+    expect(markup.indexOf('Contributors')).toBeLessThan(
       markup.indexOf('Ownership before invalidation'),
     );
   });

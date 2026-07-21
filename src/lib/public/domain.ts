@@ -59,15 +59,17 @@ export interface PublicEntityLink {
   state?: string;
   /** Only populated for an engineeringProfile link — the linked Profile's own real technologies (never fabricated). */
   technologies?: readonly PublicTaxonomyTerm[];
-  /** Only populated for an engineeringProfile link — the Team role behind that Profile, for contributor attribution. */
+  /** Populated for an engineeringProfile link, or a teamMember link — the Team role, for contributor attribution. */
   role?: string;
+  /** Only populated for a teamMember link where that person has a publicly visible Engineering Profile — the profile's own URL. `url` on a teamMember link always stays '/about'; this is how a contributor credit knows whether to link to a profile instead. */
+  profileUrl?: string;
 }
 
 export type PublicRelationshipKind =
   | 'labGraduatedToBuild'
   | 'buildAppliedInWork'
   | 'workRelatedLab'
-  | 'profileContributedToEntry'
+  | 'teamContributedToEntry'
   | 'artifactUsesBlueprint'
   | 'labRelatedBuild'
   | 'labRelatedBlueprint'
@@ -218,6 +220,11 @@ export interface PublicTeamMemberSummary extends PublicSummaryBase {
   type: 'teamMember';
   group: string;
   role: string;
+  /** Which About-page section this person appears in — independent of `founder` (a permanent historical fact). */
+  publicCategory: 'leadership' | 'team';
+  founder: boolean;
+  /** Optional — surfaced only on the compact Engineering Team card. */
+  joinedAt?: string;
   profile?: PublicEntityLink;
   portrait?: PublicMedia;
 }

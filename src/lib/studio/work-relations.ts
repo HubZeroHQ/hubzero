@@ -1,6 +1,5 @@
 import { blueprintRepository } from '@/lib/db/repositories/blueprint';
 import { buildRepository } from '@/lib/db/repositories/build';
-import { engineeringProfileRepository } from '@/lib/db/repositories/engineering-profile';
 import { labRepository } from '@/lib/db/repositories/lab';
 import { taxonomyRepository } from '@/lib/db/repositories/taxonomy';
 import { teamRepository } from '@/lib/db/repositories/team';
@@ -12,18 +11,20 @@ import { teamRepository } from '@/lib/db/repositories/team';
  * of their own yet (this phase only builds Work's), so these query the
  * repositories directly rather than an API that doesn't exist — the exact
  * same data layer a future Builds/Blueprints list page will also read.
+ *
+ * Contributors reference Team directly — the canonical person identity —
+ * never `EngineeringProfile`. Whether a credited person also has a profile
+ * is resolved at render time, not by picking from a different list here.
  */
 export async function getWorkRelationOptions() {
-  const [technologies, categories, builds, blueprints, labs, profiles, team] = await Promise.all([
+  const [technologies, categories, builds, blueprints, labs, team] = await Promise.all([
     taxonomyRepository.findByKind('technology'),
     taxonomyRepository.findByKind('category'),
     buildRepository.list(),
     blueprintRepository.list(),
     labRepository.list(),
-    engineeringProfileRepository.list(),
     teamRepository.list(),
   ]);
-  const teamNames = new Map(team.map((member) => [member._id.toString(), member.name]));
 
   return {
     technologyOptions: technologies.map((entry) => ({
@@ -46,9 +47,9 @@ export async function getWorkRelationOptions() {
       label: entry.title,
       referenceId: entry.referenceId,
     })),
-    contributorOptions: profiles.map((entry) => ({
+    contributorOptions: team.map((entry) => ({
       id: entry._id.toString(),
-      label: teamNames.get(entry.teamMemberId.toString()) ?? entry.slug,
+      label: entry.name,
       referenceId: entry.referenceId,
     })),
   };

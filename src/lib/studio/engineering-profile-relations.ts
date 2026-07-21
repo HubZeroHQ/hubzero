@@ -34,7 +34,8 @@ export async function getEngineeringProfileRelationOptions(currentTeamMemberId?:
       .filter(
         (entry) =>
           entry._id.toString() === currentTeamMemberId ||
-          !profiles.some((profile) => profile.teamMemberId.toString() === entry._id.toString()),
+          (entry.engineeringProfileEligible &&
+            !profiles.some((profile) => profile.teamMemberId.toString() === entry._id.toString())),
       )
       .map((entry) => ({
         id: entry._id.toString(),

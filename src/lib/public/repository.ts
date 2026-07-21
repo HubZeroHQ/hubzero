@@ -368,7 +368,10 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
           summary: record.bio,
           role: record.role,
           group: record.group,
+          publicCategory: record.publicCategory,
+          founder: record.founder,
           technologies: [],
+          ...(record.joinedAt ? { joinedAt: record.joinedAt.toISOString() } : {}),
           ...(portrait ? { portrait, hero: portrait } : {}),
           ...(profileVisible && profile
             ? {
@@ -416,6 +419,18 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
       ...inverses.flatMap(assertionsFrom),
       ...lineagePeers.flatMap(assertionsFrom),
     ];
+    // An Engineering Profile and its underlying Team member are the same
+    // public identity for contributor credit — those edges are always
+    // asserted against Team (`teamContributedToEntry`, never a profile id
+    // directly), so a profile's own page needs its `teamMemberId` as an
+    // alias to still surface "Contributed to" edges asserted against it.
+    const aliasSource =
+      entity.type === 'engineeringProfile'
+        ? {
+            type: 'teamMember' as const,
+            id: String((entity.record as EngineeringProfile).teamMemberId),
+          }
+        : undefined;
     return resolvePublicRelationships(
       { type: entity.type, id: entity.id },
       assertions,
@@ -425,6 +440,7 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
         const summary = await mapSummary(target);
         return summary ? toEntityLink(summary) : null;
       },
+      aliasSource,
     );
   }
 
@@ -750,6 +766,10 @@ function toEntityLink(summary: PublicEntitySummary): PublicEntityLink {
     ...(summary.summary ? { summary: summary.summary } : {}),
     ...(summary.state ? { state: summary.state } : {}),
     ...(summary.type === 'engineeringProfile' && summary.role ? { role: summary.role } : {}),
+    ...(summary.type === 'teamMember' && summary.role ? { role: summary.role } : {}),
+    ...(summary.type === 'teamMember' && summary.profile
+      ? { profileUrl: summary.profile.url }
+      : {}),
   };
 }
 
@@ -792,8 +812,7 @@ function deduplicateProfileEvidence(
     const current = byTarget.get(relationship.target.url);
     if (
       !current ||
-      (current.kind === 'profileFeaturesEvidence' &&
-        relationship.kind === 'profileContributedToEntry')
+      (current.kind === 'profileFeaturesEvidence' && relationship.kind === 'teamContributedToEntry')
     ) {
       byTarget.set(relationship.target.url, relationship);
     }
@@ -910,12 +929,12 @@ function assertionsFrom(entity: StudioPublicEntity): RelationshipAssertion[] {
         toType: 'lab' as const,
         toId: labId.toString(),
       })),
-      ...(record.contributorProfileIds ?? []).map((profileId) => ({
-        kind: 'profileContributedToEntry' as const,
+      ...(record.contributors ?? []).map((teamId) => ({
+        kind: 'teamContributedToEntry' as const,
         fromType: 'work' as const,
         fromId: id,
-        toType: 'engineeringProfile' as const,
-        toId: profileId.toString(),
+        toType: 'teamMember' as const,
+        toId: teamId.toString(),
       })),
     ];
   }
@@ -940,24 +959,24 @@ function assertionsFrom(entity: StudioPublicEntity): RelationshipAssertion[] {
             },
           ]
         : []),
-      ...(record.contributorProfileIds ?? []).map((profileId) => ({
-        kind: 'profileContributedToEntry' as const,
+      ...(record.contributors ?? []).map((teamId) => ({
+        kind: 'teamContributedToEntry' as const,
         fromType: 'build' as const,
         fromId: id,
-        toType: 'engineeringProfile' as const,
-        toId: profileId.toString(),
+        toType: 'teamMember' as const,
+        toId: teamId.toString(),
       })),
     ];
   }
   if (type === 'blueprint') {
     const record = entity.record as Blueprint;
     return [
-      ...(record.contributorProfileIds ?? []).map((profileId) => ({
-        kind: 'profileContributedToEntry' as const,
+      ...(record.contributors ?? []).map((teamId) => ({
+        kind: 'teamContributedToEntry' as const,
         fromType: 'blueprint' as const,
         fromId: id,
-        toType: 'engineeringProfile' as const,
-        toId: profileId.toString(),
+        toType: 'teamMember' as const,
+        toId: teamId.toString(),
       })),
     ];
   }
@@ -989,12 +1008,12 @@ function assertionsFrom(entity: StudioPublicEntity): RelationshipAssertion[] {
         toType: 'blueprint' as const,
         toId: blueprintId.toString(),
       })),
-      ...(record.contributorProfileIds ?? []).map((profileId) => ({
-        kind: 'profileContributedToEntry' as const,
+      ...(record.contributors ?? []).map((teamId) => ({
+        kind: 'teamContributedToEntry' as const,
         fromType: 'lab' as const,
         fromId: id,
-        toType: 'engineeringProfile' as const,
-        toId: profileId.toString(),
+        toType: 'teamMember' as const,
+        toId: teamId.toString(),
       })),
     ];
   }
@@ -1008,12 +1027,12 @@ function assertionsFrom(entity: StudioPublicEntity): RelationshipAssertion[] {
         toType: evidenceType(reference),
         toId: reference.ownerId.toString(),
       })),
-      ...(record.contributorProfileIds ?? []).map((profileId) => ({
-        kind: 'profileContributedToEntry' as const,
+      ...(record.contributors ?? []).map((teamId) => ({
+        kind: 'teamContributedToEntry' as const,
         fromType: 'note' as const,
         fromId: id,
-        toType: 'engineeringProfile' as const,
-        toId: profileId.toString(),
+        toType: 'teamMember' as const,
+        toId: teamId.toString(),
       })),
     ];
   }

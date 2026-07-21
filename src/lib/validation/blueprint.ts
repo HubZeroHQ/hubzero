@@ -26,7 +26,7 @@ export const blueprintSchema = z.object({
   previewAssetIds: z.array(objectIdString).default([]),
   featured: z.boolean().default(false),
   version: z.string().min(1).default('1.0.0'),
-  contributorProfileIds: z.array(objectIdString).default([]),
+  contributors: z.array(objectIdString).default([]),
 });
 
 export type BlueprintInput = z.infer<typeof blueprintSchema>;

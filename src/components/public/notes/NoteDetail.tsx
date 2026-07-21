@@ -33,7 +33,7 @@ export function NoteDetail({ note }: { note: ImmutablePublic<Note> }) {
     ),
   })).filter((group) => group.relationships.length);
   const contributors = note.relationships.filter(
-    (relationship) => relationship.target.type === 'engineeringProfile',
+    (relationship) => relationship.kind === 'teamContributedToEntry',
   );
   const authorDestinationAvailable =
     note.author.kind === 'person' &&

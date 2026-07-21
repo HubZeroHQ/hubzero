@@ -70,6 +70,12 @@ export default async function TeamListPage({
     },
     { key: 'role', header: 'Role', render: (entry) => entry.role },
     { key: 'group', header: 'Group', render: (entry) => entry.group },
+    {
+      key: 'publicCategory',
+      header: 'Public category',
+      render: (entry) =>
+        entry.publicCategory === 'leadership' ? 'Leadership' : 'Engineering Team',
+    },
   ];
 
   const hasAnyMembers = allMembers.length > 0;

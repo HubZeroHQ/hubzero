@@ -26,6 +26,8 @@ function normalizeTeam(doc: Team): Team {
     ...doc,
     publicProfile: doc.publicProfile ?? false,
     founder: doc.founder ?? false,
+    publicCategory: doc.publicCategory ?? 'team',
+    engineeringProfileEligible: doc.engineeringProfileEligible ?? false,
     order: doc.order ?? 0,
     socialLinks: doc.socialLinks ?? [],
     archived: doc.archived ?? false,

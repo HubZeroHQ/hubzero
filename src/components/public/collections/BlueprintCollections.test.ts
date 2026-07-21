@@ -67,12 +67,13 @@ describe('Blueprint public collection', () => {
           target: { type: 'work', title: 'Public evidence', url: '/work/public-evidence' },
         },
         {
-          kind: 'profileFeaturesEvidence',
-          label: 'Selected work',
+          kind: 'teamContributedToEntry',
+          label: 'Contributor',
           target: {
-            type: 'engineeringProfile',
+            type: 'teamMember',
             title: 'Public Engineer',
-            url: '/engineering/public-engineer',
+            url: '/about',
+            profileUrl: '/engineering/public-engineer',
           },
         },
       ],
@@ -87,11 +88,9 @@ describe('Blueprint public collection', () => {
     expect(markup).toContain('Proven in client work');
     expect(markup).toContain('Return to Blueprints');
 
-    // Engineering contributors render as publication metadata, before the case study body.
-    expect(markup).toContain('Engineering contributors');
+    // Contributors render as publication metadata, before the case study body.
+    expect(markup).toContain('Contributors');
     expect(markup).toContain('Public Engineer');
-    expect(markup.indexOf('Engineering contributors')).toBeLessThan(
-      markup.indexOf('Implementation guidance'),
-    );
+    expect(markup.indexOf('Contributors')).toBeLessThan(markup.indexOf('Implementation guidance'));
   });
 });

@@ -15,7 +15,7 @@ export const workSchema = z.object({
   relatedBuildIds: z.array(objectIdString).default([]),
   relatedBlueprintIds: z.array(objectIdString).default([]),
   relatedLabIds: z.array(objectIdString).default([]),
-  contributorProfileIds: z.array(objectIdString).default([]),
+  contributors: z.array(objectIdString).default([]),
   heroImageId: objectIdString.optional(),
   /** Additive beyond PLANNING.md §26.1 — mirrors Build's identical `repoUrl` (§26.2) for a client/internal repo link. */
   repoUrl: z.string().url().optional(),

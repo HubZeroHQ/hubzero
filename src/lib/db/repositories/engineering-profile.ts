@@ -7,6 +7,7 @@ import { ObjectId } from 'mongodb';
 import type { EngineeringProfile } from '@/types/studio';
 import { collections } from '../collections';
 import { createRepository, parsePartialInput } from '../repository';
+import { teamRepository } from './team';
 
 const base = createRepository<EngineeringProfile, EngineeringProfileInput>(
   collections.engineeringProfiles,
@@ -28,6 +29,10 @@ export const engineeringProfileRepository = {
     const parsed = engineeringProfileSchema.parse(input);
     if (await engineeringProfileRepository.findByTeamMemberId(parsed.teamMemberId)) {
       throw new Error('This Team Member already has an Engineering Profile.');
+    }
+    const teamMember = await teamRepository.findById(parsed.teamMemberId);
+    if (!teamMember?.engineeringProfileEligible) {
+      throw new Error('This Team Member is not eligible for an Engineering Profile.');
     }
     return base.create(parsed, { createdByUserId });
   },

@@ -76,16 +76,14 @@ describe('public relationship normalization', () => {
     };
     expect(relationshipLabel(blueprint, 'work', 'work-1')).toBe('Blueprint');
     const contributor: RelationshipAssertion = {
-      kind: 'profileContributedToEntry',
+      kind: 'teamContributedToEntry',
       fromType: 'work',
       fromId: 'work-1',
-      toType: 'engineeringProfile',
-      toId: 'profile-1',
+      toType: 'teamMember',
+      toId: 'team-1',
     };
-    expect(relationshipLabel(contributor, 'work', 'work-1')).toBe('Engineering contributor');
-    expect(relationshipLabel(contributor, 'engineeringProfile', 'profile-1')).toBe(
-      'Contributed to',
-    );
+    expect(relationshipLabel(contributor, 'work', 'work-1')).toBe('Contributor');
+    expect(relationshipLabel(contributor, 'teamMember', 'team-1')).toBe('Contributed to');
   });
 
   it('omits hidden, archived, missing, or otherwise unresolvable targets without a count', async () => {

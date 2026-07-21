@@ -15,6 +15,7 @@
     "seed:engineering-profiles": "tsx --env-file=.env.local scripts/seed-engineering-profiles.ts",
     "reimport:team-portraits": "tsx --env-file=.env.local scripts/reimport-team-portraits.ts",
     "create:head-admin": "tsx --env-file=.env.local scripts/create-head-admin.ts",
+    "migrate:personnel-model": "tsx --env-file=.env.local scripts/migrate-personnel-model.ts",
     "prepare": "husky"
   },
   "dependencies": {

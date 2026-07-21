@@ -22,7 +22,7 @@ export const buildSchema = z.object({
   galleryImageIds: z.array(objectIdString).default([]),
   /** Additive beyond §26.2 — the homepage's "Featured Build" slot (PLANNING.md §8) needs one flag to query against. */
   featured: z.boolean().default(false),
-  contributorProfileIds: z.array(objectIdString).default([]),
+  contributors: z.array(objectIdString).default([]),
 });
 
 export type BuildInput = z.infer<typeof buildSchema>;

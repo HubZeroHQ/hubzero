@@ -8,7 +8,7 @@ import type { EntryActionState } from '@/lib/studio/entry-actions';
 import { ROLE_LABEL } from '@/lib/studio/role-label';
 import type { UserRole } from '@/types/studio';
 
-const ROLES: UserRole[] = ['headAdmin', 'admin', 'teamMember'];
+const ROLES: UserRole[] = ['headAdmin', 'admin', 'member'];
 const emptyActionState: EntryActionState = {};
 
 export interface UserFormValues {
@@ -55,12 +55,12 @@ export function UserForm({
         label="Role"
         name="role"
         error={state.fieldErrors?.role}
-        hint="Admin and Head Admin can publish content directly; a Team Member can only submit for review."
+        hint="Admin and Head Admin can publish content directly; a Member can only submit for review."
       >
         <select
           id="role"
           name="role"
-          defaultValue={initialValues?.role ?? 'teamMember'}
+          defaultValue={initialValues?.role ?? 'member'}
           className="bg-surface-default text-text-primary focus-visible:border-accent duration-fast ease-standard rounded-[4px] border border-[#2a2a2a] px-3 py-2 text-sm transition-colors focus-visible:outline-none"
         >
           {ROLES.map((role) => (

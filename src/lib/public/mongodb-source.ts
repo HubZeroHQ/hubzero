@@ -100,14 +100,15 @@ async function list(type: PublicEntityType): Promise<StudioPublicEntity[]> {
 
 async function inverse(type: PublicEntityType, id: string): Promise<StudioPublicEntity[]> {
   // Every reference-ID field queried below (relatedWorkIds, relatedBuildIds,
-  // relatedBlueprintIds, relatedLabIds, contributorProfileIds,
-  // originatingLabId, graduatedToBuildId, featuredWorkIds, ...) is validated
-  // with `objectIdString` (lib/validation/shared.ts) and stored as a plain
+  // relatedBlueprintIds, relatedLabIds, contributors, originatingLabId,
+  // graduatedToBuildId, featuredWorkIds, ...) is validated with
+  // `objectIdString` (lib/validation/shared.ts) and stored as a plain
   // string, never a real BSON ObjectId — same rule `findTeamsByUserId` and
   // `findProfileByTeamId` already document below. `objectId(id)` here is
   // only a format check; querying with the constructed ObjectId instance
   // itself would never match these string-typed fields.
-  if (!objectId(id)) return [];
+  const idAsObjectId = objectId(id);
+  if (!idAsObjectId) return [];
   const targetId = id;
   const queries: Array<Promise<StudioPublicEntity[]>> = [];
   const wrapped = async <T extends StudioPublicRecord>(
@@ -161,29 +162,42 @@ async function inverse(type: PublicEntityType, id: string): Promise<StudioPublic
       ),
     );
   }
-  if (type === 'engineeringProfile') {
+  // Contributors always reference Team (the canonical person identity),
+  // never `EngineeringProfile` directly — so crediting a Team member and
+  // crediting "whoever this Engineering Profile belongs to" are the same
+  // query, just reached via a different starting id. A profile resolves to
+  // its `teamMemberId` first, then reuses the exact same "scan `contributors`
+  // across all five content collections" query a plain Team member's own
+  // inverse lookup would use — no separate query shape, no second field.
+  const contributorTargetId =
+    type === 'teamMember'
+      ? targetId
+      : type === 'engineeringProfile'
+        ? ((await (await collections.engineeringProfiles()).findOne({ _id: idAsObjectId }))
+            ?.teamMemberId ?? null)
+        : null;
+  if (contributorTargetId) {
+    const contributorId = String(contributorTargetId);
     queries.push(
       wrapped(
         'work',
-        (await collections.work()).find({ contributorProfileIds: targetId } as never).toArray(),
+        (await collections.work()).find({ contributors: contributorId } as never).toArray(),
       ),
       wrapped(
         'build',
-        (await collections.builds()).find({ contributorProfileIds: targetId } as never).toArray(),
+        (await collections.builds()).find({ contributors: contributorId } as never).toArray(),
       ),
       wrapped(
         'blueprint',
-        (await collections.blueprints())
-          .find({ contributorProfileIds: targetId } as never)
-          .toArray(),
+        (await collections.blueprints()).find({ contributors: contributorId } as never).toArray(),
       ),
       wrapped(
         'lab',
-        (await collections.labs()).find({ contributorProfileIds: targetId } as never).toArray(),
+        (await collections.labs()).find({ contributors: contributorId } as never).toArray(),
       ),
       wrapped(
         'note',
-        (await collections.notes()).find({ contributorProfileIds: targetId } as never).toArray(),
+        (await collections.notes()).find({ contributors: contributorId } as never).toArray(),
       ),
     );
   }

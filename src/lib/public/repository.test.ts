@@ -85,7 +85,7 @@ describe('public repository boundary', () => {
       previewAssetIds: [previewAsset._id],
       featured: false,
       version: '1.0.0',
-      contributorProfileIds: [],
+      contributors: [],
     };
     const repository = createPublicRepository(
       fakeSource({ entities: [entity('blueprint', blueprint)], media: [previewAsset] }),
@@ -143,7 +143,7 @@ describe('public repository boundary', () => {
       previewAssetIds: [],
       featured: false,
       version: '1.0.0',
-      contributorProfileIds: [],
+      contributors: [],
     };
     const repository = createPublicRepository(
       fakeSource({ entities: [entity('blueprint', blueprint)] }),
@@ -173,7 +173,7 @@ describe('public repository boundary', () => {
       relatedBuildIds: [],
       relatedBlueprintIds: [],
       relatedLabIds: [],
-      contributorProfileIds: [],
+      contributors: [],
     } as Work;
     let documentReads = 0;
     const source = fakeSource({ entities: [entity('work', work)] });
@@ -207,6 +207,8 @@ describe('public repository boundary', () => {
       publicProfile: true,
       userId: user._id,
       founder: false,
+      publicCategory: 'leadership',
+      engineeringProfileEligible: true,
       order: 0,
       socialLinks: [],
       archived: false,
@@ -252,7 +254,7 @@ describe('public repository boundary', () => {
       publicationDate: now,
       featured: false,
       galleryImageIds: [],
-      contributorProfileIds: [],
+      contributors: [],
     };
     const entities = [
       entity('note', note),
@@ -297,6 +299,8 @@ describe('public repository boundary', () => {
       publicProfile: true,
       userId: user._id,
       founder: false,
+      publicCategory: 'leadership',
+      engineeringProfileEligible: true,
       order: 0,
       socialLinks: [],
       archived: false,
@@ -319,7 +323,7 @@ describe('public repository boundary', () => {
       publicationDate: now,
       featured: false,
       galleryImageIds: [],
-      contributorProfileIds: [],
+      contributors: [],
     };
     const repository = createPublicRepository(
       fakeSource({
@@ -353,7 +357,7 @@ describe('public repository boundary', () => {
       publicationDate,
       featured: false,
       galleryImageIds: [],
-      contributorProfileIds: [],
+      contributors: [],
     });
     const older = note('Older note', 'older', new Date('2026-06-01T00:00:00.000Z'));
     const newer = note('Newer note', 'newer', new Date('2026-07-01T00:00:00.000Z'));
@@ -407,6 +411,8 @@ describe('public repository boundary', () => {
       publicProfile: true,
       userId: user._id,
       founder: false,
+      publicCategory: 'leadership',
+      engineeringProfileEligible: true,
       order: 0,
       socialLinks: [],
       archived: false,
@@ -429,7 +435,7 @@ describe('public repository boundary', () => {
       publicationDate: now,
       featured: false,
       galleryImageIds: [],
-      contributorProfileIds: [],
+      contributors: [],
     };
     const noteEntity = entity('note', note);
 
@@ -468,6 +474,8 @@ describe('public repository boundary', () => {
       group: 'Engineering',
       publicProfile,
       founder: false,
+      publicCategory: 'leadership',
+      engineeringProfileEligible: true,
       order: 0,
       socialLinks: [],
       archived: false,
@@ -542,6 +550,8 @@ describe('public repository boundary', () => {
       group: 'Engineering',
       publicProfile: true,
       founder: false,
+      publicCategory: 'leadership',
+      engineeringProfileEligible: true,
       order: 0,
       socialLinks: [],
       archived: false,
@@ -602,7 +612,7 @@ describe('public repository boundary', () => {
       relatedBuildIds: [],
       relatedBlueprintIds: [],
       relatedLabIds: [],
-      contributorProfileIds: [contributor._id],
+      contributors: [contributorTeam._id],
     };
     const caseStudyDocument: DocumentRecord = {
       _id: new ObjectId(),
@@ -621,6 +631,7 @@ describe('public repository boundary', () => {
           entity('engineeringProfile', contributor),
         ],
         documents: [profileDocument, caseStudyDocument],
+        profile: contributor,
       }),
     );
 
@@ -631,9 +642,12 @@ describe('public repository boundary', () => {
     // The Work page they're credited on shows them as a contributor too.
     const workDetail = await repository.findDetail('work', work.slug);
     const contributorRelationships = workDetail?.relationships.filter(
-      (relationship) => relationship.target.type === 'engineeringProfile',
+      (relationship) => relationship.kind === 'teamContributedToEntry',
     );
     expect(contributorRelationships).toHaveLength(1);
     expect(contributorRelationships?.[0]?.target.title).toBe('Single-credit engineer');
+    expect(contributorRelationships?.[0]?.target.profileUrl).toBe(
+      '/engineering/single-credit-engineer',
+    );
   });
 });

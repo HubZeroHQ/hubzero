@@ -58,7 +58,7 @@ function readLabMetadataFields(formData: FormData) {
     galleryImageIds: formData.getAll('galleryImageIds').map(String),
     featured: formData.get('featured') === 'on',
     milestones: readMilestones(formData),
-    contributorProfileIds: formData.getAll('contributorProfileIds').map(String),
+    contributors: formData.getAll('contributors').map(String),
   };
 }
 
@@ -245,7 +245,7 @@ export async function graduateLabToBuildAction(labId: string): Promise<EntryActi
         heroImageId: lab.heroImageId?.toString(),
         galleryImageIds: lab.galleryImageIds.map((id) => id.toString()),
         featured: false,
-        contributorProfileIds: lab.contributorProfileIds.map((id) => id.toString()),
+        contributors: lab.contributors.map((id) => id.toString()),
       },
       userId,
     );

@@ -32,7 +32,7 @@ function readWorkMetadataFields(formData: FormData) {
     relatedBuildIds: formData.getAll('relatedBuildIds').map(String),
     relatedBlueprintIds: formData.getAll('relatedBlueprintIds').map(String),
     relatedLabIds: formData.getAll('relatedLabIds').map(String),
-    contributorProfileIds: formData.getAll('contributorProfileIds').map(String),
+    contributors: formData.getAll('contributors').map(String),
   };
 }
 

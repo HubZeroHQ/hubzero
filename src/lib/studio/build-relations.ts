@@ -1,4 +1,3 @@
-import { engineeringProfileRepository } from '@/lib/db/repositories/engineering-profile';
 import { labRepository } from '@/lib/db/repositories/lab';
 import { taxonomyRepository } from '@/lib/db/repositories/taxonomy';
 import { teamRepository } from '@/lib/db/repositories/team';
@@ -13,14 +12,12 @@ import { workRepository } from '@/lib/db/repositories/work';
  * repositories they query.
  */
 export async function getBuildRelationOptions() {
-  const [technologies, labs, workEntries, profiles, team] = await Promise.all([
+  const [technologies, labs, workEntries, team] = await Promise.all([
     taxonomyRepository.findByKind('technology'),
     labRepository.list(),
     workRepository.list(),
-    engineeringProfileRepository.list(),
     teamRepository.list(),
   ]);
-  const teamNames = new Map(team.map((member) => [member._id.toString(), member.name]));
 
   return {
     technologyOptions: technologies.map((entry) => ({
@@ -37,9 +34,9 @@ export async function getBuildRelationOptions() {
       label: entry.title,
       referenceId: entry.referenceId,
     })),
-    contributorOptions: profiles.map((entry) => ({
+    contributorOptions: team.map((entry) => ({
       id: entry._id.toString(),
-      label: teamNames.get(entry.teamMemberId.toString()) ?? entry.slug,
+      label: entry.name,
       referenceId: entry.referenceId,
     })),
   };

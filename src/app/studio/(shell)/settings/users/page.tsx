@@ -16,7 +16,7 @@ import type { User, UserRole } from '@/types/studio';
 export const metadata: Metadata = { title: 'Users — HubZero Studio' };
 
 const LIST_PATH = '/studio/settings/users';
-const ROLES: UserRole[] = ['headAdmin', 'admin', 'teamMember'];
+const ROLES: UserRole[] = ['headAdmin', 'admin', 'member'];
 
 interface UsersSearchParams {
   q?: string;

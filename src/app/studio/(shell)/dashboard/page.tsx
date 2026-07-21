@@ -36,17 +36,16 @@ export default async function DashboardPage() {
 
   const newLeads = allLeads.filter(
     (lead) =>
-      lead.status === 'new' &&
-      (role !== 'teamMember' || lead.assignedToUserId?.toString() === userId),
+      lead.status === 'new' && (role !== 'member' || lead.assignedToUserId?.toString() === userId),
   );
 
   // §3: Admin/Head Admin's "Needs Your Attention" is the In Review queue
   // filtered to collections they can act on — both roles can act on every
-  // collection (§29), so it's the full queue; Team Member's is their own
+  // collection (§29), so it's the full queue; Member's is their own
   // Drafts instead.
-  const needsAttention = role === 'teamMember' ? ownDrafts : inReview;
-  const showInReviewQueue = role !== 'teamMember';
-  const showNewLeads = role !== 'teamMember' || newLeads.length > 0;
+  const needsAttention = role === 'member' ? ownDrafts : inReview;
+  const showInReviewQueue = role !== 'member';
+  const showNewLeads = role !== 'member' || newLeads.length > 0;
 
   return (
     <div className="flex flex-col gap-6">
@@ -55,9 +54,9 @@ export default async function DashboardPage() {
       <DashboardWidgetCard title="Needs your attention">
         <ContentEntryList
           entries={needsAttention}
-          emptyTitle={role === 'teamMember' ? 'Nothing waiting on you' : 'Nothing in review'}
+          emptyTitle={role === 'member' ? 'Nothing waiting on you' : 'Nothing in review'}
           emptyDescription={
-            role === 'teamMember'
+            role === 'member'
               ? 'Drafts you own will show up here.'
               : 'Entries submitted for review will show up here.'
           }

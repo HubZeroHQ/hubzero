@@ -3,7 +3,7 @@ import type { SearchAdapter } from '../types';
 
 /**
  * Leads (§26.8) is the one collection search results must scope by
- * assignment, not just by role visibility (§8: a Team Member without
+ * assignment, not just by role visibility (§8: a Member without
  * Leads visibility never sees a Lead surface in search either) — no
  * reference ID, since Leads never receives one.
  */
@@ -15,7 +15,7 @@ export const leadsSearchAdapter: SearchAdapter = {
     const entries = await leadRepository.list();
     const normalizedQuery = query.toLowerCase();
     const scoped =
-      ctx.role === 'teamMember'
+      ctx.role === 'member'
         ? entries.filter((entry) => entry.assignedToUserId?.toString() === ctx.userId)
         : entries;
 

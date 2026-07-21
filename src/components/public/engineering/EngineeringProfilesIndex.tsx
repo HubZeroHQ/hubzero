@@ -112,9 +112,8 @@ export function EngineeringProfilesIndex({
               title="A profile is published when the evidence earns it."
               className="engineering-empty"
             >
-              Eligible profiles require an approved public Team identity, a clear engineering
-              position, current exploration, substantive long-form writing, and at least two visible
-              contributions. Nothing is inferred from an internal account or résumé.
+              A profile is only created for a Team member who has earned that eligibility and has an
+              approved public Team identity. Nothing is inferred from an internal account or résumé.
             </PublicEmptyState>
           )}
         </PageContainer>

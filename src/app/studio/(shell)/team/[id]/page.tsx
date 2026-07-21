@@ -47,7 +47,9 @@ export default async function TeamMemberDetailPage({
 
       <div className="flex flex-wrap items-center gap-3">
         <ReferenceIdBadge referenceId={member.referenceId} />
+        <Tag>{member.publicCategory === 'leadership' ? 'Leadership' : 'Engineering Team'}</Tag>
         {member.founder ? <Tag>Founder</Tag> : null}
+        {member.engineeringProfileEligible ? <Tag>EP eligible</Tag> : null}
         <Tag>{member.publicProfile ? 'Public' : 'Private'}</Tag>
         {member.archived ? <Tag>Archived</Tag> : null}
       </div>
@@ -103,7 +105,7 @@ export default async function TeamMemberDetailPage({
           >
             View Engineering Profile ({linkedProfile.referenceId})
           </ButtonLink>
-        ) : (
+        ) : member.engineeringProfileEligible ? (
           <EmptyState
             title="No Engineering Profile yet."
             description="An Engineering Profile is earned, not automatic — create one when this member has real evidence to show."
@@ -112,6 +114,11 @@ export default async function TeamMemberDetailPage({
                 Create Engineering Profile
               </ButtonLink>
             }
+          />
+        ) : (
+          <EmptyState
+            title="Not eligible for an Engineering Profile."
+            description="Turn on “Eligible for an Engineering Profile” on this Team member's edit page to allow one to be created."
           />
         )}
       </section>

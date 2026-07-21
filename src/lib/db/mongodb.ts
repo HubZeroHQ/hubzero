@@ -22,7 +22,14 @@ function createClientPromise(): Promise<MongoClient> {
  */
 export function getMongoClient(): Promise<MongoClient> {
   if (!globalThis._mongoClientPromise) {
-    globalThis._mongoClientPromise = createClientPromise();
+    globalThis._mongoClientPromise = createClientPromise().catch((error: unknown) => {
+      // A failed initial connection (DNS hiccup, transient TLS reset) must
+      // not stay cached forever — every future call would otherwise reuse
+      // this same rejected promise and fail instantly, with no retry, for
+      // the lifetime of the process.
+      globalThis._mongoClientPromise = undefined;
+      throw error;
+    });
   }
 
   return globalThis._mongoClientPromise;

@@ -23,7 +23,7 @@ export interface NoteFormValues {
   relatedBlueprintIds: string[];
   relatedLabIds: string[];
   galleryImageIds: string[];
-  contributorProfileIds: string[];
+  contributors: string[];
 }
 
 interface RelationOption {
@@ -247,17 +247,17 @@ export function NoteForm({
       </Field>
 
       <Field
-        label="Engineering contributors"
-        name="contributorProfileIds"
-        error={state.fieldErrors?.contributorProfileIds}
-        hint="Explicit public credit, distinct from Author above. Select only Engineering Profiles for people who contributed to this Note."
+        label="Contributors"
+        name="contributors"
+        error={state.fieldErrors?.contributors}
+        hint="Explicit public credit, distinct from Author above. Select the Team members who contributed to this Note."
         asFieldset
       >
         <RelationMultiSelect
-          name="contributorProfileIds"
+          name="contributors"
           options={contributorOptions}
-          selectedIds={initialValues?.contributorProfileIds ?? []}
-          emptyMessage="No Engineering Profiles exist yet."
+          selectedIds={initialValues?.contributors ?? []}
+          emptyMessage="No Team members exist yet."
         />
       </Field>
 

@@ -154,9 +154,7 @@ export default async function EditLabPage({ params }: { params: Promise<{ id: st
             summary: milestone.summary,
             relatedDocumentRole: milestone.relatedDocumentRole,
           })),
-          contributorProfileIds: (lab.contributorProfileIds ?? []).map((entryId) =>
-            entryId.toString(),
-          ),
+          contributors: (lab.contributors ?? []).map((entryId) => entryId.toString()),
         }}
         initialHeroAsset={heroAsset ? toMediaAssetDTO(heroAsset) : undefined}
         initialGalleryAssets={galleryAssets.map(toMediaAssetDTO)}

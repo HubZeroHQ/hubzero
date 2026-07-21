@@ -14,7 +14,6 @@ import { transitionWorkStatusAction } from '@/lib/studio/actions/work';
 import { canUnpublishOverride, getAvailableTransitions } from '@/lib/studio/workflow-permissions';
 import { blueprintRepository } from '@/lib/db/repositories/blueprint';
 import { buildRepository } from '@/lib/db/repositories/build';
-import { engineeringProfileRepository } from '@/lib/db/repositories/engineering-profile';
 import { labRepository } from '@/lib/db/repositories/lab';
 import { documentRepository } from '@/lib/db/repositories/document';
 import { taxonomyRepository } from '@/lib/db/repositories/taxonomy';
@@ -34,17 +33,15 @@ export default async function WorkDetailPage({ params }: { params: Promise<{ id:
   const { role, id: userId } = session!.user;
   const canEdit = canActOnEntry(work, { role, userId });
 
-  const [document, technologies, categories, builds, blueprints, labs, profiles, team] =
-    await Promise.all([
-      documentRepository.findByOwnerAndRole('Work', id, 'caseStudy'),
-      taxonomyRepository.findByKind('technology'),
-      taxonomyRepository.findByKind('category'),
-      buildRepository.list(),
-      blueprintRepository.list(),
-      labRepository.list(),
-      engineeringProfileRepository.list(),
-      teamRepository.list(),
-    ]);
+  const [document, technologies, categories, builds, blueprints, labs, team] = await Promise.all([
+    documentRepository.findByOwnerAndRole('Work', id, 'caseStudy'),
+    taxonomyRepository.findByKind('technology'),
+    taxonomyRepository.findByKind('category'),
+    buildRepository.list(),
+    blueprintRepository.list(),
+    labRepository.list(),
+    teamRepository.list(),
+  ]);
 
   const technologyLabels = new Map(
     technologies.map((entry) => [entry._id.toString(), entry.label]),
@@ -68,14 +65,10 @@ export default async function WorkDetailPage({ params }: { params: Promise<{ id:
       { label: entry.title, referenceId: entry.referenceId },
     ]),
   );
-  const teamNames = new Map(team.map((member) => [member._id.toString(), member.name]));
   const contributorLabels = new Map(
-    profiles.map((entry) => [
-      entry._id.toString(),
-      {
-        label: teamNames.get(entry.teamMemberId.toString()) ?? entry.slug,
-        referenceId: entry.referenceId,
-      },
+    team.map((member) => [
+      member._id.toString(),
+      { label: member.name, referenceId: member.referenceId },
     ]),
   );
 
@@ -163,7 +156,7 @@ export default async function WorkDetailPage({ params }: { params: Promise<{ id:
       {work.relatedBuildIds.length > 0 ||
       work.relatedBlueprintIds.length > 0 ||
       (work.relatedLabIds?.length ?? 0) > 0 ||
-      (work.contributorProfileIds?.length ?? 0) > 0 ? (
+      (work.contributors?.length ?? 0) > 0 ? (
         <section className="flex flex-col gap-2">
           <h2 className="text-text-muted font-mono text-xs tracking-[0.05em] uppercase">Related</h2>
           <ul className="flex flex-col gap-1 text-sm">
@@ -193,13 +186,13 @@ export default async function WorkDetailPage({ params }: { params: Promise<{ id:
                 </li>
               );
             })}
-            {(work.contributorProfileIds ?? []).map((profileId) => {
-              const contributor = contributorLabels.get(profileId.toString());
+            {(work.contributors ?? []).map((teamId) => {
+              const contributor = contributorLabels.get(teamId.toString());
               return (
-                <li key={profileId.toString()} className="text-text-secondary">
+                <li key={teamId.toString()} className="text-text-secondary">
                   {contributor
-                    ? `${contributor.label} (${contributor.referenceId}) — Engineering contributor`
-                    : 'Unknown Engineering Profile'}
+                    ? `${contributor.label} (${contributor.referenceId}) — Contributor`
+                    : 'Unknown Team member'}
                 </li>
               );
             })}

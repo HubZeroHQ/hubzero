@@ -25,7 +25,7 @@ describe('public About experience', () => {
     expect(markup).toContain('Roster / no approved public records');
   });
 
-  it('omits a Team record with no real portrait rather than showing a placeholder identity', () => {
+  it('omits a Leadership record with no real portrait rather than showing a placeholder identity', () => {
     const member: PublicTeamMemberSummary = {
       type: 'teamMember',
       title: 'Ari Rao',
@@ -33,6 +33,8 @@ describe('public About experience', () => {
       summary: 'Builds systems around explicit ownership.',
       role: 'Systems engineer',
       group: 'Engineering',
+      publicCategory: 'leadership',
+      founder: false,
       technologies: [],
     };
     const markup = renderToStaticMarkup(<About team={[member]} profiles={[]} />);
@@ -40,7 +42,7 @@ describe('public About experience', () => {
     expect(markup).toContain('Roster / no approved public records');
   });
 
-  it('renders a photographed Team identity and withholds an ineligible Profile link', () => {
+  it('renders a photographed Leadership identity and withholds an ineligible Profile link', () => {
     const member: PublicTeamMemberSummary = {
       type: 'teamMember',
       title: 'Ari Rao',
@@ -48,6 +50,8 @@ describe('public About experience', () => {
       summary: 'Builds systems around explicit ownership.',
       role: 'Systems engineer',
       group: 'Engineering',
+      publicCategory: 'leadership',
+      founder: false,
       technologies: [],
       portrait,
       profile: {
@@ -60,5 +64,31 @@ describe('public About experience', () => {
     expect(markup).toContain('Ari Rao');
     expect(markup).toContain('Systems engineer');
     expect(markup).not.toContain('href="/engineering/ari-rao"');
+  });
+
+  it('renders Engineering Team members as compact cards, without a portrait or profile link', () => {
+    const member: PublicTeamMemberSummary = {
+      type: 'teamMember',
+      title: 'Sam Okafor',
+      url: '/about',
+      summary: 'Ships the platform edges nobody else sees.',
+      role: 'Backend Engineer',
+      group: 'Engineering Team',
+      publicCategory: 'team',
+      founder: false,
+      technologies: [],
+      joinedAt: '2025-03-01T00:00:00.000Z',
+    };
+    const markup = renderToStaticMarkup(<About team={[member]} profiles={[]} />);
+    expect(markup).toContain('Sam Okafor');
+    expect(markup).toContain('Backend Engineer');
+    expect(markup).toContain('Joined');
+    expect(markup).not.toContain('Engineering Team / no approved public records');
+  });
+
+  it('shows the Engineering Team empty state independently of Leadership', () => {
+    const markup = renderToStaticMarkup(<About team={[]} profiles={[]} />);
+    expect(markup).toContain('Roster / no approved public records');
+    expect(markup).toContain('Engineering Team / no approved public records');
   });
 });

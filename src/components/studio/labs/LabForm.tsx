@@ -34,7 +34,7 @@ export interface LabFormValues {
   relatedBlueprintIds: string[];
   galleryImageIds: string[];
   milestones: ProgressTimelineMilestoneValue[];
-  contributorProfileIds: string[];
+  contributors: string[];
 }
 
 interface RelationOption {
@@ -346,17 +346,17 @@ export function LabForm({
       </Field>
 
       <Field
-        label="Engineering contributors"
-        name="contributorProfileIds"
-        error={state.fieldErrors?.contributorProfileIds}
-        hint="Explicit public credit. Select only Engineering Profiles for people who contributed to this Lab."
+        label="Contributors"
+        name="contributors"
+        error={state.fieldErrors?.contributors}
+        hint="Explicit public credit. Select the Team members who contributed to this Lab."
         asFieldset
       >
         <RelationMultiSelect
-          name="contributorProfileIds"
+          name="contributors"
           options={contributorOptions}
-          selectedIds={initialValues?.contributorProfileIds ?? []}
-          emptyMessage="No Engineering Profiles exist yet."
+          selectedIds={initialValues?.contributors ?? []}
+          emptyMessage="No Team members exist yet."
         />
       </Field>
 

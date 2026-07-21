@@ -91,9 +91,9 @@ const SETTINGS: StudioNavGroup = {
 /**
  * §8's permissions table translated into what's literally on screen:
  * Settings is structurally invisible to anyone but Head Admin (not just
- * access-controlled), and Leads is hidden from a Team Member unless at
+ * access-controlled), and Leads is hidden from a Member unless at
  * least one Lead is actually assigned to them — computed by the caller
- * (a Team Member with zero assignments has nothing to do there today).
+ * (a Member with zero assignments has nothing to do there today).
  */
 export function getVisibleNav(
   role: UserRole,
@@ -101,7 +101,7 @@ export function getVisibleNav(
 ): StudioNavEntry[] {
   const entries: StudioNavEntry[] = [DASHBOARD, CONTENT, STUDIO];
 
-  if (role !== 'teamMember' || opts.hasAssignedLeads) {
+  if (role !== 'member' || opts.hasAssignedLeads) {
     entries.push(LEADS);
   }
 

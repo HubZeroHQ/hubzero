@@ -44,7 +44,7 @@ function readNoteMetadataFields(formData: FormData) {
     relatedEntries: readRelatedEntries(formData),
     galleryImageIds: formData.getAll('galleryImageIds').map(String),
     featured: formData.get('featured') === 'on',
-    contributorProfileIds: formData.getAll('contributorProfileIds').map(String),
+    contributors: formData.getAll('contributors').map(String),
   };
 }
 

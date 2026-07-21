@@ -87,9 +87,7 @@ export default async function EditNotePage({ params }: { params: Promise<{ id: s
           featured: note.featured,
           technologyIds: note.technologyIds.map((entryId) => entryId.toString()),
           galleryImageIds: note.galleryImageIds.map((entryId) => entryId.toString()),
-          contributorProfileIds: (note.contributorProfileIds ?? []).map((entryId) =>
-            entryId.toString(),
-          ),
+          contributors: (note.contributors ?? []).map((entryId) => entryId.toString()),
           ...splitRelatedEntries(note.relatedEntries),
         }}
         initialHeroAsset={heroAsset ? toMediaAssetDTO(heroAsset) : undefined}

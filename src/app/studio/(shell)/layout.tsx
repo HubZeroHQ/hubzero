@@ -20,7 +20,7 @@ export default async function StudioShellLayout({ children }: { children: React.
 
   const { role } = session.user;
   const hasAssignedLeads =
-    role === 'teamMember'
+    role === 'member'
       ? (await leadRepository.list({ assignedToUserId: new ObjectId(session.user.id) })).length > 0
       : false;
 

@@ -19,7 +19,7 @@ export type ReferenceId<Prefix extends ReferenceIdPrefix = ReferenceIdPrefix> = 
   ? `EP-${string}`
   : `HZ-${Prefix}-${string}`;
 
-export type UserRole = 'headAdmin' | 'admin' | 'teamMember';
+export type UserRole = 'headAdmin' | 'admin' | 'member';
 
 export type TaxonomyKind = 'technology' | 'category' | 'topic';
 
@@ -143,6 +143,24 @@ export interface Team extends WithId, WithTimestamps {
   userId?: ObjectId;
   /** Distinct from `group === 'Founders'` — a lightweight editorial flag (e.g. for a "Founder" badge) independent of which group a member is currently sorted into. */
   founder: boolean;
+  /**
+   * Which public About-page section this person appears in. Independent of
+   * `founder` — a founder is a permanent historical fact, `publicCategory`
+   * is a current organizational position, and the two can disagree in
+   * either direction (a founder who has stepped back from leadership; a
+   * later leadership hire who was never a founder).
+   */
+  publicCategory: 'leadership' | 'team';
+  /**
+   * Editorial eligibility to have an Engineering Profile created, decided
+   * independently of `publicCategory` — today set `true` exactly for
+   * Leadership, but it's a standalone decision, not derived, so extending
+   * eligibility to an individual Member later never requires touching
+   * organizational structure.
+   */
+  engineeringProfileEligible: boolean;
+  /** Optional — shown only on the compact Engineering Team card, never on Leadership's premium card. */
+  joinedAt?: Date;
   /** Lower sorts first, within a group and in the admin list's default order. */
   order: number;
   socialLinks: TeamSocialLink[];
@@ -163,8 +181,8 @@ export interface Work extends PublishableEntity {
   relatedBuildIds: ObjectId[];
   relatedBlueprintIds: ObjectId[];
   relatedLabIds: ObjectId[];
-  /** Explicit public credit only; `createdByUserId` remains internal provenance. */
-  contributorProfileIds: ObjectId[];
+  /** Explicit public credit, always via Team (the canonical person identity) — never `EngineeringProfile` directly; `createdByUserId` remains internal provenance. */
+  contributors: ObjectId[];
   heroImageId?: ObjectId;
   /** Additive beyond §26.1 — mirrors Build's `repoUrl` (§26.2). */
   repoUrl?: string;
@@ -184,8 +202,8 @@ export interface Build extends PublishableEntity {
   galleryImageIds: ObjectId[];
   /** Additive beyond §26.2 — surfaces a Build on the homepage's "Featured Build" slot (PLANNING.md §8). */
   featured: boolean;
-  /** Explicit public credit only; `createdByUserId` remains internal provenance. */
-  contributorProfileIds: ObjectId[];
+  /** Explicit public credit, always via Team (the canonical person identity) — never `EngineeringProfile` directly; `createdByUserId` remains internal provenance. */
+  contributors: ObjectId[];
 }
 
 export interface Blueprint extends PublishableEntity {
@@ -210,8 +228,8 @@ export interface Blueprint extends PublishableEntity {
   featured: boolean;
   /** Additive beyond §26.3 — a foundation evolves after its first release; free-form so `1.2.0` and `2024.1` both fit. */
   version: string;
-  /** Explicit public credit only; `createdByUserId` remains internal provenance. */
-  contributorProfileIds: ObjectId[];
+  /** Explicit public credit, always via Team (the canonical person identity) — never `EngineeringProfile` directly; `createdByUserId` remains internal provenance. */
+  contributors: ObjectId[];
 }
 
 /**
@@ -259,8 +277,8 @@ export interface Lab extends PublishableEntity {
   featured: boolean;
   /** The Progress Timeline (Phase 10). */
   milestones: ProgressMilestone[];
-  /** Explicit public credit only; `createdByUserId` remains internal provenance. */
-  contributorProfileIds: ObjectId[];
+  /** Explicit public credit, always via Team (the canonical person identity) — never `EngineeringProfile` directly; `createdByUserId` remains internal provenance. */
+  contributors: ObjectId[];
 }
 
 export interface Note extends PublishableEntity {
@@ -280,8 +298,8 @@ export interface Note extends PublishableEntity {
   /** Additive beyond §26.5 — mirrors Build/Blueprint/Lab's optional hero + gallery split. */
   heroImageId?: ObjectId;
   galleryImageIds: ObjectId[];
-  /** Explicit public credit, distinct from `authorId` (the system identity that owns/edits the write-up) — a Note can credit contributors beyond its author. */
-  contributorProfileIds: ObjectId[];
+  /** Explicit public credit, always via Team (the canonical person identity) — never `EngineeringProfile` directly; distinct from `authorId` (the system identity that owns/edits the write-up) — a Note can credit contributors beyond its author. */
+  contributors: ObjectId[];
 }
 
 /** An earned, evidence-led record of how one Team Member thinks and works. */

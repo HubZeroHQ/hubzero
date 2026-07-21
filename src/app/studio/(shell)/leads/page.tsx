@@ -44,11 +44,11 @@ export default async function LeadsListPage({
     userRepository.list(),
   ]);
 
-  // Team Member sees only what they're assigned — the same scoping the
+  // Member sees only what they're assigned — the same scoping the
   // sidebar's `hasAssignedLeads` check (`(shell)/layout.tsx`) already
   // decides whether to show Leads in the nav at all for this role.
   const allLeads =
-    role === 'teamMember'
+    role === 'member'
       ? allLeadsUnscoped.filter((lead) => lead.assignedToUserId?.toString() === userId)
       : allLeadsUnscoped;
 

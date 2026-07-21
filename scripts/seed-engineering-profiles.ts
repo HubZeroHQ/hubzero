@@ -852,6 +852,8 @@ async function seedFounder(
         portraitId,
         publicProfile: true,
         founder: true,
+        publicCategory: 'leadership',
+        engineeringProfileEligible: true,
         order,
         socialLinks: [],
         archived: false,

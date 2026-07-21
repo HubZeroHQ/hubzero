@@ -73,8 +73,8 @@ export function relationshipLabel(
       return forward ? 'Applied in client work' : 'Informed by';
     case 'workRelatedLab':
       return forward ? 'Related investigation' : 'Related client work';
-    case 'profileContributedToEntry':
-      return forward ? 'Engineering contributor' : 'Contributed to';
+    case 'teamContributedToEntry':
+      return forward ? 'Contributor' : 'Contributed to';
     case 'artifactUsesBlueprint':
       if (!forward) return 'Proven in';
       if (edge.blueprintMeaning === 'builtOn') return 'Built on';
@@ -101,16 +101,29 @@ export async function resolvePublicRelationships(
   source: { type: PublicEntityType; id: string },
   assertions: readonly RelationshipAssertion[],
   resolveLink: (type: PublicEntityType, id: string) => Promise<PublicEntityLink | null>,
+  /**
+   * An Engineering Profile and its underlying Team member are the same
+   * public identity for the purpose of "who contributed to this" edges —
+   * contributor assertions always point at Team (§3/§4 of the personnel
+   * model), never at a profile directly. Passing the profile's
+   * `teamMemberId` here lets a profile's own page still surface "Contributed
+   * to" edges that were asserted against its Team identity, without
+   * widening `source` itself (which still drives `profileFeaturesEvidence`
+   * and every other kind correctly keyed to the profile).
+   */
+  aliasSource?: { type: PublicEntityType; id: string },
 ): Promise<PublicRelationship[]> {
+  const matchesSource = (type: PublicEntityType, id: string) =>
+    (type === source.type && id === source.id) ||
+    (aliasSource !== undefined && type === aliasSource.type && id === aliasSource.id);
+
   const relevant = normalizeRelationshipAssertions(assertions).filter(
-    (edge) =>
-      (edge.fromType === source.type && edge.fromId === source.id) ||
-      (edge.toType === source.type && edge.toId === source.id),
+    (edge) => matchesSource(edge.fromType, edge.fromId) || matchesSource(edge.toType, edge.toId),
   );
 
   const resolved = await Promise.all(
     relevant.map(async (edge): Promise<PublicRelationship | null> => {
-      const forward = edge.fromType === source.type && edge.fromId === source.id;
+      const forward = matchesSource(edge.fromType, edge.fromId);
       if (
         !forward &&
         (edge.kind === 'serviceProvenBy' || edge.kind === 'profileFeaturesEvidence')

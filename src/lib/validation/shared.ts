@@ -23,7 +23,7 @@ export const publishStatusSchema = z.enum([
   'archived',
 ]);
 export const servicePublishStatusSchema = z.enum(['draft', 'published']);
-export const userRoleSchema = z.enum(['headAdmin', 'admin', 'teamMember']);
+export const userRoleSchema = z.enum(['headAdmin', 'admin', 'member']);
 export const taxonomyKindSchema = z.enum(['technology', 'category', 'topic']);
 export const leadStatusSchema = z.enum(['new', 'contacted', 'closed']);
 export const labStageSchema = z.enum(['exploring', 'building', 'testing']);

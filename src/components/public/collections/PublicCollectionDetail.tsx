@@ -334,7 +334,7 @@ function DetailRegister({ entity }: { entity: ImmutablePublic<CollectionDetail> 
               ],
             ];
   const contributors = entity.relationships.filter(
-    (relationship) => relationship.target.type === 'engineeringProfile',
+    (relationship) => relationship.kind === 'teamContributedToEntry',
   );
   return (
     <aside className="detail-register" aria-label={`${entity.title} publication metadata`}>

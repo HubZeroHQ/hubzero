@@ -21,14 +21,14 @@ function actionErrorMessage(error: unknown): string {
 
 function readRole(formData: FormData) {
   const value = String(formData.get('role') ?? '');
-  return value === 'headAdmin' || value === 'admin' || value === 'teamMember' ? value : undefined;
+  return value === 'headAdmin' || value === 'admin' || value === 'member' ? value : undefined;
 }
 
 /**
  * Users management is Head-Admin-only end to end (`manageUsers` is
  * `headAdmin`-only in `config/permissions.ts`) — that single capability
  * check is also what structurally prevents privilege escalation: no role
- * other than Head Admin can ever reach any action in this file, so a Team
+ * other than Head Admin can ever reach any action in this file, so a
  * Member or Admin has no path to grant themselves a higher role.
  */
 export async function createUserAction(
@@ -57,7 +57,7 @@ export async function createUserAction(
         email: String(formData.get('email') ?? '')
           .trim()
           .toLowerCase(),
-        role: readRole(formData) ?? 'teamMember',
+        role: readRole(formData) ?? 'member',
         passwordHash: await hashPassword(password),
         disabled: false,
         // The admin who creates this account chooses the initial password,

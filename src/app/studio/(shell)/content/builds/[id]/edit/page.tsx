@@ -100,9 +100,7 @@ export default async function EditBuildPage({ params }: { params: Promise<{ id: 
           technologyIds: build.technologyIds.map((entryId) => entryId.toString()),
           originatingLabId: build.originatingLabId?.toString(),
           relatedWorkIds: build.relatedWorkIds.map((entryId) => entryId.toString()),
-          contributorProfileIds: (build.contributorProfileIds ?? []).map((entryId) =>
-            entryId.toString(),
-          ),
+          contributors: (build.contributors ?? []).map((entryId) => entryId.toString()),
         }}
         initialHeroAsset={heroAsset ? toMediaAssetDTO(heroAsset) : undefined}
         initialGalleryAssets={galleryAssets.map(toMediaAssetDTO)}

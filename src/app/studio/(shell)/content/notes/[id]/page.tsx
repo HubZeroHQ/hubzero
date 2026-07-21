@@ -16,7 +16,6 @@ import { canUnpublishOverride, getAvailableTransitions } from '@/lib/studio/work
 import { blueprintRepository } from '@/lib/db/repositories/blueprint';
 import { buildRepository } from '@/lib/db/repositories/build';
 import { documentRepository } from '@/lib/db/repositories/document';
-import { engineeringProfileRepository } from '@/lib/db/repositories/engineering-profile';
 import { labRepository } from '@/lib/db/repositories/lab';
 import { noteRepository } from '@/lib/db/repositories/note';
 import { taxonomyRepository } from '@/lib/db/repositories/taxonomy';
@@ -48,7 +47,6 @@ export default async function NoteDetailPage({ params }: { params: Promise<{ id:
     builds,
     blueprints,
     labs,
-    profiles,
     team,
     { heroAsset, galleryAssets: gallery },
   ] = await Promise.all([
@@ -59,7 +57,6 @@ export default async function NoteDetailPage({ params }: { params: Promise<{ id:
     buildRepository.list(),
     blueprintRepository.list(),
     labRepository.list(),
-    engineeringProfileRepository.list(),
     teamRepository.list(),
     resolveHeroAndGallery(note.heroImageId, note.galleryImageIds),
   ]);
@@ -92,14 +89,10 @@ export default async function NoteDetailPage({ params }: { params: Promise<{ id:
     ]),
   );
 
-  const teamNames = new Map(team.map((member) => [member._id.toString(), member.name]));
   const contributorLabels = new Map(
-    profiles.map((entry) => [
-      entry._id.toString(),
-      {
-        label: teamNames.get(entry.teamMemberId.toString()) ?? entry.slug,
-        referenceId: entry.referenceId,
-      },
+    team.map((member) => [
+      member._id.toString(),
+      { label: member.name, referenceId: member.referenceId },
     ]),
   );
 
@@ -208,7 +201,7 @@ export default async function NoteDetailPage({ params }: { params: Promise<{ id:
         </section>
       ) : null}
 
-      {note.relatedEntries.length > 0 || (note.contributorProfileIds?.length ?? 0) > 0 ? (
+      {note.relatedEntries.length > 0 || (note.contributors?.length ?? 0) > 0 ? (
         <section className="flex flex-col gap-2">
           <h2 className="text-text-muted font-mono text-xs tracking-[0.05em] uppercase">Related</h2>
           <ul className="flex flex-col gap-1 text-sm">
@@ -225,13 +218,13 @@ export default async function NoteDetailPage({ params }: { params: Promise<{ id:
                 </li>
               );
             })}
-            {(note.contributorProfileIds ?? []).map((profileId) => {
-              const contributor = contributorLabels.get(profileId.toString());
+            {(note.contributors ?? []).map((teamId) => {
+              const contributor = contributorLabels.get(teamId.toString());
               return (
-                <li key={profileId.toString()} className="text-text-secondary">
+                <li key={teamId.toString()} className="text-text-secondary">
                   {contributor
-                    ? `${contributor.label} (${contributor.referenceId}) — Engineering contributor`
-                    : 'Unknown Engineering Profile'}
+                    ? `${contributor.label} (${contributor.referenceId}) — Contributor`
+                    : 'Unknown Team member'}
                 </li>
               );
             })}

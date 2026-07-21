@@ -34,6 +34,9 @@ export default async function EditTeamMemberPage({ params }: { params: Promise<{
           group: member.group,
           order: member.order,
           founder: member.founder,
+          publicCategory: member.publicCategory,
+          engineeringProfileEligible: member.engineeringProfileEligible,
+          joinedAt: member.joinedAt ? member.joinedAt.toISOString().slice(0, 10) : undefined,
           publicProfile: member.publicProfile,
           socialLinks: member.socialLinks,
         }}

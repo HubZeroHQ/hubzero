@@ -10,7 +10,7 @@ import type {
   PublicEngineeringProfileIndexEntry,
   PublicTeamMemberSummary,
 } from '@/lib/public/domain';
-import { PublicEmptyState } from '../EditorialPrimitives';
+import { formatPublicDate, PublicEmptyState } from '../EditorialPrimitives';
 import { PageContainer, PublicSection } from '../PageContainer';
 import { PublicImage } from '../PublicImage';
 import { FounderMotif } from '../engineering/motifs';
@@ -26,12 +26,21 @@ export function About({
 }) {
   const eligibleProfileUrls = new Set(profiles.map(({ profile }) => profile.url));
   /**
-   * Prefer omission over approximation: a Team record with no real portrait
-   * has nothing to show here and simply doesn't appear, rather than falling
-   * back to an initials placeholder. This also removes any sample/
-   * verification records that predate real photography.
+   * Leadership keeps the premium Founder-card treatment and, with it, the
+   * existing "prefer omission over approximation" rule: a record with no
+   * real portrait has nothing to show here and simply doesn't appear,
+   * rather than falling back to an initials placeholder. This also removes
+   * any sample/verification records that predate real photography.
    */
-  const roster = team.filter((member) => member.portrait);
+  const leadership = team.filter(
+    (member) => member.publicCategory === 'leadership' && member.portrait,
+  );
+  /**
+   * The Engineering Team's compact card carries no portrait requirement —
+   * it was never designed to hinge on photography the way the premium
+   * Founder card does.
+   */
+  const engineeringTeam = team.filter((member) => member.publicCategory === 'team');
 
   return (
     <main id="main-content" tabIndex={-1} className="collection-main about-main">
@@ -112,16 +121,16 @@ export function About({
         <PageContainer>
           <header className="about-section-heading">
             <p className="home-eyebrow">People / accountable work</p>
-            <h2 id="about-team-title">Who builds HubZero.</h2>
+            <h2 id="about-team-title">Leadership.</h2>
             <p>
               Public Team records establish identity. Engineering Profiles go deeper only when a
               person has a substantive, evidence-backed record to publish.
             </p>
           </header>
 
-          {roster.length ? (
+          {leadership.length ? (
             <div className="about-roster">
-              {roster.map((member) => {
+              {leadership.map((member) => {
                 const identity = member.profile
                   ? getFounderIdentity(slugFromProfileUrl(member.profile.url) ?? '')
                   : undefined;
@@ -183,6 +192,50 @@ export function About({
             >
               HubZero does not infer a public team from internal accounts or publish provisional
               biographies. The operating model remains available without inventing a roster.
+            </PublicEmptyState>
+          )}
+        </PageContainer>
+      </PublicSection>
+
+      <PublicSection
+        className="about-engineering-team"
+        aria-labelledby="about-engineering-team-title"
+      >
+        <PageContainer>
+          <header className="about-section-heading">
+            <p className="home-eyebrow">Engineering Team / building alongside leadership</p>
+            <h2 id="about-engineering-team-title">Engineering Team.</h2>
+          </header>
+
+          {engineeringTeam.length ? (
+            <div className="about-team-compact">
+              {engineeringTeam.map((member) => (
+                <article
+                  key={`${member.group}-${member.title}`}
+                  className="about-team-compact-card"
+                >
+                  <p className="about-team-compact-name">{member.title}</p>
+                  <p className="about-team-compact-role">{member.role}</p>
+                  {member.summary ? (
+                    <p className="about-team-compact-summary">{member.summary}</p>
+                  ) : null}
+                  {member.joinedAt ? (
+                    <p className="about-team-compact-joined">
+                      Joined {formatPublicDate(member.joinedAt)}
+                    </p>
+                  ) : null}
+                </article>
+              ))}
+            </div>
+          ) : (
+            <PublicEmptyState
+              id="about-engineering-team-empty-title"
+              eyebrow="Engineering Team / no approved public records"
+              title="Team profiles appear as people join publicly."
+              className="about-empty"
+            >
+              The Engineering Team roster grows independently of Leadership — no placeholder records
+              are published in the meantime.
             </PublicEmptyState>
           )}
         </PageContainer>

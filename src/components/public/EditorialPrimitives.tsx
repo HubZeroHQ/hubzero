@@ -121,7 +121,13 @@ export function TechnologyList({
  * Publication metadata, not a blog "Author" card — deliberately compact and
  * placed in the register alongside Reference/Timeline/Role/Technologies,
  * never inside the generated document body. Order follows Studio's own
- * `contributorProfileIds` array order (never re-sorted alphabetically here).
+ * `contributors` array order (never re-sorted alphabetically here).
+ *
+ * Every contributor is a Team member (§3 of the personnel model) — whether
+ * they link to an Engineering Profile depends only on whether that person
+ * currently has one, resolved via `target.profileUrl`. It is never a
+ * different kind of contributor, just a person who does or doesn't
+ * currently have a profile to link to.
  */
 export function ContributorList({
   contributors,
@@ -131,30 +137,45 @@ export function ContributorList({
   if (!contributors.length) return null;
   return (
     <div className="detail-register-contributors">
-      <p className="home-eyebrow">Engineering contributors</p>
-      <ul aria-label="Engineering contributors">
-        {contributors.map((contributor) => (
-          <li key={contributor.target.url}>
-            <Link
-              href={contributor.target.url}
-              aria-label={
-                contributor.target.role
-                  ? `${contributor.target.title}, ${contributor.target.role} — Engineering Profile`
-                  : `${contributor.target.title} — Engineering Profile`
-              }
-            >
-              <span aria-hidden="true">
-                <span className="contributor-name">{contributor.target.title}</span>
-                {contributor.target.role ? (
-                  <span className="contributor-role">{contributor.target.role}</span>
-                ) : null}
-                <span className="contributor-link">
-                  Engineering Profile <span aria-hidden="true">→</span>
-                </span>
-              </span>
-            </Link>
-          </li>
-        ))}
+      <p className="home-eyebrow">Contributors</p>
+      <ul aria-label="Contributors">
+        {contributors.map((contributor, index) => {
+          const profileHref =
+            contributor.target.type === 'engineeringProfile'
+              ? contributor.target.url
+              : contributor.target.profileUrl;
+          return (
+            <li key={`${contributor.target.title}-${index}`}>
+              {profileHref ? (
+                <Link
+                  href={profileHref}
+                  aria-label={
+                    contributor.target.role
+                      ? `${contributor.target.title}, ${contributor.target.role} — Engineering Profile`
+                      : `${contributor.target.title} — Engineering Profile`
+                  }
+                >
+                  <span aria-hidden="true">
+                    <span className="contributor-name">{contributor.target.title}</span>
+                    {contributor.target.role ? (
+                      <span className="contributor-role">{contributor.target.role}</span>
+                    ) : null}
+                    <span className="contributor-link">
+                      Engineering Profile <span aria-hidden="true">→</span>
+                    </span>
+                  </span>
+                </Link>
+              ) : (
+                <div className="contributor-static">
+                  <span className="contributor-name">{contributor.target.title}</span>
+                  {contributor.target.role ? (
+                    <span className="contributor-role">{contributor.target.role}</span>
+                  ) : null}
+                </div>
+              )}
+            </li>
+          );
+        })}
       </ul>
     </div>
   );

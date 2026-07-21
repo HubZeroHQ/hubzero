@@ -1,4 +1,3 @@
-import { engineeringProfileRepository } from '@/lib/db/repositories/engineering-profile';
 import { taxonomyRepository } from '@/lib/db/repositories/taxonomy';
 import { teamRepository } from '@/lib/db/repositories/team';
 import { workRepository } from '@/lib/db/repositories/work';
@@ -12,21 +11,19 @@ import { workRepository } from '@/lib/db/repositories/work';
  * other way — §24), so this loader stays smaller than the others.
  */
 export async function getBlueprintRelationOptions() {
-  const [technologies, profiles, team] = await Promise.all([
+  const [technologies, team] = await Promise.all([
     taxonomyRepository.findByKind('technology'),
-    engineeringProfileRepository.list(),
     teamRepository.list(),
   ]);
-  const teamNames = new Map(team.map((member) => [member._id.toString(), member.name]));
 
   return {
     technologyOptions: technologies.map((entry) => ({
       id: entry._id.toString(),
       label: entry.label,
     })),
-    contributorOptions: profiles.map((entry) => ({
+    contributorOptions: team.map((entry) => ({
       id: entry._id.toString(),
-      label: teamNames.get(entry.teamMemberId.toString()) ?? entry.slug,
+      label: entry.name,
       referenceId: entry.referenceId,
     })),
   };

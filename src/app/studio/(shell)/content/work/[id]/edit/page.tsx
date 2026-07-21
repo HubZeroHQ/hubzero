@@ -94,7 +94,7 @@ export default async function EditWorkPage({ params }: { params: Promise<{ id: s
           relatedBuildIds: work.relatedBuildIds.map((id) => id.toString()),
           relatedBlueprintIds: work.relatedBlueprintIds.map((id) => id.toString()),
           relatedLabIds: (work.relatedLabIds ?? []).map((id) => id.toString()),
-          contributorProfileIds: (work.contributorProfileIds ?? []).map((id) => id.toString()),
+          contributors: (work.contributors ?? []).map((id) => id.toString()),
         }}
         categoryOptions={categoryOptions}
         technologyOptions={technologyOptions}

@@ -38,7 +38,7 @@ export default async function NewNotePage() {
           relatedBlueprintIds: [],
           relatedLabIds: [],
           galleryImageIds: [],
-          contributorProfileIds: [],
+          contributors: [],
         }}
         {...relationOptions}
       />
