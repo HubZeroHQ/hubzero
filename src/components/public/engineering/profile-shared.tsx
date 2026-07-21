@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { PUBLIC_ENTITY_ROUTES } from '@/config/public-site';
 import type { ImmutablePublic, PublicEntityDetail, PublicRelationship } from '@/lib/public/domain';
 import { PageContainer } from '../PageContainer';
-import { RelationshipCard } from '../EditorialPrimitives';
+import { RelationshipCard, relationshipKey } from '../EditorialPrimitives';
 
 export type EngineeringProfile = Extract<PublicEntityDetail, { type: 'engineeringProfile' }>;
 
@@ -68,7 +68,7 @@ export function RelationshipGroup({
       <div className="home-relationships" aria-label={title}>
         {relationships.map((relationship) => (
           <RelationshipCard
-            key={`${relationship.kind}-${relationship.target.url}`}
+            key={relationshipKey(relationship)}
             relationship={relationship}
             enabled={PUBLIC_ENTITY_ROUTES[relationship.target.type]}
           />

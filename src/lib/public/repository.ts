@@ -365,6 +365,7 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
           type: 'teamMember',
           title: record.name,
           url: '/about',
+          referenceId: record.referenceId,
           summary: record.bio,
           role: record.role,
           group: record.group,

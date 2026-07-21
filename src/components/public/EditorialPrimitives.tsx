@@ -10,6 +10,17 @@ import type {
 import { cn } from '@/lib/utils/cn';
 import { slugFromProfileUrl } from './engineering/profile-url';
 
+/**
+ * `target.url` is not a unique per-target identifier: every teamMember
+ * target shares the literal '/about' url (see `PublicEntityLink.url` doc
+ * comment), since that link intentionally doesn't vary by person. `target.referenceId`
+ * (e.g. `HZ-TM-001`) is the stable per-entity identifier assigned at the data
+ * layer, so it — not the url — is what makes a relationship key unique.
+ */
+export function relationshipKey(relationship: ImmutablePublic<PublicRelationship>): string {
+  return `${relationship.kind}-${relationship.target.referenceId ?? relationship.target.url}`;
+}
+
 export function SectionHeader({
   eyebrow,
   title,
@@ -139,13 +150,13 @@ export function ContributorList({
     <div className="detail-register-contributors">
       <p className="home-eyebrow">Contributors</p>
       <ul aria-label="Contributors">
-        {contributors.map((contributor, index) => {
+        {contributors.map((contributor) => {
           const profileHref =
             contributor.target.type === 'engineeringProfile'
               ? contributor.target.url
               : contributor.target.profileUrl;
           return (
-            <li key={`${contributor.target.title}-${index}`}>
+            <li key={relationshipKey(contributor)}>
               {profileHref ? (
                 <Link
                   href={profileHref}

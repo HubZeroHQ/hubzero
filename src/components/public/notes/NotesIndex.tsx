@@ -1,7 +1,12 @@
 import Link from 'next/link';
 import { PUBLIC_ENTITY_ROUTES } from '@/config/public-site';
 import type { ImmutablePublic, PublicNoteIndexEntry } from '@/lib/public/domain';
-import { formatPublicDate, PublicEmptyState, TechnologyList } from '../EditorialPrimitives';
+import {
+  formatPublicDate,
+  PublicEmptyState,
+  relationshipKey,
+  TechnologyList,
+} from '../EditorialPrimitives';
 import { PageContainer, PublicSection } from '../PageContainer';
 
 export function NotesIndex({
@@ -77,7 +82,7 @@ export function NotesIndex({
                         <span>Discusses</span>
                         <ul>
                           {relationships.map((relationship) => (
-                            <li key={`${relationship.kind}-${relationship.target.url}`}>
+                            <li key={relationshipKey(relationship)}>
                               {PUBLIC_ENTITY_ROUTES[relationship.target.type] ? (
                                 <Link href={relationship.target.url}>
                                   {relationship.target.title}

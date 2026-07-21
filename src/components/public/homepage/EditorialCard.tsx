@@ -6,6 +6,7 @@ import {
   PublicationMetadata,
   RelationshipCard,
   TechnologyList,
+  relationshipKey,
 } from '../EditorialPrimitives';
 
 export function EditorialCard({
@@ -48,7 +49,7 @@ export function EditorialCard({
           <div className="home-relationships" aria-label="Connected evidence">
             {relationships.map((relationship) => (
               <RelationshipCard
-                key={`${relationship.kind}-${relationship.target.url}`}
+                key={relationshipKey(relationship)}
                 relationship={relationship}
                 enabled={Boolean(relationshipRoutes[relationship.target.type])}
               />
