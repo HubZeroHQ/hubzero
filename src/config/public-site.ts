@@ -129,7 +129,7 @@ export const PUBLIC_HOME = {
     close: 'that hold up.',
   },
   introduction:
-    'HubZero designs software, hardware, AI systems, and the digital infrastructure that connects them. The work is documented through its constraints, decisions, and outcomes.',
+    'HubZero designs and builds software products, developer tools, AI-backed systems, and the infrastructure that runs them. Each one below is documented through its constraints, decisions, and outcomes.',
   pillars: [
     {
       label: 'Labs',
@@ -233,14 +233,57 @@ export const PUBLIC_ABOUT = {
   ],
 } as const;
 
+/**
+ * `description` is the short answer to "what's the difference between
+ * these?" — surfaced as a native tooltip on the desktop pill nav (which has
+ * no room for subtitles) and as a visible line under each label in the
+ * disclosed mobile menu (which does). Kept to a few words, not a repeat of
+ * the fuller `PUBLIC_HOME.pillars` copy.
+ */
 export const PUBLIC_NAVIGATION = [
-  { label: 'Work', href: '/work', type: 'work', enabled: true },
-  { label: 'Builds', href: '/builds', type: 'build', enabled: true },
-  { label: 'Blueprints', href: '/blueprints', type: 'blueprint', enabled: true },
-  { label: 'Labs', href: '/labs', type: 'lab', enabled: true },
-  { label: 'Notes', href: '/notes', type: 'note', enabled: true },
-  { label: 'Services', href: '/services', type: 'service', enabled: false },
-  { label: 'About', href: '/about', type: 'teamMember', enabled: true },
+  { label: 'Work', href: '/work', type: 'work', enabled: true, description: 'Client case studies' },
+  {
+    label: 'Builds',
+    href: '/builds',
+    type: 'build',
+    enabled: true,
+    description: 'Products HubZero ships',
+  },
+  {
+    label: 'Blueprints',
+    href: '/blueprints',
+    type: 'blueprint',
+    enabled: true,
+    description: 'Reusable engineering foundations',
+  },
+  {
+    label: 'Labs',
+    href: '/labs',
+    type: 'lab',
+    enabled: true,
+    description: 'Investigations in progress',
+  },
+  {
+    label: 'Notes',
+    href: '/notes',
+    type: 'note',
+    enabled: true,
+    description: 'Short-form engineering journal',
+  },
+  {
+    label: 'Services',
+    href: '/services',
+    type: 'service',
+    enabled: false,
+    description: 'Capability by evidence',
+  },
+  {
+    label: 'About',
+    href: '/about',
+    type: 'teamMember',
+    enabled: true,
+    description: 'Team & operating model',
+  },
 ] as const;
 
 export const PUBLIC_ENTITY_ROUTES = {

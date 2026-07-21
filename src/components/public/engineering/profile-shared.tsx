@@ -3,6 +3,7 @@ import { PUBLIC_ENTITY_ROUTES } from '@/config/public-site';
 import type { ImmutablePublic, PublicEntityDetail, PublicRelationship } from '@/lib/public/domain';
 import { PageContainer } from '../PageContainer';
 import { RelationshipCard, relationshipKey } from '../EditorialPrimitives';
+import { RelationshipGraph } from '../EvidenceVisuals';
 
 export type EngineeringProfile = Extract<PublicEntityDetail, { type: 'engineeringProfile' }>;
 
@@ -53,6 +54,29 @@ export function resolveRelationshipGroups(profile: ImmutablePublic<EngineeringPr
       (relationship) => relationship.target.type === group.type,
     ),
   })).filter((group) => group.relationships.length);
+}
+
+/**
+ * Shared by the generic template and every founder composition (§18
+ * evidence visualization) — a monochrome SVG summary of the same
+ * `profile.relationships` the `RelationshipGroup` lists below it render
+ * accessibly. One implementation, so a future composition gets it for free
+ * instead of needing its own copy of this block.
+ */
+export function ProfileEvidenceGraph({
+  profile,
+}: {
+  profile: ImmutablePublic<EngineeringProfile>;
+}) {
+  if (!profile.relationships.length) return null;
+  return (
+    <div className="home-section-artifact">
+      <RelationshipGraph
+        subject={{ label: profile.title, meta: 'Engineer' }}
+        relationships={profile.relationships}
+      />
+    </div>
+  );
 }
 
 export function RelationshipGroup({

@@ -15,15 +15,55 @@ export function EditorialCard({
   relationshipRoutes,
   prominent = false,
   priority = false,
+  layout = 'card',
 }: {
   feature: ImmutablePublic<PublicHomepageFeature>;
   routeEnabled: boolean;
   relationshipRoutes: Readonly<Record<string, boolean>>;
   prominent?: boolean;
   priority?: boolean;
+  /**
+   * 'row' is the same primitive rendered as a compact, dated ledger entry
+   * instead of a boxed card — used where a section wants to read as a
+   * chronological record (current Labs/Notes) rather than a shelf of
+   * products, without introducing a second card component to keep in sync.
+   */
+  layout?: 'card' | 'row';
 }) {
   const { entity, relationships } = feature;
   const heading = <h3>{entity.title}</h3>;
+
+  if (layout === 'row') {
+    return (
+      <article className="home-ledger-row">
+        <div className="home-ledger-heading">
+          <MetadataRow entity={entity} />
+          {routeEnabled ? (
+            <Link href={entity.url} className="home-ledger-title">
+              {heading}
+              <span aria-hidden="true">→</span>
+            </Link>
+          ) : (
+            <div className="home-ledger-title">{heading}</div>
+          )}
+        </div>
+        <p className="home-ledger-summary">{entity.summary}</p>
+        <PublicationMetadata entity={entity} />
+        <TechnologyList technologies={entity.technologies} />
+        {relationships.length ? (
+          <div className="home-relationships" aria-label="Connected evidence">
+            {relationships.slice(0, 3).map((relationship) => (
+              <RelationshipCard
+                key={relationshipKey(relationship)}
+                relationship={relationship}
+                enabled={Boolean(relationshipRoutes[relationship.target.type])}
+              />
+            ))}
+          </div>
+        ) : null}
+      </article>
+    );
+  }
 
   return (
     <article className={prominent ? 'home-card home-card-prominent' : 'home-card'}>

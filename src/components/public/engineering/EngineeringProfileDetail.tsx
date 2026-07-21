@@ -6,6 +6,7 @@ import { ProseRenderer } from '../ProseRenderer';
 import { PublicImage } from '../PublicImage';
 import { FOUNDER_COMPOSITIONS } from './compositions';
 import {
+  ProfileEvidenceGraph,
   ProfileFooter,
   RelationshipGroup,
   resolveDocuments,
@@ -143,6 +144,7 @@ export function EngineeringProfileDetail({ profile }: { profile: ImmutablePublic
                 Every connection below is explicit in the public record. Internal creator metadata
                 is never treated as contribution credit.
               </p>
+              <ProfileEvidenceGraph profile={profile} />
             </header>
             <div className="detail-relation-groups">
               {groups.map((group) => (

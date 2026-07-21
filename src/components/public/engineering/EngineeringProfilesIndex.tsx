@@ -1,7 +1,12 @@
 import Link from 'next/link';
 import { PUBLIC_ENTITY_ROUTES } from '@/config/public-site';
 import type { ImmutablePublic, PublicEngineeringProfileIndexEntry } from '@/lib/public/domain';
-import { PublicEmptyState, relationshipKey, TechnologyList } from '../EditorialPrimitives';
+import {
+  PublicEmptyState,
+  RelationshipCard,
+  relationshipKey,
+  TechnologyList,
+} from '../EditorialPrimitives';
 import { PageContainer, PublicSection } from '../PageContainer';
 import { PublicImage } from '../PublicImage';
 
@@ -60,47 +65,50 @@ export function EngineeringProfilesIndex({
           {entries.length ? (
             <ol className="engineering-ledger">
               {entries.map(({ profile, areasOfExpertise, relationships }) => (
-                <li key={profile.url}>
+                <li key={profile.url} className="engineering-card">
                   <article>
-                    <div className="engineering-ledger-identity">
+                    <div className="engineering-card-identity">
                       {profile.portrait ? <PublicImage media={profile.portrait} /> : null}
                       <div>
-                        <p className="home-eyebrow">{profile.referenceId}</p>
-                        <Link href={profile.url}>
+                        <p className="home-eyebrow">
+                          {profile.role} / {profile.referenceId}
+                        </p>
+                        <Link href={profile.url} className="engineering-card-title">
                           <h3>{profile.title}</h3>
                           <span aria-hidden="true">→</span>
                         </Link>
-                        <p>{profile.role}</p>
+                        <p className="engineering-card-position">{profile.summary}</p>
                       </div>
                     </div>
-                    <div className="engineering-ledger-position">
-                      <p>{profile.summary}</p>
+                    <div className="engineering-card-body">
                       {areasOfExpertise.length ? (
-                        <ul className="engineering-expertise" aria-label="Areas of expertise">
-                          {areasOfExpertise.map((area) => (
+                        <ul className="engineering-expertise" aria-label="Primary expertise">
+                          {areasOfExpertise.slice(0, 3).map((area) => (
                             <li key={area}>{area}</li>
                           ))}
                         </ul>
                       ) : null}
-                      <TechnologyList technologies={profile.technologies} />
+                      <TechnologyList technologies={profile.technologies.slice(0, 4)} />
+                      {relationships.length ? (
+                        <div className="engineering-card-evidence">
+                          <p className="home-eyebrow">
+                            Evidence / {relationships.length} connected
+                          </p>
+                          <div
+                            className="home-relationships"
+                            aria-label={`${profile.title} selected evidence`}
+                          >
+                            {relationships.slice(0, 3).map((relationship) => (
+                              <RelationshipCard
+                                key={relationshipKey(relationship)}
+                                relationship={relationship}
+                                enabled={Boolean(PUBLIC_ENTITY_ROUTES[relationship.target.type])}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      ) : null}
                     </div>
-                    <nav aria-label={`${profile.title} selected evidence`}>
-                      <p className="home-eyebrow">Selected evidence / {relationships.length}</p>
-                      <ul>
-                        {relationships.slice(0, 5).map((relationship) => (
-                          <li key={relationshipKey(relationship)}>
-                            <span>{relationship.label}</span>
-                            {PUBLIC_ENTITY_ROUTES[relationship.target.type] ? (
-                              <Link href={relationship.target.url}>
-                                {relationship.target.title}
-                              </Link>
-                            ) : (
-                              <span>{relationship.target.title}</span>
-                            )}
-                          </li>
-                        ))}
-                      </ul>
-                    </nav>
                   </article>
                 </li>
               ))}

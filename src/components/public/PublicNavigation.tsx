@@ -42,6 +42,7 @@ export function PublicNavigation() {
                   ref={current ? currentLinkRef : undefined}
                   aria-current={current ? 'page' : undefined}
                   className="public-nav-link"
+                  title={item.description}
                 >
                   {item.label}
                 </Link>

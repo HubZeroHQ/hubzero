@@ -7,7 +7,7 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 interface PublicMobileNavProps {
-  items: readonly { label: string; href: string }[];
+  items: readonly { label: string; href: string; description?: string }[];
 }
 
 /**
@@ -62,7 +62,10 @@ export function PublicMobileNav({ items }: PublicMobileNavProps) {
                   aria-current={current ? 'page' : undefined}
                   className="public-mobile-nav-link"
                 >
-                  {item.label}
+                  <span>{item.label}</span>
+                  {item.description ? (
+                    <span className="public-mobile-nav-description">{item.description}</span>
+                  ) : null}
                 </Link>
               );
             })}

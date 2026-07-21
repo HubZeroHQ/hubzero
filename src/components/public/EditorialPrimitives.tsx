@@ -27,14 +27,14 @@ export function SectionHeader({
   description,
   className,
 }: {
-  eyebrow: string;
+  eyebrow?: string;
   title: ReactNode;
   description?: string;
   className?: string;
 }) {
   return (
     <header className={cn('home-section-header', className)}>
-      <p className="home-eyebrow">{eyebrow}</p>
+      {eyebrow ? <p className="home-eyebrow">{eyebrow}</p> : null}
       <div>
         <h2>{title}</h2>
         {description ? <p>{description}</p> : null}

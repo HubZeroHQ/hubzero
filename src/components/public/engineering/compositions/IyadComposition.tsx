@@ -10,6 +10,7 @@ import { ProseRenderer } from '../../ProseRenderer';
 import { PublicImage } from '../../PublicImage';
 import { FounderMotif } from '../motifs';
 import {
+  ProfileEvidenceGraph,
   ProfileFooter,
   RelationshipGroup,
   resolveDocuments,
@@ -137,6 +138,7 @@ export function IyadComposition({
                 Every connection below is explicit in the public record. Internal creator metadata
                 is never treated as contribution credit.
               </p>
+              <ProfileEvidenceGraph profile={profile} />
             </header>
             <div className="detail-relation-groups">
               {groups.map((group) => (

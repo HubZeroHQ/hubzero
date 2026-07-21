@@ -340,10 +340,12 @@
   }
 
   .public-mobile-nav-link {
-    display: flex;
+    display: grid;
     min-height: 48px;
-    align-items: center;
+    align-content: center;
+    gap: 2px;
     border-radius: var(--radius-control);
+    padding-block: 8px;
     padding-inline: 16px;
     color: var(--color-text-secondary);
     font-size: 16px;
@@ -351,6 +353,14 @@
     transition:
       color var(--duration-fast) var(--ease-standard),
       background-color var(--duration-fast) var(--ease-standard);
+  }
+
+  .public-mobile-nav-description {
+    color: var(--color-text-muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 0.04em;
   }
 
   .public-mobile-nav-link:hover,
@@ -377,12 +387,64 @@
     text-transform: uppercase;
   }
 
+  .public-footer-top {
+    display: grid;
+    gap: 40px;
+    padding-block: 56px 32px;
+    border-bottom: 1px solid var(--color-border-muted);
+  }
+
+  .public-footer-brand {
+    display: grid;
+    gap: 12px;
+    max-width: 42ch;
+  }
+
+  .public-footer-mark {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--color-text-secondary);
+  }
+
+  .public-footer-nav {
+    display: grid;
+    gap: 16px;
+    align-content: start;
+  }
+
+  .public-footer-nav-heading {
+    color: var(--color-text-disabled);
+  }
+
+  .public-footer-nav ul {
+    display: grid;
+    gap: 10px;
+  }
+
+  .public-footer-nav a {
+    color: var(--color-text-muted);
+    transition: color var(--duration-fast) var(--ease-standard);
+  }
+
+  .public-footer-nav a:hover,
+  .public-footer-nav a:focus-visible {
+    color: var(--color-text-primary);
+  }
+
+  @media (min-width: 640px) {
+    .public-footer-top {
+      grid-template-columns: minmax(0, 1fr) auto auto;
+      gap: 64px;
+    }
+  }
+
   .public-footer-inner {
     display: grid;
-    grid-template-columns: 1fr auto auto;
+    grid-template-columns: 1fr auto;
     align-items: center;
     gap: 32px;
-    min-height: 96px;
+    min-height: 72px;
   }
 
   .public-status-main {
@@ -781,9 +843,22 @@
     align-items: center;
     gap: 16px;
     margin-top: 32px;
-    color: var(--color-text-primary);
     font-size: 14px;
     font-weight: 600;
+    transition: transform 110ms linear;
+  }
+
+  /*
+   * §CTA hierarchy — exactly one filled, non-underlined action per page (the
+   * conversion CTA: "Start a project conversation"). Every other in-copy
+   * action ("Inspect the evidence", "Review services") stays an underlined
+   * text link, so the primary action is legible at a glance without adding
+   * a second button style or SaaS-style call-to-action chrome — it reuses
+   * the same filled-pill treatment `.public-nav-contact` already
+   * establishes as this site's one "solid" affordance.
+   */
+  .home-text-link {
+    color: var(--color-text-primary);
     text-decoration: underline;
     text-decoration-color: var(--color-border-strong);
     text-underline-offset: 6px;
@@ -792,9 +867,22 @@
       transform 110ms linear;
   }
 
-  .home-text-link:hover,
-  .home-primary-link:hover {
+  .home-text-link:hover {
     text-decoration-color: currentColor;
+  }
+
+  .home-primary-link {
+    padding-inline: 24px;
+    border-radius: 100px;
+    background: var(--color-text-primary);
+    color: var(--color-bg-base);
+    transition:
+      transform 110ms linear,
+      opacity var(--duration-fast) var(--ease-standard);
+  }
+
+  .home-primary-link:hover {
+    opacity: 0.85;
   }
 
   .home-text-link:active,
@@ -914,6 +1002,7 @@
   }
 
   .home-card {
+    position: relative;
     overflow: hidden;
     border: 1px solid var(--color-border-default);
     border-radius: var(--radius-card);
@@ -924,8 +1013,34 @@
       box-shadow var(--duration-considered) var(--ease-standard);
   }
 
-  .home-card:has(a:focus-visible),
-  .home-card:hover {
+  /*
+   * Whole-card click target (§Interaction model): `a.home-card-title` carries
+   * an absolutely-positioned `::after` stretched to the card's own bounds
+   * (the nearest positioned ancestor, via `.home-card`'s `position: relative`
+   * above), so a click anywhere on the card — media, summary, whitespace —
+   * activates the same link the title does. This is the well-established
+   * "stretched link" pattern (as in Bootstrap's `.stretched-link`): the
+   * overlay is a pseudo-element of the real anchor, not a second element, so
+   * it never duplicates the accessible name or the tab stop. Nested real
+   * links (`.home-relationship-card`) opt back out via `position: relative;
+   * z-index: 1`, which paints them above the overlay so they stay
+   * independently clickable. A card with no destination renders
+   * `.home-card-title` as a plain `<div>` instead of an anchor, so neither
+   * the overlay nor the hover lift below ever applies to it — see §7 (no
+   * partial affordances): a non-interactive card must not look interactive.
+   */
+  .home-card:has(a.home-card-title) {
+    cursor: pointer;
+  }
+
+  a.home-card-title::after {
+    position: absolute;
+    inset: 0;
+    content: '';
+  }
+
+  .home-card:has(a.home-card-title):hover,
+  .home-card:has(a:focus-visible) {
     border-color: var(--color-border-strong);
     transform: translateY(-4px);
     box-shadow: 0 28px 56px -28px rgb(0 0 0 / 0.68);
@@ -1029,6 +1144,9 @@
   }
 
   .home-relationship-card {
+    position: relative;
+    /* Above `a.home-card-title::after`'s stretched overlay (z-index: auto) so this stays independently clickable inside a whole-card link — see the `.home-card` comment. */
+    z-index: 1;
     display: grid;
     grid-template-columns: minmax(96px, 0.5fr) 1fr auto;
     gap: 12px;
@@ -1094,6 +1212,160 @@
 
   .home-current-grid > section .home-subsection-title {
     margin-bottom: 0;
+  }
+
+  /*
+   * §Homepage rhythm — Labs and Notes read as a dated journal, not another
+   * shelf of product cards, so this section renders `EditorialCard` in its
+   * compact `layout="row"` form (`.home-ledger-row`) instead of `.home-card`:
+   * same shared component and data, a distinct rhythm from the boxed grids
+   * above and below it. Whole-row click target via the same stretched-link
+   * pattern as `.home-card` / `.notes-ledger`.
+   */
+  .home-ledger {
+    border-top: 1px solid var(--color-border-muted);
+  }
+
+  .home-ledger-row {
+    position: relative;
+    padding-block: 20px;
+    border-bottom: 1px solid var(--color-border-muted);
+    transition: background-color var(--duration-fast) var(--ease-standard);
+  }
+
+  .home-ledger-row:hover,
+  .home-ledger-row:has(a:focus-visible) {
+    background-color: var(--color-surface-default);
+  }
+
+  .home-ledger-heading {
+    display: grid;
+    gap: 10px;
+  }
+
+  .home-ledger-title {
+    display: flex;
+    min-height: 32px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    color: var(--color-text-primary);
+  }
+
+  .home-ledger-title::after {
+    position: absolute;
+    inset: 0;
+    content: '';
+  }
+
+  .home-ledger-title h3 {
+    font-size: clamp(20px, 3vw, 26px);
+    font-weight: 500;
+    line-height: 1.15;
+    text-wrap: balance;
+  }
+
+  .home-ledger-title > span {
+    color: var(--color-text-muted);
+    transition:
+      color var(--duration-fast) var(--ease-standard),
+      transform var(--duration-fast) var(--ease-standard);
+  }
+
+  .home-ledger-row:hover .home-ledger-title > span,
+  .home-ledger-title:focus-visible > span {
+    color: var(--color-text-primary);
+    transform: translateX(4px);
+  }
+
+  .home-ledger-summary {
+    max-width: 56ch;
+    margin-top: 12px;
+    color: var(--color-text-secondary);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .home-ledger-row .home-publication-meta,
+  .home-ledger-row .home-technologies {
+    margin-top: 12px;
+  }
+
+  /*
+   * §18 Engineering evidence visualization — monochrome, typography-first
+   * SVG diagrams generated straight from real `PublicRelationship[]` /
+   * entity fields, never illustration. `figure[role="img"]` carries the
+   * accessible summary; the `<svg>` itself is `aria-hidden` so its many
+   * individual `<text>` nodes aren't announced piecemeal — the same
+   * relationships already have a fully accessible, keyboard-operable
+   * rendering elsewhere on the page (`RelationshipCard` / metadata rows).
+   * `width: 100%; height: auto` on a `viewBox`-scaled root is what makes
+   * these responsive: the whole diagram (including its text) scales with
+   * its container instead of overflowing or needing horizontal scroll.
+   */
+  .evidence-graph,
+  .axis-diagram {
+    margin: 0;
+  }
+
+  .evidence-graph svg,
+  .axis-diagram svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+
+  .evidence-graph-line,
+  .axis-diagram-line {
+    stroke: var(--color-border-strong);
+    stroke-width: 1;
+  }
+
+  .evidence-graph-node,
+  .axis-diagram-node {
+    fill: var(--color-bg-base);
+    stroke: var(--color-text-muted);
+    stroke-width: 1;
+  }
+
+  .evidence-graph-subject-meta,
+  .evidence-graph-edge-label,
+  .axis-diagram-label {
+    fill: var(--color-text-muted);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .evidence-graph-subject-label {
+    fill: var(--color-text-primary);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  .evidence-graph-node-label,
+  .axis-diagram-value {
+    fill: var(--color-text-secondary);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .axis-diagram-caption {
+    fill: var(--color-text-muted);
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .home-section-artifact {
+    margin-bottom: clamp(40px, 5vw, 64px);
+    padding-bottom: clamp(40px, 5vw, 64px);
+    border-bottom: 1px solid var(--color-border-muted);
   }
 
   .home-closing {
@@ -1681,10 +1953,24 @@
   }
 
   .notes-ledger > li {
+    position: relative;
     display: grid;
     gap: 20px;
     padding-block: clamp(32px, 4vw, 48px);
     border-bottom: 1px solid var(--color-border-muted);
+    transition: background-color var(--duration-fast) var(--ease-standard);
+  }
+
+  /* Whole-row click target, same "stretched link" pattern as `.home-card` — the title anchor's `::after` stretches to the row, nested relationship links opt back out with their own stacking context below. */
+  .notes-ledger > li:hover,
+  .notes-ledger > li:has(a:focus-visible) {
+    background-color: var(--color-surface-default);
+  }
+
+  .notes-ledger-heading > a::after {
+    position: absolute;
+    inset: 0;
+    content: '';
   }
 
   .notes-ledger > li > time {
@@ -1771,6 +2057,8 @@
   }
 
   .notes-ledger-relations a {
+    position: relative;
+    z-index: 1;
     text-decoration: underline;
     text-decoration-color: var(--color-border-strong);
     text-underline-offset: 4px;
@@ -2161,11 +2449,16 @@
     display: inline-flex;
   }
 
+  .public-footer-top {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+
   .public-footer-inner {
     grid-template-columns: 1fr;
     gap: 10px;
     align-content: center;
-    min-height: 136px;
+    min-height: 96px;
   }
 
   .public-status-main {
@@ -3439,10 +3732,24 @@
   }
 
   .about-operating-ledger > li {
+    position: relative;
     display: grid;
     gap: 20px;
     padding-block: clamp(28px, 4vw, 44px);
     border-bottom: 1px solid var(--color-border-muted);
+    transition: background-color var(--duration-fast) var(--ease-standard);
+  }
+
+  /* Whole-row click target, same pattern as `.home-card` / `.notes-ledger` — the single "Explore" link's `::after` stretches to the row. */
+  .about-operating-ledger > li:hover,
+  .about-operating-ledger > li:has(a:focus-visible) {
+    background-color: var(--color-surface-default);
+  }
+
+  .about-operating-ledger > li > a::after {
+    position: absolute;
+    inset: 0;
+    content: '';
   }
 
   .about-operating-ledger > li > span,
@@ -3750,80 +4057,109 @@
     }
   }
 
+  /*
+   * Engineering Profile ledger card (§9 redesign). Hierarchy top to bottom:
+   * role → name → one-line position → primary expertise → evidence, with
+   * evidence given equal visual weight to the identity block instead of
+   * being demoted to a footer-style nav list. The whole row is one click
+   * target via the same stretched-link pattern as `.home-card` /
+   * `.notes-ledger`: `.engineering-card-title`'s `::after` stretches to the
+   * row, and `.home-relationship-card` (shared with the homepage feature
+   * cards) opts back out above it via its own `z-index: 1`.
+   */
   .engineering-ledger > li {
+    position: relative;
     padding-block: clamp(40px, 5vw, 64px);
     border-bottom: 1px solid var(--color-border-muted);
+    transition: background-color var(--duration-fast) var(--ease-standard);
   }
 
-  .engineering-ledger article {
+  .engineering-ledger > li:hover,
+  .engineering-ledger > li:has(a:focus-visible) {
+    background-color: var(--color-surface-default);
+  }
+
+  .engineering-card article {
     display: grid;
-    gap: 36px;
+    gap: 32px;
   }
 
-  .engineering-ledger-identity {
+  .engineering-card-identity {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);
     gap: 20px;
-    align-items: center;
+    align-items: start;
   }
 
-  .engineering-ledger-identity .public-media {
-    width: 88px;
+  .engineering-card-identity .public-media {
+    width: 72px;
     overflow: hidden;
     border-radius: 10px;
   }
 
-  .engineering-ledger-identity .public-media img {
+  .engineering-card-identity .public-media img {
     aspect-ratio: 4 / 5;
     object-fit: cover;
   }
 
-  .engineering-ledger-identity a {
+  .engineering-card-title {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     gap: 18px;
     align-items: baseline;
-    margin-top: 12px;
+    margin-top: 10px;
   }
 
-  .engineering-ledger-identity h3 {
-    font-size: clamp(30px, 5vw, 46px);
+  .engineering-card-title::after {
+    position: absolute;
+    inset: 0;
+    content: '';
+  }
+
+  .engineering-card-title h3 {
+    font-size: clamp(28px, 5vw, 42px);
     font-weight: 600;
     line-height: 1.08;
     letter-spacing: -0.025em;
   }
 
-  .engineering-ledger-identity a > span {
+  .engineering-card-title > span {
     color: var(--color-text-muted);
     transition:
       transform var(--duration-fast) var(--ease-standard),
       color var(--duration-fast) var(--ease-standard);
   }
 
-  .engineering-ledger-identity a:hover > span,
-  .engineering-ledger-identity a:focus-visible > span {
+  .engineering-ledger > li:hover .engineering-card-title > span,
+  .engineering-card-title:focus-visible > span {
     color: var(--color-text-primary);
     transform: translateX(4px);
   }
 
-  .engineering-ledger-identity div > p:last-child {
-    margin-top: 8px;
-    color: var(--color-text-secondary);
-    font-size: 14px;
-  }
-
-  .engineering-ledger-position > p {
-    max-width: 60ch;
+  /* Clamped to a concise positioning statement — the full biography stays one click away on the profile itself, per §9 ("biography should be shorter"). */
+  .engineering-card-position {
+    display: -webkit-box;
+    overflow: hidden;
+    max-width: 56ch;
+    margin-top: 10px;
     color: var(--color-text-secondary);
     font-size: 15px;
     line-height: 1.7;
+    text-overflow: ellipsis;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+  }
+
+  .engineering-card-body {
+    display: grid;
+    align-content: start;
+    gap: 24px;
   }
 
   .engineering-expertise {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
-    margin-top: 20px;
   }
 
   .engineering-expertise li {
@@ -3838,39 +4174,40 @@
     text-transform: uppercase;
   }
 
-  .engineering-ledger-position .home-technologies {
+  /*
+   * Technologies read as a plain, secondary line here — not a second row of
+   * pills competing with "primary expertise" directly above it, which was
+   * the "chip overload" §9 flagged (two visually-identical bordered-chip
+   * rows, one of them frequently repeating the same terms).
+   */
+  .engineering-card-body .home-technologies {
+    gap: 4px 10px;
     margin-top: 12px;
   }
 
-  .engineering-ledger nav > ul {
-    display: grid;
-    margin-top: 16px;
+  .engineering-card-body .home-technologies li {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    color: var(--color-text-muted);
+  }
+
+  .engineering-card-body .home-technologies li:not(:last-child)::after {
+    margin-left: 10px;
+    color: var(--color-border-strong);
+    content: '/';
+  }
+
+  .engineering-card-evidence {
+    padding-top: 20px;
     border-top: 1px solid var(--color-border-muted);
   }
 
-  .engineering-ledger nav li {
-    display: grid;
-    gap: 8px;
-    padding-block: 14px;
-    border-bottom: 1px solid var(--color-border-muted);
-  }
-
-  .engineering-ledger nav li > span:first-child {
-    color: var(--color-text-muted);
-    font-family: var(--font-mono);
-    font-size: 10px;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-  }
-
-  .engineering-ledger nav a,
-  .engineering-ledger nav li > span:last-child {
-    color: var(--color-text-secondary);
-    font-size: 13px;
-  }
-
-  .engineering-ledger nav a:hover {
-    color: var(--color-text-primary);
+  .engineering-card-evidence .home-relationships {
+    margin-top: 12px;
+    padding-top: 0;
+    border-top: 0;
   }
 
   .profile-hero-grid {
@@ -4009,11 +4346,6 @@
   .about-principle-grid article:nth-child(even) {
     padding-left: 32px;
   }
-
-  .engineering-ledger nav li {
-    grid-template-columns: minmax(130px, 0.65fr) minmax(0, 1.35fr);
-    gap: 24px;
-  }
 }
 
 @media (min-width: 900px) {
@@ -4041,9 +4373,9 @@
     top: 112px;
   }
 
-  .engineering-ledger article {
-    grid-template-columns: minmax(240px, 0.8fr) minmax(260px, 1fr) minmax(240px, 0.8fr);
-    gap: clamp(32px, 5vw, 72px);
+  .engineering-card article {
+    grid-template-columns: minmax(240px, 0.85fr) minmax(0, 1.6fr);
+    gap: clamp(48px, 6vw, 96px);
     align-items: start;
   }
 
@@ -4062,13 +4394,13 @@
     justify-self: start;
   }
 
-  .engineering-ledger-identity {
+  .engineering-card-identity {
     grid-template-columns: 1fr;
   }
 
-  .engineering-ledger-identity .public-media {
+  .engineering-card-identity .public-media {
     width: 100%;
-    max-width: 220px;
+    max-width: 180px;
   }
 
   .profile-hero-grid > .public-media {

@@ -6,7 +6,8 @@ import type {
   PublicServiceSummary,
 } from '@/lib/public/domain';
 import { PageContainer, PublicSection } from '../PageContainer';
-import { SectionHeader } from '../EditorialPrimitives';
+import { formatPublicDate, SectionHeader } from '../EditorialPrimitives';
+import { AxisDiagram, RelationshipGraph } from '../EvidenceVisuals';
 import { EditorialCard } from './EditorialCard';
 
 const relationshipRoutes: Readonly<Record<string, boolean>> = PUBLIC_ENTITY_ROUTES;
@@ -27,6 +28,20 @@ export function Homepage({
   const hasEvidence = Boolean(
     work.length || builds.length || labs.length || notes.length || blueprint || profiles.length,
   );
+  const currentTimeline = [
+    ...labs.map((feature) => ({
+      date: feature.entity.lastMajorUpdate ?? feature.entity.startDate,
+      title: feature.entity.title,
+      caption: 'Lab',
+    })),
+    ...notes.map((feature) => ({
+      date: feature.entity.publicationDate,
+      title: feature.entity.title,
+      caption: 'Note',
+    })),
+  ]
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    .slice(-5);
 
   return (
     <main id="main-content" tabIndex={-1} className="home-main">
@@ -44,6 +59,14 @@ export function Homepage({
               }
               description="Products designed, engineered, and maintained inside HubZero."
             />
+            {builds[0]?.relationships.length ? (
+              <div className="home-section-artifact">
+                <RelationshipGraph
+                  subject={{ label: builds[0].entity.title, meta: 'Build' }}
+                  relationships={builds[0].relationships}
+                />
+              </div>
+            ) : null}
             <div className="home-feature-grid">
               {builds.map((feature, index) => (
                 <EditorialCard
@@ -66,7 +89,6 @@ export function Homepage({
         <PublicSection id={builds.length ? undefined : 'evidence'}>
           <PageContainer>
             <SectionHeader
-              eyebrow="Work / client evidence"
               title={
                 <>
                   Constraints made <em>legible.</em>
@@ -74,6 +96,14 @@ export function Homepage({
               }
               description="Client work is shown through the decisions and outcomes that can be verified."
             />
+            {work[0]?.relationships.length ? (
+              <div className="home-section-artifact">
+                <RelationshipGraph
+                  subject={{ label: work[0].entity.title, meta: 'Work' }}
+                  relationships={work[0].relationships}
+                />
+              </div>
+            ) : null}
             {work.map((feature) => (
               <EditorialCard
                 key={feature.entity.url}
@@ -99,6 +129,16 @@ export function Homepage({
               }
               description="Blueprints pair information architecture with a defined design language and a working preview."
             />
+            <div className="home-section-artifact">
+              <AxisDiagram
+                label="System register"
+                items={[
+                  { label: 'Architecture', value: blueprint.entity.architecture },
+                  { label: 'Design language', value: blueprint.entity.designLanguage },
+                  { label: 'Version', value: `v${blueprint.entity.version}` },
+                ]}
+              />
+            </div>
             <EditorialCard
               feature={blueprint}
               routeEnabled
@@ -113,7 +153,6 @@ export function Homepage({
         <PublicSection id={!builds.length && !work.length && !blueprint ? 'evidence' : undefined}>
           <PageContainer>
             <SectionHeader
-              eyebrow="Current engineering"
               title={
                 <>
                   Work shown in the <em>present tense.</em>
@@ -121,20 +160,35 @@ export function Homepage({
               }
               description="Dated investigations and technical notes, included only while they remain current."
             />
+            {currentTimeline.length ? (
+              <div className="home-section-artifact">
+                <AxisDiagram
+                  label="Publication timeline"
+                  items={currentTimeline.map((entry) => ({
+                    label: formatPublicDate(entry.date),
+                    value: entry.title,
+                    caption: entry.caption,
+                  }))}
+                />
+              </div>
+            ) : null}
             <div className="home-current-grid">
               {labs.length ? (
                 <section aria-labelledby="featured-labs-title">
                   <h3 id="featured-labs-title" className="home-subsection-title">
                     Featured Labs
                   </h3>
-                  {labs.map((feature) => (
-                    <EditorialCard
-                      key={feature.entity.url}
-                      feature={feature}
-                      routeEnabled
-                      relationshipRoutes={relationshipRoutes}
-                    />
-                  ))}
+                  <div className="home-ledger">
+                    {labs.map((feature) => (
+                      <EditorialCard
+                        key={feature.entity.url}
+                        feature={feature}
+                        routeEnabled
+                        relationshipRoutes={relationshipRoutes}
+                        layout="row"
+                      />
+                    ))}
+                  </div>
                 </section>
               ) : null}
               {notes.length ? (
@@ -142,14 +196,17 @@ export function Homepage({
                   <h3 id="featured-notes-title" className="home-subsection-title">
                     Featured Notes
                   </h3>
-                  {notes.map((feature) => (
-                    <EditorialCard
-                      key={feature.entity.url}
-                      feature={feature}
-                      routeEnabled
-                      relationshipRoutes={relationshipRoutes}
-                    />
-                  ))}
+                  <div className="home-ledger">
+                    {notes.map((feature) => (
+                      <EditorialCard
+                        key={feature.entity.url}
+                        feature={feature}
+                        routeEnabled
+                        relationshipRoutes={relationshipRoutes}
+                        layout="row"
+                      />
+                    ))}
+                  </div>
                 </section>
               ) : null}
             </div>
@@ -161,7 +218,6 @@ export function Homepage({
         <PublicSection>
           <PageContainer>
             <SectionHeader
-              eyebrow="Engineering profiles"
               title={
                 <>
                   Judgement has an <em>owner.</em>
@@ -169,6 +225,17 @@ export function Homepage({
               }
               description="Profiles connect engineering positions to the evidence that supports them."
             />
+            {(() => {
+              const featured = profiles.find((feature) => feature.relationships.length);
+              return featured ? (
+                <div className="home-section-artifact">
+                  <RelationshipGraph
+                    subject={{ label: featured.entity.title, meta: 'Engineer' }}
+                    relationships={featured.relationships}
+                  />
+                </div>
+              ) : null;
+            })()}
             <div className="home-profile-grid">
               {profiles.map((feature) => (
                 <EditorialCard
@@ -272,6 +339,15 @@ function OperatingSystem() {
           }
           description="Ideas can move between research, products, client application, and reusable foundations. Relationships record the paths that actually happened."
         />
+        <div className="home-section-artifact">
+          <AxisDiagram
+            label="Operating model"
+            items={PUBLIC_HOME.pillars.map((pillar, index) => ({
+              label: String(index + 1).padStart(2, '0'),
+              value: pillar.label,
+            }))}
+          />
+        </div>
         <ol className="home-pillar-list">
           {PUBLIC_HOME.pillars.map((pillar, index) => {
             const enabled = PUBLIC_ENTITY_ROUTES[pillar.type];
