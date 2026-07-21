@@ -1493,6 +1493,37 @@
     content: '';
   }
 
+  /* Mirrors .home-text-link's understated underline treatment — this is a
+     supporting-metadata disclosure control, not a primary call to action. */
+  .blueprint-features-toggle {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    margin-top: 20px;
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--color-text-primary);
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: underline;
+    text-decoration-color: var(--color-border-strong);
+    text-underline-offset: 6px;
+    cursor: pointer;
+    transition:
+      text-decoration-color var(--duration-fast) var(--ease-standard),
+      transform 110ms linear;
+  }
+
+  .blueprint-features-toggle:hover {
+    text-decoration-color: currentColor;
+  }
+
+  .blueprint-features-toggle:active {
+    transform: scale(0.97);
+  }
+
   .detail-progress-grid section {
     padding: 24px;
     border: 1px solid var(--color-border-default);
@@ -1877,6 +1908,53 @@
 
   .note-author-actions a:hover {
     text-decoration-color: currentColor;
+  }
+}
+
+/*
+ * Mobile-only progressive disclosure for the Blueprint feature list
+ * (BlueprintFeatureList). This is supporting metadata, not primary editorial
+ * content, so it must not dominate the page on a small screen — but nothing
+ * is removed from the DOM; every <li> beyond the visible count is always
+ * present, just clipped via max-height/opacity until expanded. Desktop
+ * never applies this: its own >=768px rules already show the whole grid.
+ */
+@media (max-width: 767px) {
+  .blueprint-features ul {
+    display: block;
+  }
+
+  .blueprint-features li {
+    margin-bottom: 10px;
+  }
+
+  .blueprint-features li:last-child {
+    margin-bottom: 0;
+  }
+
+  .blueprint-features li.blueprint-feature-overflow {
+    max-height: 200px;
+    transition:
+      max-height var(--duration-considered) var(--ease-standard),
+      opacity var(--duration-fast) var(--ease-standard),
+      padding var(--duration-considered) var(--ease-standard),
+      margin-bottom var(--duration-considered) var(--ease-standard),
+      border-width var(--duration-considered) var(--ease-standard);
+  }
+
+  .blueprint-features ul[data-state='collapsed'] li.blueprint-feature-overflow {
+    overflow: hidden;
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    margin-bottom: 0;
+    border-width: 0;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .blueprint-features-toggle {
+    display: inline-flex;
   }
 }
 
