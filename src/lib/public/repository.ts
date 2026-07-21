@@ -812,6 +812,7 @@ function toEntityLink(summary: PublicEntitySummary): PublicEntityLink {
     ...(summary.referenceId ? { referenceId: summary.referenceId } : {}),
     ...(summary.summary ? { summary: summary.summary } : {}),
     ...(summary.state ? { state: summary.state } : {}),
+    ...(summary.type === 'engineeringProfile' && summary.role ? { role: summary.role } : {}),
   };
 }
 

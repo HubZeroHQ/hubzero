@@ -85,7 +85,13 @@ describe('Blueprint public collection', () => {
     expect(markup).toContain('Composable documentation routes');
     expect(markup).toContain('Implementation guidance');
     expect(markup).toContain('Proven in client work');
-    expect(markup).toContain('Engineering attribution');
     expect(markup).toContain('Return to Blueprints');
+
+    // Engineering contributors render as publication metadata, before the case study body.
+    expect(markup).toContain('Engineering contributors');
+    expect(markup).toContain('Public Engineer');
+    expect(markup.indexOf('Engineering contributors')).toBeLessThan(
+      markup.indexOf('Implementation guidance'),
+    );
   });
 });

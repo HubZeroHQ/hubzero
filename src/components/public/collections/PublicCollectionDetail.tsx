@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { PUBLIC_ENTITY_ROUTES } from '@/config/public-site';
 import type { ImmutablePublic, PublicEntityDetail, PublicRelationship } from '@/lib/public/domain';
 import {
+  ContributorList,
   formatMetadata,
   formatPublicDate,
   PublicBreadcrumbs,
@@ -69,10 +70,6 @@ export function PublicCollectionDetail({ entity }: { entity: ImmutablePublic<Col
             title: 'Engineering notes',
             relationships: connected.filter((item) => item.target.type === 'note'),
           },
-          {
-            title: 'Engineering attribution',
-            relationships: connected.filter((item) => item.target.type === 'engineeringProfile'),
-          },
         ].filter((group) => group.relationships.length)
       : [];
   const buildRelationshipGroups =
@@ -86,10 +83,6 @@ export function PublicCollectionDetail({ entity }: { entity: ImmutablePublic<Col
             title: 'Connected investigations',
             relationships: connected.filter((item) => item.target.type === 'lab'),
           },
-          {
-            title: 'Engineering attribution',
-            relationships: connected.filter((item) => item.target.type === 'engineeringProfile'),
-          },
         ].filter((group) => group.relationships.length)
       : [];
   const labRelationshipGroups =
@@ -102,10 +95,6 @@ export function PublicCollectionDetail({ entity }: { entity: ImmutablePublic<Col
           {
             title: 'Related Blueprints',
             relationships: connected.filter((item) => item.target.type === 'blueprint'),
-          },
-          {
-            title: 'Engineering attribution',
-            relationships: connected.filter((item) => item.target.type === 'engineeringProfile'),
           },
         ].filter((group) => group.relationships.length)
       : [];
@@ -127,10 +116,6 @@ export function PublicCollectionDetail({ entity }: { entity: ImmutablePublic<Col
           {
             title: 'Engineering notes',
             relationships: connected.filter((item) => item.target.type === 'note'),
-          },
-          {
-            title: 'Engineering attribution',
-            relationships: connected.filter((item) => item.target.type === 'engineeringProfile'),
           },
         ].filter((group) => group.relationships.length)
       : [];
@@ -348,6 +333,9 @@ function DetailRegister({ entity }: { entity: ImmutablePublic<CollectionDetail> 
                   : 'No major update listed',
               ],
             ];
+  const contributors = entity.relationships.filter(
+    (relationship) => relationship.target.type === 'engineeringProfile',
+  );
   return (
     <aside className="detail-register" aria-label={`${entity.title} publication metadata`}>
       <dl>
@@ -362,6 +350,7 @@ function DetailRegister({ entity }: { entity: ImmutablePublic<CollectionDetail> 
       {entity.type === 'work' ? (
         <TechnologyList technologies={entity.categories} label="Categories" />
       ) : null}
+      <ContributorList contributors={contributors} />
     </aside>
   );
 }
