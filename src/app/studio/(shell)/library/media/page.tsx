@@ -100,7 +100,7 @@ export default async function MediaLibraryPage({
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Media"
-        description="The central asset library every collection reuses — Cloudinary-backed, searchable, and tracked wherever it's used (CMS_PRODUCT_DESIGN.md §6)."
+        description="The central asset library every collection reuses — Cloudinary-backed, searchable, and tracked wherever it's used."
         actions={<MediaUploadLauncher />}
       />
 

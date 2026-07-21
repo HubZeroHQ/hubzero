@@ -21,7 +21,7 @@ export default async function NewWorkPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="New Work entry"
-        description="Starts as a Draft. A reference ID is assigned automatically on save (§27)."
+        description="Starts as a Draft. A reference ID is assigned automatically on save."
       />
       <WorkForm
         action={createWorkAction}

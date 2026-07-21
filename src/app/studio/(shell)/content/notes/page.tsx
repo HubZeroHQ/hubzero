@@ -122,7 +122,7 @@ export default async function NotesListPage({
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Notes"
-        description="HubZero's engineering notebook — architecture decisions, implementation notes, research summaries, performance investigations, and debugging write-ups worth publishing. Every entry here is a live view of the Notes collection (PLANNING.md §26.5)."
+        description="HubZero's engineering notebook — architecture decisions, implementation notes, research summaries, performance investigations, and debugging write-ups worth publishing. Every entry here is a live view of the Notes collection."
         actions={<ButtonLink href={`${NOTES_LIST_PATH}/new`}>New Note</ButtonLink>}
       />
 

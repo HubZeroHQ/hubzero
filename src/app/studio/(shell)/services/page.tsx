@@ -73,7 +73,7 @@ export default async function ServicesListPage({
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Services"
-        description="The canonical Services dataset — every entry links back to real evidence (PLANNING.md §26.7)."
+        description="The canonical Services dataset — every entry links back to real evidence."
         actions={<ButtonLink href={`${LIST_PATH}/new`}>New Service</ButtonLink>}
       />
 

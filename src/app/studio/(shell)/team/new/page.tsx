@@ -10,7 +10,7 @@ export default function NewTeamMemberPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="New Team member"
-        description="A reference ID is assigned automatically on save (§27). An Engineering Profile, if earned, is created separately and links back here."
+        description="A reference ID is assigned automatically on save. An Engineering Profile, if earned, is created separately and links back here."
       />
       <TeamForm action={createTeamAction} submitLabel="Create Team member" />
     </div>

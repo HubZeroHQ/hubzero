@@ -1,6 +1,6 @@
 # Public DTO Specification
 
-**Status:** Phase 13 public contract — documentation only, pending review
+**Status:** Implemented. Phase 13 public contract; these DTOs are shipped and in active use across the public read layer.
 
 **Scope:** Stable, implementation-agnostic public read objects derived from Studio
 

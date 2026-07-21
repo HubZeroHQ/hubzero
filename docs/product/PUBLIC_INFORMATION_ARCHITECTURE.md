@@ -1,6 +1,6 @@
 # Public Information Architecture
 
-**Status:** Phase 12 design proposal, refined by Phase 13 public contracts — documentation only
+**Status:** Implemented. Phase 12 design proposal, refined by Phase 13 public contracts; this is the shipped route and navigation structure.
 
 **Scope:** Public destinations, navigation, relationships, journeys, and Studio-to-public mapping
 

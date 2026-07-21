@@ -75,7 +75,7 @@ export function BlueprintForm({
         label="Name"
         name="name"
         error={state.fieldErrors?.name}
-        hint="Must follow the Blueprint-X-Y naming convention — e.g. Blueprint-SaaS-Editorial (AGENTS.md)."
+        hint="Must follow the Blueprint-X-Y naming convention — e.g. Blueprint-SaaS-Editorial."
       >
         <Input
           id="name"
@@ -160,7 +160,7 @@ export function BlueprintForm({
           label="Live preview URL"
           name="liveDeploymentUrl"
           error={state.fieldErrors?.liveDeploymentUrl}
-          hint="Required — where a visitor can experience this foundation directly (PLANNING.md §11)."
+          hint="Required — where a visitor can experience this foundation directly."
         >
           <Input
             id="liveDeploymentUrl"

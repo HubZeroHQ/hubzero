@@ -1,6 +1,6 @@
 # Visibility Rules
 
-**Status:** Phase 13 canonical public visibility contract — documentation only, pending review
+**Status:** Implemented. Phase 13 canonical public visibility contract; this predicate is live in `src/lib/public/queries.ts` and used by every public consumer.
 
 This document defines the one fail-closed visibility predicate used by every future public consumer. It refines the canonical direction in [PUBLIC_DATA_LAYER.md](PUBLIC_DATA_LAYER.md) without changing Studio workflow. DTO construction is defined in [PUBLIC_DTO_SPECIFICATION.md](PUBLIC_DTO_SPECIFICATION.md).
 

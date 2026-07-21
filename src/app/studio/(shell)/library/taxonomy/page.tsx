@@ -79,7 +79,7 @@ export default async function TaxonomyListPage({
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Taxonomy"
-        description="Shared Technologies, Categories, and Tags — the single source of truth used across every Studio collection (PLANNING.md §26.11)."
+        description="Shared Technologies, Categories, and Tags — the single source of truth used across every Studio collection."
         actions={
           <div className="flex gap-2">
             {mergeOptions.length > 1 ? (

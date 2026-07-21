@@ -209,7 +209,7 @@ export default async function WorkDetailPage({ params }: { params: Promise<{ id:
         ) : (
           <EmptyState
             title="No case study yet."
-            description="The document body hasn't been written yet (PLANNING.md §25)."
+            description="The document body hasn't been written yet."
             action={
               canEdit ? (
                 <ButtonLink href={`/studio/content/work/${id}/edit`} variant="secondary">

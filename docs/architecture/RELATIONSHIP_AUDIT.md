@@ -1,6 +1,6 @@
 # Relationship Audit
 
-**Status:** Phase 13 relationship contract — documentation only, pending review
+**Status:** Implemented. Phase 13 relationship contract; the behavior audited below is live across collection detail pages.
 
 **Audit snapshot:** 17 July 2026
 

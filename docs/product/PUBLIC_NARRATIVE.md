@@ -1,6 +1,6 @@
 # Public Narrative
 
-**Status:** Phase 12 design proposal, refined by Phase 13 content contracts — documentation only
+**Status:** Implemented. Phase 12 design proposal, refined by Phase 13 content contracts; this narrative is live across the public site.
 
 The public story is designed by time and understanding, not by page count. It should reward both a five-second scan and a ten-minute investigation without forcing either visitor into the other's pace.
 

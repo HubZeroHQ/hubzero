@@ -1,12 +1,12 @@
 /**
  * Development-only bootstrap for a Head Admin Studio account.
  *
- * There is no in-app way to create a Studio user yet (Settings → Users,
- * PLANNING.md §26.9/§29, is still a `CollectionPlaceholder`), so a local
- * developer has no route to a first session. This script exists solely to
- * fill that gap for local manual verification — it is never imported by any
- * page, API route, or Server Action, so it ships no HTTP-reachable surface;
- * it only runs when a developer invokes it directly from a terminal.
+ * Settings → Users can only create accounts from within an authenticated
+ * Head Admin session, so a fresh local database has no route to a first
+ * session. This script exists solely to break that chicken-and-egg problem
+ * for local manual verification — it is never imported by any page, API
+ * route, or Server Action, so it ships no HTTP-reachable surface; it only
+ * runs when a developer invokes it directly from a terminal.
  *
  * Safety:
  * - Refuses to run unless `NODE_ENV` is `development` (or unset, which is

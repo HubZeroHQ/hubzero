@@ -109,7 +109,7 @@ export default async function LeadsListPage({
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Leads"
-        description="Inbound submissions from the public contact form (PLANNING.md §26.8) — deliberately minimal, not a CRM."
+        description="Inbound submissions from the public contact form — deliberately minimal, not a CRM."
       />
 
       <form action={LIST_PATH} method="GET" className="flex gap-2">

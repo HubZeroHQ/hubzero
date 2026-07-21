@@ -274,7 +274,7 @@ export default async function BuildDetailPage({ params }: { params: Promise<{ id
         ) : (
           <EmptyState
             title="No case study yet."
-            description="The document body hasn't been written yet (PLANNING.md §25)."
+            description="The document body hasn't been written yet."
             action={
               canEdit ? (
                 <ButtonLink href={`/studio/content/builds/${id}/edit`} variant="secondary">
@@ -295,7 +295,7 @@ export default async function BuildDetailPage({ params }: { params: Promise<{ id
         ) : (
           <EmptyState
             title="No technical documentation yet."
-            description="Architecture, technical decisions, and challenges (PLANNING.md §10) haven't been written yet."
+            description="Architecture, technical decisions, and challenges haven't been written yet."
             action={
               canEdit ? (
                 <ButtonLink href={`/studio/content/builds/${id}/edit`} variant="secondary">

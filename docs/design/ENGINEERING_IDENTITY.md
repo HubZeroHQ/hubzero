@@ -1,6 +1,6 @@
 # Engineering Identity
 
-**Status:** Phase 12 design proposal — documentation only
+**Status:** Implemented. Phase 12 design proposal; this identity language is live across the public site.
 
 Engineering identity is the visible consequence of how HubZero works. It is not an illustration style and should never depend on terminal wallpaper, circuit traces, blueprint grids, code rain, or invented system telemetry.
 

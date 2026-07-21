@@ -234,7 +234,7 @@ export default async function BlueprintDetailPage({ params }: { params: Promise<
         ) : (
           <EmptyState
             title="No case study yet."
-            description="The document body hasn't been written yet (PLANNING.md §25)."
+            description="The document body hasn't been written yet."
             action={
               canEdit ? (
                 <ButtonLink href={`/studio/content/blueprints/${id}/edit`} variant="secondary">

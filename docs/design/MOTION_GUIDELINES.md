@@ -1,6 +1,6 @@
 # Public Motion Guidelines
 
-**Status:** Phase 12 design proposal — documentation only
+**Status:** Implemented. Phase 12 design proposal; these motion guidelines are live across the public site.
 
 **Canonical base:** `DESIGN_SYSTEM.md` §6 and `.hubzero/design/motion.md`
 
