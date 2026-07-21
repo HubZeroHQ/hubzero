@@ -99,8 +99,16 @@ async function list(type: PublicEntityType): Promise<StudioPublicEntity[]> {
 }
 
 async function inverse(type: PublicEntityType, id: string): Promise<StudioPublicEntity[]> {
-  const targetId = objectId(id);
-  if (!targetId) return [];
+  // Every reference-ID field queried below (relatedWorkIds, relatedBuildIds,
+  // relatedBlueprintIds, relatedLabIds, contributorProfileIds,
+  // originatingLabId, graduatedToBuildId, featuredWorkIds, ...) is validated
+  // with `objectIdString` (lib/validation/shared.ts) and stored as a plain
+  // string, never a real BSON ObjectId — same rule `findTeamsByUserId` and
+  // `findProfileByTeamId` already document below. `objectId(id)` here is
+  // only a format check; querying with the constructed ObjectId instance
+  // itself would never match these string-typed fields.
+  if (!objectId(id)) return [];
+  const targetId = id;
   const queries: Array<Promise<StudioPublicEntity[]>> = [];
   const wrapped = async <T extends StudioPublicRecord>(
     entityType: PublicEntityType,
@@ -109,12 +117,18 @@ async function inverse(type: PublicEntityType, id: string): Promise<StudioPublic
 
   if (type === 'work') {
     queries.push(
-      wrapped('build', (await collections.builds()).find({ relatedWorkIds: targetId }).toArray()),
+      wrapped(
+        'build',
+        (await collections.builds()).find({ relatedWorkIds: targetId } as never).toArray(),
+      ),
     );
   }
   if (type === 'build') {
     queries.push(
-      wrapped('work', (await collections.work()).find({ relatedBuildIds: targetId }).toArray()),
+      wrapped(
+        'work',
+        (await collections.work()).find({ relatedBuildIds: targetId } as never).toArray(),
+      ),
       wrapped(
         'lab',
         (await collections.labs())
@@ -125,37 +139,51 @@ async function inverse(type: PublicEntityType, id: string): Promise<StudioPublic
   }
   if (type === 'blueprint') {
     queries.push(
-      wrapped('work', (await collections.work()).find({ relatedBlueprintIds: targetId }).toArray()),
-      wrapped('lab', (await collections.labs()).find({ relatedBlueprintIds: targetId }).toArray()),
+      wrapped(
+        'work',
+        (await collections.work()).find({ relatedBlueprintIds: targetId } as never).toArray(),
+      ),
+      wrapped(
+        'lab',
+        (await collections.labs()).find({ relatedBlueprintIds: targetId } as never).toArray(),
+      ),
     );
   }
   if (type === 'lab') {
     queries.push(
-      wrapped('build', (await collections.builds()).find({ originatingLabId: targetId }).toArray()),
-      wrapped('work', (await collections.work()).find({ relatedLabIds: targetId }).toArray()),
+      wrapped(
+        'build',
+        (await collections.builds()).find({ originatingLabId: targetId } as never).toArray(),
+      ),
+      wrapped(
+        'work',
+        (await collections.work()).find({ relatedLabIds: targetId } as never).toArray(),
+      ),
     );
   }
   if (type === 'engineeringProfile') {
     queries.push(
       wrapped(
         'work',
-        (await collections.work()).find({ contributorProfileIds: targetId }).toArray(),
+        (await collections.work()).find({ contributorProfileIds: targetId } as never).toArray(),
       ),
       wrapped(
         'build',
-        (await collections.builds()).find({ contributorProfileIds: targetId }).toArray(),
+        (await collections.builds()).find({ contributorProfileIds: targetId } as never).toArray(),
       ),
       wrapped(
         'blueprint',
-        (await collections.blueprints()).find({ contributorProfileIds: targetId }).toArray(),
+        (await collections.blueprints())
+          .find({ contributorProfileIds: targetId } as never)
+          .toArray(),
       ),
       wrapped(
         'lab',
-        (await collections.labs()).find({ contributorProfileIds: targetId }).toArray(),
+        (await collections.labs()).find({ contributorProfileIds: targetId } as never).toArray(),
       ),
       wrapped(
         'note',
-        (await collections.notes()).find({ contributorProfileIds: targetId }).toArray(),
+        (await collections.notes()).find({ contributorProfileIds: targetId } as never).toArray(),
       ),
     );
   }

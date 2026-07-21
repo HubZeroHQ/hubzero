@@ -143,9 +143,7 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
     const profileEntity = profile
       ? await source.findEntityById('engineeringProfile', profile._id.toString())
       : null;
-    const profileAvailable = Boolean(
-      profileEntity && (await isEligibleEngineeringProfile(profileEntity, team)),
-    );
+    const profileAvailable = Boolean(profileEntity && (await visible(profileEntity)));
     const portrait = await media(team.portraitId, 'portrait');
     const technologies =
       profileAvailable && profile ? await terms(profile.technologyIds, 'technology') : [];
@@ -158,66 +156,6 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
       profileAvailable,
       ...(technologies.length ? { technologies } : {}),
     };
-  }
-
-  async function isEligibleEngineeringProfile(
-    entity: StudioPublicEntity,
-    team: Team,
-  ): Promise<boolean> {
-    if (entity.type !== 'engineeringProfile') return false;
-    const record = entity.record as EngineeringProfile;
-    if (
-      !isPubliclyVisible({
-        type: 'engineeringProfile',
-        status: record.status,
-        teamPublic: team.publicProfile,
-      }) ||
-      !record.overview?.trim() ||
-      !record.engineeringPhilosophy?.trim() ||
-      !record.currentExploration?.trim() ||
-      !record.engineeringIdentity.some((statement) => statement.trim())
-    ) {
-      return false;
-    }
-
-    const documents = await publicDocuments('engineeringProfile', entity.id);
-    if (!hasSubstantiveDocument(documents)) return false;
-
-    const storedTargets: Array<readonly [PublicEntityType, string]> = [
-      ...record.featuredWorkIds.map((id) => ['work', id.toString()] as const),
-      ...record.featuredBuildIds.map((id) => ['build', id.toString()] as const),
-      ...record.featuredBlueprintIds.map((id) => ['blueprint', id.toString()] as const),
-      ...record.featuredLabIds.map((id) => ['lab', id.toString()] as const),
-      ...record.featuredNoteIds.map((id) => ['note', id.toString()] as const),
-    ];
-    const inverseContributions = await source.findInverseEntities('engineeringProfile', entity.id);
-    const explicitTargets = [
-      ...storedTargets,
-      ...inverseContributions.flatMap((target): Array<readonly [PublicEntityType, string]> =>
-        target.type === 'work' ||
-        target.type === 'build' ||
-        target.type === 'blueprint' ||
-        target.type === 'lab' ||
-        target.type === 'note'
-          ? [[target.type, target.id]]
-          : [],
-      ),
-    ];
-    const distinctTargets = new Map(
-      explicitTargets.map(([type, id]) => [`${type}:${id}`, [type, id] as const]),
-    );
-    const resolved = await Promise.all(
-      [...distinctTargets.values()].map(async ([type, id]) => {
-        const target = await source.findEntityById(type, id);
-        if (!target || !(await visible(target))) return false;
-        if (target.type === 'note') {
-          const note = target.record as Note;
-          return Boolean(note.summary?.trim() && note.publicationDate instanceof Date);
-        }
-        return Boolean(await mapSummary(target));
-      }),
-    );
-    return resolved.filter(Boolean).length >= 2;
   }
 
   async function mapSummary(entity: StudioPublicEntity): Promise<PublicEntitySummary | null> {
@@ -387,7 +325,6 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
         );
         if (!teamEntity || !(await visible(teamEntity))) return null;
         const team = teamEntity.record as Team;
-        if (!(await isEligibleEngineeringProfile(entity, team))) return null;
         const [technologies, portrait, hero] = await Promise.all([
           terms(record.technologyIds, 'technology'),
           media(record.portraitId ?? team.portraitId, 'portrait'),
@@ -610,7 +547,7 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
         };
       }
       case 'engineeringProfile': {
-        if (summary.type !== 'engineeringProfile' || !documents.length) return null;
+        if (summary.type !== 'engineeringProfile') return null;
         const record = entity.record as EngineeringProfile;
         return {
           ...summary,

@@ -1326,13 +1326,17 @@
   }
 
   .detail-register-contributors a {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    padding: 8px 12px;
+    display: block;
+    padding: 10px 12px;
     margin-inline: -12px;
     border-radius: 6px;
     transition: background-color var(--duration-fast) var(--ease-standard);
+  }
+
+  .detail-register-contributors a > span {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
   }
 
   .detail-register-contributors a:hover,
@@ -1344,18 +1348,20 @@
     color: var(--color-text-primary);
     font-size: 14px;
     font-weight: 500;
+    line-height: 1.3;
   }
 
   .contributor-role {
     color: var(--color-text-secondary);
     font-size: 12px;
+    line-height: 1.4;
   }
 
   .contributor-link {
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    margin-top: 4px;
+    margin-top: 3px;
     color: var(--color-text-muted);
     font-family: var(--font-mono);
     font-size: 10px;
