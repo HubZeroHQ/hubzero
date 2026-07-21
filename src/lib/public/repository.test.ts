@@ -186,7 +186,7 @@ describe('public repository boundary', () => {
     expect(documentReads).toBe(0);
   });
 
-  it('resolves User to Team without linking a published but ineligible Profile', async () => {
+  it('links a published Profile with a public Team as a Note author destination, even with zero evidence', async () => {
     const user: User = {
       _id: new ObjectId(),
       name: 'Internal account',
@@ -268,8 +268,8 @@ describe('public repository boundary', () => {
     expect(result.author).toMatchObject({
       kind: 'person',
       name: 'Public Engineer',
-      url: '/about',
-      profileAvailable: false,
+      url: '/engineering/public-engineer',
+      profileAvailable: true,
     });
     expect(JSON.stringify(result)).not.toContain(user.email);
     expect(JSON.stringify(result)).not.toContain('Internal account');
@@ -458,15 +458,15 @@ describe('public repository boundary', () => {
     expect(missingUser?.type === 'note' ? missingUser.author.kind : null).toBe('organization');
   });
 
-  it('publishes only earned Engineering Profiles and keeps ineligible details fail-closed', async () => {
-    const team = (name: string): Team => ({
+  it('publishes every Engineering Profile whose status and linked Team are public, regardless of contribution count', async () => {
+    const team = (name: string, publicProfile: boolean): Team => ({
       _id: new ObjectId(),
       referenceId: 'HZ-TM-101',
       name,
       role: 'Systems engineer',
       bio: 'Builds explicit public systems.',
       group: 'Engineering',
-      publicProfile: true,
+      publicProfile,
       founder: false,
       order: 0,
       socialLinks: [],
@@ -474,100 +474,65 @@ describe('public repository boundary', () => {
       createdAt: now,
       updatedAt: now,
     });
-    const eligibleTeam = team('Eligible engineer');
-    const thinTeam = team('Thin engineer');
-    const work = (title: string, referenceId: `HZ-WK-${string}`): Work => ({
-      _id: new ObjectId(),
-      createdAt: now,
-      updatedAt: now,
-      createdByUserId: creator,
-      status: 'published',
-      slug: title.toLowerCase().replaceAll(' ', '-'),
-      referenceId,
-      title,
-      summary: `${title} is a complete public evidence record.`,
-      clientType: 'Product team',
-      categoryTagIds: [],
-      timeline: '12 weeks',
-      role: 'Product engineering',
-      technologyIds: [],
-      relatedBuildIds: [],
-      relatedBlueprintIds: [],
-      relatedLabIds: [],
-      contributorProfileIds: [],
-    });
-    const firstWork = work('First evidence', 'HZ-WK-101');
-    const secondWork = work('Second evidence', 'HZ-WK-102');
+    const visibleTeam = team('New engineer', true);
+    const hiddenTeam = team('Not yet public engineer', false);
     const profile = (
       teamMemberId: ObjectId,
       slug: string,
-      featuredWorkIds: ObjectId[],
+      status: EngineeringProfile['status'],
     ): EngineeringProfile => ({
       _id: new ObjectId(),
       createdAt: now,
       updatedAt: now,
       createdByUserId: creator,
-      status: 'published',
+      status,
       slug,
-      referenceId: slug === 'eligible-engineer' ? 'EP-101' : 'EP-102',
+      referenceId:
+        slug === 'new-engineer' ? 'EP-101' : slug === 'draft-engineer' ? 'EP-102' : 'EP-103',
       teamMemberId,
       overview: 'Builds public systems around explicit ownership and observable state.',
       engineeringPhilosophy: 'Make the evidence boundary explicit before implementation.',
       currentExploration: 'Deterministic public read models',
       areasOfExpertise: ['Public data architecture'],
       currentInterests: ['Dependency graphs'],
-      engineeringIdentity: ['State and ownership should remain legible.'],
+      // No evidence at all: no featured work, no document, no external contribution.
+      engineeringIdentity: [],
       technologyIds: [],
-      featuredWorkIds,
+      featuredWorkIds: [],
       featuredBuildIds: [],
       featuredBlueprintIds: [],
       featuredLabIds: [],
       featuredNoteIds: [],
       galleryImageIds: [],
     });
-    const eligible = profile(eligibleTeam._id, 'eligible-engineer', [
-      firstWork._id,
-      secondWork._id,
-    ]);
-    firstWork.contributorProfileIds = [eligible._id];
-    secondWork.contributorProfileIds = [eligible._id];
-    const thin = profile(thinTeam._id, 'thin-engineer', []);
-    const substantialText = Array.from({ length: 48 }, (_, index) => `evidence-${index}`).join(' ');
-    const profileDocument: DocumentRecord = {
-      _id: new ObjectId(),
-      ownerType: 'EngineeringProfile',
-      ownerId: eligible._id,
-      role: 'introduction',
-      blocks: [
-        { id: 'one', type: 'paragraph', data: { text: substantialText } },
-        { id: 'two', type: 'paragraph', data: { text: substantialText } },
-      ],
-      createdAt: now,
-      updatedAt: now,
-    };
+    // Published, public Team, zero evidence — must still be publicly visible.
+    const withoutEvidence = profile(visibleTeam._id, 'new-engineer', 'published');
+    // Published, but the linked Team is not (yet) public — must stay hidden.
+    const draftEngineer = profile(hiddenTeam._id, 'draft-engineer', 'published');
+    // Still in draft — must stay hidden regardless of Team visibility.
+    const unpublished = profile(visibleTeam._id, 'unpublished-engineer', 'draft');
     const repository = createPublicRepository(
       fakeSource({
         entities: [
-          entity('teamMember', eligibleTeam),
-          entity('teamMember', thinTeam),
-          entity('work', firstWork),
-          entity('work', secondWork),
-          entity('engineeringProfile', eligible),
-          entity('engineeringProfile', thin),
+          entity('teamMember', visibleTeam),
+          entity('teamMember', hiddenTeam),
+          entity('engineeringProfile', withoutEvidence),
+          entity('engineeringProfile', draftEngineer),
+          entity('engineeringProfile', unpublished),
         ],
-        documents: [profileDocument],
       }),
     );
 
     const entries = await repository.listEngineeringProfileIndexEntries();
     expect(entries).toHaveLength(1);
-    expect(entries[0]?.profile.title).toBe('Eligible engineer');
-    expect(entries[0]?.relationships).toHaveLength(2);
-    expect(await repository.findDetail('engineeringProfile', thin.slug)).toBeNull();
-    expect(await repository.findSummary('engineeringProfile', thin.slug)).toBeNull();
+    expect(entries[0]?.profile.title).toBe('New engineer');
+    expect(await repository.findDetail('engineeringProfile', withoutEvidence.slug)).not.toBeNull();
+    expect(await repository.findSummary('engineeringProfile', withoutEvidence.slug)).not.toBeNull();
+    expect(await repository.findDetail('engineeringProfile', draftEngineer.slug)).toBeNull();
+    expect(await repository.findDetail('engineeringProfile', unpublished.slug)).toBeNull();
   });
 
-  it('still credits a contributor with a real but single-entry public record, even though their own profile page stays gated', async () => {
+  it('credits a contributor with a single public credit, and their own profile page resolves too', async () => {
     const contributorTeam: Team = {
       _id: new ObjectId(),
       referenceId: 'HZ-TM-201',
@@ -659,13 +624,11 @@ describe('public repository boundary', () => {
       }),
     );
 
-    // The contributor's own profile page/listing still requires ≥2 pieces of
-    // evidence — that invariant from the test above is unaffected.
-    expect(await repository.findDetail('engineeringProfile', contributor.slug)).toBeNull();
+    // The contributor's own profile page resolves — publication no longer
+    // depends on how many other things they've contributed to.
+    expect(await repository.findDetail('engineeringProfile', contributor.slug)).not.toBeNull();
 
-    // But the Work page they're credited on must still show them as a
-    // contributor: crediting shouldn't depend on how many *other* public
-    // things they've contributed to.
+    // The Work page they're credited on shows them as a contributor too.
     const workDetail = await repository.findDetail('work', work.slug);
     const contributorRelationships = workDetail?.relationships.filter(
       (relationship) => relationship.target.type === 'engineeringProfile',
