@@ -117,7 +117,7 @@ Approved owner/role mapping:
 | Work | `caseStudy` |
 | Build | `caseStudy`, `technical` |
 | Blueprint | `caseStudy` |
-| Lab | `overview`, `engineeringJournal`, `findings`, `researchNotes`; legacy `journal` may map to `engineeringJournal` only after editorial review |
+| Lab | `overview`, `engineeringJournal`, `findings`, `researchNotes` |
 | Note | `body` |
 | Engineering Profile | `introduction`, `interview`, `timeline`, `quotes`, `achievements` |
 | Team | No current public Document role |
@@ -200,7 +200,7 @@ Each collection provides a Summary and, where it has a canonical detail route, a
 
 **Optional:** all populated Lab Document roles, gallery, public repository/demo, graduated Build.
 
-**Mapping note:** the current Studio model uses four Lab roles while earlier planning described one `journal`. The public Detail accepts the current role set and exposes only populated roles. A legacy `journal` is not silently duplicated across them.
+**Mapping note:** the public Detail accepts the four current Lab roles and exposes only populated roles.
 
 **Visibility:** Lab record is published and readable by the current source contract; Documents inherit Lab visibility; relationship targets are independently filtered; `internalRepoUrl` is excluded regardless of status.
 

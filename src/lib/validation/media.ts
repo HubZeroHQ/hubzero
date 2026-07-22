@@ -13,7 +13,7 @@ export const MEDIA_FOLDERS: readonly MediaFolder[] = [
   'general',
 ] as const;
 
-export const mediaFolderSchema = z.enum(MEDIA_FOLDERS as [MediaFolder, ...MediaFolder[]]);
+const mediaFolderSchema = z.enum(MEDIA_FOLDERS as [MediaFolder, ...MediaFolder[]]);
 
 /** PLANNING.md §26.10, §33 — a Cloudinary reference, never binary data. */
 export const mediaAssetSchema = z.object({

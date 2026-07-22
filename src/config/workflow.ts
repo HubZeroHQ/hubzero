@@ -1,4 +1,4 @@
-import type { PublishStatus, ServicePublishStatus } from '@/types/studio';
+import type { PublishStatus } from '@/types/studio';
 
 /**
  * PLANNING.md §28 — one shared state machine used across Work, Builds,
@@ -23,22 +23,6 @@ export const PUBLISH_WORKFLOW_TRANSITIONS: Record<PublishStatus, readonly Publis
   archived: [],
 };
 
-/** Services (§26.7) — deliberately lighter two-state workflow. */
-export const SERVICE_WORKFLOW_TRANSITIONS: Record<
-  ServicePublishStatus,
-  readonly ServicePublishStatus[]
-> = {
-  draft: ['published'],
-  published: ['draft'],
-};
-
 export function isValidPublishTransition(from: PublishStatus, to: PublishStatus): boolean {
   return PUBLISH_WORKFLOW_TRANSITIONS[from].includes(to);
-}
-
-export function isValidServiceTransition(
-  from: ServicePublishStatus,
-  to: ServicePublishStatus,
-): boolean {
-  return SERVICE_WORKFLOW_TRANSITIONS[from].includes(to);
 }

@@ -1,5 +1,5 @@
 import { type Capability, roleHasCapability } from '@/config/permissions';
-import { isValidPublishTransition, PUBLISH_WORKFLOW_TRANSITIONS } from '@/config/workflow';
+import { PUBLISH_WORKFLOW_TRANSITIONS } from '@/config/workflow';
 import type { PublishStatus, UserRole } from '@/types/studio';
 
 /**
@@ -57,5 +57,3 @@ export function getAvailableTransitions(
 export function canUnpublishOverride(current: PublishStatus, role: UserRole): boolean {
   return current !== 'draft' && roleHasCapability(role, 'unpublishOverride');
 }
-
-export { isValidPublishTransition };

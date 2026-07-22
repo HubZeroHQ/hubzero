@@ -1,6 +1,8 @@
 'use server';
 
 import { engineeringProfileRepository } from '@/lib/db/repositories/engineering-profile';
+import type { Block } from '@/lib/documents/blocks';
+import type { EngineeringProfileDocumentRole } from '@/config/engineering-profiles';
 import { createDocumentSaveAction } from '@/lib/studio/document-actions';
 import {
   createEntryCreateAction,
@@ -78,9 +80,9 @@ export const transitionEngineeringProfileStatusAction =
   });
 
 export const saveEngineeringProfileDocumentAction = async (
-  role: import('@/config/engineering-profiles').EngineeringProfileDocumentRole,
+  role: EngineeringProfileDocumentRole,
   ownerId: string,
-  blocks: import('@/lib/documents/blocks').Block[],
+  blocks: Block[],
 ) =>
   createDocumentSaveAction<EngineeringProfile>({
     ownerType: 'EngineeringProfile',

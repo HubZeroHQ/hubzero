@@ -10,7 +10,7 @@ This repository contains HubZero's public-facing website and the first-party Stu
 
 The site organizes HubZero's engineering output around four permanent collections — Work, Builds, Blueprints, and Labs — alongside Notes, Engineering Profiles, Services, and a Contact surface. Every public page is a read view over Studio content; nothing on the public site is hand-authored inside a component.
 
-It intentionally does not contain a separate CMS backend, a third-party content platform, or a marketing/growth stack. `client/` is a legacy implementation kept in the repository as historical reference only — it is not part of the current site and shares none of its architecture, routing, or components.
+It intentionally does not contain a separate CMS backend, a third-party content platform, or a marketing/growth stack.
 
 ---
 
@@ -44,9 +44,7 @@ src/
   lib/            Core logic: database access, auth, AI, documents, public reads, search.
   config/         Static configuration: permissions, workflow, taxonomy, navigation.
 docs/             Architecture, design, product, and operations documentation.
-scripts/          One-time and maintenance scripts (admin bootstrap, content seeding).
-team/             Canonical Markdown source for Engineering Profiles, pending Studio import.
-client/           Legacy reference implementation, kept for historical context only.
+scripts/          Explicit administrator bootstrap utilities.
 public/           Static assets served from the web root.
 .hubzero/         Shared HubZero engineering knowledge base, synced from HubZero Core.
 ```
@@ -88,8 +86,6 @@ Copy `.env.example` to `.env.local` and provide values for MongoDB, authenticati
 ## Content
 
 Public pages do not embed content directly. Every collection — Work, Builds, Blueprints, Labs, Notes, Engineering Profiles, Services — is authored in Studio and rendered through the public DTO layer described above.
-
-Engineering Profiles are the one exception in transit: they currently originate as Markdown files in [`team/`](team/README.md), which remain the canonical source until they are imported into Studio as first-class records. Once imported, Studio becomes the editing surface and the Markdown files remain as historical source material.
 
 ---
 

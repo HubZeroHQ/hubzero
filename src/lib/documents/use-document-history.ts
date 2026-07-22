@@ -16,7 +16,7 @@ import type { Block } from './blocks';
  * nothing, undoing a single keystroke at a time.
  */
 
-export const COALESCE_WINDOW_MS = 800;
+const COALESCE_WINDOW_MS = 800;
 const MAX_HISTORY_ENTRIES = 100;
 
 export interface HistoryState {

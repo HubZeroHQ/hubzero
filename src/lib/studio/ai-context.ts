@@ -73,7 +73,7 @@ async function resolveEntryReferences(entries: EntryReference[]): Promise<Relate
   return resolved.flat();
 }
 
-export class GenerationEntryNotFoundError extends Error {
+class GenerationEntryNotFoundError extends Error {
   constructor() {
     super('This entry no longer exists.');
     this.name = 'GenerationEntryNotFoundError';

@@ -13,7 +13,7 @@ import type { ClassifiedProviderError } from './providers/gemini-error';
 /** Rough chars-per-token ratio for English prose — good enough to flag "this is clearly too big," not an exact count. Real tokenization varies by model and content. */
 const CHARS_PER_TOKEN_ESTIMATE = 4;
 
-export function estimateTokens(chars: number): number {
+function estimateTokens(chars: number): number {
   return Math.ceil(chars / CHARS_PER_TOKEN_ESTIMATE);
 }
 

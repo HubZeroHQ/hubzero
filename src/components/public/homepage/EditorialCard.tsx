@@ -32,6 +32,9 @@ export function EditorialCard({
 }) {
   const { entity, relationships } = feature;
   const heading = <h3>{entity.title}</h3>;
+  const cardClassName = prominent
+    ? `home-card home-card-prominent ${entity.hero ? 'home-card-with-media' : 'home-card-editorial'}`
+    : 'home-card';
 
   if (layout === 'row') {
     return (
@@ -66,7 +69,7 @@ export function EditorialCard({
   }
 
   return (
-    <article className={prominent ? 'home-card home-card-prominent' : 'home-card'}>
+    <article className={cardClassName}>
       {entity.hero ? (
         <div className="home-card-media">
           <PublicImage media={entity.hero} priority={priority} />

@@ -9,7 +9,7 @@
  * generic `AiProviderError` today.
  */
 
-export type ProviderErrorCategory =
+type ProviderErrorCategory =
   | 'request-too-large'
   | 'timeout'
   | 'rate-limit'

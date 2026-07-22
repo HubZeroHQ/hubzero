@@ -199,7 +199,7 @@ Visitors must be able to disqualify a Blueprint quickly. Clear fit increases tru
 Stage → objective → current milestone → approach → experiments/findings → blockers → graduation criteria → next update
 ```
 
-Labs are not unfinished case studies. Dates, milestones, and honest blockers matter. The current Studio model separates long-form evidence into `overview`, `engineeringJournal`, `findings`, and `researchNotes` Documents; the public narrative selects only populated roles rather than rendering empty tabs. When a Lab graduates, that engineering record remains historical evidence and the transition points to the Build. A reviewed legacy `journal` may map into the engineering-journal role, but it is never duplicated across all four roles.
+Labs are not unfinished case studies. Dates, milestones, and honest blockers matter. The current Studio model separates long-form evidence into `overview`, `engineeringJournal`, `findings`, and `researchNotes` Documents; the public narrative selects only populated roles rather than rendering empty tabs. When a Lab graduates, that engineering record remains historical evidence and the transition points to the Build.
 
 ### Notes — one useful idea
 

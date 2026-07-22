@@ -9,13 +9,13 @@ import type { BlockInstruction, TransformInstruction } from '../types';
  * both read from here, so the two surfaces can never drift into subtly
  * different behavior for the same verb.
  */
-export interface InstructionGuidance {
+interface InstructionGuidance {
   /** Human label — the per-block menu and selection toolbar may still show a different *word* for the same instruction (§9's "Expand"/"Lengthen"), but always the same underlying prompt fragment. */
   label: string;
   description: string;
 }
 
-export const INSTRUCTION_GUIDANCE: Record<BlockInstruction, InstructionGuidance> = {
+const INSTRUCTION_GUIDANCE: Record<BlockInstruction, InstructionGuidance> = {
   rewrite: {
     label: 'Rewrite',
     description:

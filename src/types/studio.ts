@@ -125,7 +125,7 @@ export interface User extends WithId, WithTimestamps {
 }
 
 /** One entry in a Team member's public social links list — platform is free-text (e.g. "GitHub", "X") rather than an enum, matching `group`'s "adjustable, never hardcoded" precedent below. */
-export interface TeamSocialLink {
+interface TeamSocialLink {
   platform: string;
   url: string;
 }

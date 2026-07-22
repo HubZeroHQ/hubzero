@@ -14,7 +14,7 @@ import { blockSchema, type Block } from './blocks';
  * left open-ended, since every owner must also know how to authorize and
  * render the Documents it holds.
  */
-export const ownerTypeSchema = z.enum([
+const ownerTypeSchema = z.enum([
   'Work',
   'Build',
   'Blueprint',
@@ -27,15 +27,12 @@ export type OwnerType = z.infer<typeof ownerTypeSchema>;
 
 /**
  * `overview`/`engineeringJournal`/`findings`/`researchNotes` are Labs'
- * document roles (PLANNING.md §26.4's `journal` role split into the richer
- * set Phase 10 actually calls for — an engineering notebook accumulates more
- * than one kind of long-form content). `journal` itself is kept as a
- * general-purpose role for a future owner that just needs one running log.
+ * explicit document roles. The vocabulary stays closed so every persisted
+ * document has a current owner-facing purpose.
  */
 export const documentRoleSchema = z.enum([
   'caseStudy',
   'technical',
-  'journal',
   'profile',
   'body',
   'overview',

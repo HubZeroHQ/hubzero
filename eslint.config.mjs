@@ -16,7 +16,7 @@ const eslintConfig = [
     // checkouts (their own `.next/`, `node_modules/`, etc.) — without this,
     // `eslint .` also lints their build output as if it were this repo's
     // own source, which is both wrong and enormously noisy.
-    ignores: ['client/**', '.next/**', 'node_modules/**', 'next-env.d.ts', '.claude/**'],
+    ignores: ['.next/**', 'node_modules/**', 'next-env.d.ts', '.claude/**'],
   },
 ];
 

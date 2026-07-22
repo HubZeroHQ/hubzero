@@ -25,7 +25,7 @@ export interface FounderIdentity {
   motifDescription: string;
 }
 
-export const FOUNDER_IDENTITIES: readonly FounderIdentity[] = [
+const FOUNDER_IDENTITIES: readonly FounderIdentity[] = [
   {
     slug: 'rifaque',
     accent: '#4d8dff',

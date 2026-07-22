@@ -10,8 +10,7 @@ import { serverEnv } from '@/lib/env';
  */
 export interface SystemInfo {
   version: string;
-  nodeEnv: string;
-  commitSha?: string;
+  deploymentStage: 'Production';
   cloudinaryConfigured: boolean;
   geminiConfigured: boolean;
 }
@@ -20,8 +19,7 @@ export function getSystemInfo(): SystemInfo {
   const env = serverEnv();
   return {
     version: packageJson.version,
-    nodeEnv: env.NODE_ENV,
-    commitSha: process.env.VERCEL_GIT_COMMIT_SHA ?? process.env.GIT_COMMIT_SHA,
+    deploymentStage: 'Production',
     cloudinaryConfigured: Boolean(
       env.CLOUDINARY_CLOUD_NAME && env.CLOUDINARY_API_KEY && env.CLOUDINARY_API_SECRET,
     ),

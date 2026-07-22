@@ -11,7 +11,7 @@ import type { DocumentRole, OwnerType } from '@/lib/documents/schema';
  * (a Build's `caseStudy` vs. its `technical` doc) gets genuinely distinct
  * guidance rather than one generic "Build" paragraph.
  */
-export interface CollectionGuidance {
+interface CollectionGuidance {
   label: string;
   goal: string;
   structure: string;
@@ -93,7 +93,6 @@ const COLLECTION_GUIDANCE: Partial<Record<`${OwnerType}:${DocumentRole}`, Collec
   'Build:caseStudy': BUILD_CASE_STUDY,
   'Build:technical': BUILD_TECHNICAL,
   'Blueprint:caseStudy': BLUEPRINT_CASE_STUDY,
-  'Lab:journal': LAB_JOURNAL_BASE,
   'Lab:overview': { ...LAB_JOURNAL_BASE, label: 'Lab — Overview' },
   'Lab:engineeringJournal': LAB_JOURNAL_BASE,
   'Lab:findings': {
@@ -110,10 +109,7 @@ const COLLECTION_GUIDANCE: Partial<Record<`${OwnerType}:${DocumentRole}`, Collec
   'Team:profile': TEAM_PROFILE,
 };
 
-export function getCollectionGuidance(
-  ownerType: OwnerType,
-  role: DocumentRole,
-): CollectionGuidance {
+function getCollectionGuidance(ownerType: OwnerType, role: DocumentRole): CollectionGuidance {
   return COLLECTION_GUIDANCE[`${ownerType}:${role}`] ?? DEFAULT_GUIDANCE;
 }
 

@@ -13,20 +13,6 @@ import { createPublicRepository } from './repository';
 
 const repository = createPublicRepository(mongoPublicDataSource);
 
-export function getPublicSummary(type: PublicEntityType, slug: string) {
-  return unstable_cache(
-    () => repository.findSummary(type, slug),
-    cacheKey(type, 'public-summary', slug),
-    {
-      tags: [
-        PUBLIC_CACHE_TAGS.entity(type, slug),
-        PUBLIC_CACHE_TAGS.collection(type),
-        PUBLIC_CACHE_TAGS.relations,
-      ],
-    },
-  )();
-}
-
 export function getPublicDetail(type: PublicDetailEntityType, slug: string) {
   return unstable_cache(
     () => repository.findDetail(type, slug),
@@ -108,5 +94,3 @@ export function getPublicHomepage(now = new Date()) {
 function cacheKey(type: PublicEntityType, ...parts: string[]): string[] {
   return [PUBLIC_CACHE_VERSION, type, ...parts];
 }
-
-export { repository as uncachedPublicRepository };

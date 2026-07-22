@@ -13,7 +13,6 @@ export type PublicEntityType =
   'work' | 'build' | 'blueprint' | 'lab' | 'note' | 'engineeringProfile' | 'teamMember' | 'service';
 
 export type PublicDetailEntityType = Exclude<PublicEntityType, 'teamMember' | 'service'>;
-export type PublicPillarType = 'work' | 'build' | 'blueprint' | 'lab';
 export type PublicTaxonomyKind = 'technology' | 'category' | 'topic';
 export type PublicMediaRole =
   'hero' | 'screenshot' | 'diagram' | 'portrait' | 'gallery' | 'inline' | 'social';
@@ -25,7 +24,7 @@ export interface PublicTaxonomyTerm {
   url?: string;
 }
 
-export interface PublicResponsiveImage {
+interface PublicResponsiveImage {
   srcSet: string;
   sizes: string;
 }
@@ -85,7 +84,7 @@ export interface PublicRelationship {
   target: PublicEntityLink;
 }
 
-export type PersonAuthor = {
+type PersonAuthor = {
   kind: 'person';
   name: string;
   role?: string;

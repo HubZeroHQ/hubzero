@@ -3,7 +3,7 @@
 import { useActionState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Field } from '@/components/ui/Field';
-import { fieldClassName, Input } from '@/components/ui/Input';
+import { Input } from '@/components/ui/Input';
 import type { EntryActionState } from '@/lib/studio/entry-actions';
 
 const emptyActionState: EntryActionState = {};
@@ -15,9 +15,7 @@ export function StudioSettingsForm({
   action: (prevState: EntryActionState, formData: FormData) => Promise<EntryActionState>;
   initialValues: {
     studioName: string;
-    tagline: string;
     contactEmail: string;
-    accentColor?: string;
   };
 }) {
   const [state, formAction, pending] = useActionState(action, emptyActionState);
@@ -37,16 +35,6 @@ export function StudioSettingsForm({
         <Input id="studioName" name="studioName" defaultValue={initialValues.studioName} required />
       </Field>
 
-      <Field label="Tagline" name="tagline" error={state.fieldErrors?.tagline}>
-        <textarea
-          id="tagline"
-          name="tagline"
-          defaultValue={initialValues.tagline}
-          rows={2}
-          className={fieldClassName}
-        />
-      </Field>
-
       <Field label="Contact email" name="contactEmail" error={state.fieldErrors?.contactEmail}>
         <Input
           id="contactEmail"
@@ -54,21 +42,6 @@ export function StudioSettingsForm({
           type="email"
           defaultValue={initialValues.contactEmail}
           required
-        />
-      </Field>
-
-      <Field
-        label="Accent color"
-        name="accentColor"
-        error={state.fieldErrors?.accentColor}
-        hint="Optional. 6-digit hex, e.g. #ffb020."
-      >
-        <Input
-          id="accentColor"
-          name="accentColor"
-          defaultValue={initialValues.accentColor}
-          placeholder="#ffb020"
-          className="max-w-[160px]"
         />
       </Field>
 

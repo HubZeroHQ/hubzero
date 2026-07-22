@@ -63,9 +63,8 @@ export function ImageFields({
         <div className="bg-surface-default border-border-muted relative h-20 w-20 shrink-0 overflow-hidden rounded-[4px] border">
           {url ? (
             // Editor-only preview thumbnail — plain `<img>` deliberately, so it
-            // never depends on the source being a next/image-configured host
-            // (legacy pre-Media-Library blocks may still point at an arbitrary
-            // URL). The public BlockRenderer output is the one that matters for
+            // never depends on the source being a next/image-configured host.
+            // The public BlockRenderer output is the one that matters for
             // optimization and only ever uses next/image once dimensions are known.
             // eslint-disable-next-line @next/next/no-img-element
             <img src={url} alt="" className="h-full w-full object-cover" />

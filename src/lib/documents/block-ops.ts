@@ -131,7 +131,7 @@ export function reorderBlocks(blocks: Block[], fromIndex: number, toIndex: numbe
 }
 
 /** Serialized clipboard payload for cross-document "Copy" (Appendix B.5 — plain duplicate, not a synced block). */
-export interface CopiedBlockPayload {
+interface CopiedBlockPayload {
   __hubzeroBlock: true;
   block: Block;
 }

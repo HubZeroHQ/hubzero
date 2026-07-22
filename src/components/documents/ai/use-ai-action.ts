@@ -18,7 +18,7 @@ import { useCallback, useRef, useState } from 'react';
  * reasonable follow-up once the provider layer supports streaming
  * (see PR description's future extension points).
  */
-export type AiActionStatus = 'idle' | 'loading' | 'error';
+type AiActionStatus = 'idle' | 'loading' | 'error';
 
 export interface UseAiActionResult<TResult> {
   status: AiActionStatus;

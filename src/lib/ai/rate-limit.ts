@@ -17,7 +17,7 @@ export interface AiRateLimiter {
   consume(key: string, now?: number): Promise<RateLimitCheck> | RateLimitCheck;
 }
 
-export class InMemorySlidingWindowRateLimiter implements AiRateLimiter {
+class InMemorySlidingWindowRateLimiter implements AiRateLimiter {
   private readonly buckets = new Map<string, number[]>();
   private lastSweep = 0;
 

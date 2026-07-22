@@ -30,7 +30,7 @@ export type Capability =
   | 'manageSystemConfig'
   | 'manageMedia';
 
-export const ROLE_CAPABILITIES: Record<UserRole, readonly Capability[]> = {
+const ROLE_CAPABILITIES: Record<UserRole, readonly Capability[]> = {
   headAdmin: [
     'createOwnEntry',
     'createAnyEntry',

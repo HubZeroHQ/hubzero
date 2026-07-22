@@ -14,7 +14,7 @@ export type EngineeringProfile = Extract<PublicEntityDetail, { type: 'engineerin
  * bespoke page still speaks the same editorial vocabulary as every other
  * Engineering Profile — only the arrangement differs, not the content model.
  */
-export const DOCUMENT_LABELS = {
+const DOCUMENT_LABELS = {
   introduction: {
     eyebrow: 'Introduction / engineering context',
     title: 'Position and practice',
@@ -25,15 +25,9 @@ export const DOCUMENT_LABELS = {
   achievements: { eyebrow: 'Outcomes / verified record', title: 'Documented outcomes' },
 } as const;
 
-export const DOCUMENT_ORDER = [
-  'introduction',
-  'interview',
-  'quotes',
-  'timeline',
-  'achievements',
-] as const;
+const DOCUMENT_ORDER = ['introduction', 'interview', 'quotes', 'timeline', 'achievements'] as const;
 
-export const RELATIONSHIP_GROUPS = [
+const RELATIONSHIP_GROUPS = [
   { type: 'work', title: 'Related Work' },
   { type: 'build', title: 'Related Builds' },
   { type: 'lab', title: 'Related Labs' },

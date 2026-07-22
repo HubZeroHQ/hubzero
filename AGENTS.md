@@ -17,29 +17,8 @@ Their guidance takes precedence over default assumptions.
 
 You are designing the next generation of HubZero.
 
-This repository has intentionally been reset.
-
-Assume there is no previous implementation.
-
-A legacy website exists only inside:
-
-client/
-
-This directory exists solely as historical reference.
-
-Use it only to understand previous messaging, branding, content, and ideas worth preserving.
-
-Do NOT inherit its:
-
-- architecture
-- routing
-- styling
-- components
-- design system
-- implementation patterns
-- information architecture
-
-The new website should be designed from first principles.
+The production platform is designed from first principles around the architecture and design
+documentation in this repository.
 
 ---
 
@@ -219,12 +198,11 @@ Avoid filler.
 Before implementation:
 
 1. Read all documentation.
-2. Study the legacy website only for historical context.
-3. Understand the four pillars.
-4. Produce a complete information architecture.
-5. Produce a complete content strategy.
-6. Produce a complete design strategy.
-7. Produce a technical implementation roadmap.
-8. Wait for approval.
+2. Understand the four pillars.
+3. Produce a complete information architecture.
+4. Produce a complete content strategy.
+5. Produce a complete design strategy.
+6. Produce a technical implementation roadmap.
+7. Wait for approval.
 
 Implementation begins only after planning is approved.

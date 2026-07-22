@@ -54,10 +54,6 @@ export function createSignedUploadParams(folder = 'hubzero'): SignedUploadParams
   };
 }
 
-export function getCloudinaryClient(): typeof cloudinary {
-  return ensureConfigured();
-}
-
 /**
  * Removes the binary from Cloudinary — called only when a Media record
  * itself is deleted (never on "Replace", which always creates a new record

@@ -13,7 +13,7 @@ function actionErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : 'Something went wrong. Try again.';
 }
 
-/** Only the minimal `StudioSettings` branding fields are editable — everything else on this page is a read-only derivation of existing config (`system-info.ts`, `config/public-site.ts`). */
+/** Only the Studio's operational identity is editable; deployment state remains read-only. */
 export async function updateStudioSettingsAction(
   _prevState: EntryActionState,
   formData: FormData,
@@ -24,16 +24,12 @@ export async function updateStudioSettingsAction(
     return { error: actionErrorMessage(error) };
   }
 
-  const accentColor = String(formData.get('accentColor') ?? '').trim();
-
   try {
     await settingsRepository.update({
       studioName: String(formData.get('studioName') ?? ''),
-      tagline: String(formData.get('tagline') ?? ''),
       contactEmail: String(formData.get('contactEmail') ?? '')
         .trim()
         .toLowerCase(),
-      accentColor: accentColor || undefined,
     });
   } catch (error) {
     if (error instanceof ZodError) {

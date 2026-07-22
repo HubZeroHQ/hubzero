@@ -2362,20 +2362,34 @@
     grid-template-columns: 1fr;
   }
 
-  .home-card-prominent {
+  .home-card-prominent.home-card-with-media {
     display: grid;
     grid-column: span 2;
     grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.75fr);
   }
 
-  .home-card-prominent .home-card-media,
-  .home-card-prominent .public-media,
-  .home-card-prominent .public-media img {
+  .home-card-prominent.home-card-with-media .home-card-media,
+  .home-card-prominent.home-card-with-media .public-media,
+  .home-card-prominent.home-card-with-media .public-media img {
     height: 100%;
   }
 
-  .home-card-prominent .public-media img {
+  .home-card-prominent.home-card-with-media .public-media img {
     aspect-ratio: auto;
+  }
+
+  .home-card-prominent.home-card-editorial .home-card-body {
+    padding: clamp(36px, 5vw, 64px);
+  }
+
+  .home-card-prominent.home-card-editorial .home-card-title h3 {
+    max-width: 22ch;
+    font-size: clamp(38px, 5vw, 64px);
+  }
+
+  .home-card-prominent.home-card-editorial .home-card-summary {
+    max-width: 72ch;
+    font-size: clamp(16px, 1.5vw, 18px);
   }
 
   .collection-hero-grid,

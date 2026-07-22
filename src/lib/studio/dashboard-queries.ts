@@ -7,7 +7,7 @@ import { teamRepository } from '@/lib/db/repositories/team';
 import { workRepository } from '@/lib/db/repositories/work';
 import type { PublishStatus } from '@/types/studio';
 
-export type ContentEntityType =
+type ContentEntityType =
   'work' | 'builds' | 'blueprints' | 'labs' | 'notes' | 'engineeringProfiles';
 
 const CONTENT_HREF: Record<ContentEntityType, string> = {

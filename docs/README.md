@@ -8,7 +8,6 @@ This directory contains HubZero's engineering, design, and product documentation
 | [`design/`](design) | The design system, motion, and visual identity language the interface follows. |
 | [`product/`](product) | Public-facing information architecture, narrative strategy, and content-model documentation. |
 | [`operations/`](operations) | Production trust boundaries, security posture, and operational limitations. |
-| [`archive/`](archive) | Superseded planning documents and dated point-in-time audits, retained for historical context. |
 
 ## Architecture
 
@@ -35,7 +34,3 @@ This directory contains HubZero's engineering, design, and product documentation
 ## Operations
 
 - [`AI_AUTHORING_SECURITY.md`](operations/AI_AUTHORING_SECURITY.md) — Trust boundaries, validation, and rate-limiting for the AI authoring feature in production.
-
-## Archive
-
-Historical planning documents and dated content/launch audits, kept for record rather than as current guidance. See [`archive/README.md`](archive/README.md) before citing anything in this directory.

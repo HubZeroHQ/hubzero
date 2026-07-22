@@ -10,7 +10,7 @@ import { BLOCK_CATALOG_FLAT } from '@/lib/documents/block-catalog';
  * the editorial layer — usage guidance a person browsing a menu doesn't
  * need, but a model choosing a document's structure does.
  */
-export interface BlockUsageGuidance {
+interface BlockUsageGuidance {
   useWhen: string;
   avoidWhen: string;
 }
@@ -123,10 +123,6 @@ const BLOCK_USAGE_GUIDANCE: Record<BlockType, BlockUsageGuidance> = {
       'No real source exists — an unsupported claim should be softened in the prose itself, not given a fake citation.',
   },
 };
-
-export function getBlockUsageGuidance(type: BlockType): BlockUsageGuidance {
-  return BLOCK_USAGE_GUIDANCE[type];
-}
 
 /** A compact one-line-per-type table — cheap enough to include in every request regardless of action. */
 export function renderBlockGuidanceTable(): string {

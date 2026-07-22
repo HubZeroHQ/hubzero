@@ -36,7 +36,7 @@ const safeUrlSchema = z
     { message: 'URL must start with http:// or https://.' },
   );
 
-export const headingBlockSchema = z.object({
+const headingBlockSchema = z.object({
   ...blockBase,
   type: z.literal('heading'),
   data: z.object({
@@ -45,25 +45,25 @@ export const headingBlockSchema = z.object({
   }),
 });
 
-export const paragraphBlockSchema = z.object({
+const paragraphBlockSchema = z.object({
   ...blockBase,
   type: z.literal('paragraph'),
   data: z.object({ text: z.string() }),
 });
 
-export const markdownBlockSchema = z.object({
+const markdownBlockSchema = z.object({
   ...blockBase,
   type: z.literal('markdown'),
   data: z.object({ markdown: z.string() }),
 });
 
-export const richTextBlockSchema = z.object({
+const richTextBlockSchema = z.object({
   ...blockBase,
   type: z.literal('richText'),
   data: z.object({ html: z.string() }),
 });
 
-export const quoteBlockSchema = z.object({
+const quoteBlockSchema = z.object({
   ...blockBase,
   type: z.literal('quote'),
   data: z.object({
@@ -72,7 +72,7 @@ export const quoteBlockSchema = z.object({
   }),
 });
 
-export const codeBlockSchema = z.object({
+const codeBlockSchema = z.object({
   ...blockBase,
   type: z.literal('code'),
   data: z.object({
@@ -99,7 +99,7 @@ export const imageBlockSchema = z.object({
   }),
 });
 
-export const imageGalleryBlockSchema = z.object({
+const imageGalleryBlockSchema = z.object({
   ...blockBase,
   type: z.literal('imageGallery'),
   data: z.object({
@@ -126,13 +126,13 @@ export const videoEmbedBlockSchema = z.object({
   }),
 });
 
-export const dividerBlockSchema = z.object({
+const dividerBlockSchema = z.object({
   ...blockBase,
   type: z.literal('divider'),
   data: z.object({}),
 });
 
-export const calloutBlockSchema = z.object({
+const calloutBlockSchema = z.object({
   ...blockBase,
   type: z.literal('callout'),
   data: z.object({
@@ -141,7 +141,7 @@ export const calloutBlockSchema = z.object({
   }),
 });
 
-export const tableBlockSchema = z.object({
+const tableBlockSchema = z.object({
   ...blockBase,
   type: z.literal('table'),
   data: z.object({
@@ -150,19 +150,19 @@ export const tableBlockSchema = z.object({
   }),
 });
 
-export const orderedListBlockSchema = z.object({
+const orderedListBlockSchema = z.object({
   ...blockBase,
   type: z.literal('orderedList'),
   data: z.object({ items: z.array(z.string().min(1)).min(1) }),
 });
 
-export const unorderedListBlockSchema = z.object({
+const unorderedListBlockSchema = z.object({
   ...blockBase,
   type: z.literal('unorderedList'),
   data: z.object({ items: z.array(z.string().min(1)).min(1) }),
 });
 
-export const checklistBlockSchema = z.object({
+const checklistBlockSchema = z.object({
   ...blockBase,
   type: z.literal('checklist'),
   data: z.object({
@@ -187,7 +187,7 @@ export const fileAttachmentBlockSchema = z.object({
   }),
 });
 
-export const metricsBlockSchema = z.object({
+const metricsBlockSchema = z.object({
   ...blockBase,
   type: z.literal('metrics'),
   data: z.object({
@@ -205,7 +205,7 @@ export const metricsBlockSchema = z.object({
   }),
 });
 
-export const timelineBlockSchema = z.object({
+const timelineBlockSchema = z.object({
   ...blockBase,
   type: z.literal('timeline'),
   data: z.object({
@@ -221,7 +221,7 @@ export const timelineBlockSchema = z.object({
   }),
 });
 
-export const technologyStackBlockSchema = z.object({
+const technologyStackBlockSchema = z.object({
   ...blockBase,
   type: z.literal('technologyStack'),
   data: z.object({

@@ -28,8 +28,8 @@ export const taxonomyKindSchema = z.enum(['technology', 'category', 'topic']);
 export const leadStatusSchema = z.enum(['new', 'contacted', 'closed']);
 export const labStageSchema = z.enum(['exploring', 'building', 'testing']);
 export const buildDeploymentStateSchema = z.enum(['live', 'retired']);
-export const evidenceOwnerTypeSchema = z.enum(['Work', 'Build', 'Blueprint', 'Lab']);
-export const serviceEvidenceOwnerTypeSchema = z.enum(['Work', 'Build', 'Blueprint', 'Lab', 'Note']);
+const evidenceOwnerTypeSchema = z.enum(['Work', 'Build', 'Blueprint', 'Lab']);
+const serviceEvidenceOwnerTypeSchema = z.enum(['Work', 'Build', 'Blueprint', 'Lab', 'Note']);
 
 /** A reference into a Work/Build/Blueprint/Lab entry (§13, §24). */
 export const entryReferenceSchema = z.object({
@@ -63,5 +63,3 @@ export const progressMilestoneSchema = z.object({
   summary: z.string().min(1),
   relatedDocumentRole: documentRoleSchema.optional(),
 });
-
-export type ProgressMilestoneInput = z.infer<typeof progressMilestoneSchema>;

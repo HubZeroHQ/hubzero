@@ -15,7 +15,6 @@ export const PUBLIC_CACHE_TAGS = {
   sitemap: 'public:sitemap',
   feed: 'public:feed',
   media: (id: string) => `public:media:${id}`,
-  taxonomy: (id: string) => `public:taxonomy:${id}`,
 } as const;
 
 const ALL_PUBLIC_TYPES: readonly PublicEntityType[] = [
@@ -45,16 +44,6 @@ export function invalidatePublicEntity(type: PublicEntityType, slug?: string): v
 
 export function invalidatePublicMedia(id: string): void {
   revalidateTag(PUBLIC_CACHE_TAGS.media(id));
-  invalidateAllCollections();
-  revalidateTag(PUBLIC_CACHE_TAGS.relations);
-  revalidateTag(PUBLIC_CACHE_TAGS.homepage);
-  revalidateTag(PUBLIC_CACHE_TAGS.discovery);
-  revalidateTag(PUBLIC_CACHE_TAGS.sitemap);
-  revalidateTag(PUBLIC_CACHE_TAGS.feed);
-}
-
-export function invalidatePublicTaxonomy(id: string): void {
-  revalidateTag(PUBLIC_CACHE_TAGS.taxonomy(id));
   invalidateAllCollections();
   revalidateTag(PUBLIC_CACHE_TAGS.relations);
   revalidateTag(PUBLIC_CACHE_TAGS.homepage);

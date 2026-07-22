@@ -10,7 +10,7 @@ export class UnauthorizedError extends Error {
   }
 }
 
-export class ForbiddenError extends Error {
+class ForbiddenError extends Error {
   constructor(message = 'You do not have permission to do this.') {
     super(message);
     this.name = 'ForbiddenError';
@@ -20,12 +20,6 @@ export class ForbiddenError extends Error {
 export interface SessionIdentity {
   role: UserRole;
   userId: string;
-}
-
-/** The current Studio session's role, or `null` if signed out. */
-export async function getSessionRole(): Promise<UserRole | null> {
-  const session = await auth();
-  return session?.user.role ?? null;
 }
 
 /**

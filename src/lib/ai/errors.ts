@@ -6,7 +6,7 @@
  * are different problems with different fixes for the author).
  */
 
-export class AiGenerationError extends Error {}
+class AiGenerationError extends Error {}
 
 export class AiInvalidRequestError extends AiGenerationError {
   constructor(message = 'The AI request was invalid or too large.') {

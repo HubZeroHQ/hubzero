@@ -1,11 +1,11 @@
 import type { PublicDiscoveryEntry, PublicEntityType, PublicRelationship } from '../domain';
 
-export interface PublicSearchQuery {
+interface PublicSearchQuery {
   query: string;
   limit?: number;
 }
 
-export interface PublicSearchRelationshipMatch {
+interface PublicSearchRelationshipMatch {
   label: string;
   title: string;
   url: string;

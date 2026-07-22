@@ -37,7 +37,7 @@ export interface SlashCommandDefinition {
   instruction: string;
 }
 
-export const SLASH_COMMANDS: SlashCommandDefinition[] = [
+const SLASH_COMMANDS: SlashCommandDefinition[] = [
   {
     command: 'generate',
     label: '/generate',

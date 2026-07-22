@@ -12,10 +12,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "bootstrap:dev-admin": "tsx --env-file=.env.local scripts/bootstrap-dev-admin.ts",
-    "seed:engineering-profiles": "tsx --env-file=.env.local scripts/seed-engineering-profiles.ts",
-    "reimport:team-portraits": "tsx --env-file=.env.local scripts/reimport-team-portraits.ts",
     "create:head-admin": "tsx --env-file=.env.local scripts/create-head-admin.ts",
-    "migrate:personnel-model": "tsx --env-file=.env.local scripts/migrate-personnel-model.ts",
     "prepare": "husky"
   },
   "dependencies": {
@@ -45,12 +42,12 @@
     "pdf-parse": "^2.4.5",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "server-only": "^0.0.1",
     "tailwind-merge": "^3.3.1",
     "zod": "^4.1.13"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
-    "@hubzero/core": "^3.0.0",
     "@tailwindcss/postcss": "^4.1.14",
     "@types/node": "^24.7.2",
     "@types/react": "^19.2.2",

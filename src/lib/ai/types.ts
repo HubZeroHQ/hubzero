@@ -62,9 +62,9 @@ export interface AdjacentBlockContext {
   next?: AdjacentBlockSummary;
 }
 
-export type TechnicalDepth = 'introductory' | 'practitioner' | 'expert';
-export type ContentLength = 'brief' | 'standard' | 'in-depth';
-export type ContentTone = 'neutral' | 'narrative' | 'direct' | 'analytical';
+type TechnicalDepth = 'introductory' | 'practitioner' | 'expert';
+type ContentLength = 'brief' | 'standard' | 'in-depth';
+type ContentTone = 'neutral' | 'narrative' | 'direct' | 'analytical';
 
 /** Shared editorial dials every generation surface reads the same way — never redefined per call site. */
 export interface EditorialOptions {
@@ -132,7 +132,7 @@ export const BLOCK_ONLY_INSTRUCTIONS = [
   'explainCode',
   'documentApi',
 ] as const;
-export type BlockOnlyInstruction = (typeof BLOCK_ONLY_INSTRUCTIONS)[number];
+type BlockOnlyInstruction = (typeof BLOCK_ONLY_INSTRUCTIONS)[number];
 
 export type BlockInstruction = TransformInstruction | BlockOnlyInstruction;
 
@@ -172,8 +172,6 @@ export interface TextGenerationResult {
   kind: 'text';
   text: string;
 }
-
-export type GenerationResult = BlockGenerationResult | TextGenerationResult;
 
 /** The result shape a given request resolves to — lets `ContentGenerationProvider.generate` return a precisely narrowed type per call site instead of a union every caller has to re-check. */
 export type GenerationResultFor<R extends GenerationRequest> = R extends SelectionTransformRequest

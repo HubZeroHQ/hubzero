@@ -39,7 +39,7 @@ describe('relationshipKey', () => {
     const withoutReferenceId: PublicRelationship = {
       kind: 'teamContributedToEntry',
       label: 'Contributed to',
-      target: { type: 'teamMember', title: 'Legacy target', url: '/legacy' },
+      target: { type: 'teamMember', title: 'Related target', url: '/about' },
     };
     const withReferenceId = teamContributor('HZ-TM-001', 'First contributor');
 

@@ -10,7 +10,7 @@ import {
   type SignedUploadParams,
 } from '@/lib/media/cloudinary';
 import { toMediaAssetDTO, type MediaAssetDTO } from '@/lib/media/dto';
-import { findMediaUsage, type MediaUsageRef } from '@/lib/media/usage';
+import { findMediaUsage } from '@/lib/media/usage';
 import { mediaAssetSchema } from '@/lib/validation/media';
 import type { MediaFolder } from '@/types/studio';
 import { invalidatePublicMedia } from '@/lib/public/cache';
@@ -178,9 +178,8 @@ export async function replaceMediaAssetFileAction(
 /**
  * Deletes both the Mongo record and the Cloudinary binary. Refuses on the
  * first call if the asset is still referenced anywhere — the caller (the
- * Media detail page, or a Media Picker's manage view) is expected to fetch
- * `getMediaUsageAction` first, show the reader the usage list, and only
- * pass `force: true` once a human has explicitly confirmed past that
+ * Media detail page shows the usage list before deletion and only passes
+ * `force: true` once a human has explicitly confirmed past that
  * warning (CMS_PRODUCT_DESIGN.md §6 — a usage-count warning, not a silent
  * block, since a genuinely unused reference is the common case).
  */
@@ -247,9 +246,4 @@ export async function searchMediaAction(input?: {
     .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())
     .slice(0, 60)
     .map(toMediaAssetDTO);
-}
-
-export async function getMediaUsageAction(id: string): Promise<MediaUsageRef[]> {
-  await requireCapability('manageMedia');
-  return findMediaUsage(id);
 }
