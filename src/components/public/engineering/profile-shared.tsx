@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { PUBLIC_ENTITY_ROUTES } from '@/config/public-site';
 import type { ImmutablePublic, PublicEntityDetail, PublicRelationship } from '@/lib/public/domain';
+import { publicRoute } from '@/lib/public/routes';
 import { PageContainer } from '../PageContainer';
 import { RelationshipCard, relationshipKey } from '../EditorialPrimitives';
 import { RelationshipGraph } from '../EvidenceVisuals';
@@ -112,10 +113,10 @@ export function ProfileFooter({ profile }: { profile: ImmutablePublic<Engineerin
           <p>{profile.referenceId} / HubZero Engineering</p>
         </div>
         <div className="profile-footer-actions">
-          <Link href="/engineering">
+          <Link href={publicRoute.collection('engineeringProfile')}>
             Return to Engineering Profiles <span aria-hidden="true">→</span>
           </Link>
-          <Link href="/about">
+          <Link href={publicRoute.about()}>
             How HubZero operates <span aria-hidden="true">→</span>
           </Link>
         </div>

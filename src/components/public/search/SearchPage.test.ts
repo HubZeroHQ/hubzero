@@ -33,6 +33,8 @@ describe('public search page', () => {
     expect(markup).toContain('Release Ledger');
     expect(markup).toContain('Technology match:');
     expect(markup).toContain('TypeScript');
+    expect(markup).toContain('class="search-result-row public-connected-row"');
+    expect(markup).toContain('class="search-result-primary"');
   });
 
   it('keeps no-results and unavailable states explicit', () => {

@@ -39,7 +39,6 @@ function fakeSource(input: {
     findEntityById: async (type, id) =>
       input.entities.find((item) => item.type === type && item.id === id) ?? null,
     listEntities: async (type) => input.entities.filter((item) => item.type === type),
-    findInverseEntities: async () => [],
     findDocuments: async (ownerType, ownerId) =>
       input.documents?.filter(
         (document) => document.ownerType === ownerType && document.ownerId.toString() === ownerId,

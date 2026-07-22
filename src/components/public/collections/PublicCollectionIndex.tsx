@@ -7,6 +7,7 @@ import type {
   PublicTaxonomyTerm,
   PublicWorkSummary,
 } from '@/lib/public/domain';
+import { publicRoute } from '@/lib/public/routes';
 import {
   MetadataRow,
   PublicationMetadata,
@@ -123,7 +124,7 @@ export function PublicCollectionIndex({
           {type === 'work' && categoryFilters.length ? (
             <nav className="collection-filters" aria-label="Filter Work by category">
               <Link
-                href="/work"
+                href={publicRoute.workCategory()}
                 className="collection-filter"
                 aria-current={!activeCategory ? 'page' : undefined}
               >
@@ -132,7 +133,7 @@ export function PublicCollectionIndex({
               {categoryFilters.map((category) => (
                 <Link
                   key={category.slug}
-                  href={`/work?category=${encodeURIComponent(category.slug)}`}
+                  href={publicRoute.workCategory(category.slug)}
                   className="collection-filter"
                   aria-current={activeCategory === category.slug ? 'page' : undefined}
                 >

@@ -1,10 +1,8 @@
 import type { ImmutablePublic, PublicRelationship } from '@/lib/public/domain';
+import { layoutGraph, type GraphLayoutInput } from '@/lib/graph-layout';
 import { formatMetadata, relationshipKey } from './EditorialPrimitives';
 
-const GRAPH_WIDTH = 440;
 const GRAPH_ROW_HEIGHT = 46;
-const GRAPH_TOP_PADDING = 16;
-const GRAPH_TRUNK_X = 168;
 const GRAPH_MAX_ITEMS = 4;
 
 /**
@@ -26,10 +24,44 @@ export function RelationshipGraph({
   const items = relationships.slice(0, GRAPH_MAX_ITEMS);
   if (!items.length) return null;
 
-  const height = items.length * GRAPH_ROW_HEIGHT + GRAPH_TOP_PADDING * 2;
-  const centerY = height / 2;
-  const firstY = GRAPH_TOP_PADDING + GRAPH_ROW_HEIGHT / 2;
-  const lastY = GRAPH_TOP_PADDING + (items.length - 1) * GRAPH_ROW_HEIGHT + GRAPH_ROW_HEIGHT / 2;
+  type GraphEntity =
+    | { kind: 'subject'; value: typeof subject }
+    | { kind: 'relationship'; value: ImmutablePublic<PublicRelationship> };
+  const input: GraphLayoutInput<GraphEntity, ImmutablePublic<PublicRelationship>> = {
+    rootId: 'subject',
+    nodes: [
+      {
+        id: 'subject',
+        entity: { kind: 'subject' as const, value: subject },
+        width: 168,
+        height: GRAPH_ROW_HEIGHT,
+        order: -1,
+      },
+      ...items.map((relationship, order) => ({
+        id: relationshipKey(relationship),
+        entity: { kind: 'relationship' as const, value: relationship },
+        width: 272,
+        height: GRAPH_ROW_HEIGHT,
+        order,
+      })),
+    ],
+    edges: items.map((relationship, order) => ({
+      id: relationshipKey(relationship),
+      source: 'subject',
+      target: relationshipKey(relationship),
+      relationship,
+      order,
+    })),
+  };
+  const layout = layoutGraph(input, {
+    columnGap: 0,
+    rowGap: 0,
+    paddingY: 16,
+    minimumWidth: 440,
+    targetExtension: 20,
+  });
+  const subjectNode = layout.nodes.find((node) => node.id === 'subject')!;
+  const subjectCenterY = subjectNode.y + subjectNode.height / 2;
   const summary = `Relationship graph: ${subject.label} connects to ${items
     .map((relationship) => relationship.target.title)
     .join(', ')}.`;
@@ -37,42 +69,35 @@ export function RelationshipGraph({
   return (
     <figure className="evidence-graph" role="img" aria-label={summary}>
       <svg
-        viewBox={`0 0 ${GRAPH_WIDTH} ${height}`}
+        viewBox={`0 0 ${layout.bounds.width} ${layout.bounds.height}`}
         preserveAspectRatio="xMinYMid meet"
         aria-hidden="true"
       >
-        <text x="0" y={centerY - 8} className="evidence-graph-subject-meta">
+        <text x={subjectNode.x} y={subjectCenterY - 8} className="evidence-graph-subject-meta">
           {subject.meta}
         </text>
-        <text x="0" y={centerY + 14} className="evidence-graph-subject-label">
+        <text x={subjectNode.x} y={subjectCenterY + 14} className="evidence-graph-subject-label">
           {subject.label}
         </text>
-        <line x1="0" y1={centerY} x2={GRAPH_TRUNK_X} y2={centerY} className="evidence-graph-line" />
-        {items.length > 1 ? (
-          <line
-            x1={GRAPH_TRUNK_X}
-            y1={firstY}
-            x2={GRAPH_TRUNK_X}
-            y2={lastY}
+        {layout.edges.map((edge) => (
+          <polyline
+            key={`edge-${edge.id}`}
+            points={edge.points.map(({ x, y }) => `${x},${y}`).join(' ')}
             className="evidence-graph-line"
+            fill="none"
           />
-        ) : null}
-        {items.map((relationship, index) => {
-          const y = GRAPH_TOP_PADDING + index * GRAPH_ROW_HEIGHT + GRAPH_ROW_HEIGHT / 2;
+        ))}
+        {layout.nodes.flatMap((node) => {
+          if (node.entity.kind !== 'relationship') return [];
+          const relationship = node.entity.value;
+          const y = node.y + node.height / 2;
           return (
-            <g key={relationshipKey(relationship)}>
-              <line
-                x1={GRAPH_TRUNK_X}
-                y1={y}
-                x2={GRAPH_TRUNK_X + 20}
-                y2={y}
-                className="evidence-graph-line"
-              />
-              <circle cx={GRAPH_TRUNK_X} cy={y} r="3" className="evidence-graph-node" />
-              <text x={GRAPH_TRUNK_X + 30} y={y - 8} className="evidence-graph-edge-label">
+            <g key={node.id}>
+              <circle cx={node.x} cy={y} r="3" className="evidence-graph-node" />
+              <text x={node.x + 30} y={y - 8} className="evidence-graph-edge-label">
                 {relationship.label}
               </text>
-              <text x={GRAPH_TRUNK_X + 30} y={y + 12} className="evidence-graph-node-label">
+              <text x={node.x + 30} y={y + 12} className="evidence-graph-node-label">
                 {relationship.target.title}
               </text>
             </g>

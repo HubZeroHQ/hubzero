@@ -35,5 +35,6 @@ describe('public Services experience', () => {
     expect(markup).toContain('Publishing systems');
     expect(markup).toContain('href="/notes/public-read-boundary"');
     expect(markup).toContain('Proven by / 1');
+    expect(markup).toContain('<nav aria-label="Publishing systems evidence"');
   });
 });

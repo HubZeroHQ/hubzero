@@ -5,6 +5,7 @@ import type {
   PublicHomepageProjection,
   PublicServiceSummary,
 } from '@/lib/public/domain';
+import { publicRoute } from '@/lib/public/routes';
 import { PageContainer, PublicSection } from '../PageContainer';
 import { formatPublicDate, SectionHeader } from '../EditorialPrimitives';
 import { AxisDiagram, RelationshipGraph } from '../EvidenceVisuals';
@@ -280,7 +281,7 @@ function ServicesPassage({
               ))}
             </ul>
           ) : null}
-          <Link href="/services" className="home-text-link">
+          <Link href={publicRoute.collection('service')} className="home-text-link">
             Review services <span aria-hidden="true">→</span>
           </Link>
         </div>
@@ -386,7 +387,7 @@ function Closing() {
           <h2>{PUBLIC_HOME.closing.title}</h2>
           <p>{PUBLIC_HOME.closing.body}</p>
           {PUBLIC_SITE.release.contact ? (
-            <Link href="/contact?from=home" className="home-primary-link">
+            <Link href={publicRoute.contact({ from: 'home' })} className="home-primary-link">
               Start a project conversation <span aria-hidden="true">→</span>
             </Link>
           ) : null}

@@ -71,6 +71,7 @@ describe('Builds and Labs public collections', () => {
     expect(markup).toContain('href="/builds/release-ledger"');
     expect(markup).toContain('HZ-BL-101');
     expect(markup).toContain('TypeScript');
+    expect(markup).toContain('href="/search?q=TypeScript"');
   });
 
   it('renders Work category filters as URL-addressable server navigation', () => {
@@ -87,6 +88,7 @@ describe('Builds and Labs public collections', () => {
     expect(markup).toContain('href="/work?category=developer-tools"');
     expect(markup).toContain('aria-current="page"');
     expect(markup).toContain('Developer tools');
+    expect(markup).toContain('href="/work?category=developer-tools"');
   });
 
   it('renders Work as a long-form engineering publication with typed continuation paths', () => {

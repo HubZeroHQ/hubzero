@@ -1,5 +1,6 @@
 import { getFounderIdentity } from '@/config/founder-identity';
 import type { ImmutablePublic } from '@/lib/public/domain';
+import { publicRoute } from '@/lib/public/routes';
 import { PublicBreadcrumbs, TechnologyList } from '../EditorialPrimitives';
 import { PageContainer, PublicSection } from '../PageContainer';
 import { ProseRenderer } from '../ProseRenderer';
@@ -39,8 +40,11 @@ export function EngineeringProfileDetail({ profile }: { profile: ImmutablePublic
         <PageContainer>
           <PublicBreadcrumbs
             items={[
-              { label: 'HubZero', href: '/' },
-              { label: 'Engineering profiles', href: '/engineering' },
+              { label: 'HubZero', href: publicRoute.home() },
+              {
+                label: 'Engineering profiles',
+                href: publicRoute.collection('engineeringProfile'),
+              },
               { label: profile.title },
             ]}
           />

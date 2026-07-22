@@ -1,7 +1,8 @@
 import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import type { PublicRelationship } from '@/lib/public/domain';
-import { RelationshipCard, relationshipKey } from './EditorialPrimitives';
+import { RelationshipCard, relationshipKey, TechnologyList } from './EditorialPrimitives';
 
 // Regression coverage for the post-personnel-migration bug where every
 // teamMember target shares the literal '/about' url, so two distinct
@@ -68,5 +69,31 @@ describe('RelationshipCard list rendering', () => {
 
     const keys = elements.map((element) => element.key);
     expect(new Set(keys).size).toBe(keys.length);
+  });
+
+  it('uses one keyboard-focusable canonical anchor for the whole relationship surface', () => {
+    const relationship = teamContributor('HZ-TM-001', 'First contributor');
+    const markup = renderToStaticMarkup(
+      createElement(RelationshipCard, { relationship, enabled: true }),
+    );
+
+    expect(markup).toContain('class="home-relationship-card" href="/about"');
+    expect(markup).not.toContain('tabindex');
+  });
+});
+
+describe('TechnologyList navigation', () => {
+  it('links technologies and categories through canonical route adapters', () => {
+    const markup = renderToStaticMarkup(
+      createElement(TechnologyList, {
+        technologies: [
+          { kind: 'technology', label: 'TypeScript', slug: 'typescript' },
+          { kind: 'category', label: 'Developer tools', slug: 'developer-tools' },
+        ],
+      }),
+    );
+
+    expect(markup).toContain('href="/search?q=TypeScript"');
+    expect(markup).toContain('href="/work?category=developer-tools"');
   });
 });

@@ -302,7 +302,11 @@ describe('public discovery foundations', () => {
     });
   });
 
-  it('keeps robots closed while the public release gate is disabled', () => {
-    expect(robots()).toEqual({ rules: { userAgent: '*', disallow: '/' } });
+  it('opens public routes to crawlers while protecting private surfaces', () => {
+    expect(robots()).toEqual({
+      rules: [{ userAgent: '*', allow: '/', disallow: ['/studio/', '/api/'] }],
+      sitemap: 'https://hubzero.in/sitemap.xml',
+      host: 'https://hubzero.in',
+    });
   });
 });

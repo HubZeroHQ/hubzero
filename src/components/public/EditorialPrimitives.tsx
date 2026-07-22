@@ -7,6 +7,7 @@ import type {
   PublicRelationship,
   PublicTaxonomyTerm,
 } from '@/lib/public/domain';
+import { publicRoute } from '@/lib/public/routes';
 import { cn } from '@/lib/utils/cn';
 import { slugFromProfileUrl } from './engineering/profile-url';
 
@@ -122,7 +123,9 @@ export function TechnologyList({
   return (
     <ul className="home-technologies" aria-label={label}>
       {technologies.slice(0, 8).map((technology) => (
-        <li key={`${technology.kind}-${technology.slug}`}>{technology.label}</li>
+        <li key={`${technology.kind}-${technology.slug}`}>
+          <Link href={publicRoute.taxonomy(technology)}>{technology.label}</Link>
+        </li>
       ))}
     </ul>
   );

@@ -1,6 +1,10 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import type { PublicMedia, PublicTeamMemberSummary } from '@/lib/public/domain';
+import type {
+  PublicEngineeringProfileSummary,
+  PublicMedia,
+  PublicTeamMemberSummary,
+} from '@/lib/public/domain';
 import { About } from './About';
 
 const portrait: PublicMedia = {
@@ -64,6 +68,7 @@ describe('public About experience', () => {
     expect(markup).toContain('Ari Rao');
     expect(markup).toContain('Systems engineer');
     expect(markup).not.toContain('href="/engineering/ari-rao"');
+    expect(markup).not.toContain('about-person-linkable');
   });
 
   it('renders Engineering Team members as compact cards, without a portrait or profile link', () => {
@@ -84,6 +89,41 @@ describe('public About experience', () => {
     expect(markup).toContain('Backend Engineer');
     expect(markup).toContain('Joined');
     expect(markup).not.toContain('Engineering Team / no approved public records');
+  });
+
+  it('makes an eligible Leadership profile card one canonical keyboard destination', () => {
+    const profile: PublicEngineeringProfileSummary = {
+      type: 'engineeringProfile',
+      title: 'Ari Rao',
+      slug: 'ari-rao',
+      url: '/engineering/ari-rao',
+      referenceId: 'EP-101',
+      summary: 'Builds systems around explicit ownership.',
+      role: 'Systems engineer',
+      engineeringIdentity: [],
+      currentExploration: 'Ownership boundaries',
+      technologies: [],
+    };
+    const member: PublicTeamMemberSummary = {
+      type: 'teamMember',
+      title: 'Ari Rao',
+      url: '/about',
+      summary: profile.summary,
+      role: profile.role,
+      group: 'Leadership',
+      publicCategory: 'leadership',
+      founder: false,
+      technologies: [],
+      portrait,
+      profile,
+    };
+    const markup = renderToStaticMarkup(
+      <About team={[member]} profiles={[{ profile, areasOfExpertise: [], relationships: [] }]} />,
+    );
+
+    expect(markup).toContain('class="about-person about-person-linkable"');
+    expect(markup).toContain('href="/engineering/ari-rao"');
+    expect(markup.match(/href="\/engineering\/ari-rao"/g)).toHaveLength(1);
   });
 
   it('shows the Engineering Team empty state independently of Leadership', () => {

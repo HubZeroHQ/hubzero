@@ -40,15 +40,27 @@ import type {
   PublicWorkSummary,
 } from './domain';
 import { estimateReadingTimeMinutes } from '@/lib/documents/reading-time';
+import {
+  createGraphQuery,
+  type GraphQuery,
+  type HubZeroRelationshipKind,
+} from '@/lib/entity-graph';
+import { projectEvidence, type PublicEvidenceNode } from './evidence-projection';
 import { isSafePublicUrl, toPublicMedia } from './media';
-import { type RelationshipAssertion, resolvePublicRelationships } from './relationships';
+import {
+  normalizePublicEntityGraph,
+  type PublicRelationshipData,
+  type RelationshipAssertion,
+} from './relationships';
+import { publicRoute } from './routes';
+import { projectSearchEntry } from './search-projection';
 import type { PublicDataSource, StudioPublicEntity } from './source';
 import { isPubliclyVisible } from './visibility';
 
 const ORGANIZATION_AUTHOR: OrganizationAuthor = {
   kind: 'organization',
   name: 'HubZero',
-  url: '/about',
+  url: publicRoute.about(),
 };
 
 const TYPE_TO_OWNER: Record<PublicDetailEntityType, OwnerType> = {
@@ -81,6 +93,16 @@ export interface PublicRepository {
 }
 
 export function createPublicRepository(source: PublicDataSource): PublicRepository {
+  type EvidenceQuery = GraphQuery<
+    PublicEvidenceNode,
+    HubZeroRelationshipKind,
+    PublicRelationshipData
+  >;
+  type EvidenceContext = {
+    query: EvidenceQuery;
+    destinations: ReadonlyMap<string, PublicEntityLink>;
+  };
+
   async function visible(entity: StudioPublicEntity): Promise<boolean> {
     if (entity.type === 'teamMember') {
       return isPubliclyVisible({
@@ -152,13 +174,20 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
       name: team.name,
       ...(team.role ? { role: team.role } : {}),
       ...(portrait ? { portrait } : {}),
-      url: profileAvailable && profile ? `/engineering/${profile.slug}` : '/about',
+      url:
+        profileAvailable && profile
+          ? publicRoute.entity({ type: 'engineeringProfile', slug: profile.slug })
+          : publicRoute.about(),
       profileAvailable,
       ...(technologies.length ? { technologies } : {}),
     };
   }
 
-  async function mapSummary(entity: StudioPublicEntity): Promise<PublicEntitySummary | null> {
+  async function mapSummary(
+    entity: StudioPublicEntity,
+    includeRelationships = true,
+    evidence?: EvidenceContext,
+  ): Promise<PublicEntitySummary | null> {
     if (!(await visible(entity))) return null;
 
     switch (entity.type) {
@@ -174,7 +203,7 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
           type: 'work',
           title: record.title,
           slug: record.slug,
-          url: `/work/${record.slug}`,
+          url: publicRoute.entity({ type: 'work', slug: record.slug }),
           referenceId: record.referenceId,
           summary: record.summary,
           clientType: record.clientType,
@@ -207,7 +236,7 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
           type: 'build',
           title: record.title,
           slug: record.slug,
-          url: `/builds/${record.slug}`,
+          url: publicRoute.entity({ type: 'build', slug: record.slug }),
           referenceId: record.referenceId,
           summary: summarySource,
           deploymentState: record.deploymentState,
@@ -241,7 +270,7 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
           type: 'blueprint',
           title: record.name,
           slug: record.slug,
-          url: `/blueprints/${record.slug}`,
+          url: publicRoute.entity({ type: 'blueprint', slug: record.slug }),
           referenceId: record.referenceId,
           summary: record.shortDescription,
           architecture: record.architecture,
@@ -277,7 +306,7 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
           type: 'lab',
           title: record.title,
           slug: record.slug,
-          url: `/labs/${record.slug}`,
+          url: publicRoute.entity({ type: 'lab', slug: record.slug }),
           referenceId: record.referenceId,
           summary: record.objective,
           stage: record.stage,
@@ -306,7 +335,7 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
           type: 'note',
           title: record.title,
           slug: record.slug,
-          url: `/notes/${record.slug}`,
+          url: publicRoute.entity({ type: 'note', slug: record.slug }),
           referenceId: record.referenceId,
           summary: record.summary,
           publicationDate: record.publicationDate.toISOString(),
@@ -334,7 +363,7 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
           type: 'engineeringProfile',
           title: team.name,
           slug: record.slug,
-          url: `/engineering/${record.slug}`,
+          url: publicRoute.entity({ type: 'engineeringProfile', slug: record.slug }),
           referenceId: record.referenceId,
           summary: record.overview,
           role: team.role,
@@ -364,7 +393,7 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
         const summary: PublicTeamMemberSummary = {
           type: 'teamMember',
           title: record.name,
-          url: '/about',
+          url: publicRoute.collection('teamMember'),
           referenceId: record.referenceId,
           summary: record.bio,
           role: record.role,
@@ -379,7 +408,7 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
                 profile: {
                   type: 'engineeringProfile',
                   title: record.name,
-                  url: `/engineering/${profile.slug}`,
+                  url: publicRoute.entity({ type: 'engineeringProfile', slug: profile.slug }),
                   referenceId: profile.referenceId,
                   summary: profile.overview,
                   state: profile.currentExploration,
@@ -392,34 +421,56 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
       }
       case 'service': {
         const record = entity.record as Service;
-        const evidence = await resolveRelations(entity);
+        const relationships = includeRelationships ? await resolveRelations(entity, evidence) : [];
         const summary: PublicServiceSummary = {
           type: 'service',
           title: record.title,
-          url: '/services',
+          url: publicRoute.collection('service'),
           summary: record.description,
           technologies: [],
-          evidence,
+          evidence: relationships,
         };
         return summary;
       }
     }
   }
 
-  async function resolveRelations(entity: StudioPublicEntity): Promise<PublicRelationship[]> {
-    const inverses = await source.findInverseEntities(entity.type, entity.id);
-    const lineagePeers =
-      entity.type === 'build' && (entity.record as Build).originatingLabId
-        ? await source.findInverseEntities(
-            'lab',
-            (entity.record as Build).originatingLabId!.toString(),
-          )
-        : [];
-    const assertions = [
-      ...assertionsFrom(entity),
-      ...inverses.flatMap(assertionsFrom),
-      ...lineagePeers.flatMap(assertionsFrom),
-    ];
+  async function buildEvidenceQuery(): Promise<EvidenceContext> {
+    const records = (
+      await Promise.all(ALL_PUBLIC_TYPES.map((type) => source.listEntities(type)))
+    ).flat();
+    const visible = compact(
+      await Promise.all(
+        records.map(async (record) => {
+          const summary = await mapSummary(record, false);
+          return summary ? { record, summary } : null;
+        }),
+      ),
+    );
+    const nodes: PublicEvidenceNode[] = visible.map(({ record, summary }) => ({
+      ref: { type: record.type, id: record.id },
+      label: summary.title,
+      data: undefined,
+    }));
+    const destinations = new Map(
+      visible.map(({ record, summary }) => [`${record.type}:${record.id}`, toEntityLink(summary)]),
+    );
+    return {
+      query: createGraphQuery(
+        normalizePublicEntityGraph(
+          nodes,
+          visible.flatMap(({ record }) => assertionsFrom(record)),
+        ),
+      ),
+      destinations,
+    };
+  }
+
+  async function resolveRelations(
+    entity: StudioPublicEntity,
+    context?: EvidenceContext,
+  ): Promise<PublicRelationship[]> {
+    const { query, destinations } = context ?? (await buildEvidenceQuery());
     // An Engineering Profile and its underlying Team member are the same
     // public identity for contributor credit — those edges are always
     // asserted against Team (`teamContributedToEntry`, never a profile id
@@ -432,37 +483,40 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
             id: String((entity.record as EngineeringProfile).teamMemberId),
           }
         : undefined;
-    return resolvePublicRelationships(
-      { type: entity.type, id: entity.id },
-      assertions,
-      async (type, id): Promise<PublicEntityLink | null> => {
-        const target = await source.findEntityById(type, id);
-        if (!target) return null;
-        const summary = await mapSummary(target);
-        return summary ? toEntityLink(summary) : null;
-      },
-      aliasSource,
+    return (
+      projectEvidence(
+        query,
+        destinations,
+        { type: entity.type, id: entity.id },
+        aliasSource ? [aliasSource] : [],
+      )?.relationships.slice() ?? []
     );
   }
 
   async function findSummary(type: PublicEntityType, slug: string) {
     const entity = await source.findEntityBySlug(type, slug);
-    return entity ? mapSummary(entity) : null;
+    if (!entity) return null;
+    const evidence = type === 'service' ? await buildEvidenceQuery() : undefined;
+    return mapSummary(entity, true, evidence);
   }
 
   async function listSummaries(type: PublicEntityType): Promise<PublicEntitySummary[]> {
     const entities = await source.listEntities(type);
-    const summaries = await Promise.all(entities.map(mapSummary));
+    const evidence = type === 'service' ? await buildEvidenceQuery() : undefined;
+    const summaries = await Promise.all(
+      entities.map((entity) => mapSummary(entity, true, evidence)),
+    );
     return summaries.filter((summary): summary is PublicEntitySummary => summary !== null);
   }
 
   async function listNoteIndexEntries(): Promise<PublicNoteIndexEntry[]> {
     const entities = await source.listEntities('note');
+    const evidence = await buildEvidenceQuery();
     const entries = await Promise.all(
       entities.map(async (entity): Promise<PublicNoteIndexEntry | null> => {
         const note = await mapSummary(entity);
         if (!note || note.type !== 'note') return null;
-        return { note, relationships: await resolveRelations(entity) };
+        return { note, relationships: await resolveRelations(entity, evidence) };
       }),
     );
     return compact(entries).sort(
@@ -476,11 +530,12 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
     PublicEngineeringProfileIndexEntry[]
   > {
     const entities = await source.listEntities('engineeringProfile');
+    const evidence = await buildEvidenceQuery();
     const entries = await Promise.all(
       sortEntities(entities).map(
         async (entity): Promise<PublicEngineeringProfileIndexEntry | null> => {
           if (!('slug' in entity.record)) return null;
-          const detail = await findDetail('engineeringProfile', entity.record.slug);
+          const detail = await findDetail('engineeringProfile', entity.record.slug, evidence);
           if (!detail || detail.type !== 'engineeringProfile') return null;
           return {
             profile: detail,
@@ -496,13 +551,14 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
   async function findDetail(
     type: PublicDetailEntityType,
     slug: string,
+    evidence?: EvidenceContext,
   ): Promise<PublicEntityDetail | null> {
     const entity = await source.findEntityBySlug(type, slug);
     if (!entity) return null;
     const summary = await mapSummary(entity);
     if (!summary || summary.type !== type) return null;
     const documents = await publicDocuments(type, entity.id);
-    const relationships = await resolveRelations(entity);
+    const relationships = await resolveRelations(entity, evidence);
 
     switch (type) {
       case 'work': {
@@ -588,9 +644,14 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
     entity: StudioPublicEntity,
     expectedType: T['type'],
     now: Date,
+    evidence: EvidenceContext,
   ): Promise<PublicHomepageFeature<T> | null> {
     if (!('slug' in entity.record)) return null;
-    const detail = await findDetail(expectedType as PublicDetailEntityType, entity.record.slug);
+    const detail = await findDetail(
+      expectedType as PublicDetailEntityType,
+      entity.record.slug,
+      evidence,
+    );
     if (!detail || detail.type !== expectedType || !isHomepageEligible(detail, now)) return null;
     return {
       entity: detail as unknown as T,
@@ -608,39 +669,40 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
         source.listEntities('note'),
         source.listEntities('engineeringProfile'),
       ]);
+    const evidence = await buildEvidenceQuery();
 
     const work = compact(
       await Promise.all(
         sortEntities(workEntities).map((entity) =>
-          homepageFeature<PublicWorkSummary>(entity, 'work', now),
+          homepageFeature<PublicWorkSummary>(entity, 'work', now, evidence),
         ),
       ),
     ).slice(0, 1);
     const builds = compact(
       await Promise.all(
         sortEntities(buildEntities.filter(hasFeaturedFlag)).map((entity) =>
-          homepageFeature<PublicBuildSummary>(entity, 'build', now),
+          homepageFeature<PublicBuildSummary>(entity, 'build', now, evidence),
         ),
       ),
     ).slice(0, 2);
     const blueprints = compact(
       await Promise.all(
         sortEntities(blueprintEntities.filter(hasFeaturedFlag)).map((entity) =>
-          homepageFeature<PublicBlueprintSummary>(entity, 'blueprint', now),
+          homepageFeature<PublicBlueprintSummary>(entity, 'blueprint', now, evidence),
         ),
       ),
     );
     const labs = compact(
       await Promise.all(
         sortEntities(labEntities.filter(hasFeaturedFlag)).map((entity) =>
-          homepageFeature<PublicLabSummary>(entity, 'lab', now),
+          homepageFeature<PublicLabSummary>(entity, 'lab', now, evidence),
         ),
       ),
     ).slice(0, 2);
     const allSubstantiveNotes = compact(
       await Promise.all(
         sortEntities(noteEntities).map((entity) =>
-          homepageFeature<PublicNoteSummary>(entity, 'note', now),
+          homepageFeature<PublicNoteSummary>(entity, 'note', now, evidence),
         ),
       ),
     );
@@ -661,7 +723,12 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
     const engineeringProfiles = compact(
       await Promise.all(
         sortEntities(profiles).map((entity) =>
-          homepageFeature<PublicEngineeringProfileSummary>(entity, 'engineeringProfile', now),
+          homepageFeature<PublicEngineeringProfileSummary>(
+            entity,
+            'engineeringProfile',
+            now,
+            evidence,
+          ),
         ),
       ),
     ).slice(0, 2);
@@ -696,7 +763,7 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
       const entities = (await Promise.all(types.map((type) => source.listEntities(type)))).flat();
       const projected = await Promise.all(
         entities.map(async (entity) => {
-          const summary = await mapSummary(entity);
+          const summary = await mapSummary(entity, false);
           return summary ? { entity, summary } : null;
         }),
       );
@@ -707,17 +774,18 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
           toEntityLink(summary),
         ]),
       );
-      const assertions = entities.flatMap(assertionsFrom);
+      const graph = normalizePublicEntityGraph(
+        visible.map(({ entity, summary }) => ({
+          ref: { type: entity.type, id: entity.id },
+          label: summary.title,
+          data: undefined,
+        })),
+        visible.flatMap(({ entity }) => assertionsFrom(entity)),
+      );
+      const query = createGraphQuery(graph);
       const entries = await Promise.all(
         visible.map(async ({ entity, summary }) =>
-          toDiscoveryEntry(
-            summary,
-            await resolvePublicRelationships(
-              { type: entity.type, id: entity.id },
-              assertions,
-              async (type, id) => links.get(`${type}:${id}`) ?? null,
-            ),
-          ),
+          projectSearchEntry(query, links, { type: entity.type, id: entity.id }, summary),
         ),
       );
       return freezePublicDto(entries);
@@ -771,29 +839,6 @@ function toEntityLink(summary: PublicEntitySummary): PublicEntityLink {
     ...(summary.type === 'teamMember' && summary.profile
       ? { profileUrl: summary.profile.url }
       : {}),
-  };
-}
-
-function toDiscoveryEntry(
-  summary: PublicEntitySummary,
-  relationships: readonly PublicRelationship[],
-): PublicDiscoveryEntry {
-  return {
-    type: summary.type,
-    title: summary.title,
-    url: summary.url,
-    summary: summary.summary,
-    ...(summary.referenceId ? { referenceId: summary.referenceId } : {}),
-    taxonomy: summary.technologies.map((term) => term.label),
-    ...(summary.state ? { state: summary.state } : {}),
-    ...(summary.type === 'note'
-      ? { lastModified: summary.publicationDate }
-      : summary.type === 'lab' && summary.lastMajorUpdate
-        ? { lastModified: summary.lastMajorUpdate }
-        : {}),
-    ...(summary.type === 'note' ? { author: summary.author } : {}),
-    ...(summary.hero ? { media: summary.hero } : {}),
-    relationships: [...relationships],
   };
 }
 

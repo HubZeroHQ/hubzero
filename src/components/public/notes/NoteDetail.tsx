@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { PUBLIC_ENTITY_ROUTES } from '@/config/public-site';
 import { founderAccentStyle, getFounderIdentity } from '@/config/founder-identity';
 import type { ImmutablePublic, PublicEntityDetail, PublicRelationship } from '@/lib/public/domain';
+import { publicRoute } from '@/lib/public/routes';
 import {
   ContributorList,
   formatPublicDate,
@@ -51,8 +52,8 @@ export function NoteDetail({ note }: { note: ImmutablePublic<Note> }) {
         <PageContainer>
           <PublicBreadcrumbs
             items={[
-              { label: 'HubZero', href: '/' },
-              { label: 'Notes', href: '/notes' },
+              { label: 'HubZero', href: publicRoute.home() },
+              { label: 'Notes', href: publicRoute.collection('note') },
               { label: note.title },
             ]}
           />
@@ -182,7 +183,7 @@ export function NoteDetail({ note }: { note: ImmutablePublic<Note> }) {
                 View engineering profile <span aria-hidden="true">→</span>
               </FounderCrossLink>
             ) : null}
-            <Link href="/notes">
+            <Link href={publicRoute.collection('note')}>
               Return to Notes <span aria-hidden="true">→</span>
             </Link>
           </div>

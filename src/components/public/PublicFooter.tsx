@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { PUBLIC_NAVIGATION, PUBLIC_SITE } from '@/config/public-site';
+import { publicRoute } from '@/lib/public/routes';
 
 const contentLinks = PUBLIC_NAVIGATION.filter(
   (item) => item.type !== 'teamMember' && item.type !== 'service' && item.enabled,
@@ -45,7 +46,7 @@ export function PublicFooter() {
               ))}
               {PUBLIC_SITE.release.contact ? (
                 <li>
-                  <Link href="/contact?from=footer">Contact</Link>
+                  <Link href={publicRoute.contact({ from: 'footer' })}>Contact</Link>
                 </li>
               ) : null}
             </ul>

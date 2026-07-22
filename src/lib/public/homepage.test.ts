@@ -75,7 +75,6 @@ function source(record: ReturnType<typeof build>, thin = false): PublicDataSourc
       type === 'build' && slug === record.slug ? wrapped : null,
     findEntityById: async (type, id) => (type === 'build' && id === wrapped.id ? wrapped : null),
     listEntities: async (type) => (type === 'build' ? [wrapped] : []),
-    findInverseEntities: async () => [],
     findDocuments: async () =>
       thin
         ? [{ ...document(record._id, 'caseStudy'), blocks: [paragraph('only', 'short')] }]

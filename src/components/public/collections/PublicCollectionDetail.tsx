@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { PUBLIC_ENTITY_ROUTES } from '@/config/public-site';
 import type { ImmutablePublic, PublicEntityDetail, PublicRelationship } from '@/lib/public/domain';
+import { publicRoute } from '@/lib/public/routes';
 import {
   ContributorList,
   formatMetadata,
@@ -39,14 +40,7 @@ export function PublicCollectionDetail({ entity }: { entity: ImmutablePublic<Col
         : entity.type === 'blueprint'
           ? 'Blueprints'
           : 'Labs';
-  const collectionHref =
-    entity.type === 'work'
-      ? '/work'
-      : entity.type === 'build'
-        ? '/builds'
-        : entity.type === 'blueprint'
-          ? '/blueprints'
-          : '/labs';
+  const collectionHref = publicRoute.collection(entity.type);
   const lineage = entity.relationships.filter(
     (relationship) => relationship.kind === 'labGraduatedToBuild',
   );
@@ -128,7 +122,7 @@ export function PublicCollectionDetail({ entity }: { entity: ImmutablePublic<Col
         <PageContainer>
           <PublicBreadcrumbs
             items={[
-              { label: 'HubZero', href: '/' },
+              { label: 'HubZero', href: publicRoute.home() },
               { label: collection, href: collectionHref },
               { label: entity.title },
             ]}

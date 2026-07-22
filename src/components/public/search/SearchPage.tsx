@@ -4,6 +4,7 @@ import { PUBLIC_SEARCH_GROUPS } from '@/config/public-site';
 import { founderAccentStyle, getFounderIdentity } from '@/config/founder-identity';
 import type { PublicSearchResult } from '@/lib/public/discovery/search';
 import type { ImmutablePublic } from '@/lib/public/domain';
+import { publicRoute } from '@/lib/public/routes';
 import { formatMetadata, formatPublicDate, PublicEmptyState } from '../EditorialPrimitives';
 import { slugFromProfileUrl } from '../engineering/profile-url';
 import { PageContainer, PublicSection } from '../PageContainer';
@@ -34,7 +35,7 @@ export function SearchPage({
               technologies or relationships that connect them.
             </p>
           </div>
-          <form action="/search" role="search" className="search-form">
+          <form action={publicRoute.search()} role="search" className="search-form">
             <label htmlFor="public-search-page">Search HubZero</label>
             <div className="search-input-wrap">
               <Search aria-hidden="true" />
@@ -136,12 +137,16 @@ function SearchResultRow({ result }: { result: ImmutablePublic<PublicSearchResul
       : undefined;
 
   return (
-    <article className="search-result-row">
+    <article className="search-result-row public-connected-row">
       <div className="search-result-index">
         <span>{metadata.join(' / ') || formatMetadata(result.type)}</span>
       </div>
       <div className="search-result-copy">
-        <Link href={result.url} style={identity ? founderAccentStyle(identity.accent) : undefined}>
+        <Link
+          href={result.url}
+          className="search-result-primary"
+          style={identity ? founderAccentStyle(identity.accent) : undefined}
+        >
           <h4 className={identity ? 'founder-accent-text' : undefined}>{result.title}</h4>
           <span aria-hidden="true">→</span>
         </Link>

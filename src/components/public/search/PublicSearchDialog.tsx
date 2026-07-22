@@ -9,6 +9,7 @@ import { PUBLIC_SEARCH_GROUPS } from '@/config/public-site';
 import { founderAccentStyle, getFounderIdentity } from '@/config/founder-identity';
 import type { PublicSearchResult } from '@/lib/public/discovery/search';
 import { PUBLIC_TRANSITIONS } from '@/lib/public/motion';
+import { publicRoute } from '@/lib/public/routes';
 import { slugFromProfileUrl } from '../engineering/profile-url';
 
 export function PublicSearchDialog() {
@@ -199,7 +200,11 @@ export function PublicSearchDialog() {
                   </button>
                 </header>
 
-                <form action="/search" role="search" className="public-search-dialog-form">
+                <form
+                  action={publicRoute.search()}
+                  role="search"
+                  className="public-search-dialog-form"
+                >
                   <Search aria-hidden="true" />
                   <input
                     ref={inputRef}
@@ -251,7 +256,7 @@ export function PublicSearchDialog() {
                         Search titles, summaries, references, technologies, authors, and
                         relationships.
                       </p>
-                      <Link href="/search" onClick={close}>
+                      <Link href={publicRoute.search()} onClick={close}>
                         Open full search <span aria-hidden="true">→</span>
                       </Link>
                     </div>
@@ -315,11 +320,7 @@ export function PublicSearchDialog() {
                 <footer className="public-search-dialog-footer">
                   <span>↑↓ Select</span>
                   <span>↵ Open</span>
-                  <Link
-                    href={
-                      query.trim() ? `/search?q=${encodeURIComponent(query.trim())}` : '/search'
-                    }
-                  >
+                  <Link href={publicRoute.search(query.trim() ? { q: query.trim() } : undefined)}>
                     Full search
                   </Link>
                 </footer>

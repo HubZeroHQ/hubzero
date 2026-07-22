@@ -1,3 +1,5 @@
+import { publicRoute } from '@/lib/public/routes';
+
 export const PUBLIC_SITE = {
   name: 'HubZero',
   description:
@@ -11,8 +13,7 @@ export const PUBLIC_SITE = {
   socialImageWidth: 1200,
   socialImageHeight: 630,
   release: {
-    /** Keep crawler and feed release gates closed until LAUNCH_READINESS.md is approved. */
-    live: false,
+    live: true,
     search: true,
     feed: false,
     contact: true,
@@ -135,25 +136,25 @@ export const PUBLIC_HOME = {
       label: 'Labs',
       description:
         'Investigations in progress, with their stage and current evidence made explicit.',
-      href: '/labs',
+      href: publicRoute.collection('lab'),
       type: 'lab',
     },
     {
       label: 'Builds',
       description: 'Products shipped and maintained by HubZero.',
-      href: '/builds',
+      href: publicRoute.collection('build'),
       type: 'build',
     },
     {
       label: 'Work',
       description: 'Client problems resolved through engineering judgement.',
-      href: '/work',
+      href: publicRoute.collection('work'),
       type: 'work',
     },
     {
       label: 'Blueprints',
       description: 'Proven information architectures and design languages made reusable.',
-      href: '/blueprints',
+      href: publicRoute.collection('blueprint'),
       type: 'blueprint',
     },
   ],
@@ -185,28 +186,28 @@ export const PUBLIC_ABOUT = {
       verb: 'Investigate',
       description:
         'Open questions become bounded explorations with a stage, current milestone, evidence, and an honest graduation criterion.',
-      href: '/labs',
+      href: publicRoute.collection('lab'),
     },
     {
       label: 'Builds',
       verb: 'Ship',
       description:
         'Useful internal products are documented through their current state, architecture, decisions, and continuing maintenance.',
-      href: '/builds',
+      href: publicRoute.collection('build'),
     },
     {
       label: 'Work',
       verb: 'Apply',
       description:
         'Client work begins with the constraint and records the decisions, implementation, outcome, and lessons that followed.',
-      href: '/work',
+      href: publicRoute.collection('work'),
     },
     {
       label: 'Blueprints',
       verb: 'Generalise',
       description:
         'Patterns that hold up become reusable foundations with an explicit information architecture and design language.',
-      href: '/blueprints',
+      href: publicRoute.collection('blueprint'),
     },
   ],
   principles: [
@@ -241,45 +242,51 @@ export const PUBLIC_ABOUT = {
  * the fuller `PUBLIC_HOME.pillars` copy.
  */
 export const PUBLIC_NAVIGATION = [
-  { label: 'Work', href: '/work', type: 'work', enabled: true, description: 'Client case studies' },
+  {
+    label: 'Work',
+    href: publicRoute.collection('work'),
+    type: 'work',
+    enabled: true,
+    description: 'Client case studies',
+  },
   {
     label: 'Builds',
-    href: '/builds',
+    href: publicRoute.collection('build'),
     type: 'build',
     enabled: true,
     description: 'Products HubZero ships',
   },
   {
     label: 'Blueprints',
-    href: '/blueprints',
+    href: publicRoute.collection('blueprint'),
     type: 'blueprint',
     enabled: true,
     description: 'Reusable engineering foundations',
   },
   {
     label: 'Labs',
-    href: '/labs',
+    href: publicRoute.collection('lab'),
     type: 'lab',
     enabled: true,
     description: 'Investigations in progress',
   },
   {
     label: 'Notes',
-    href: '/notes',
+    href: publicRoute.collection('note'),
     type: 'note',
     enabled: true,
     description: 'Short-form engineering journal',
   },
   {
     label: 'Services',
-    href: '/services',
+    href: publicRoute.collection('service'),
     type: 'service',
     enabled: false,
     description: 'Capability by evidence',
   },
   {
     label: 'About',
-    href: '/about',
+    href: publicRoute.about(),
     type: 'teamMember',
     enabled: true,
     description: 'Team & operating model',

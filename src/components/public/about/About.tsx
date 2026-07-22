@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { PUBLIC_ABOUT } from '@/config/public-site';
+import { publicRoute } from '@/lib/public/routes';
 import {
   founderAccentStyle,
   founderMotifViewTransitionStyle,
@@ -142,7 +143,7 @@ export function About({
                 return (
                   <article
                     key={`${member.group}-${member.title}`}
-                    className="about-person"
+                    className={linkEligible ? 'about-person about-person-linkable' : 'about-person'}
                     style={identity ? founderAccentStyle(identity.accent) : undefined}
                   >
                     <div className="about-person-portrait">
@@ -247,7 +248,7 @@ export function About({
             <p className="home-eyebrow">Engineering Profiles / demonstrated practice</p>
             <h2>Follow the work through the people accountable for it.</h2>
           </div>
-          <Link href="/engineering">
+          <Link href={publicRoute.collection('engineeringProfile')}>
             Browse engineering profiles <span aria-hidden="true">→</span>
           </Link>
         </PageContainer>

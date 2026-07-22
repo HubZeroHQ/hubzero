@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { publicRoute } from '@/lib/public/routes';
 
 const COPY = {
   notFound: {
@@ -35,7 +36,7 @@ export function PublicStatusPage({
           <p>{copy.description}</p>
           <div className="mt-8 flex flex-wrap gap-3">
             {action ?? (
-              <Link href="/" className="public-button-secondary">
+              <Link href={publicRoute.home()} className="public-button-secondary">
                 Return to HubZero
               </Link>
             )}

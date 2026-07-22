@@ -28,7 +28,6 @@ export interface PublicDataSource {
   findEntityBySlug(type: PublicEntityType, slug: string): Promise<StudioPublicEntity | null>;
   findEntityById(type: PublicEntityType, id: string): Promise<StudioPublicEntity | null>;
   listEntities(type: PublicEntityType): Promise<StudioPublicEntity[]>;
-  findInverseEntities(type: PublicEntityType, id: string): Promise<StudioPublicEntity[]>;
   findDocuments(ownerType: DocumentRecord['ownerType'], ownerId: string): Promise<DocumentRecord[]>;
   findMedia(ids: readonly string[]): Promise<MediaAsset[]>;
   findTaxonomy(ids: readonly string[]): Promise<TaxonomyEntry[]>;

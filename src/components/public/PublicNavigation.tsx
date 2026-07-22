@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef } from 'react';
 import { PUBLIC_NAVIGATION, PUBLIC_SITE } from '@/config/public-site';
+import { publicRoute } from '@/lib/public/routes';
 import { PublicMobileNav } from './PublicMobileNav';
 import { PublicSearchDialog } from './search/PublicSearchDialog';
 
@@ -21,7 +22,7 @@ export function PublicNavigation() {
   return (
     <header className="public-nav-wrap">
       <nav className="public-nav" aria-label="Primary navigation">
-        <Link href="/" className="public-nav-brand" aria-label="HubZero home">
+        <Link href={publicRoute.home()} className="public-nav-brand" aria-label="HubZero home">
           <Image
             src="/brand/hubzero-logo-white.png"
             alt=""
@@ -53,7 +54,7 @@ export function PublicNavigation() {
         <PublicMobileNav items={activeItems} />
         {PUBLIC_SITE.release.search ? <PublicSearchDialog /> : null}
         {PUBLIC_SITE.release.contact ? (
-          <Link href="/contact?from=navigation" className="public-nav-contact">
+          <Link href={publicRoute.contact({ from: 'navigation' })} className="public-nav-contact">
             Contact
           </Link>
         ) : null}

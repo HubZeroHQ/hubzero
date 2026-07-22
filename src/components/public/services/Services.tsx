@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { PUBLIC_ENTITY_ROUTES, PUBLIC_SERVICES } from '@/config/public-site';
 import type { ImmutablePublic, PublicServiceSummary } from '@/lib/public/domain';
+import { publicRoute } from '@/lib/public/routes';
 import { PublicEmptyState, relationshipKey } from '../EditorialPrimitives';
 import { PageContainer, PublicSection } from '../PageContainer';
 
@@ -170,7 +171,7 @@ export function Services({
                 <li key={boundary}>{boundary}</li>
               ))}
             </ul>
-            <Link href="/contact?from=services">
+            <Link href={publicRoute.contact({ from: 'services' })}>
               Start with the problem <span aria-hidden="true">→</span>
             </Link>
           </div>

@@ -1128,10 +1128,30 @@
   }
 
   .home-technologies li {
-    padding: 7px 10px;
     border: 1px solid var(--color-border-default);
     border-radius: 100px;
     color: var(--color-text-secondary);
+    transition:
+      border-color var(--duration-fast) var(--ease-standard),
+      background-color var(--duration-fast) var(--ease-standard),
+      color var(--duration-fast) var(--ease-standard);
+  }
+
+  .home-technologies a {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    min-height: 32px;
+    align-items: center;
+    padding: 7px 10px;
+    border-radius: inherit;
+  }
+
+  .home-technologies li:hover,
+  .home-technologies li:has(a:focus-visible) {
+    border-color: var(--color-border-strong);
+    background: var(--color-surface-elevated);
+    color: var(--color-text-primary);
   }
 
   .home-relationships {
@@ -2909,10 +2929,18 @@
   }
 
   .search-result-row {
+    position: relative;
     display: grid;
     gap: 24px;
     padding-block: 32px;
     border-bottom: 1px solid var(--color-border-muted);
+    cursor: pointer;
+    transition: background-color var(--duration-fast) var(--ease-standard);
+  }
+
+  .search-result-row:hover,
+  .search-result-row:has(a:focus-visible) {
+    background-color: var(--color-surface-default);
   }
 
   .search-result-index {
@@ -2930,6 +2958,17 @@
     grid-template-columns: minmax(0, 1fr) auto;
     gap: 24px;
     align-items: center;
+  }
+
+  .search-result-primary::after {
+    position: absolute;
+    inset: 0;
+    content: '';
+  }
+
+  .search-relationship-matches a {
+    position: relative;
+    z-index: 1;
   }
 
   .search-result-copy h4 {
@@ -3221,6 +3260,7 @@
   }
 
   .services-evidence-ledger nav li {
+    position: relative;
     display: grid;
     grid-template-columns: minmax(84px, 0.4fr) minmax(0, 1.6fr);
     gap: 16px;
@@ -3246,6 +3286,22 @@
     color: var(--color-text-secondary);
     font-size: 14px;
     transition: color var(--duration-fast) var(--ease-standard);
+  }
+
+  .services-evidence-ledger nav a::after {
+    position: absolute;
+    inset: 0;
+    content: '';
+  }
+
+  .services-evidence-ledger nav li:has(a) {
+    cursor: pointer;
+    transition: background-color var(--duration-fast) var(--ease-standard);
+  }
+
+  .services-evidence-ledger nav li:has(a):hover,
+  .services-evidence-ledger nav li:has(a:focus-visible) {
+    background-color: var(--color-surface-elevated);
   }
 
   .services-evidence-ledger nav a:hover {
@@ -3848,9 +3904,20 @@
     transition: border-color var(--duration-fast) var(--ease-standard);
   }
 
-  .about-person:hover,
-  .about-person:focus-within {
+  .about-person-linkable {
+    position: relative;
+    cursor: pointer;
+  }
+
+  .about-person-linkable:hover,
+  .about-person-linkable:focus-within {
     border-color: var(--founder-accent, var(--color-border-strong));
+  }
+
+  .about-person-linkable .about-person-content a::after {
+    position: absolute;
+    inset: 0;
+    content: '';
   }
 
   .about-person-portrait {
@@ -3969,15 +4036,15 @@
     transition-delay: calc(var(--duration-motif) * 0.55);
   }
 
-  .about-person:hover .about-person-motif .founder-motif-trace,
-  .about-person:focus-within .about-person-motif .founder-motif-trace {
+  .about-person-linkable:hover .about-person-motif .founder-motif-trace,
+  .about-person-linkable:focus-within .about-person-motif .founder-motif-trace {
     stroke-dashoffset: 0;
   }
 
-  .about-person:hover .about-person-motif .founder-motif-node,
-  .about-person:hover .about-person-motif .founder-motif-hub,
-  .about-person:focus-within .about-person-motif .founder-motif-node,
-  .about-person:focus-within .about-person-motif .founder-motif-hub {
+  .about-person-linkable:hover .about-person-motif .founder-motif-node,
+  .about-person-linkable:hover .about-person-motif .founder-motif-hub,
+  .about-person-linkable:focus-within .about-person-motif .founder-motif-node,
+  .about-person-linkable:focus-within .about-person-motif .founder-motif-hub {
     opacity: 1;
   }
 
@@ -4003,12 +4070,6 @@
     border: 1px solid var(--color-border-default);
     border-radius: var(--radius-card);
     background: var(--color-surface-default);
-    transition: border-color var(--duration-fast) var(--ease-standard);
-  }
-
-  .about-team-compact-card:hover,
-  .about-team-compact-card:focus-within {
-    border-color: var(--color-border-strong);
   }
 
   .about-team-compact-name {
@@ -4191,6 +4252,11 @@
     border-radius: 0;
     background: none;
     color: var(--color-text-muted);
+  }
+
+  .engineering-card-body .home-technologies a {
+    min-height: 24px;
+    padding: 0;
   }
 
   .engineering-card-body .home-technologies li:not(:last-child)::after {
