@@ -908,7 +908,6 @@ function isHomepageEligible(detail: PublicEntityDetail, now: Date): boolean {
     case 'build':
       return (
         Boolean(detail.hero) &&
-        detail.links.some((link) => link.kind === 'live') &&
         detail.documents.filter((document) => ['caseStudy', 'technical'].includes(document.role))
           .length >= 2 &&
         detail.documents

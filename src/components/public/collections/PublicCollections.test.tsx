@@ -74,6 +74,19 @@ describe('Builds and Labs public collections', () => {
     expect(markup).toContain('href="/search?q=TypeScript"');
   });
 
+  it('keeps retired Builds in the main collection with an editorial badge', () => {
+    const markup = renderToStaticMarkup(
+      <PublicCollectionIndex
+        type="build"
+        entries={[{ ...buildSummary, deploymentState: 'retired', state: 'retired', links: [] }]}
+      />,
+    );
+
+    expect(markup).toContain('href="/builds/release-ledger"');
+    expect(markup).toContain('data-tone="historical"');
+    expect(markup).toContain('Retired');
+  });
+
   it('renders Work category filters as URL-addressable server navigation', () => {
     const markup = renderToStaticMarkup(
       <PublicCollectionIndex

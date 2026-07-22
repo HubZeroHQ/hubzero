@@ -7,6 +7,7 @@ import {
   formatMetadata,
   formatPublicDate,
   PublicBreadcrumbs,
+  PublicBuildStateBadge,
   RelationshipCard,
   relationshipKey,
   TechnologyList,
@@ -281,7 +282,12 @@ export function PublicCollectionDetail({ entity }: { entity: ImmutablePublic<Col
           <div>
             <p className="home-eyebrow">Publication record</p>
             <p>
-              {entity.referenceId} / {formatMetadata(entity.state ?? entity.type)}
+              {entity.referenceId} /{' '}
+              {entity.type === 'build' ? (
+                <PublicBuildStateBadge state={entity.deploymentState} />
+              ) : (
+                formatMetadata(entity.state ?? entity.type)
+              )}
             </p>
           </div>
           <Link href={collectionHref}>
@@ -305,7 +311,6 @@ function DetailRegister({ entity }: { entity: ImmutablePublic<CollectionDetail> 
       : entity.type === 'build'
         ? [
             ['Reference', entity.referenceId],
-            ['State', formatMetadata(entity.deploymentState)],
             [
               'Technology',
               entity.technologies.length ? `${entity.technologies.length} listed` : 'Not listed',
@@ -335,6 +340,14 @@ function DetailRegister({ entity }: { entity: ImmutablePublic<CollectionDetail> 
   return (
     <aside className="detail-register" aria-label={`${entity.title} publication metadata`}>
       <dl>
+        {entity.type === 'build' ? (
+          <div>
+            <dt>Maintenance status</dt>
+            <dd>
+              <PublicBuildStateBadge state={entity.deploymentState} />
+            </dd>
+          </div>
+        ) : null}
         {values.map(([term, value]) => (
           <div key={term}>
             <dt>{term}</dt>

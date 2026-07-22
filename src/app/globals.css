@@ -1081,6 +1081,28 @@
     line-height: 1.4;
   }
 
+  .public-build-state {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    padding: 3px 8px;
+    border: 1px solid var(--color-border-default);
+    border-radius: 100px;
+    background: var(--color-surface-elevated);
+    color: var(--color-text-secondary);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .public-build-state[data-tone='historical'] {
+    background: var(--color-surface-default);
+    color: var(--color-text-muted);
+  }
+
   .home-metadata > div:not(:last-child)::after,
   .home-publication-meta > span:not(:last-child)::after {
     content: '/';
@@ -1180,6 +1202,10 @@
     transition:
       background-color var(--duration-fast) var(--ease-standard),
       color var(--duration-fast) var(--ease-standard);
+  }
+
+  .home-relationship-card:has(.public-build-state) {
+    grid-template-columns: minmax(96px, 0.5fr) 1fr auto auto;
   }
 
   a.home-relationship-card:hover,
@@ -2958,6 +2984,8 @@
   }
 
   .search-result-index {
+    display: grid;
+    gap: 8px;
     padding-top: 6px;
     overflow-wrap: anywhere;
   }

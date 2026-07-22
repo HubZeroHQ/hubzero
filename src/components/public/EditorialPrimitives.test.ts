@@ -80,6 +80,26 @@ describe('RelationshipCard list rendering', () => {
     expect(markup).toContain('class="home-relationship-card" href="/about"');
     expect(markup).not.toContain('tabindex');
   });
+
+  it('labels retired Build relationship targets with the shared editorial badge', () => {
+    const relationship: PublicRelationship = {
+      kind: 'buildAppliedInWork',
+      label: 'Informed by',
+      target: {
+        type: 'build',
+        title: 'Historical product',
+        url: '/builds/historical-product',
+        state: 'retired',
+      },
+    };
+    const markup = renderToStaticMarkup(
+      createElement(RelationshipCard, { relationship, enabled: true }),
+    );
+
+    expect(markup).toContain('class="public-build-state"');
+    expect(markup).toContain('data-tone="historical"');
+    expect(markup).toContain('Retired');
+  });
 });
 
 describe('TechnologyList navigation', () => {

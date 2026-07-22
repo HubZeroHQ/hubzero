@@ -37,6 +37,18 @@ describe('public search page', () => {
     expect(markup).toContain('class="search-result-primary"');
   });
 
+  it('shows the shared retired treatment for historical Build results', () => {
+    const markup = renderToStaticMarkup(
+      createElement(SearchPage, {
+        query: 'release',
+        results: [{ ...result, state: 'retired' }],
+      }),
+    );
+
+    expect(markup).toContain('data-tone="historical"');
+    expect(markup).toContain('Retired');
+  });
+
   it('keeps no-results and unavailable states explicit', () => {
     expect(
       renderToStaticMarkup(createElement(SearchPage, { query: 'missing', results: [] })),

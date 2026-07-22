@@ -10,6 +10,7 @@ import { founderAccentStyle, getFounderIdentity } from '@/config/founder-identit
 import type { PublicSearchResult } from '@/lib/public/discovery/search';
 import { PUBLIC_TRANSITIONS } from '@/lib/public/motion';
 import { publicRoute } from '@/lib/public/routes';
+import { PublicBuildStateBadge } from '../EditorialPrimitives';
 import { slugFromProfileUrl } from '../engineering/profile-url';
 
 export function PublicSearchDialog() {
@@ -305,6 +306,9 @@ export function PublicSearchDialog() {
                                       {result.title}
                                     </strong>
                                     <small>{result.summary}</small>
+                                    {result.type === 'build' && result.state ? (
+                                      <PublicBuildStateBadge state={result.state} />
+                                    ) : null}
                                   </span>
                                   <span aria-hidden="true">→</span>
                                 </Link>

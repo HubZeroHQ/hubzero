@@ -1,6 +1,10 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { founderAccentStyle, getFounderIdentity } from '@/config/founder-identity';
+import {
+  getPublicBuildStatePresentation,
+  type PublicBuildState,
+} from '@/lib/public/build-presentation';
 import type {
   ImmutablePublic,
   PublicEntitySummary,
@@ -98,7 +102,9 @@ export function MetadataRow({ entity }: { entity: ImmutablePublic<PublicEntitySu
     values.push(entity.architecture, entity.designLanguage, `v${entity.version}`);
   }
   if (entity.type === 'engineeringProfile') values.push(entity.role);
-  if (entity.state && entity.type !== 'blueprint') values.push(entity.state);
+  if (entity.state && entity.type !== 'blueprint' && entity.type !== 'build') {
+    values.push(entity.state);
+  }
 
   return (
     <dl className="home-metadata" aria-label={`${entity.title} metadata`}>
@@ -108,7 +114,30 @@ export function MetadataRow({ entity }: { entity: ImmutablePublic<PublicEntitySu
           <dd>{entity.type === 'blueprint' && index > 0 ? value : formatMetadata(value)}</dd>
         </div>
       ))}
+      {entity.type === 'build' ? (
+        <div>
+          <dt className="sr-only">Maintenance status</dt>
+          <dd>
+            <PublicBuildStateBadge state={entity.deploymentState} />
+          </dd>
+        </div>
+      ) : null}
     </dl>
+  );
+}
+
+export function PublicBuildStateBadge({ state }: { state: PublicBuildState | string }) {
+  const presentation = getPublicBuildStatePresentation(state);
+  if (!presentation) return null;
+
+  return (
+    <span
+      className="public-build-state"
+      data-tone={presentation.tone}
+      title={presentation.description}
+    >
+      {presentation.label}
+    </span>
   );
 }
 
@@ -239,6 +268,9 @@ export function RelationshipCard({
       <strong className={identity ? 'founder-accent-text' : undefined}>
         {relationship.target.title}
       </strong>
+      {relationship.target.type === 'build' && relationship.target.state ? (
+        <PublicBuildStateBadge state={relationship.target.state} />
+      ) : null}
       {enabled ? <span aria-hidden="true">→</span> : null}
     </>
   );

@@ -5,7 +5,12 @@ import { founderAccentStyle, getFounderIdentity } from '@/config/founder-identit
 import type { PublicSearchResult } from '@/lib/public/discovery/search';
 import type { ImmutablePublic } from '@/lib/public/domain';
 import { publicRoute } from '@/lib/public/routes';
-import { formatMetadata, formatPublicDate, PublicEmptyState } from '../EditorialPrimitives';
+import {
+  formatMetadata,
+  formatPublicDate,
+  PublicBuildStateBadge,
+  PublicEmptyState,
+} from '../EditorialPrimitives';
 import { slugFromProfileUrl } from '../engineering/profile-url';
 import { PageContainer, PublicSection } from '../PageContainer';
 
@@ -125,7 +130,7 @@ function SearchResultRow({ result }: { result: ImmutablePublic<PublicSearchResul
   const metadata = [
     result.referenceId,
     result.author?.name,
-    result.state
+    result.state && result.type !== 'build'
       ? result.type === 'note'
         ? formatPublicDate(result.state)
         : formatMetadata(result.state)
@@ -140,6 +145,9 @@ function SearchResultRow({ result }: { result: ImmutablePublic<PublicSearchResul
     <article className="search-result-row public-connected-row">
       <div className="search-result-index">
         <span>{metadata.join(' / ') || formatMetadata(result.type)}</span>
+        {result.type === 'build' && result.state ? (
+          <PublicBuildStateBadge state={result.state} />
+        ) : null}
       </div>
       <div className="search-result-copy">
         <Link

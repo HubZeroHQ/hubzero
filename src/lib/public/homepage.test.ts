@@ -108,4 +108,17 @@ describe('homepage public projection', () => {
     const projection = await createPublicRepository(source(build(false))).getHomepage(now);
     expect(projection.builds).toEqual([]);
   });
+
+  it('keeps a featured retired Build eligible without a live deployment URL', async () => {
+    const retiredBuild = {
+      ...build(),
+      deploymentState: 'retired' as const,
+      liveUrl: undefined,
+    };
+    const projection = await createPublicRepository(source(retiredBuild)).getHomepage(now);
+
+    expect(projection.builds).toHaveLength(1);
+    expect(projection.builds[0]?.entity.deploymentState).toBe('retired');
+    expect(projection.builds[0]?.entity.links.some((link) => link.kind === 'live')).toBe(false);
+  });
 });
