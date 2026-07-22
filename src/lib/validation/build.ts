@@ -9,6 +9,7 @@ import {
 /** PLANNING.md §26.2. Owns two Documents (`caseStudy`, `technical`) via the general ownership model (§25) — not modeled here. */
 export const buildSchema = z.object({
   title: z.string().min(1),
+  summary: z.string().trim().min(1).max(320),
   slug: slugSchema,
   status: publishStatusSchema.default('draft'),
   deploymentState: buildDeploymentStateSchema,

@@ -1,6 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import type { PublicHomepageProjection } from '@/lib/public/domain';
+import { compareHomepageEngineeringProfiles } from '@/lib/public/repository';
 import { Homepage } from './Homepage';
 
 const emptyProjection: PublicHomepageProjection = {
@@ -12,6 +13,104 @@ const emptyProjection: PublicHomepageProjection = {
 };
 
 describe('Homepage', () => {
+  it('uses deterministic contribution-count then name ordering for profiles', () => {
+    const feature = (title: string, count: number) =>
+      ({
+        entity: { title },
+        relationships: Array.from({ length: count }, () => ({ kind: 'teamContributedToEntry' })),
+      }) as never;
+    const ordered = [feature('Zed', 1), feature('Ada', 3), feature('Bea', 3)].sort(
+      compareHomepageEngineeringProfiles,
+    );
+
+    expect(ordered.map((entry: { entity: { title: string } }) => entry.entity.title)).toEqual([
+      'Ada',
+      'Bea',
+      'Zed',
+    ]);
+  });
+
+  it('renders multiple accountable engineering profiles and their connected contributions', () => {
+    const projection: PublicHomepageProjection = {
+      ...emptyProjection,
+      profiles: [
+        {
+          entity: {
+            type: 'engineeringProfile',
+            title: 'Rifaque Ahmed',
+            url: '/engineering/rifaque',
+            slug: 'rifaque',
+            referenceId: 'EP-001',
+            summary: 'Builds public systems.',
+            role: 'Systems engineer',
+            engineeringIdentity: [],
+            currentExploration: 'Public graphs',
+            technologies: [],
+          },
+          relationships: [
+            {
+              kind: 'teamContributedToEntry',
+              label: 'Contributor',
+              target: { type: 'build', title: 'QueryCraft', url: '/builds/querycraft' },
+            },
+          ],
+        },
+        {
+          entity: {
+            type: 'engineeringProfile',
+            title: 'Sultan',
+            url: '/engineering/sultan',
+            slug: 'sultan',
+            referenceId: 'EP-002',
+            summary: 'Documents engineering decisions.',
+            role: 'Engineer',
+            engineeringIdentity: [],
+            currentExploration: 'Evidence',
+            technologies: [],
+          },
+          relationships: [
+            {
+              kind: 'teamContributedToEntry',
+              label: 'Contributor',
+              target: {
+                type: 'build',
+                title: 'Bhatkal Time Luxe',
+                url: '/builds/bhatkal-time-luxe',
+              },
+            },
+            {
+              kind: 'teamContributedToEntry',
+              label: 'Contributor',
+              target: { type: 'build', title: 'Nexus', url: '/builds/nexus' },
+            },
+            {
+              kind: 'teamContributedToEntry',
+              label: 'Contributor',
+              target: { type: 'build', title: 'Atlas', url: '/builds/atlas' },
+            },
+            {
+              kind: 'teamContributedToEntry',
+              label: 'Contributor',
+              target: { type: 'build', title: 'Signal', url: '/builds/signal' },
+            },
+          ],
+        },
+      ],
+    };
+
+    const markup = renderToStaticMarkup(<Homepage projection={projection} />);
+
+    expect(markup).toContain('Rifaque Ahmed');
+    expect(markup).toContain('Sultan');
+    expect(markup).toContain('QueryCraft');
+    expect(markup).toContain('Bhatkal Time Luxe');
+    expect(markup).toContain('Nexus');
+    expect(markup).toContain('Atlas');
+    expect(markup).not.toContain('Signal');
+    expect(markup).toContain('+1 more contribution');
+    expect(projection.profiles[1]?.relationships).toHaveLength(4);
+  });
+
   it('keeps the complete narrative rhythm without rendering empty content chapters', () => {
     const markup = renderToStaticMarkup(<Homepage projection={emptyProjection} />);
 

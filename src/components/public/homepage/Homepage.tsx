@@ -226,17 +226,6 @@ export function Homepage({
               }
               description="Profiles connect engineering positions to the evidence that supports them."
             />
-            {(() => {
-              const featured = profiles.find((feature) => feature.relationships.length);
-              return featured ? (
-                <div className="home-section-artifact">
-                  <RelationshipGraph
-                    subject={{ label: featured.entity.title, meta: 'Engineer' }}
-                    relationships={featured.relationships}
-                  />
-                </div>
-              ) : null;
-            })()}
             <div className="home-profile-grid">
               {profiles.map((feature) => (
                 <EditorialCard

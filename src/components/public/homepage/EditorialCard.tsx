@@ -55,7 +55,7 @@ export function EditorialCard({
         <TechnologyList technologies={entity.technologies} />
         {relationships.length ? (
           <div className="home-relationships" aria-label="Connected evidence">
-            {relationships.slice(0, 3).map((relationship) => (
+            {relationships.map((relationship) => (
               <RelationshipCard
                 key={relationshipKey(relationship)}
                 relationship={relationship}
@@ -89,17 +89,55 @@ export function EditorialCard({
         <PublicationMetadata entity={entity} />
         <TechnologyList technologies={entity.technologies} />
         {relationships.length ? (
-          <div className="home-relationships" aria-label="Connected evidence">
-            {relationships.map((relationship) => (
-              <RelationshipCard
-                key={relationshipKey(relationship)}
-                relationship={relationship}
-                enabled={Boolean(relationshipRoutes[relationship.target.type])}
-              />
-            ))}
-          </div>
+          entity.type === 'engineeringProfile' ? (
+            <ProfileContributions
+              relationships={relationships}
+              relationshipRoutes={relationshipRoutes}
+            />
+          ) : (
+            <div className="home-relationships" aria-label="Connected evidence">
+              {relationships.map((relationship) => (
+                <RelationshipCard
+                  key={relationshipKey(relationship)}
+                  relationship={relationship}
+                  enabled={Boolean(relationshipRoutes[relationship.target.type])}
+                />
+              ))}
+            </div>
+          )
         ) : null}
       </div>
     </article>
+  );
+}
+
+function ProfileContributions({
+  relationships,
+  relationshipRoutes,
+}: {
+  relationships: readonly ImmutablePublic<PublicHomepageFeature>['relationships'][number][];
+  relationshipRoutes: Readonly<Record<string, boolean>>;
+}) {
+  const contributions = relationships.filter(
+    (relationship) => relationship.kind === 'teamContributedToEntry',
+  );
+  const visible = contributions.slice(0, 3);
+  const remaining = contributions.length - visible.length;
+
+  return (
+    <div className="home-relationships" aria-label="Public contributions">
+      {visible.map((relationship) => (
+        <RelationshipCard
+          key={relationshipKey(relationship)}
+          relationship={relationship}
+          enabled={Boolean(relationshipRoutes[relationship.target.type])}
+        />
+      ))}
+      {remaining > 0 ? (
+        <div className="home-relationship-card home-relationship-summary">
+          +{remaining} more contribution{remaining === 1 ? '' : 's'}
+        </div>
+      ) : null}
+    </div>
   );
 }

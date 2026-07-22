@@ -92,6 +92,7 @@ export default async function EditBuildPage({ params }: { params: Promise<{ id: 
         submitLabel="Save changes"
         initialValues={{
           title: build.title,
+          summary: build.summary,
           slug: build.slug,
           deploymentState: build.deploymentState,
           liveUrl: build.liveUrl,

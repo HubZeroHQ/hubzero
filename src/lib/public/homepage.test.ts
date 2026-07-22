@@ -1,7 +1,7 @@
 import { ObjectId } from 'mongodb';
 import { describe, expect, it } from 'vitest';
 import type { DocumentRecord } from '@/lib/documents/schema';
-import type { Build, MediaAsset } from '@/types/studio';
+import type { Build, MediaAsset, Team } from '@/types/studio';
 import { createPublicRepository } from './repository';
 import type { PublicDataSource, StudioPublicEntity } from './source';
 
@@ -30,7 +30,7 @@ function document(ownerId: ObjectId, role: 'caseStudy' | 'technical'): DocumentR
   };
 }
 
-function build(featured = true): Build & { productSummary: string } {
+function build(featured = true): Build {
   return {
     _id: new ObjectId(),
     createdAt: now,
@@ -40,7 +40,7 @@ function build(featured = true): Build & { productSummary: string } {
     slug: 'public-build',
     referenceId: 'HZ-BL-101',
     title: 'Public build',
-    productSummary: 'A product with a complete, evidence-backed public record.',
+    summary: 'A product with a complete, evidence-backed public record.',
     deploymentState: 'live',
     liveUrl: 'https://example.com/product',
     technologyIds: [],
@@ -52,7 +52,11 @@ function build(featured = true): Build & { productSummary: string } {
   };
 }
 
-function source(record: ReturnType<typeof build>, thin = false): PublicDataSource {
+function source(
+  record: ReturnType<typeof build>,
+  thin = false,
+  contributors: Team[] = [],
+): PublicDataSource {
   const wrapped: StudioPublicEntity = {
     type: 'build',
     id: record._id.toString(),
@@ -73,8 +77,24 @@ function source(record: ReturnType<typeof build>, thin = false): PublicDataSourc
   return {
     findEntityBySlug: async (type, slug) =>
       type === 'build' && slug === record.slug ? wrapped : null,
-    findEntityById: async (type, id) => (type === 'build' && id === wrapped.id ? wrapped : null),
-    listEntities: async (type) => (type === 'build' ? [wrapped] : []),
+    findEntityById: async (type, id) => {
+      if (type === 'build' && id === wrapped.id) return wrapped;
+      const contributor = contributors.find(
+        (entry) => type === 'teamMember' && entry._id.toString() === id,
+      );
+      return contributor ? { type: 'teamMember', id, record: contributor } : null;
+    },
+    listEntities: async (type) => {
+      if (type === 'build') return [wrapped];
+      if (type === 'teamMember') {
+        return contributors.map((record) => ({
+          type: 'teamMember' as const,
+          id: record._id.toString(),
+          record,
+        }));
+      }
+      return [];
+    },
     findDocuments: async () =>
       thin
         ? [{ ...document(record._id, 'caseStudy'), blocks: [paragraph('only', 'short')] }]
@@ -84,6 +104,26 @@ function source(record: ReturnType<typeof build>, thin = false): PublicDataSourc
     findUser: async () => null,
     findTeamsByUserId: async () => [],
     findProfileByTeamId: async () => null,
+  };
+}
+
+function contributor(name: string, referenceId: `HZ-TM-${string}`): Team {
+  return {
+    _id: new ObjectId(),
+    createdAt: now,
+    updatedAt: now,
+    referenceId,
+    name,
+    role: 'Engineer',
+    bio: `${name} contributes to the product record.`,
+    group: 'Engineering Team',
+    publicProfile: true,
+    founder: false,
+    publicCategory: 'team',
+    engineeringProfileEligible: true,
+    order: 0,
+    socialLinks: [],
+    archived: false,
   };
 }
 
@@ -120,5 +160,29 @@ describe('homepage public projection', () => {
     expect(projection.builds).toHaveLength(1);
     expect(projection.builds[0]?.entity.deploymentState).toBe('retired');
     expect(projection.builds[0]?.entity.links.some((link) => link.kind === 'live')).toBe(false);
+  });
+
+  it('preserves the complete contributor relationship graph across homepage and detail projections', async () => {
+    const contributors = [
+      contributor('Rifaque Ahmed', 'HZ-TM-001'),
+      contributor('Raif Karani', 'HZ-TM-002'),
+      contributor('Sultan', 'HZ-TM-003'),
+    ];
+    const record = { ...build(), contributors: contributors.map((entry) => entry._id) };
+    const repository = createPublicRepository(source(record, false, contributors));
+
+    const [homepage, detail] = await Promise.all([
+      repository.getHomepage(now),
+      repository.findDetail('build', record.slug),
+    ]);
+    const homepageRelationships = homepage.builds[0]?.relationships ?? [];
+    const detailRelationships = detail?.type === 'build' ? detail.relationships : [];
+
+    expect(homepageRelationships).toEqual(detailRelationships);
+    expect(
+      homepageRelationships
+        .filter((relationship) => relationship.kind === 'teamContributedToEntry')
+        .map((relationship) => relationship.target.title),
+    ).toEqual(['Rifaque Ahmed', 'Raif Karani', 'Sultan']);
   });
 });

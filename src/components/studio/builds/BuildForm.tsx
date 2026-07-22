@@ -13,6 +13,7 @@ import type { BuildDeploymentState } from '@/types/studio';
 
 export interface BuildFormValues {
   title: string;
+  summary: string;
   slug: string;
   deploymentState: BuildDeploymentState;
   liveUrl?: string;
@@ -73,6 +74,23 @@ export function BuildForm({
 
       <Field label="Title" name="title" error={state.fieldErrors?.title}>
         <Input id="title" name="title" defaultValue={initialValues?.title} required />
+      </Field>
+
+      <Field
+        label="Public summary"
+        name="summary"
+        error={state.fieldErrors?.summary}
+        hint="A concise product description — not the case study. Used in public indexes, metadata, and search."
+      >
+        <textarea
+          id="summary"
+          name="summary"
+          rows={4}
+          maxLength={320}
+          defaultValue={initialValues?.summary}
+          className={fieldClassName}
+          required
+        />
       </Field>
 
       <Field

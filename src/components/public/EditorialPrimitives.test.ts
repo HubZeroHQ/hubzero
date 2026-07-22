@@ -99,6 +99,18 @@ describe('RelationshipCard list rendering', () => {
     expect(markup).toContain('class="public-build-state"');
     expect(markup).toContain('data-tone="historical"');
     expect(markup).toContain('Retired');
+    expect(markup).toContain('class="home-relationship-title"');
+    expect(markup).toContain('class="home-relationship-status"');
+  });
+
+  it('keeps a status region present when a relationship has no badge', () => {
+    const relationship = teamContributor('HZ-TM-001', 'Current contributor');
+    const markup = renderToStaticMarkup(
+      createElement(RelationshipCard, { relationship, enabled: true }),
+    );
+
+    expect(markup).toContain('class="home-relationship-title"');
+    expect(markup).toContain('class="home-relationship-status"></span>');
   });
 });
 

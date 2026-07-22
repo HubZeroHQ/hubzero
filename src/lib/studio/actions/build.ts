@@ -34,6 +34,7 @@ function readOptionalId(formData: FormData, key: string): string | undefined {
 function readBuildMetadataFields(formData: FormData) {
   return {
     title: String(formData.get('title') ?? ''),
+    summary: String(formData.get('summary') ?? ''),
     slug: String(formData.get('slug') ?? ''),
     deploymentState: String(
       formData.get('deploymentState') ?? 'live',

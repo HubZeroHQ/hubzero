@@ -264,13 +264,15 @@ export function RelationshipCard({
       : undefined;
   const content = (
     <>
-      <span>{relationship.label}</span>
-      <strong className={identity ? 'founder-accent-text' : undefined}>
+      <span className="home-relationship-label">{relationship.label}</span>
+      <strong className={`home-relationship-title${identity ? 'founder-accent-text' : ''}`}>
         {relationship.target.title}
       </strong>
-      {relationship.target.type === 'build' && relationship.target.state ? (
-        <PublicBuildStateBadge state={relationship.target.state} />
-      ) : null}
+      <span className="home-relationship-status">
+        {relationship.target.type === 'build' && relationship.target.state ? (
+          <PublicBuildStateBadge state={relationship.target.state} />
+        ) : null}
+      </span>
       {enabled ? <span aria-hidden="true">→</span> : null}
     </>
   );

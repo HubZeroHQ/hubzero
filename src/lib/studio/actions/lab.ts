@@ -236,6 +236,11 @@ export async function graduateLabToBuildAction(labId: string): Promise<EntryActi
     const build = await buildRepository.create(
       {
         title: lab.title,
+        // Carried over as a starting point, same as title/technologies/media
+        // below — the Lab's `objective` is its closest equivalent to a Build's
+        // public summary. Editors revise it like everything else here before
+        // the graduated Build is ever published.
+        summary: lab.objective,
         slug: lab.slug,
         status: 'draft',
         deploymentState: 'live',

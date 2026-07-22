@@ -191,6 +191,8 @@ export interface Work extends PublishableEntity {
 export interface Build extends PublishableEntity {
   referenceId: ReferenceId<'BL'>;
   title: string;
+  /** Concise public/editorial summary for indexes, metadata, search, and relationship context — distinct from the owned `caseStudy` Document (§25). */
+  summary: string;
   deploymentState: BuildDeploymentState;
   liveUrl?: string;
   repoUrl?: string;

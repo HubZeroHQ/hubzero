@@ -1190,7 +1190,7 @@
     /* Above `a.home-card-title::after`'s stretched overlay (z-index: auto) so this stays independently clickable inside a whole-card link — see the `.home-card` comment. */
     z-index: 1;
     display: grid;
-    grid-template-columns: minmax(96px, 0.5fr) 1fr auto;
+    grid-template-columns: minmax(96px, 0.5fr) minmax(0, 1fr) minmax(76px, auto) 20px;
     gap: 12px;
     align-items: center;
     min-height: 44px;
@@ -1204,17 +1204,13 @@
       color var(--duration-fast) var(--ease-standard);
   }
 
-  .home-relationship-card:has(.public-build-state) {
-    grid-template-columns: minmax(96px, 0.5fr) 1fr auto auto;
-  }
-
   a.home-relationship-card:hover,
   a.home-relationship-card:focus-visible {
     background: var(--color-surface-elevated);
     color: var(--color-text-primary);
   }
 
-  .home-relationship-card > span:first-child {
+  .home-relationship-label {
     color: var(--color-text-muted);
     font-family: var(--font-mono);
     font-size: 10px;
@@ -1222,22 +1218,32 @@
     text-transform: uppercase;
   }
 
-  .home-relationship-card strong {
+  .home-relationship-title {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     font-weight: 500;
     transition: color var(--duration-fast) var(--ease-standard);
   }
 
-  a.home-relationship-card:hover strong,
-  a.home-relationship-card:focus-visible strong {
+  .home-relationship-status {
+    display: flex;
+    min-width: 76px;
+    justify-content: flex-end;
+  }
+
+  a.home-relationship-card:hover .home-relationship-title,
+  a.home-relationship-card:focus-visible .home-relationship-title {
     color: var(--color-text-primary);
   }
 
-  a.home-relationship-card:hover span[aria-hidden='true']:last-child,
-  a.home-relationship-card:focus-visible span[aria-hidden='true']:last-child {
+  a.home-relationship-card:hover > span[aria-hidden='true']:last-child,
+  a.home-relationship-card:focus-visible > span[aria-hidden='true']:last-child {
     transform: translateX(2px);
   }
 
-  .home-relationship-card span[aria-hidden='true']:last-child {
+  .home-relationship-card > span[aria-hidden='true']:last-child {
     transition: transform var(--duration-fast) var(--ease-standard);
   }
 

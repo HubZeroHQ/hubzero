@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { StatusStepper } from '@/components/studio/collection/StatusStepper';
 import { PageHeader } from '@/components/studio/PageHeader';
+import { BuildPublicationChecklist } from '@/components/studio/builds/BuildPublicationChecklist';
 import { BlockRenderer } from '@/components/documents/BlockRenderer';
 import { ButtonLink } from '@/components/ui/ButtonLink';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -20,6 +21,10 @@ import { resolveHeroAndGallery } from '@/lib/media/resolve';
 import { taxonomyRepository } from '@/lib/db/repositories/taxonomy';
 import { teamRepository } from '@/lib/db/repositories/team';
 import { workRepository } from '@/lib/db/repositories/work';
+import {
+  evaluateBuildPublicationChecklist,
+  type EligibilityDocument,
+} from '@/lib/public/eligibility';
 
 export const metadata: Metadata = { title: 'Builds — HubZero Studio' };
 
@@ -109,6 +114,17 @@ export default async function BuildDetailPage({ params }: { params: Promise<{ id
   const canOverride = canUnpublishOverride(build.status, role);
   const boundTransitionAction = transitionBuildStatusAction.bind(null, id);
 
+  const eligibilityDocuments: EligibilityDocument[] = [
+    ...(caseStudyDocument ? [{ role: 'caseStudy', blocks: caseStudyDocument.blocks }] : []),
+    ...(technicalDocument ? [{ role: 'technical', blocks: technicalDocument.blocks }] : []),
+  ];
+  const publicationChecks = evaluateBuildPublicationChecklist({
+    status: build.status,
+    summary: build.summary,
+    hasHero: Boolean(heroAsset),
+    documents: eligibilityDocuments,
+  });
+
   return (
     <div className="flex flex-col gap-8">
       <PageHeader
@@ -157,6 +173,8 @@ export default async function BuildDetailPage({ params }: { params: Promise<{ id
           onTransition={boundTransitionAction}
         />
       </div>
+
+      <BuildPublicationChecklist checks={publicationChecks} />
 
       {heroAsset ? (
         <div className="border-border-default rounded-card relative aspect-[16/9] w-full overflow-hidden border">

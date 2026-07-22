@@ -3,7 +3,6 @@ import { layoutGraph, type GraphLayoutInput } from '@/lib/graph-layout';
 import { formatMetadata, relationshipKey } from './EditorialPrimitives';
 
 const GRAPH_ROW_HEIGHT = 46;
-const GRAPH_MAX_ITEMS = 4;
 
 /**
  * A monochrome SVG node graph — the subject on the left, its real
@@ -21,7 +20,7 @@ export function RelationshipGraph({
   subject: { label: string; meta: string };
   relationships: readonly ImmutablePublic<PublicRelationship>[];
 }) {
-  const items = relationships.slice(0, GRAPH_MAX_ITEMS);
+  const items = relationships;
   if (!items.length) return null;
 
   type GraphEntity =

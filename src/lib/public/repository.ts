@@ -46,6 +46,13 @@ import {
   type HubZeroRelationshipKind,
 } from '@/lib/entity-graph';
 import { projectEvidence, type PublicEvidenceNode } from './evidence-projection';
+import {
+  hasRoles,
+  hasSubstantiveDocument,
+  isBuildDetailEligible,
+  isBuildHomepageEligible,
+  isEngineeringProfileHomepageEligible,
+} from './eligibility';
 import { isSafePublicUrl, toPublicMedia } from './media';
 import {
   normalizePublicEntityGraph,
@@ -216,14 +223,8 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
         return summary;
       }
       case 'build': {
-        const record = entity.record as Build & { summary?: unknown; productSummary?: unknown };
-        const summarySource =
-          typeof record.productSummary === 'string'
-            ? record.productSummary
-            : typeof record.summary === 'string'
-              ? record.summary
-              : '';
-        if (!summarySource.trim()) return null;
+        const record = entity.record as Build;
+        if (typeof record.summary !== 'string' || !record.summary.trim()) return null;
         const [technologies, hero] = await Promise.all([
           terms(record.technologyIds, 'technology'),
           media(record.heroImageId, 'hero'),
@@ -238,7 +239,7 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
           slug: record.slug,
           url: publicRoute.entity({ type: 'build', slug: record.slug }),
           referenceId: record.referenceId,
-          summary: summarySource,
+          summary: record.summary,
           deploymentState: record.deploymentState,
           state: record.deploymentState,
           technologies,
@@ -483,14 +484,13 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
             id: String((entity.record as EngineeringProfile).teamMemberId),
           }
         : undefined;
-    return (
-      projectEvidence(
-        query,
-        destinations,
-        { type: entity.type, id: entity.id },
-        aliasSource ? [aliasSource] : [],
-      )?.relationships.slice() ?? []
+    const projection = projectEvidence(
+      query,
+      destinations,
+      { type: entity.type, id: entity.id },
+      aliasSource ? [aliasSource] : [],
     );
+    return projection ? [...projection.relationships] : [];
   }
 
   async function findSummary(type: PublicEntityType, slug: string) {
@@ -573,8 +573,7 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
         };
       }
       case 'build': {
-        if (summary.type !== 'build' || !hasRoles(documents, ['caseStudy', 'technical']))
-          return null;
+        if (summary.type !== 'build' || !isBuildDetailEligible(documents)) return null;
         return {
           ...summary,
           documents,
@@ -655,7 +654,9 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
     if (!detail || detail.type !== expectedType || !isHomepageEligible(detail, now)) return null;
     return {
       entity: detail as unknown as T,
-      relationships: detail.relationships.slice(0, 2),
+      // Keep the canonical relationship graph intact. Presentation surfaces may
+      // classify and bound relationships after this repository boundary.
+      relationships: [...detail.relationships],
     };
   }
 
@@ -722,7 +723,7 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
         : [];
     const engineeringProfiles = compact(
       await Promise.all(
-        sortEntities(profiles).map((entity) =>
+        profiles.map((entity) =>
           homepageFeature<PublicEngineeringProfileSummary>(
             entity,
             'engineeringProfile',
@@ -731,7 +732,14 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
           ),
         ),
       ),
-    ).slice(0, 2);
+    )
+      .filter((feature) =>
+        feature.relationships.some(
+          (relationship) => relationship.kind === 'teamContributedToEntry',
+        ),
+      )
+      .sort(compareHomepageEngineeringProfiles)
+      .slice(0, 4);
 
     return {
       work,
@@ -842,10 +850,6 @@ function toEntityLink(summary: PublicEntitySummary): PublicEntityLink {
   };
 }
 
-function hasRoles(documents: readonly { role: string }[], roles: readonly string[]): boolean {
-  return roles.every((role) => documents.some((document) => document.role === role));
-}
-
 function compact<T>(values: readonly (T | null)[]): T[] {
   return values.filter((value): value is T => value !== null);
 }
@@ -878,22 +882,6 @@ function sortEntities(entities: readonly StudioPublicEntity[]): StudioPublicEnti
   });
 }
 
-function hasSubstantiveDocument(
-  documents: readonly { blocks: readonly { type: string; data: unknown }[] }[],
-): boolean {
-  return documents.some((document) => {
-    const textBlocks = document.blocks.filter(
-      (block) =>
-        !['heading', 'divider', 'image', 'imageGallery', 'technologyStack'].includes(block.type),
-    );
-    const words = textBlocks
-      .map((block) => JSON.stringify(block.data).replace(/<[^>]*>/g, ' '))
-      .join(' ')
-      .match(/[\p{L}\p{N}][\p{L}\p{N}'’-]*/gu);
-    return textBlocks.length >= 2 && (words?.length ?? 0) >= 80;
-  });
-}
-
 function isRecent(date: string | undefined, now: Date, maxAgeDays = 180): boolean {
   if (!date) return false;
   const value = new Date(date);
@@ -906,14 +894,10 @@ function isHomepageEligible(detail: PublicEntityDetail, now: Date): boolean {
     case 'work':
       return hasSubstantiveDocument(detail.documents);
     case 'build':
-      return (
-        Boolean(detail.hero) &&
-        detail.documents.filter((document) => ['caseStudy', 'technical'].includes(document.role))
-          .length >= 2 &&
-        detail.documents
-          .filter((document) => ['caseStudy', 'technical'].includes(document.role))
-          .every((document) => hasSubstantiveDocument([document]))
-      );
+      return isBuildHomepageEligible({
+        hasHero: Boolean(detail.hero),
+        documents: detail.documents,
+      });
     case 'blueprint':
       return (
         detail.previewMedia.length > 0 &&
@@ -930,12 +914,29 @@ function isHomepageEligible(detail: PublicEntityDetail, now: Date): boolean {
     case 'note':
       return isRecent(detail.publicationDate, now) && hasSubstantiveDocument(detail.documents);
     case 'engineeringProfile':
-      return (
-        Boolean(detail.portrait) &&
-        detail.relationships.length >= 2 &&
-        hasSubstantiveDocument(detail.documents)
-      );
+      return isEngineeringProfileHomepageEligible({
+        hasPortrait: Boolean(detail.portrait),
+        contributionCount: detail.relationships.filter(
+          (relationship) => relationship.kind === 'teamContributedToEntry',
+        ).length,
+        documents: detail.documents,
+      });
   }
+}
+
+export function compareHomepageEngineeringProfiles(
+  left: PublicHomepageFeature<PublicEngineeringProfileSummary>,
+  right: PublicHomepageFeature<PublicEngineeringProfileSummary>,
+): number {
+  const leftContributions = left.relationships.filter(
+    (relationship) => relationship.kind === 'teamContributedToEntry',
+  ).length;
+  const rightContributions = right.relationships.filter(
+    (relationship) => relationship.kind === 'teamContributedToEntry',
+  ).length;
+  return (
+    rightContributions - leftContributions || left.entity.title.localeCompare(right.entity.title)
+  );
 }
 
 function evidenceType(reference: EntryReference | ServiceEvidenceReference): PublicEntityType {
