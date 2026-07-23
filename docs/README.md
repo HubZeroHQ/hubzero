@@ -17,6 +17,7 @@ This directory contains HubZero's engineering, design, and product documentation
 - [`PUBLIC_DTO_SPECIFICATION.md`](architecture/PUBLIC_DTO_SPECIFICATION.md) — The field-level contract for public read objects derived from Studio records.
 - [`VISIBILITY_RULES.md`](architecture/VISIBILITY_RULES.md) — The single fail-closed visibility predicate used by every public consumer.
 - [`RELATIONSHIP_AUDIT.md`](architecture/RELATIONSHIP_AUDIT.md) — Canonical relationship kinds, storage direction, and reciprocal public behavior between collections.
+- [`ADR_PHASE_1_DEFERRALS.md`](architecture/ADR_PHASE_1_DEFERRALS.md) — Why v2.5 Phase 1 deferred jsdom/Testing Library and `chain.ts`, and the conditions under which each should be introduced.
 
 ## Design
 
