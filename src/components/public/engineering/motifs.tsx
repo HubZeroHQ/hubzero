@@ -1,5 +1,6 @@
-import type { CSSProperties, JSX } from 'react';
+import type { JSX } from 'react';
 import type { FounderMotifId } from '@/config/founder-identity';
+import { AssembleStroke, PathBuilder } from '../motion/assemble';
 
 /**
  * Founder motifs (Phase 23) — engineering infrastructure, not illustration.
@@ -90,120 +91,11 @@ const MOTIF_COMPONENTS: Record<FounderMotifId, (props: { count: number }) => JSX
   pcbTrace: PCBTraceMotif,
 };
 
-/** Deterministic pseudo-random float in [0, 1) — used only for the per-stroke motion stagger, never for geometry. */
-function hash(i: number, salt: number): number {
-  const x = Math.sin(i * 12.9898 + salt * 78.233) * 43758.5453;
-  return x - Math.floor(x);
-}
-
 /** Evenly spaced horizontal lanes across the motif's vertical range. */
 function laneYs(count: number): number[] {
   if (count <= 1) return [(LANE_TOP + LANE_BOTTOM) / 2];
   const step = (LANE_BOTTOM - LANE_TOP) / (count - 1);
   return Array.from({ length: count }, (_, index) => LANE_TOP + step * index);
-}
-
-/**
- * Builds an SVG path `d` string while tracking its true drawn length, so
- * every stroke can use its OWN stroke-dasharray/dashoffset — a reveal
- * proportional to that stroke's actual length, not one shared oversized
- * constant.
- */
-class PathBuilder {
-  d = '';
-  length = 0;
-  private x = 0;
-  private y = 0;
-
-  moveTo(x: number, y: number): this {
-    this.d += `M ${x} ${y} `;
-    this.x = x;
-    this.y = y;
-    return this;
-  }
-
-  h(x: number): this {
-    this.length += Math.abs(x - this.x);
-    this.d += `H ${x} `;
-    this.x = x;
-    return this;
-  }
-
-  v(y: number): this {
-    this.length += Math.abs(y - this.y);
-    this.d += `V ${y} `;
-    this.y = y;
-    return this;
-  }
-
-  lineTo(x: number, y: number): this {
-    this.length += Math.hypot(x - this.x, y - this.y);
-    this.d += `L ${x} ${y} `;
-    this.x = x;
-    this.y = y;
-    return this;
-  }
-
-  curveTo(c1x: number, c1y: number, c2x: number, c2y: number, x: number, y: number): this {
-    this.length +=
-      Math.hypot(c1x - this.x, c1y - this.y) +
-      Math.hypot(c2x - c1x, c2y - c1y) +
-      Math.hypot(x - c2x, y - c2y);
-    this.d += `C ${c1x} ${c1y}, ${c2x} ${c2y}, ${x} ${y} `;
-    this.x = x;
-    this.y = y;
-    return this;
-  }
-
-  /** Horizontal-then-vertical move with a short 45° chamfer at the corner — a real PCB miter, not a sharp staircase turn. */
-  hv(toX: number, toY: number, chamfer = 6): this {
-    const dx = Math.sign(toX - this.x) || 1;
-    const dy = Math.sign(toY - this.y) || 1;
-    const c = Math.min(chamfer, Math.abs(toX - this.x) / 2, Math.abs(toY - this.y) / 2);
-    if (c <= 0.01) {
-      this.h(toX);
-      this.v(toY);
-      return this;
-    }
-    const cornerY = this.y;
-    this.h(toX - dx * c);
-    this.lineTo(toX, cornerY + dy * c);
-    this.v(toY);
-    return this;
-  }
-}
-
-/** Per-stroke stagger: distinct delay and duration so the reveal feels like asynchronous signal propagation, not one synchronized flourish. */
-function asyncDraw(seed: number): CSSProperties {
-  const delay = Math.round(hash(seed, 91) * 460);
-  const duration = Math.round(620 + hash(seed, 97) * 420);
-  return {
-    transitionDelay: `${delay}ms`,
-    transitionDuration: `${duration}ms`,
-    animationDelay: `${delay}ms`,
-    animationDuration: `${duration}ms`,
-  };
-}
-
-function Trace({
-  builder,
-  seed,
-  extraClassName,
-}: {
-  builder: PathBuilder;
-  seed: number;
-  extraClassName?: string;
-}) {
-  const dash = Math.max(builder.length, 1) + 2;
-  return (
-    <path
-      className={`founder-motif-trace ${extraClassName ?? ''}`.trim()}
-      d={builder.d}
-      strokeDasharray={dash}
-      strokeDashoffset={dash}
-      style={asyncDraw(seed)}
-    />
-  );
 }
 
 /**
@@ -227,20 +119,25 @@ function NetworkMotif({ count }: { count: number }) {
   const platformY = 166;
   const platform = new PathBuilder().moveTo(470, platformY).h(60);
   elements.push(
-    <Trace key="ri-platform" seed={seed++} builder={platform} extraClassName="founder-motif-bus" />,
+    <AssembleStroke
+      key="ri-platform"
+      seed={seed++}
+      builder={platform}
+      className="founder-motif-bus"
+    />,
   );
 
   // A system bus starting slightly lower than the entry column, its two modules unevenly spaced and unevenly reached.
   const systemAY = 44;
   const systemAEndX = 426;
   const systemA = new PathBuilder().moveTo(500, systemAY).h(systemAEndX);
-  elements.push(<Trace key={`ri-sysA-${seed}`} seed={seed++} builder={systemA} />);
+  elements.push(<AssembleStroke key={`ri-sysA-${seed}`} seed={seed++} builder={systemA} />);
   [
     { y: 12, dockX: 497 },
     { y: 60, dockX: 465 },
   ].forEach(({ y, dockX }, i) => {
     const p = new PathBuilder().moveTo(VIEW_WIDTH, y).h(dockX).v(systemAY);
-    elements.push(<Trace key={`ri-a-mod-${i}-${seed}`} seed={seed++} builder={p} />);
+    elements.push(<AssembleStroke key={`ri-a-mod-${i}-${seed}`} seed={seed++} builder={p} />);
     nodes.push(
       <rect
         key={`ri-a-node-${i}-${seed}`}
@@ -253,7 +150,7 @@ function NetworkMotif({ count }: { count: number }) {
     );
   });
   const dropA = new PathBuilder().moveTo(systemAEndX, systemAY).v(platformY);
-  elements.push(<Trace key={`ri-dropA-${seed}`} seed={seed++} builder={dropA} />);
+  elements.push(<AssembleStroke key={`ri-dropA-${seed}`} seed={seed++} builder={dropA} />);
   nodes.push(
     <rect
       key={`ri-dropA-node-${seed}`}
@@ -269,7 +166,7 @@ function NetworkMotif({ count }: { count: number }) {
     // Skips the system tier completely — a direct dependency straight into the platform.
     const skipDockX = 326;
     const skip = new PathBuilder().moveTo(VIEW_WIDTH, 102).h(skipDockX).v(platformY);
-    elements.push(<Trace key={`ri-skip-${seed}`} seed={seed++} builder={skip} />);
+    elements.push(<AssembleStroke key={`ri-skip-${seed}`} seed={seed++} builder={skip} />);
     nodes.push(
       <rect
         key={`ri-skip-node-${seed}`}
@@ -286,11 +183,15 @@ function NetworkMotif({ count }: { count: number }) {
     // Forks: one branch reaches the platform, the other runs off and never reconnects to anything.
     const forkX = 438;
     const trunk = new PathBuilder().moveTo(VIEW_WIDTH, 130).h(forkX);
-    elements.push(<Trace key={`ri-fork-trunk-${seed}`} seed={seed++} builder={trunk} />);
+    elements.push(<AssembleStroke key={`ri-fork-trunk-${seed}`} seed={seed++} builder={trunk} />);
     const deadBranch = new PathBuilder().moveTo(forkX, 130).v(86).h(298);
-    elements.push(<Trace key={`ri-fork-dead-${seed}`} seed={seed++} builder={deadBranch} />);
+    elements.push(
+      <AssembleStroke key={`ri-fork-dead-${seed}`} seed={seed++} builder={deadBranch} />,
+    );
     const liveBranch = new PathBuilder().moveTo(forkX, 130).v(154).h(292).v(platformY);
-    elements.push(<Trace key={`ri-fork-live-${seed}`} seed={seed++} builder={liveBranch} />);
+    elements.push(
+      <AssembleStroke key={`ri-fork-live-${seed}`} seed={seed++} builder={liveBranch} />,
+    );
     nodes.push(
       <rect
         key={`ri-fork-node-${seed}`}
@@ -306,14 +207,14 @@ function NetworkMotif({ count }: { count: number }) {
   if (count >= 5) {
     // Bypasses the platform outright: the vertical run simply crosses its row without docking.
     const bypass = new PathBuilder().moveTo(VIEW_WIDTH, 18).h(449).v(190).h(360);
-    elements.push(<Trace key={`ri-bypass-${seed}`} seed={seed++} builder={bypass} />);
+    elements.push(<AssembleStroke key={`ri-bypass-${seed}`} seed={seed++} builder={bypass} />);
   }
 
   if (count >= 6) {
     // Terminates early — a job with no further consumer.
     const endX = 442;
     const term = new PathBuilder().moveTo(VIEW_WIDTH, 152).h(endX);
-    elements.push(<Trace key={`ri-term-${seed}`} seed={seed++} builder={term} />);
+    elements.push(<AssembleStroke key={`ri-term-${seed}`} seed={seed++} builder={term} />);
     nodes.push(
       <circle
         key={`ri-term-node-${seed}`}
@@ -347,14 +248,14 @@ function DependencyGraphMotif({ count }: { count: number }) {
 
   const spine = new PathBuilder().moveTo(500, spineY).h(90);
   elements.push(
-    <Trace key="raif-spine" seed={seed++} builder={spine} extraClassName="founder-motif-bus" />,
+    <AssembleStroke key="raif-spine" seed={seed++} builder={spine} className="founder-motif-bus" />,
   );
 
   ys.forEach((y, i) => {
     if (Math.abs(y - spineY) < 6) return;
     const dockX = 480 - i * 16;
     const path = new PathBuilder().moveTo(VIEW_WIDTH, y).h(dockX).v(spineY);
-    elements.push(<Trace key={`raif-${i}`} seed={seed++} builder={path} />);
+    elements.push(<AssembleStroke key={`raif-${i}`} seed={seed++} builder={path} />);
     nodes.push(
       <rect
         key={`raif-n-${i}`}
@@ -392,7 +293,7 @@ function TravelerMotif({ count }: { count: number }) {
   ys.forEach((y, i) => {
     const endX = 400 + ((i * 43) % 80);
     const row = new PathBuilder().moveTo(VIEW_WIDTH, y).h(endX);
-    elements.push(<Trace key={`iyad-row-${i}`} seed={seed++} builder={row} />);
+    elements.push(<AssembleStroke key={`iyad-row-${i}`} seed={seed++} builder={row} />);
   });
 
   const travel = new PathBuilder().moveTo(VIEW_WIDTH, 34).h(340).v(90).h(230);
@@ -409,11 +310,11 @@ function TravelerMotif({ count }: { count: number }) {
     endY = 160;
   }
   elements.push(
-    <Trace
+    <AssembleStroke
       key={`iyad-travel-${seed}`}
       seed={seed++}
       builder={travel}
-      extraClassName="founder-motif-bus"
+      className="founder-motif-bus"
     />,
   );
   nodes.push(
@@ -449,14 +350,14 @@ function EditorialGridMotif({ count }: { count: number }) {
   ys.forEach((y, i) => {
     const endX = 40 + ((i * 23) % 60);
     const rule = new PathBuilder().moveTo(VIEW_WIDTH, y).h(endX);
-    elements.push(<Trace key={`sultan-${i}`} seed={seed++} builder={rule} />);
+    elements.push(<AssembleStroke key={`sultan-${i}`} seed={seed++} builder={rule} />);
   });
 
   [470, 425].forEach((x, mi) => {
     ys.forEach((y, i) => {
       if ((i + mi) % 2 !== 0) return;
       const tick = new PathBuilder().moveTo(x, y - 5).v(y + 5);
-      elements.push(<Trace key={`sultan-mark-${mi}-${i}`} seed={seed++} builder={tick} />);
+      elements.push(<AssembleStroke key={`sultan-mark-${mi}-${i}`} seed={seed++} builder={tick} />);
     });
   });
 
@@ -468,7 +369,7 @@ function EditorialGridMotif({ count }: { count: number }) {
       .moveTo(branchX, branchY)
       .v(branchY - 24)
       .h(branchX - 60);
-    elements.push(<Trace key="sultan-branch" seed={seed++} builder={branch} />);
+    elements.push(<AssembleStroke key="sultan-branch" seed={seed++} builder={branch} />);
     marks.push(
       <rect
         key="sultan-branch-node"
@@ -508,7 +409,7 @@ function PCBTraceMotif({ count }: { count: number }) {
   busYs.forEach((y, i) => {
     const endX = 210 + i * 40;
     const p = new PathBuilder().moveTo(VIEW_WIDTH, y).h(endX);
-    elements.push(<Trace key={`sal-bus-${seed}`} seed={seed++} builder={p} />);
+    elements.push(<AssembleStroke key={`sal-bus-${seed}`} seed={seed++} builder={p} />);
   });
 
   // The area of interest: a differential pair, drawn heavier, with a small via cluster where it lands.
@@ -523,19 +424,19 @@ function PCBTraceMotif({ count }: { count: number }) {
     .hv(diffTurnX, diffDropY + diffGap, 8)
     .h(diffEndX);
   elements.push(
-    <Trace
+    <AssembleStroke
       key={`sal-diff-a-${seed}`}
       seed={seed++}
       builder={diffA}
-      extraClassName="founder-motif-bus"
+      className="founder-motif-bus"
     />,
   );
   elements.push(
-    <Trace
+    <AssembleStroke
       key={`sal-diff-b-${seed}`}
       seed={seed++}
       builder={diffB}
-      extraClassName="founder-motif-bus"
+      className="founder-motif-bus"
     />,
   );
   vias.push(
@@ -564,18 +465,18 @@ function PCBTraceMotif({ count }: { count: number }) {
       clock.h(x);
     }
     clock.h(x - 40);
-    elements.push(<Trace key={`sal-clock-${seed}`} seed={seed++} builder={clock} />);
+    elements.push(<AssembleStroke key={`sal-clock-${seed}`} seed={seed++} builder={clock} />);
   }
 
   // A quiet fine-pitch escape, thinned — one more background signal.
   const fineY = 168;
   const fine = new PathBuilder().moveTo(VIEW_WIDTH, fineY).hv(495, 174, 5).h(300);
   elements.push(
-    <Trace
+    <AssembleStroke
       key={`sal-fine-${seed}`}
       seed={seed++}
       builder={fine}
-      extraClassName="founder-motif-fine"
+      className="founder-motif-fine"
     />,
   );
 
@@ -585,7 +486,7 @@ function PCBTraceMotif({ count }: { count: number }) {
     const padTraceEndX = 460;
     const padX = 468;
     const padTrace = new PathBuilder().moveTo(VIEW_WIDTH, padY).h(padTraceEndX);
-    elements.push(<Trace key={`sal-pad-${seed}`} seed={seed++} builder={padTrace} />);
+    elements.push(<AssembleStroke key={`sal-pad-${seed}`} seed={seed++} builder={padTrace} />);
     vias.push(
       <path
         key={`sal-teardrop-${seed}`}
