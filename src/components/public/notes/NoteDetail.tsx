@@ -1,14 +1,14 @@
 import Link from 'next/link';
 import { PUBLIC_ENTITY_ROUTES } from '@/config/public-site';
 import { founderAccentStyle, getFounderIdentity } from '@/config/founder-identity';
-import type { ImmutablePublic, PublicEntityDetail, PublicRelationship } from '@/lib/public/domain';
+import type { ImmutablePublic, PublicEntityDetail } from '@/lib/public/domain';
 import { publicRoute } from '@/lib/public/routes';
+import { DetailGallery } from '../DetailGallery';
 import {
   ContributorList,
+  DetailSectionHeading,
   formatPublicDate,
   PublicBreadcrumbs,
-  RelationshipCard,
-  relationshipKey,
   TechnologyList,
 } from '../EditorialPrimitives';
 import { FounderCrossLink } from '../engineering/FounderCrossLink';
@@ -16,6 +16,7 @@ import { slugFromProfileUrl } from '../engineering/profile-url';
 import { PageContainer, PublicSection } from '../PageContainer';
 import { ProseRenderer } from '../ProseRenderer';
 import { PublicImage } from '../PublicImage';
+import { RelatedRecordsSection } from '../RelatedRecordsSection';
 
 type Note = Extract<PublicEntityDetail, { type: 'note' }>;
 
@@ -104,9 +105,11 @@ export function NoteDetail({ note }: { note: ImmutablePublic<Note> }) {
       {body ? (
         <PublicSection className="note-body" aria-labelledby="note-body-title">
           <PageContainer className="note-body-grid">
-            <header>
-              <p className="home-eyebrow">Journal entry / {note.referenceId}</p>
-              <h2 id="note-body-title">Engineering note</h2>
+            <DetailSectionHeading
+              id="note-body-title"
+              eyebrow={`Journal entry / ${note.referenceId}`}
+              title="Engineering note"
+            >
               {body.outline?.length && body.outline.length > 1 ? (
                 <nav className="detail-outline" aria-label="Note contents">
                   <ol>
@@ -118,47 +121,30 @@ export function NoteDetail({ note }: { note: ImmutablePublic<Note> }) {
                   </ol>
                 </nav>
               ) : null}
-            </header>
+            </DetailSectionHeading>
             <ProseRenderer document={body} headingOffset={1} as="div" />
           </PageContainer>
         </PublicSection>
       ) : null}
 
-      {note.gallery.length ? (
-        <PublicSection className="note-gallery" aria-labelledby="note-gallery-title">
-          <PageContainer>
-            <header className="detail-section-header">
-              <p className="home-eyebrow">Supporting media / recorded evidence</p>
-              <h2 id="note-gallery-title">Views from the work</h2>
-            </header>
-            <div className="detail-gallery-grid">
-              {note.gallery.map((media) => (
-                <PublicImage key={media.url} media={media} />
-              ))}
-            </div>
-          </PageContainer>
-        </PublicSection>
-      ) : null}
+      <DetailGallery
+        id="note-gallery-title"
+        eyebrow="Supporting media / recorded evidence"
+        title="Views from the work"
+        media={note.gallery}
+        sectionClassName="note-gallery"
+      />
 
       {groups.length ? (
-        <PublicSection className="note-relations" aria-labelledby="note-relations-title">
-          <PageContainer className="note-relations-grid">
-            <header>
-              <p className="home-eyebrow">Continuity / referenced engineering</p>
-              <h2 id="note-relations-title">Continue through the record</h2>
-              <p>These links are part of the evidence behind this note.</p>
-            </header>
-            <div className="detail-relation-groups">
-              {groups.map((group) => (
-                <RelationshipGroup
-                  key={group.type}
-                  title={group.title}
-                  relationships={group.relationships}
-                />
-              ))}
-            </div>
-          </PageContainer>
-        </PublicSection>
+        <RelatedRecordsSection
+          id="note-relations-title"
+          eyebrow="Continuity / referenced engineering"
+          title="Continue through the record"
+          description="These links are part of the evidence behind this note."
+          groups={groups}
+          sectionClassName="note-relations"
+          containerClassName="note-relations-grid"
+        />
       ) : null}
 
       <footer
@@ -190,28 +176,5 @@ export function NoteDetail({ note }: { note: ImmutablePublic<Note> }) {
         </PageContainer>
       </footer>
     </article>
-  );
-}
-
-function RelationshipGroup({
-  title,
-  relationships,
-}: {
-  title: string;
-  relationships: readonly ImmutablePublic<PublicRelationship>[];
-}) {
-  return (
-    <section className="detail-relation-group">
-      <h3>{title}</h3>
-      <div className="home-relationships" aria-label={title}>
-        {relationships.map((relationship) => (
-          <RelationshipCard
-            key={relationshipKey(relationship)}
-            relationship={relationship}
-            enabled={PUBLIC_ENTITY_ROUTES[relationship.target.type]}
-          />
-        ))}
-      </div>
-    </section>
   );
 }

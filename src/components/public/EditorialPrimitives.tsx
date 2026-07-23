@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
+import { PUBLIC_ENTITY_ROUTES } from '@/config/public-site';
 import { founderAccentStyle, getFounderIdentity } from '@/config/founder-identity';
 import {
   getPublicBuildStatePresentation,
@@ -61,6 +62,47 @@ export function SectionHeader({
         <h2>{title}</h2>
         {description ? <p>{description}</p> : null}
       </div>
+    </header>
+  );
+}
+
+/**
+ * The eyebrow/heading/description shell repeated across every detail-page
+ * sub-section (documents, galleries, relationship groups, profile
+ * chapters) — distinct from `SectionHeader` above, which drives the
+ * homepage's more spacious rhythm (`home-section-header`).
+ *
+ * `className` is intentionally omitted rather than hardcoded to
+ * `detail-section-header`: some call sites (a Blueprint's specification, a
+ * gallery) already carried that class and its `gap`/`margin-bottom`
+ * spacing; others (a relationship section, a document body, a profile
+ * chapter) were always a bare `<header>`, with spacing owned entirely by
+ * the surrounding `*-grid` container's own `gap`. Defaulting to
+ * `detail-section-header` here would have added real, unwanted spacing to
+ * the second group — pass it explicitly only where the original markup
+ * had it.
+ */
+export function DetailSectionHeading({
+  id,
+  eyebrow,
+  title,
+  description,
+  children,
+  className,
+}: {
+  id: string;
+  eyebrow: string;
+  title: ReactNode;
+  description?: ReactNode;
+  children?: ReactNode;
+  className?: string;
+}) {
+  return (
+    <header className={className}>
+      <p className="home-eyebrow">{eyebrow}</p>
+      <h2 id={id}>{title}</h2>
+      {description ? <p>{description}</p> : null}
+      {children}
     </header>
   );
 }
@@ -301,6 +343,37 @@ export function RelationshipCard({
     <div className="home-relationship-card" style={style}>
       {content}
     </div>
+  );
+}
+
+/**
+ * A titled group of `RelationshipCard`s — the shared shape behind every
+ * "Related Work" / "Related Builds" / "Authored Notes" style block on the
+ * public site (collection detail pages, Notes, Engineering Profiles).
+ * Previously reimplemented identically in three separate files; this is
+ * now the one canonical definition. See `RelatedRecordsSection`, which
+ * composes this into a full page section.
+ */
+export function RelationshipGroup({
+  title,
+  relationships,
+}: {
+  title: string;
+  relationships: readonly ImmutablePublic<PublicRelationship>[];
+}) {
+  return (
+    <section className="detail-relation-group">
+      <h3>{title}</h3>
+      <div className="home-relationships" aria-label={title}>
+        {relationships.map((relationship) => (
+          <RelationshipCard
+            key={relationshipKey(relationship)}
+            relationship={relationship}
+            enabled={PUBLIC_ENTITY_ROUTES[relationship.target.type]}
+          />
+        ))}
+      </div>
+    </section>
   );
 }
 

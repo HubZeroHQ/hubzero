@@ -18,6 +18,7 @@ This directory contains HubZero's engineering, design, and product documentation
 - [`VISIBILITY_RULES.md`](architecture/VISIBILITY_RULES.md) — The single fail-closed visibility predicate used by every public consumer.
 - [`RELATIONSHIP_AUDIT.md`](architecture/RELATIONSHIP_AUDIT.md) — Canonical relationship kinds, storage direction, and reciprocal public behavior between collections.
 - [`ADR_PHASE_1_DEFERRALS.md`](architecture/ADR_PHASE_1_DEFERRALS.md) — Why v2.5 Phase 1 deferred jsdom/Testing Library and `chain.ts`, and the conditions under which each should be introduced.
+- [`ADR_PHASE_2_COMPOSITION_SCOPE.md`](architecture/ADR_PHASE_2_COMPOSITION_SCOPE.md) — Why v2.5 Phase 2 built different composition primitives than originally planned, a spacing bug the audit caught before shipping, and why adoption is scoped to three files.
 
 ## Design
 
