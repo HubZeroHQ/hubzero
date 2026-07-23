@@ -1,20 +1,20 @@
 import Link from 'next/link';
-import { PUBLIC_ENTITY_ROUTES } from '@/config/public-site';
-import type { ImmutablePublic, PublicEntityDetail, PublicRelationship } from '@/lib/public/domain';
+import type { ImmutablePublic, PublicEntityDetail } from '@/lib/public/domain';
 import { publicRoute } from '@/lib/public/routes';
+import { DetailGallery } from '../DetailGallery';
 import {
   ContributorList,
+  DetailSectionHeading,
   formatMetadata,
   formatPublicDate,
   PublicBreadcrumbs,
   PublicBuildStateBadge,
-  RelationshipCard,
-  relationshipKey,
   TechnologyList,
 } from '../EditorialPrimitives';
 import { PageContainer, PublicSection } from '../PageContainer';
 import { ProseRenderer } from '../ProseRenderer';
 import { PublicImage } from '../PublicImage';
+import { RelatedRecordsSection } from '../RelatedRecordsSection';
 import { BlueprintFeatureList } from './BlueprintFeatureList';
 
 type BuildDetail = Extract<PublicEntityDetail, { type: 'build' }>;
@@ -168,7 +168,13 @@ export function PublicCollectionDetail({ entity }: { entity: ImmutablePublic<Col
       ) : null}
 
       {lineage.length ? (
-        <RelationshipSection title="Product lineage" relationships={lineage} />
+        <RelatedRecordsSection
+          id="relations-product-lineage"
+          title="Product lineage"
+          groups={[{ relationships: lineage }]}
+          sectionClassName="detail-relations"
+          containerClassName="detail-relations-grid"
+        />
       ) : null}
 
       {entity.type === 'lab' ? <LabProgress entity={entity} /> : null}
@@ -196,9 +202,7 @@ export function PublicCollectionDetail({ entity }: { entity: ImmutablePublic<Col
             aria-labelledby={sectionId}
           >
             <PageContainer className="detail-document-grid">
-              <header>
-                <p className="home-eyebrow">{label.eyebrow}</p>
-                <h2 id={sectionId}>{label.title}</h2>
+              <DetailSectionHeading id={sectionId} eyebrow={label.eyebrow} title={label.title}>
                 {document.outline?.length && document.outline.length > 1 ? (
                   <nav aria-label={`${label.title} contents`} className="detail-outline">
                     <ol>
@@ -210,70 +214,70 @@ export function PublicCollectionDetail({ entity }: { entity: ImmutablePublic<Col
                     </ol>
                   </nav>
                 ) : null}
-              </header>
+              </DetailSectionHeading>
               <ProseRenderer document={document} headingOffset={1} />
             </PageContainer>
           </PublicSection>
         );
       })}
 
-      {'gallery' in entity && entity.gallery.length ? (
-        <PublicSection className="detail-gallery" aria-labelledby="detail-gallery-title">
-          <PageContainer>
-            <header className="detail-section-header">
-              <p className="home-eyebrow">Media / evidence</p>
-              <h2 id="detail-gallery-title">Recorded views</h2>
-            </header>
-            <div className="detail-gallery-grid">
-              {entity.gallery.map((media) => (
-                <PublicImage key={media.url} media={media} />
-              ))}
-            </div>
-          </PageContainer>
-        </PublicSection>
+      {'gallery' in entity ? (
+        <DetailGallery
+          id="detail-gallery-title"
+          eyebrow="Media / evidence"
+          title="Recorded views"
+          media={entity.gallery}
+          sectionClassName="detail-gallery"
+        />
       ) : null}
 
-      {entity.type === 'blueprint' && entity.previewMedia.length ? (
-        <PublicSection className="detail-gallery" aria-labelledby="blueprint-preview-title">
-          <PageContainer>
-            <header className="detail-section-header">
-              <p className="home-eyebrow">Implementation / recorded views</p>
-              <h2 id="blueprint-preview-title">Preview the system</h2>
-            </header>
-            <div className="detail-gallery-grid">
-              {entity.previewMedia.map((media) => (
-                <PublicImage key={media.url} media={media} />
-              ))}
-            </div>
-          </PageContainer>
-        </PublicSection>
+      {entity.type === 'blueprint' ? (
+        <DetailGallery
+          id="blueprint-preview-title"
+          eyebrow="Implementation / recorded views"
+          title="Preview the system"
+          media={entity.previewMedia}
+          sectionClassName="detail-gallery"
+        />
       ) : null}
 
       {entity.type === 'work' && workRelationshipGroups.length ? (
-        <GroupedRelationshipSection
+        <RelatedRecordsSection
+          id="grouped-connections-title"
           title="Continue through the engineering record"
           groups={workRelationshipGroups}
+          sectionClassName="detail-relations"
+          containerClassName="detail-relations-grid"
         />
       ) : null}
 
       {entity.type === 'blueprint' && blueprintRelationshipGroups.length ? (
-        <GroupedRelationshipSection
+        <RelatedRecordsSection
+          id="grouped-connections-title"
           title="Evidence and connected systems"
           groups={blueprintRelationshipGroups}
+          sectionClassName="detail-relations"
+          containerClassName="detail-relations-grid"
         />
       ) : null}
 
       {entity.type === 'build' && buildRelationshipGroups.length ? (
-        <GroupedRelationshipSection
+        <RelatedRecordsSection
+          id="grouped-connections-title"
           title="Continue through the engineering record"
           groups={buildRelationshipGroups}
+          sectionClassName="detail-relations"
+          containerClassName="detail-relations-grid"
         />
       ) : null}
 
       {entity.type === 'lab' && labRelationshipGroups.length ? (
-        <GroupedRelationshipSection
+        <RelatedRecordsSection
+          id="grouped-connections-title"
           title="Continue through the engineering record"
           groups={labRelationshipGroups}
+          sectionClassName="detail-relations"
+          containerClassName="detail-relations-grid"
         />
       ) : null}
 
@@ -371,10 +375,12 @@ function BlueprintSpecification({ entity }: { entity: ImmutablePublic<BlueprintD
       aria-labelledby="blueprint-specification-title"
     >
       <PageContainer>
-        <header className="detail-section-header">
-          <p className="home-eyebrow">System specification / v{entity.version}</p>
-          <h2 id="blueprint-specification-title">What is designed to be reused</h2>
-        </header>
+        <DetailSectionHeading
+          id="blueprint-specification-title"
+          eyebrow={`System specification / v${entity.version}`}
+          title="What is designed to be reused"
+          className="detail-section-header"
+        />
         <dl className="blueprint-system-register">
           <div>
             <dt>Information architecture</dt>
@@ -399,10 +405,12 @@ function LabProgress({ entity }: { entity: ImmutablePublic<LabDetail> }) {
   return (
     <PublicSection className="detail-progress" aria-labelledby="detail-progress-title">
       <PageContainer>
-        <header className="detail-section-header">
-          <p className="home-eyebrow">Current state / {formatMetadata(entity.stage)}</p>
-          <h2 id="detail-progress-title">What the investigation is moving toward</h2>
-        </header>
+        <DetailSectionHeading
+          id="detail-progress-title"
+          eyebrow={`Current state / ${formatMetadata(entity.stage)}`}
+          title="What the investigation is moving toward"
+          className="detail-section-header"
+        />
         <div className="detail-progress-grid">
           <section>
             <h3>Research direction</h3>
@@ -431,74 +439,4 @@ function LabProgress({ entity }: { entity: ImmutablePublic<LabDetail> }) {
       </PageContainer>
     </PublicSection>
   );
-}
-
-function RelationshipSection({
-  title,
-  relationships,
-}: {
-  title: string;
-  relationships: readonly ImmutablePublic<PublicRelationship>[];
-}) {
-  return (
-    <PublicSection className="detail-relations" aria-labelledby={`relations-${slugify(title)}`}>
-      <PageContainer className="detail-relations-grid">
-        <header>
-          <p className="home-eyebrow">Relationships / typed links</p>
-          <h2 id={`relations-${slugify(title)}`}>{title}</h2>
-        </header>
-        <div className="home-relationships" aria-label={title}>
-          {relationships.map((relationship) => (
-            <RelationshipCard
-              key={relationshipKey(relationship)}
-              relationship={relationship}
-              enabled={PUBLIC_ENTITY_ROUTES[relationship.target.type]}
-            />
-          ))}
-        </div>
-      </PageContainer>
-    </PublicSection>
-  );
-}
-
-function GroupedRelationshipSection({
-  title,
-  groups,
-}: {
-  title: string;
-  groups: Array<{
-    title: string;
-    relationships: readonly ImmutablePublic<PublicRelationship>[];
-  }>;
-}) {
-  return (
-    <PublicSection className="detail-relations" aria-labelledby="grouped-connections-title">
-      <PageContainer className="detail-relations-grid">
-        <header>
-          <p className="home-eyebrow">Relationships / typed links</p>
-          <h2 id="grouped-connections-title">{title}</h2>
-        </header>
-        <div className="detail-relation-groups">
-          {groups.map((group) => (
-            <section key={group.title} className="detail-relation-group">
-              <h3>{group.title}</h3>
-              <div className="home-relationships" aria-label={group.title}>
-                {group.relationships.map((relationship) => (
-                  <RelationshipCard
-                    key={relationshipKey(relationship)}
-                    relationship={relationship}
-                    enabled={PUBLIC_ENTITY_ROUTES[relationship.target.type]}
-                  />
-                ))}
-              </div>
-            </section>
-          ))}
-        </div>
-      </PageContainer>
-    </PublicSection>
-  );
-}
-
-function slugify(value: string) {
-  return value.toLowerCase().replaceAll(' ', '-');
 }

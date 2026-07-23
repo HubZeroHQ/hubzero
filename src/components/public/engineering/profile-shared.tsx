@@ -1,10 +1,18 @@
 import Link from 'next/link';
-import { PUBLIC_ENTITY_ROUTES } from '@/config/public-site';
-import type { ImmutablePublic, PublicEntityDetail, PublicRelationship } from '@/lib/public/domain';
+import type { ImmutablePublic, PublicEntityDetail } from '@/lib/public/domain';
 import { publicRoute } from '@/lib/public/routes';
 import { PageContainer } from '../PageContainer';
-import { RelationshipCard, relationshipKey } from '../EditorialPrimitives';
 import { RelationshipGraph } from '../EvidenceVisuals';
+
+/**
+ * Re-exported, not redefined: `RelationshipGroup` used to be duplicated
+ * here and in `NoteDetail.tsx` and `PublicCollectionDetail.tsx`. It now has
+ * one canonical implementation in `EditorialPrimitives.tsx` (next to
+ * `RelationshipCard`, which it composes). Re-exporting here means every
+ * founder composition's existing `from './profile-shared'` import keeps
+ * working unchanged.
+ */
+export { RelationshipGroup } from '../EditorialPrimitives';
 
 export type EngineeringProfile = Extract<PublicEntityDetail, { type: 'engineeringProfile' }>;
 
@@ -78,29 +86,6 @@ export function ProfileEvidenceGraph({
         relationships={profile.relationships}
       />
     </div>
-  );
-}
-
-export function RelationshipGroup({
-  title,
-  relationships,
-}: {
-  title: string;
-  relationships: readonly ImmutablePublic<PublicRelationship>[];
-}) {
-  return (
-    <section className="detail-relation-group">
-      <h3>{title}</h3>
-      <div className="home-relationships" aria-label={title}>
-        {relationships.map((relationship) => (
-          <RelationshipCard
-            key={relationshipKey(relationship)}
-            relationship={relationship}
-            enabled={PUBLIC_ENTITY_ROUTES[relationship.target.type]}
-          />
-        ))}
-      </div>
-    </section>
   );
 }
 

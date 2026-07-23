@@ -3,8 +3,10 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import type { PublicRelationship } from '@/lib/public/domain';
 import {
+  DetailSectionHeading,
   RelationshipCard,
   relationshipHref,
+  RelationshipGroup,
   relationshipKey,
   TechnologyList,
 } from './EditorialPrimitives';
@@ -201,6 +203,67 @@ describe('relationshipHref', () => {
     for (const relationship of relationships) {
       expect(relationshipHref(relationship)).toBe(relationship.target.url);
     }
+  });
+});
+
+describe('DetailSectionHeading', () => {
+  it('renders no class attribute when none is supplied, matching a bare original <header>', () => {
+    const markup = renderToStaticMarkup(
+      createElement(DetailSectionHeading, {
+        id: 'section-title',
+        eyebrow: 'Eyebrow',
+        title: 'Title',
+      }),
+    );
+
+    expect(markup).toBe(
+      '<header><p class="home-eyebrow">Eyebrow</p><h2 id="section-title">Title</h2></header>',
+    );
+  });
+
+  it('applies a supplied className verbatim, for the call sites that already carried detail-section-header', () => {
+    const markup = renderToStaticMarkup(
+      createElement(DetailSectionHeading, {
+        id: 'section-title',
+        eyebrow: 'Eyebrow',
+        title: 'Title',
+        className: 'detail-section-header',
+      }),
+    );
+
+    expect(markup).toContain('<header class="detail-section-header">');
+  });
+
+  it('renders an optional description and trailing children after the heading', () => {
+    const markup = renderToStaticMarkup(
+      createElement(
+        DetailSectionHeading,
+        { id: 'section-title', eyebrow: 'Eyebrow', title: 'Title', description: 'A description' },
+        createElement('nav', { 'aria-label': 'Contents' }, 'Outline'),
+      ),
+    );
+
+    expect(markup).toContain('<p>A description</p>');
+    expect(markup).toContain('<nav aria-label="Contents">Outline</nav>');
+  });
+});
+
+describe('RelationshipGroup', () => {
+  it('renders a titled group of RelationshipCards under one accessible label', () => {
+    const relationships: PublicRelationship[] = [
+      {
+        kind: 'buildAppliedInWork',
+        label: 'Informed by',
+        target: { type: 'build', title: 'A build', url: '/builds/a-build' },
+      },
+    ];
+    const markup = renderToStaticMarkup(
+      createElement(RelationshipGroup, { title: 'Related Builds', relationships }),
+    );
+
+    expect(markup).toContain('<h3>Related Builds</h3>');
+    expect(markup).toContain('class="home-relationships" aria-label="Related Builds"');
+    expect(markup).toContain('A build');
   });
 });
 

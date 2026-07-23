@@ -1,15 +1,16 @@
 import { getFounderIdentity } from '@/config/founder-identity';
 import type { ImmutablePublic } from '@/lib/public/domain';
 import { publicRoute } from '@/lib/public/routes';
-import { PublicBreadcrumbs, TechnologyList } from '../EditorialPrimitives';
+import { DetailGallery } from '../DetailGallery';
+import { DetailSectionHeading, PublicBreadcrumbs, TechnologyList } from '../EditorialPrimitives';
 import { PageContainer, PublicSection } from '../PageContainer';
 import { ProseRenderer } from '../ProseRenderer';
 import { PublicImage } from '../PublicImage';
+import { RelatedRecordsSection } from '../RelatedRecordsSection';
 import { FOUNDER_COMPOSITIONS } from './compositions';
 import {
   ProfileEvidenceGraph,
   ProfileFooter,
-  RelationshipGroup,
   resolveDocuments,
   resolveRelationshipGroups,
   type EngineeringProfile as Profile,
@@ -92,10 +93,11 @@ export function EngineeringProfileDetail({ profile }: { profile: ImmutablePublic
         aria-labelledby="profile-position-title"
       >
         <PageContainer className="profile-position-grid">
-          <header>
-            <p className="home-eyebrow">Engineering position / current practice</p>
-            <h2 id="profile-position-title">How the work is approached.</h2>
-          </header>
+          <DetailSectionHeading
+            id="profile-position-title"
+            eyebrow="Engineering position / current practice"
+            title="How the work is approached."
+          />
           <div className="profile-position-copy">
             <p>{profile.engineeringPhilosophy}</p>
             {profile.engineeringIdentity.length ? (
@@ -114,10 +116,11 @@ export function EngineeringProfileDetail({ profile }: { profile: ImmutablePublic
         aria-labelledby="profile-current-title"
       >
         <PageContainer className="profile-current-grid">
-          <div>
-            <p className="home-eyebrow">Current exploration</p>
-            <h2 id="profile-current-title">{profile.currentExploration}</h2>
-          </div>
+          <DetailSectionHeading
+            id="profile-current-title"
+            eyebrow="Current exploration"
+            title={profile.currentExploration}
+          />
           <div className="profile-current-register">
             {profile.areasOfExpertise.length ? (
               <section aria-labelledby="profile-expertise-title">
@@ -150,31 +153,16 @@ export function EngineeringProfileDetail({ profile }: { profile: ImmutablePublic
       </PublicSection>
 
       {groups.length ? (
-        <PublicSection
-          className="profile-evidence profile-chapter"
-          aria-labelledby="profile-evidence-title"
-        >
-          <PageContainer className="profile-evidence-grid">
-            <header>
-              <p className="home-eyebrow">Evidence / demonstrated contribution</p>
-              <h2 id="profile-evidence-title">Follow the contribution into the work.</h2>
-              <p>
-                Every connection below is explicit in the public record. Internal creator metadata
-                is never treated as contribution credit.
-              </p>
-              <ProfileEvidenceGraph profile={profile} />
-            </header>
-            <div className="detail-relation-groups">
-              {groups.map((group) => (
-                <RelationshipGroup
-                  key={group.type}
-                  title={group.title}
-                  relationships={group.relationships}
-                />
-              ))}
-            </div>
-          </PageContainer>
-        </PublicSection>
+        <RelatedRecordsSection
+          id="profile-evidence-title"
+          eyebrow="Evidence / demonstrated contribution"
+          title="Follow the contribution into the work."
+          description="Every connection below is explicit in the public record. Internal creator metadata is never treated as contribution credit."
+          headerContent={<ProfileEvidenceGraph profile={profile} />}
+          groups={groups}
+          sectionClassName="profile-evidence profile-chapter"
+          containerClassName="profile-evidence-grid"
+        />
       ) : null}
 
       {documents.map(({ document, eyebrow, title }) => (
@@ -184,9 +172,11 @@ export function EngineeringProfileDetail({ profile }: { profile: ImmutablePublic
           aria-labelledby={`profile-document-${document.role}`}
         >
           <PageContainer className="profile-document-grid">
-            <header>
-              <p className="home-eyebrow">{eyebrow}</p>
-              <h2 id={`profile-document-${document.role}`}>{title}</h2>
+            <DetailSectionHeading
+              id={`profile-document-${document.role}`}
+              eyebrow={eyebrow}
+              title={title}
+            >
               {document.outline?.length && document.outline.length > 1 ? (
                 <nav className="detail-outline" aria-label={`${title} contents`}>
                   <ol>
@@ -198,30 +188,19 @@ export function EngineeringProfileDetail({ profile }: { profile: ImmutablePublic
                   </ol>
                 </nav>
               ) : null}
-            </header>
+            </DetailSectionHeading>
             <ProseRenderer document={document} headingOffset={1} as="div" />
           </PageContainer>
         </PublicSection>
       ))}
 
-      {profile.gallery.length ? (
-        <PublicSection
-          className="profile-gallery profile-chapter"
-          aria-labelledby="profile-gallery-title"
-        >
-          <PageContainer>
-            <header className="detail-section-header">
-              <p className="home-eyebrow">Media / supporting evidence</p>
-              <h2 id="profile-gallery-title">Artifacts from the work</h2>
-            </header>
-            <div className="detail-gallery-grid">
-              {profile.gallery.map((media) => (
-                <PublicImage key={media.url} media={media} />
-              ))}
-            </div>
-          </PageContainer>
-        </PublicSection>
-      ) : null}
+      <DetailGallery
+        id="profile-gallery-title"
+        eyebrow="Media / supporting evidence"
+        title="Artifacts from the work"
+        media={profile.gallery}
+        sectionClassName="profile-gallery profile-chapter"
+      />
 
       <ProfileFooter profile={profile} />
     </article>
