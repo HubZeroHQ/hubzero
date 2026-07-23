@@ -51,12 +51,14 @@ export function IyadComposition({
               { label: profile.title },
             ]}
           />
-          <p className="home-eyebrow founder-eyebrow">
-            Engineering Profile / {profile.referenceId}
-          </p>
-          <h1>{profile.title}</h1>
-          <p className="profile-role">{profile.role}</p>
-          <p className="detail-summary">{profile.summary}</p>
+          <div className="profile-identity">
+            <p className="home-eyebrow founder-eyebrow">
+              Engineering Profile / {profile.referenceId}
+            </p>
+            <h1>{profile.title}</h1>
+            <p className="profile-role">{profile.role}</p>
+            <p className="detail-summary">{profile.summary}</p>
+          </div>
           <div
             className="founder-motif-frame founder-motif-frame-traveler"
             style={founderMotifViewTransitionStyle(identity.slug)}
@@ -75,7 +77,10 @@ export function IyadComposition({
         </PageContainer>
       </header>
 
-      <PublicSection className="profile-position" aria-labelledby="profile-position-title">
+      <PublicSection
+        className="profile-position profile-chapter"
+        aria-labelledby="profile-position-title"
+      >
         <PageContainer className="founder-spine-column">
           <p className="home-eyebrow">Engineering position / how the product evolves</p>
           <h2 id="profile-position-title">The product keeps moving.</h2>
@@ -90,7 +95,10 @@ export function IyadComposition({
         </PageContainer>
       </PublicSection>
 
-      <PublicSection className="profile-current" aria-labelledby="profile-current-title">
+      <PublicSection
+        className="profile-current profile-chapter"
+        aria-labelledby="profile-current-title"
+      >
         <PageContainer className="founder-spine-column">
           <p className="home-eyebrow">Current exploration</p>
           <h2 id="profile-current-title">{profile.currentExploration}</h2>
@@ -115,7 +123,12 @@ export function IyadComposition({
                 </ul>
               </section>
             ) : null}
-            <TechnologyList technologies={profile.technologies} />
+            {profile.technologies.length ? (
+              <section aria-labelledby="profile-technology-title">
+                <h3 id="profile-technology-title">Technology path</h3>
+                <TechnologyList technologies={profile.technologies} />
+              </section>
+            ) : null}
           </div>
         </PageContainer>
       </PublicSection>
@@ -129,7 +142,10 @@ export function IyadComposition({
       ) : null}
 
       {groups.length ? (
-        <PublicSection className="profile-evidence" aria-labelledby="profile-evidence-title">
+        <PublicSection
+          className="profile-evidence profile-chapter"
+          aria-labelledby="profile-evidence-title"
+        >
           <PageContainer className="profile-evidence-grid">
             <header>
               <p className="home-eyebrow">Evidence / demonstrated contribution</p>
@@ -156,7 +172,7 @@ export function IyadComposition({
       {documents.map(({ document, eyebrow, title }) => (
         <PublicSection
           key={document.role}
-          className="profile-document"
+          className="profile-document profile-chapter"
           aria-labelledby={`profile-document-${document.role}`}
         >
           <PageContainer className="profile-document-grid">
@@ -181,7 +197,10 @@ export function IyadComposition({
       ))}
 
       {profile.gallery.length ? (
-        <PublicSection className="profile-gallery" aria-labelledby="profile-gallery-title">
+        <PublicSection
+          className="profile-gallery profile-chapter"
+          aria-labelledby="profile-gallery-title"
+        >
           <PageContainer>
             <header className="detail-section-header">
               <p className="home-eyebrow">Media / supporting evidence</p>

@@ -2,13 +2,22 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import type { PublicRelationship } from '@/lib/public/domain';
-import { RelationshipCard, relationshipKey, TechnologyList } from './EditorialPrimitives';
+import {
+  RelationshipCard,
+  relationshipHref,
+  relationshipKey,
+  TechnologyList,
+} from './EditorialPrimitives';
 
 // Regression coverage for the post-personnel-migration bug where every
 // teamMember target shares the literal '/about' url, so two distinct
 // contributors without an Engineering Profile used to collide on the same
 // React key (`teamContributedToEntry-/about`).
-function teamContributor(referenceId: string, title: string): PublicRelationship {
+function teamContributor(
+  referenceId: string,
+  title: string,
+  profileUrl?: string,
+): PublicRelationship {
   return {
     kind: 'teamContributedToEntry',
     label: 'Contributed to',
@@ -17,6 +26,7 @@ function teamContributor(referenceId: string, title: string): PublicRelationship
       title,
       url: '/about',
       referenceId,
+      ...(profileUrl ? { profileUrl } : {}),
     },
   };
 }
@@ -72,13 +82,42 @@ describe('RelationshipCard list rendering', () => {
   });
 
   it('uses one keyboard-focusable canonical anchor for the whole relationship surface', () => {
-    const relationship = teamContributor('HZ-TM-001', 'First contributor');
+    const relationship = teamContributor(
+      'HZ-TM-001',
+      'First contributor',
+      '/about/first-contributor',
+    );
     const markup = renderToStaticMarkup(
       createElement(RelationshipCard, { relationship, enabled: true }),
     );
 
-    expect(markup).toContain('class="home-relationship-card" href="/about"');
+    expect(markup).toContain('class="home-relationship-card" href="/about/first-contributor"');
     expect(markup).not.toContain('tabindex');
+  });
+
+  it('links a contributor to their canonical Engineering Profile, never to the About index', () => {
+    const relationship = teamContributor(
+      'HZ-TM-001',
+      'First contributor',
+      '/about/first-contributor',
+    );
+    const markup = renderToStaticMarkup(
+      createElement(RelationshipCard, { relationship, enabled: true }),
+    );
+
+    expect(markup).toContain('href="/about/first-contributor"');
+    expect(markup).not.toContain('href="/about"');
+  });
+
+  it('renders a contributor without a public profile as static text instead of linking to /about', () => {
+    const relationship = teamContributor('HZ-TM-002', 'No profile yet');
+    const markup = renderToStaticMarkup(
+      createElement(RelationshipCard, { relationship, enabled: true }),
+    );
+
+    expect(markup).not.toContain('<a ');
+    expect(markup).not.toContain('href="/about"');
+    expect(markup).toContain('No profile yet');
   });
 
   it('labels retired Build relationship targets with the shared editorial badge', () => {
@@ -111,6 +150,57 @@ describe('RelationshipCard list rendering', () => {
 
     expect(markup).toContain('class="home-relationship-title"');
     expect(markup).toContain('class="home-relationship-status"></span>');
+  });
+});
+
+describe('relationshipHref', () => {
+  it('resolves a teamMember contributor to their canonical Engineering Profile url', () => {
+    const relationship = teamContributor('HZ-TM-001', 'Contributor', '/about/contributor');
+
+    expect(relationshipHref(relationship)).toBe('/about/contributor');
+  });
+
+  it('never resolves a teamMember contributor to the About index, with or without a profile', () => {
+    const withProfile = teamContributor('HZ-TM-001', 'Contributor', '/about/contributor');
+    const withoutProfile = teamContributor('HZ-TM-002', 'No profile yet');
+
+    expect(relationshipHref(withProfile)).not.toBe('/about');
+    expect(relationshipHref(withoutProfile)).not.toBe('/about');
+    expect(relationshipHref(withoutProfile)).toBeUndefined();
+  });
+
+  it('resolves every non-teamMember relationship kind through its own target.url, unchanged', () => {
+    const relationships: PublicRelationship[] = [
+      {
+        kind: 'buildAppliedInWork',
+        label: 'Informed by',
+        target: { type: 'build', title: 'A build', url: '/builds/a-build' },
+      },
+      {
+        kind: 'labGraduatedToBuild',
+        label: 'Graduated to',
+        target: { type: 'lab', title: 'A lab', url: '/labs/a-lab' },
+      },
+      {
+        kind: 'artifactUsesBlueprint',
+        label: 'Built on',
+        target: { type: 'blueprint', title: 'A blueprint', url: '/blueprints/a-blueprint' },
+      },
+      {
+        kind: 'noteDiscussesArtifact',
+        label: 'Discussed in',
+        target: { type: 'note', title: 'A note', url: '/notes/a-note' },
+      },
+      {
+        kind: 'profileFeaturesEvidence',
+        label: 'Features',
+        target: { type: 'engineeringProfile', title: 'A profile', url: '/about/a-profile' },
+      },
+    ];
+
+    for (const relationship of relationships) {
+      expect(relationshipHref(relationship)).toBe(relationship.target.url);
+    }
   });
 });
 

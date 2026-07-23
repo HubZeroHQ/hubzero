@@ -140,7 +140,12 @@ export function SultanComposition({
                     </ul>
                   </section>
                 ) : null}
-                <TechnologyList technologies={profile.technologies} />
+                {profile.technologies.length ? (
+                  <section aria-labelledby="profile-technology-title">
+                    <h3 id="profile-technology-title">Technology path</h3>
+                    <TechnologyList technologies={profile.technologies} />
+                  </section>
+                ) : null}
               </div>
             </section>
           </div>
@@ -156,7 +161,10 @@ export function SultanComposition({
       ) : null}
 
       {groups.length ? (
-        <PublicSection className="profile-evidence" aria-labelledby="profile-evidence-title">
+        <PublicSection
+          className="profile-evidence profile-chapter"
+          aria-labelledby="profile-evidence-title"
+        >
           <PageContainer className="profile-evidence-grid">
             <header>
               <p className="home-eyebrow">Evidence / demonstrated contribution</p>
@@ -183,7 +191,7 @@ export function SultanComposition({
       {documents.map(({ document, eyebrow, title }) => (
         <PublicSection
           key={document.role}
-          className="profile-document"
+          className="profile-document profile-chapter"
           aria-labelledby={`profile-document-${document.role}`}
         >
           <PageContainer className="profile-document-grid">
@@ -208,7 +216,10 @@ export function SultanComposition({
       ))}
 
       {profile.gallery.length ? (
-        <PublicSection className="profile-gallery" aria-labelledby="profile-gallery-title">
+        <PublicSection
+          className="profile-gallery profile-chapter"
+          aria-labelledby="profile-gallery-title"
+        >
           <PageContainer>
             <header className="detail-section-header">
               <p className="home-eyebrow">Media / supporting evidence</p>

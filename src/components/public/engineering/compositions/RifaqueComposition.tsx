@@ -79,7 +79,10 @@ export function RifaqueComposition({
         </PageContainer>
       </header>
 
-      <PublicSection className="profile-position" aria-labelledby="profile-position-title">
+      <PublicSection
+        className="profile-position profile-chapter"
+        aria-labelledby="profile-position-title"
+      >
         <PageContainer className="profile-position-grid">
           <header>
             <p className="home-eyebrow">Engineering position / systems view</p>
@@ -98,7 +101,10 @@ export function RifaqueComposition({
         </PageContainer>
       </PublicSection>
 
-      <PublicSection className="profile-current" aria-labelledby="profile-current-title">
+      <PublicSection
+        className="profile-current profile-chapter"
+        aria-labelledby="profile-current-title"
+      >
         <PageContainer className="profile-current-grid">
           <div>
             <p className="home-eyebrow">Current exploration</p>
@@ -125,7 +131,12 @@ export function RifaqueComposition({
                 </ul>
               </section>
             ) : null}
-            <TechnologyList technologies={profile.technologies} />
+            {profile.technologies.length ? (
+              <section aria-labelledby="profile-technology-title">
+                <h3 id="profile-technology-title">Technology path</h3>
+                <TechnologyList technologies={profile.technologies} />
+              </section>
+            ) : null}
           </div>
         </PageContainer>
       </PublicSection>
@@ -139,7 +150,10 @@ export function RifaqueComposition({
       ) : null}
 
       {groups.length ? (
-        <PublicSection className="profile-evidence" aria-labelledby="profile-evidence-title">
+        <PublicSection
+          className="profile-evidence profile-chapter"
+          aria-labelledby="profile-evidence-title"
+        >
           <PageContainer className="profile-evidence-grid">
             <header>
               <p className="home-eyebrow">Evidence / demonstrated contribution</p>
@@ -166,7 +180,7 @@ export function RifaqueComposition({
       {documents.map(({ document, eyebrow, title }) => (
         <PublicSection
           key={document.role}
-          className="profile-document"
+          className="profile-document profile-chapter"
           aria-labelledby={`profile-document-${document.role}`}
         >
           <PageContainer className="profile-document-grid">
@@ -191,7 +205,10 @@ export function RifaqueComposition({
       ))}
 
       {profile.gallery.length ? (
-        <PublicSection className="profile-gallery" aria-labelledby="profile-gallery-title">
+        <PublicSection
+          className="profile-gallery profile-chapter"
+          aria-labelledby="profile-gallery-title"
+        >
           <PageContainer>
             <header className="detail-section-header">
               <p className="home-eyebrow">Media / supporting evidence</p>

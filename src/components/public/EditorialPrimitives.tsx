@@ -26,6 +26,23 @@ export function relationshipKey(relationship: ImmutablePublic<PublicRelationship
   return `${relationship.kind}-${relationship.target.referenceId ?? relationship.target.url}`;
 }
 
+/**
+ * The canonical destination for a relationship target. A teamMember link's
+ * `url` is always the literal '/about' (it doesn't vary by person — see
+ * `PublicEntityLink.profileUrl` doc comment), so a contributor only gets a
+ * destination when they currently have a public Engineering Profile;
+ * otherwise there is no canonical page to send them to and the caller should
+ * render static text instead of a link to the About index. Every other
+ * target type's `url` is already its own canonical page.
+ */
+export function relationshipHref(
+  relationship: ImmutablePublic<PublicRelationship>,
+): string | undefined {
+  return relationship.target.type === 'teamMember'
+    ? relationship.target.profileUrl
+    : relationship.target.url;
+}
+
 export function SectionHeader({
   eyebrow,
   title,
@@ -183,10 +200,7 @@ export function ContributorList({
       <p className="home-eyebrow">Contributors</p>
       <ul aria-label="Contributors">
         {contributors.map((contributor) => {
-          const profileHref =
-            contributor.target.type === 'engineeringProfile'
-              ? contributor.target.url
-              : contributor.target.profileUrl;
+          const profileHref = relationshipHref(contributor);
           return (
             <li key={relationshipKey(contributor)}>
               {profileHref ? (
@@ -262,6 +276,8 @@ export function RelationshipCard({
     relationship.target.type === 'engineeringProfile'
       ? getFounderIdentity(slugFromProfileUrl(relationship.target.url) ?? '')
       : undefined;
+  const href = relationshipHref(relationship);
+  const linked = enabled && Boolean(href);
   const content = (
     <>
       <span className="home-relationship-label">{relationship.label}</span>
@@ -273,12 +289,12 @@ export function RelationshipCard({
           <PublicBuildStateBadge state={relationship.target.state} />
         ) : null}
       </span>
-      {enabled ? <span aria-hidden="true">→</span> : null}
+      {linked ? <span aria-hidden="true">→</span> : null}
     </>
   );
   const style = identity ? founderAccentStyle(identity.accent) : undefined;
-  return enabled ? (
-    <Link href={relationship.target.url} className="home-relationship-card" style={style}>
+  return enabled && href ? (
+    <Link href={href} className="home-relationship-card" style={style}>
       {content}
     </Link>
   ) : (

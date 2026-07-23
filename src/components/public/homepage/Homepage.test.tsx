@@ -111,6 +111,55 @@ describe('Homepage', () => {
     expect(projection.profiles[1]?.relationships).toHaveLength(4);
   });
 
+  it('links a Build card contributor to their canonical Engineering Profile, never to /about', () => {
+    const projection: PublicHomepageProjection = {
+      ...emptyProjection,
+      builds: [
+        {
+          entity: {
+            type: 'build',
+            title: 'QueryCraft',
+            url: '/builds/querycraft',
+            summary: 'A build.',
+            technologies: [],
+            slug: 'querycraft',
+            referenceId: 'HZ-BLD-001',
+            deploymentState: 'live',
+            links: [],
+          },
+          relationships: [
+            {
+              kind: 'teamContributedToEntry',
+              label: 'Contributor',
+              target: {
+                type: 'teamMember',
+                title: 'Rifaque Ahmed',
+                url: '/about',
+                referenceId: 'HZ-TM-001',
+                profileUrl: '/engineering/rifaque-ahmed',
+              },
+            },
+            {
+              kind: 'teamContributedToEntry',
+              label: 'Contributor',
+              target: {
+                type: 'teamMember',
+                title: 'No Profile Yet',
+                url: '/about',
+                referenceId: 'HZ-TM-002',
+              },
+            },
+          ],
+        },
+      ],
+    };
+
+    const markup = renderToStaticMarkup(<Homepage projection={projection} />);
+
+    expect(markup).toContain('href="/engineering/rifaque-ahmed"');
+    expect(markup).not.toContain('href="/about"');
+  });
+
   it('keeps the complete narrative rhythm without rendering empty content chapters', () => {
     const markup = renderToStaticMarkup(<Homepage projection={emptyProjection} />);
 

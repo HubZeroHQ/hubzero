@@ -64,8 +64,15 @@ export function ProfileEvidenceGraph({
   profile: ImmutablePublic<EngineeringProfile>;
 }) {
   if (!profile.relationships.length) return null;
+  const total = profile.relationships.length;
+  const collections = new Set(profile.relationships.map((relationship) => relationship.target.type))
+    .size;
   return (
-    <div className="home-section-artifact">
+    <div className="home-section-artifact profile-evidence-graph">
+      <p className="profile-evidence-graph-meta">
+        {total} {total === 1 ? 'connection' : 'connections'} across {collections}{' '}
+        {collections === 1 ? 'collection' : 'collections'}
+      </p>
       <RelationshipGraph
         subject={{ label: profile.title, meta: 'Engineer' }}
         relationships={profile.relationships}

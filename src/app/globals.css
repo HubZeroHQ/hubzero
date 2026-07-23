@@ -765,6 +765,23 @@
     padding-left: 24px;
   }
 
+  .public-timeline li {
+    position: relative;
+  }
+
+  /* One marker per real timeline event, on the rail the list already has. */
+  .public-timeline li::before {
+    content: '';
+    position: absolute;
+    top: 7px;
+    left: -28px;
+    width: 7px;
+    height: 7px;
+    border: 1px solid var(--color-text-muted);
+    border-radius: 50%;
+    background: var(--color-bg-base);
+  }
+
   .public-timeline h4 {
     margin-top: 4px;
   }
@@ -4404,17 +4421,43 @@
     gap: 32px;
   }
 
-  .profile-current-register section > ul:not(.engineering-expertise) {
+  .profile-current-register section > ul:not(.engineering-expertise, .home-technologies) {
     display: grid;
     margin-top: 14px;
     border-top: 1px solid var(--color-border-muted);
   }
 
-  .profile-current-register section > ul:not(.engineering-expertise) li {
+  .profile-current-register section > ul:not(.engineering-expertise, .home-technologies) li {
     padding-block: 14px;
     border-bottom: 1px solid var(--color-border-muted);
     color: var(--color-text-secondary);
     font-size: 14px;
+  }
+
+  /*
+   * The technology taxonomy already appears as "Areas of expertise" chips
+   * and "Current interests" above it — real, distinct fields, but visually
+   * the same shape repeated a third time reads as noise, not evidence. This
+   * reuses the same de-emphasis already shipped for the index card
+   * (`.engineering-card-body .home-technologies`): a plain, quiet line, not
+   * a third row of pill chips competing with the two above it.
+   */
+  .profile-current-register .home-technologies {
+    gap: 6px 10px;
+    margin-top: 14px;
+  }
+
+  .profile-current-register .home-technologies li {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    color: var(--color-text-muted);
+  }
+
+  .profile-current-register .home-technologies a {
+    min-height: 24px;
+    padding: 0;
   }
 
   .profile-evidence-grid > header,
@@ -4600,6 +4643,95 @@
 @keyframes founder-motif-appear {
   to {
     opacity: 1;
+  }
+}
+
+/*
+ * Engineering Profile chapter rhythm — every profile-chapter section is a
+ * numbered stop in one continuous document, generalizing the numbering
+ * Sultan's own outline already does by hand. The count reflects each page's
+ * real section order (via a CSS counter), so it stays correct across every
+ * composition regardless of how many chapters a founder's identity
+ * includes — never a fixed or invented sequence.
+ */
+@layer components {
+  .profile-detail {
+    counter-reset: profile-chapter;
+  }
+
+  .profile-chapter {
+    counter-increment: profile-chapter;
+    padding-block: clamp(100px, 10vw, 168px);
+  }
+
+  .profile-chapter .home-eyebrow {
+    position: relative;
+    padding-left: 34px;
+  }
+
+  .profile-chapter .home-eyebrow::before {
+    content: counter(profile-chapter, decimal-leading-zero);
+    position: absolute;
+    top: 0;
+    left: 0;
+    color: var(--color-text-muted);
+  }
+
+  /*
+   * Sultan's editorial grid already numbers every chapter in its own
+   * persistent outline nav (§ founder-editorial-outline below) — a second
+   * numeral on the eyebrow would duplicate it, not reinforce it.
+   */
+  .founder-profile-editorial-grid .profile-chapter .home-eyebrow {
+    padding-left: 0;
+  }
+
+  .founder-profile-editorial-grid .profile-chapter .home-eyebrow::before {
+    content: none;
+  }
+
+  .profile-hero {
+    padding-block: clamp(120px, 13vw, 176px) clamp(90px, 9vw, 136px);
+  }
+
+  /*
+   * The evidence graph gets a frame of its own — the same border/radius/
+   * surface vocabulary already used for code blocks and callouts sitewide —
+   * so it reads as a distinct figure ahead of the accessible relationship
+   * list beneath it, not a decorative flourish on top of it. The caption is
+   * generated from the real relationship count, never invented copy.
+   */
+  .profile-evidence-graph {
+    margin-top: 28px;
+    padding: 28px clamp(20px, 3vw, 40px);
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-card);
+    background: var(--color-surface-default);
+  }
+
+  .profile-evidence-graph-meta {
+    margin-bottom: 20px;
+    color: var(--color-text-muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  /*
+   * Long-form documents (introduction / interview / quotes / timeline /
+   * achievements) all render through one shared ProseRenderer template.
+   * Every heading after the first marks the start of a new unit — a new
+   * question, a new principle, a new dated entry — so it gets a dividing
+   * rule and real breathing room instead of running straight into the prose
+   * above it. Scoped to profile documents only; other collections using
+   * the same ProseRenderer keep their existing rhythm.
+   */
+  .profile-document .public-prose h2:not(:first-child),
+  .profile-document .public-prose h3:not(:first-child) {
+    margin-top: clamp(40px, 5vw, 64px);
+    padding-top: clamp(28px, 3.5vw, 40px);
+    border-top: 1px solid var(--color-border-muted);
   }
 }
 

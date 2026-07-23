@@ -70,7 +70,10 @@ export function RaifComposition({
         </PageContainer>
       </header>
 
-      <PublicSection className="founder-architecture" aria-labelledby="founder-architecture-title">
+      <PublicSection
+        className="founder-architecture profile-chapter"
+        aria-labelledby="founder-architecture-title"
+      >
         <PageContainer>
           <header>
             <p className="home-eyebrow">Architecture / evidence graph</p>
@@ -90,7 +93,7 @@ export function RaifComposition({
       </PublicSection>
 
       <PublicSection
-        className="profile-position founder-decision-record"
+        className="profile-position founder-decision-record profile-chapter"
         aria-labelledby="profile-position-title"
       >
         <PageContainer className="profile-position-grid">
@@ -114,7 +117,10 @@ export function RaifComposition({
         </PageContainer>
       </PublicSection>
 
-      <PublicSection className="profile-current" aria-labelledby="profile-current-title">
+      <PublicSection
+        className="profile-current profile-chapter"
+        aria-labelledby="profile-current-title"
+      >
         <PageContainer className="profile-current-grid">
           <div>
             <p className="home-eyebrow">Current exploration</p>
@@ -141,7 +147,12 @@ export function RaifComposition({
                 </ul>
               </section>
             ) : null}
-            <TechnologyList technologies={profile.technologies} />
+            {profile.technologies.length ? (
+              <section aria-labelledby="profile-technology-title">
+                <h3 id="profile-technology-title">Technology path</h3>
+                <TechnologyList technologies={profile.technologies} />
+              </section>
+            ) : null}
           </div>
         </PageContainer>
       </PublicSection>
@@ -155,7 +166,10 @@ export function RaifComposition({
       ) : null}
 
       {groups.length ? (
-        <PublicSection className="profile-evidence" aria-labelledby="profile-evidence-title">
+        <PublicSection
+          className="profile-evidence profile-chapter"
+          aria-labelledby="profile-evidence-title"
+        >
           <PageContainer className="profile-evidence-grid">
             <header>
               <p className="home-eyebrow">Evidence / demonstrated contribution</p>
@@ -182,7 +196,7 @@ export function RaifComposition({
       {documents.map(({ document, eyebrow, title }) => (
         <PublicSection
           key={document.role}
-          className="profile-document"
+          className="profile-document profile-chapter"
           aria-labelledby={`profile-document-${document.role}`}
         >
           <PageContainer className="profile-document-grid">
@@ -207,7 +221,10 @@ export function RaifComposition({
       ))}
 
       {profile.gallery.length ? (
-        <PublicSection className="profile-gallery" aria-labelledby="profile-gallery-title">
+        <PublicSection
+          className="profile-gallery profile-chapter"
+          aria-labelledby="profile-gallery-title"
+        >
           <PageContainer>
             <header className="detail-section-header">
               <p className="home-eyebrow">Media / supporting evidence</p>
