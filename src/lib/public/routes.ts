@@ -40,6 +40,7 @@ function withQuery(path: string, query: Query = {}): string {
 export const publicRoute = {
   home: () => '/' as const,
   about: () => '/about' as const,
+  ledger: () => '/ledger' as const,
   contact: (query?: Query) => withQuery('/contact', query),
   search: (query?: Query) => withQuery('/search', query),
   collection: (type: PublicEntityType) => COLLECTION_ROUTES[type],

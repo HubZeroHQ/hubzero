@@ -8,6 +8,7 @@ import {
   createPublicSearchEntryPoint,
 } from './discovery/search';
 import type { PublicDetailEntityType, PublicEntityType } from './domain';
+import { buildLedger } from './ledger-projection';
 import { mongoPublicDataSource } from './mongodb-source';
 import { createPublicRepository } from './repository';
 
@@ -89,6 +90,21 @@ export function getPublicHomepage(now = new Date()) {
     ],
     revalidate: 86_400,
   })();
+}
+
+/**
+ * Ledger (v2.5 Phase 7): composes two already-cached, already-existing
+ * queries rather than adding a new repository method or a new cache
+ * entry. `listPublicSummaries` individually caches Notes and Labs; this
+ * only concatenates and runs them through the pure, dependency-free
+ * `buildLedger` sort — no new persistence, no new query.
+ */
+export async function getPublicLedger() {
+  const [notes, labs] = await Promise.all([
+    listPublicSummaries('note'),
+    listPublicSummaries('lab'),
+  ]);
+  return buildLedger([...notes, ...labs]);
 }
 
 function cacheKey(type: PublicEntityType, ...parts: string[]): string[] {
