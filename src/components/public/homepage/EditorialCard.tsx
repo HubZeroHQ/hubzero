@@ -2,11 +2,10 @@ import Link from 'next/link';
 import type { ImmutablePublic, PublicHomepageFeature } from '@/lib/public/domain';
 import { PublicImage } from '../PublicImage';
 import {
+  CappedRelationshipList,
   MetadataRow,
   PublicationMetadata,
-  RelationshipCard,
   TechnologyList,
-  relationshipKey,
 } from '../EditorialPrimitives';
 
 export function EditorialCard({
@@ -35,6 +34,8 @@ export function EditorialCard({
   const cardClassName = prominent
     ? `home-card home-card-prominent ${entity.hero ? 'home-card-with-media' : 'home-card-editorial'}`
     : 'home-card';
+  const enabled = (relationship: (typeof relationships)[number]) =>
+    Boolean(relationshipRoutes[relationship.target.type]);
 
   if (layout === 'row') {
     return (
@@ -53,17 +54,12 @@ export function EditorialCard({
         <p className="home-ledger-summary">{entity.summary}</p>
         <PublicationMetadata entity={entity} />
         <TechnologyList technologies={entity.technologies} />
-        {relationships.length ? (
-          <div className="home-relationships" aria-label="Connected evidence">
-            {relationships.map((relationship) => (
-              <RelationshipCard
-                key={relationshipKey(relationship)}
-                relationship={relationship}
-                enabled={Boolean(relationshipRoutes[relationship.target.type])}
-              />
-            ))}
-          </div>
-        ) : null}
+        <CappedRelationshipList
+          relationships={relationships}
+          limit={relationships.length}
+          ariaLabel="Connected evidence"
+          enabled={enabled}
+        />
       </article>
     );
   }
@@ -88,24 +84,16 @@ export function EditorialCard({
         <p className="home-card-summary">{entity.summary}</p>
         <PublicationMetadata entity={entity} />
         <TechnologyList technologies={entity.technologies} />
-        {relationships.length ? (
-          entity.type === 'engineeringProfile' ? (
-            <ProfileContributions
-              relationships={relationships}
-              relationshipRoutes={relationshipRoutes}
-            />
-          ) : (
-            <div className="home-relationships" aria-label="Connected evidence">
-              {relationships.map((relationship) => (
-                <RelationshipCard
-                  key={relationshipKey(relationship)}
-                  relationship={relationship}
-                  enabled={Boolean(relationshipRoutes[relationship.target.type])}
-                />
-              ))}
-            </div>
-          )
-        ) : null}
+        {entity.type === 'engineeringProfile' ? (
+          <ProfileContributions relationships={relationships} enabled={enabled} />
+        ) : (
+          <CappedRelationshipList
+            relationships={relationships}
+            limit={relationships.length}
+            ariaLabel="Connected evidence"
+            enabled={enabled}
+          />
+        )}
       </div>
     </article>
   );
@@ -113,31 +101,30 @@ export function EditorialCard({
 
 function ProfileContributions({
   relationships,
-  relationshipRoutes,
+  enabled,
 }: {
   relationships: readonly ImmutablePublic<PublicHomepageFeature>['relationships'][number][];
-  relationshipRoutes: Readonly<Record<string, boolean>>;
+  enabled: (
+    relationship: ImmutablePublic<PublicHomepageFeature>['relationships'][number],
+  ) => boolean;
 }) {
   const contributions = relationships.filter(
     (relationship) => relationship.kind === 'teamContributedToEntry',
   );
-  const visible = contributions.slice(0, 3);
-  const remaining = contributions.length - visible.length;
+  const remaining = contributions.length - Math.min(contributions.length, 3);
 
   return (
-    <div className="home-relationships" aria-label="Public contributions">
-      {visible.map((relationship) => (
-        <RelationshipCard
-          key={relationshipKey(relationship)}
-          relationship={relationship}
-          enabled={Boolean(relationshipRoutes[relationship.target.type])}
-        />
-      ))}
-      {remaining > 0 ? (
-        <div className="home-relationship-card home-relationship-summary">
-          +{remaining} more contribution{remaining === 1 ? '' : 's'}
-        </div>
-      ) : null}
-    </div>
+    <CappedRelationshipList
+      relationships={contributions}
+      ariaLabel="Public contributions"
+      enabled={enabled}
+      overflow={
+        remaining > 0 ? (
+          <div className="home-relationship-card home-relationship-summary">
+            +{remaining} more contribution{remaining === 1 ? '' : 's'}
+          </div>
+        ) : null
+      }
+    />
   );
 }

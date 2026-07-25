@@ -117,6 +117,13 @@ export function PublicCollectionIndex({
             {entries.length ? (
               <p>
                 {entries.length} eligible published {entries.length === 1 ? 'record' : 'records'}.
+                {type === 'lab' ? (
+                  <>
+                    {' '}
+                    Lab activity alongside Notes forms the{' '}
+                    <Link href={publicRoute.ledger()}>full Ledger</Link>.
+                  </>
+                ) : null}
               </p>
             ) : null}
           </header>

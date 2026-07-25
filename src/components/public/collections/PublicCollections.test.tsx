@@ -87,6 +87,18 @@ describe('Builds and Labs public collections', () => {
     expect(markup).toContain('Retired');
   });
 
+  it('cross-links to the Ledger from the Labs collection index, but not from Builds', () => {
+    const labMarkup = renderToStaticMarkup(
+      <PublicCollectionIndex type="lab" entries={[labSummary]} />,
+    );
+    const buildMarkup = renderToStaticMarkup(
+      <PublicCollectionIndex type="build" entries={[buildSummary]} />,
+    );
+
+    expect(labMarkup).toContain('href="/ledger"');
+    expect(buildMarkup).not.toContain('href="/ledger"');
+  });
+
   it('renders Work category filters as URL-addressable server navigation', () => {
     const markup = renderToStaticMarkup(
       <PublicCollectionIndex
@@ -181,6 +193,12 @@ describe('Builds and Labs public collections', () => {
     expect(markup).toContain('Connected investigations');
     expect(markup).toContain('Return to Work');
 
+    // The main relationship section now pairs an EvidenceGraph with its list, like Engineering Profiles.
+    expect(markup).toContain('class="evidence-graph"');
+    expect(markup.indexOf('class="evidence-graph"')).toBeGreaterThan(
+      markup.indexOf('Continue through the engineering record'),
+    );
+
     // Engineering contributors render as publication metadata, before the case study body.
     expect(markup).toContain('Contributors');
     expect(markup).toContain('Public Engineer');
@@ -271,6 +289,15 @@ describe('Builds and Labs public collections', () => {
           },
         },
         {
+          kind: 'buildAppliedInWork',
+          label: 'Applied in client work',
+          target: {
+            type: 'work',
+            title: 'Operational release review',
+            url: '/work/operational-release-review',
+          },
+        },
+        {
           kind: 'teamContributedToEntry',
           label: 'Engineering contributor',
           target: {
@@ -297,6 +324,11 @@ describe('Builds and Labs public collections', () => {
     expect(markup).toContain('Public Engineer');
     expect(markup).toContain('Backend Engineer');
     expect(markup.indexOf('Contributors')).toBeLessThan(markup.indexOf('Product story'));
+
+    // The Build's own "Applied in client work" section pairs an EvidenceGraph with its list.
+    expect(markup).toContain('Applied in client work');
+    expect(markup).toContain('class="evidence-graph-focus-region"');
+    expect(markup).toContain('class="evidence-graph"');
   });
 
   it('renders Lab state, milestones, and research Documents in narrative order', () => {
@@ -319,6 +351,11 @@ describe('Builds and Labs public collections', () => {
             role: 'Backend Engineer',
           },
         },
+        {
+          kind: 'labRelatedBuild',
+          label: 'Related Build',
+          target: { type: 'build', title: 'Release Ledger', url: '/builds/release-ledger' },
+        },
       ],
       graduationCriteria: 'The resolver remains deterministic across every visibility transition.',
       gallery: [],
@@ -329,6 +366,7 @@ describe('Builds and Labs public collections', () => {
           summary: 'Every exclusive-edge conflict now has an expected public outcome.',
         },
       ],
+      trace: [],
     };
     const markup = renderToStaticMarkup(<PublicCollectionDetail entity={detail} />);
 
@@ -343,5 +381,103 @@ describe('Builds and Labs public collections', () => {
     expect(markup).toContain('Public Engineer');
     expect(markup.indexOf('Contributors')).toBeLessThan(markup.indexOf('Engineering journal'));
     expect(markup).toContain('Updated');
+
+    // The Lab's own "Related Builds" section pairs an EvidenceGraph with its list.
+    expect(markup).toContain('Related Builds');
+    expect(markup).toContain('class="evidence-graph-focus-region"');
+    expect(markup).toContain('class="evidence-graph"');
+    // No trace chain was resolved for this fixture — Trace stays absent, not an empty chapter.
+    expect(markup).not.toContain('Trace / causal chain');
+  });
+
+  it('renders a Lab’s forward Trace as a chain-mode EvidenceGraph through Build to Work', () => {
+    const detail: Extract<PublicEntityDetail, { type: 'lab' }> = {
+      ...labSummary,
+      documents: [
+        {
+          role: 'engineeringJournal',
+          blocks: [{ id: 'journal-entry', type: 'paragraph', data: { text: 'Observed result.' } }],
+        },
+      ],
+      relationships: [],
+      graduationCriteria: 'The resolver remains deterministic across every visibility transition.',
+      gallery: [],
+      milestones: [],
+      trace: [
+        {
+          kind: 'labGraduatedToBuild',
+          label: 'Graduated into',
+          target: { type: 'build', title: 'Release Ledger', url: '/builds/release-ledger' },
+        },
+        {
+          kind: 'buildAppliedInWork',
+          label: 'Applied in client work',
+          target: {
+            type: 'work',
+            title: 'Operational release review',
+            url: '/work/operational-release-review',
+          },
+        },
+      ],
+    };
+    const markup = renderToStaticMarkup(<PublicCollectionDetail entity={detail} />);
+
+    expect(markup).toContain('Trace / causal chain');
+    expect(markup).toContain('class="evidence-graph-focus-region"');
+    expect(markup).toContain('class="evidence-graph"');
+    expect(markup).toContain(
+      'aria-label="Trace: Cache Consistency Study → Release Ledger → Operational release review."',
+    );
+    expect(markup).toContain('href="/builds/release-ledger"');
+    expect(markup).toContain('href="/work/operational-release-review"');
+    expect(markup.indexOf('href="/builds/release-ledger"')).toBeLessThan(
+      markup.indexOf('href="/work/operational-release-review"'),
+    );
+  });
+
+  it('renders a Blueprint specification, feature list, preview gallery, and connected-systems EvidenceGraph', () => {
+    const detail: Extract<PublicEntityDetail, { type: 'blueprint' }> = {
+      type: 'blueprint',
+      title: 'Editorial Detail Template',
+      slug: 'editorial-detail-template',
+      url: '/blueprints/editorial-detail-template',
+      referenceId: 'HZ-BP-101',
+      summary: 'A reusable detail-page architecture for evidence-backed collection records.',
+      architecture: 'SaaS',
+      designLanguage: 'Editorial',
+      version: '2.1.0',
+      links: [],
+      technologies: [{ kind: 'technology', label: 'Next.js', slug: 'nextjs' }],
+      features: ['Typed relationship groups', 'Evidence graph composition'],
+      documents: [
+        {
+          role: 'caseStudy',
+          blocks: [{ id: 'context', type: 'heading', data: { level: 2, text: 'Context' } }],
+        },
+      ],
+      relationships: [
+        {
+          kind: 'artifactUsesBlueprint',
+          label: 'Built on',
+          target: {
+            type: 'work',
+            title: 'Operational release review',
+            url: '/work/operational-release-review',
+          },
+        },
+      ],
+      previewMedia: [],
+    };
+    const markup = renderToStaticMarkup(<PublicCollectionDetail entity={detail} />);
+
+    expect(markup).toContain('Blueprint / reusable engineering asset');
+    expect(markup).toContain('What is designed to be reused');
+    expect(markup).toContain('Version 2.1.0');
+    expect(markup).toContain('Typed relationship groups');
+    expect(markup).toContain('Evidence and connected systems');
+    expect(markup).toContain('Proven in client work');
+    expect(markup).toContain('class="evidence-graph-focus-region"');
+    expect(markup).toContain('class="evidence-graph"');
+    expect(markup).toContain('Return to Blueprints');
   });
 });

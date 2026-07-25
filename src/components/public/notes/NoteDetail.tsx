@@ -11,6 +11,7 @@ import {
   PublicBreadcrumbs,
   TechnologyList,
 } from '../EditorialPrimitives';
+import { EvidenceGraph, EvidenceGraphFocusSync } from '../evidence-graph';
 import { FounderCrossLink } from '../engineering/FounderCrossLink';
 import { slugFromProfileUrl } from '../engineering/profile-url';
 import { PageContainer, PublicSection } from '../PageContainer';
@@ -136,15 +137,23 @@ export function NoteDetail({ note }: { note: ImmutablePublic<Note> }) {
       />
 
       {groups.length ? (
-        <RelatedRecordsSection
-          id="note-relations-title"
-          eyebrow="Continuity / referenced engineering"
-          title="Continue through the record"
-          description="These links are part of the evidence behind this note."
-          groups={groups}
-          sectionClassName="note-relations"
-          containerClassName="note-relations-grid"
-        />
+        <EvidenceGraphFocusSync>
+          <RelatedRecordsSection
+            id="note-relations-title"
+            eyebrow="Continuity / referenced engineering"
+            title="Continue through the record"
+            description="These links are part of the evidence behind this note."
+            headerContent={
+              <EvidenceGraph
+                subject={{ label: note.title, meta: 'Note' }}
+                relationships={note.relationships}
+              />
+            }
+            groups={groups}
+            sectionClassName="note-relations"
+            containerClassName="note-relations-grid"
+          />
+        </EvidenceGraphFocusSync>
       ) : null}
 
       <footer
