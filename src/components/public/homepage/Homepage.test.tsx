@@ -10,6 +10,7 @@ const emptyProjection: PublicHomepageProjection = {
   labs: [],
   notes: [],
   profiles: [],
+  publishedRecordCount: 0,
 };
 
 describe('Homepage', () => {
@@ -170,6 +171,116 @@ describe('Homepage', () => {
     expect(markup).not.toContain('Featured Labs');
     expect(markup).not.toContain('Featured Notes');
     expect(markup).not.toContain('Products / shipped');
+  });
+
+  it("renders the opening statistic as the projection's real published-record count, singular and plural", () => {
+    const zero = renderToStaticMarkup(<Homepage projection={emptyProjection} />);
+    expect(zero).toContain('<dt>Published</dt><dd>0 public records</dd>');
+
+    const one = renderToStaticMarkup(
+      <Homepage projection={{ ...emptyProjection, publishedRecordCount: 1 }} />,
+    );
+    expect(one).toContain('<dt>Published</dt><dd>1 public record</dd>');
+
+    const many = renderToStaticMarkup(
+      <Homepage projection={{ ...emptyProjection, publishedRecordCount: 47 }} />,
+    );
+    expect(many).toContain('<dt>Published</dt><dd>47 public records</dd>');
+  });
+
+  it('lands the #evidence anchor on whichever evidence section actually renders first', () => {
+    const work: PublicHomepageProjection['work'][number] = {
+      entity: {
+        type: 'work',
+        title: 'Work only',
+        url: '/work/work-only',
+        summary: 'A published engineering record.',
+        referenceId: 'work-1',
+        slug: 'work-only',
+        clientType: 'Product',
+        timeline: '2026',
+        hubZeroRole: 'Engineering',
+        categories: [],
+        technologies: [],
+      },
+      relationships: [],
+    };
+    const blueprint: PublicHomepageProjection['blueprint'] = {
+      entity: {
+        type: 'blueprint',
+        title: 'Blueprint only',
+        url: '/blueprints/blueprint-only',
+        summary: 'A reusable foundation.',
+        referenceId: 'HZ-BP-001',
+        slug: 'blueprint-only',
+        architecture: 'SaaS',
+        designLanguage: 'Editorial',
+        version: '1.0.0',
+        links: [],
+        technologies: [],
+        previewMedia: [],
+      },
+      relationships: [],
+    };
+
+    const workOnly = renderToStaticMarkup(
+      <Homepage projection={{ ...emptyProjection, work: [work] }} />,
+    );
+    expect(workOnly).toContain('id="evidence"');
+    expect(workOnly.indexOf('id="evidence"')).toBeLessThan(workOnly.indexOf('Constraints made'));
+
+    const blueprintOnly = renderToStaticMarkup(
+      <Homepage projection={{ ...emptyProjection, blueprint }} />,
+    );
+    expect(blueprintOnly).toContain('id="evidence"');
+    expect(blueprintOnly.indexOf('id="evidence"')).toBeLessThan(
+      blueprintOnly.indexOf('A proven pattern'),
+    );
+
+    // Only one #evidence id ever renders, even with multiple sections present
+    const workAndBlueprint = renderToStaticMarkup(
+      <Homepage projection={{ ...emptyProjection, work: [work], blueprint }} />,
+    );
+    expect(workAndBlueprint.match(/id="evidence"/g)).toHaveLength(1);
+  });
+
+  it('wraps the Builds evidence graph and its grid in EvidenceGraphFocusSync so hover/focus can pair by data-evidence-node', () => {
+    const projection: PublicHomepageProjection = {
+      ...emptyProjection,
+      builds: [
+        {
+          entity: {
+            type: 'build',
+            title: 'QueryCraft',
+            url: '/builds/querycraft',
+            summary: 'A build.',
+            technologies: [],
+            slug: 'querycraft',
+            referenceId: 'HZ-BLD-001',
+            deploymentState: 'live',
+            links: [],
+          },
+          relationships: [
+            {
+              kind: 'buildAppliedInWork',
+              label: 'Applied in',
+              target: { type: 'work', title: 'Bhatkal Time Luxe', url: '/work/bhatkal-time-luxe' },
+            },
+          ],
+        },
+      ],
+    };
+
+    const markup = renderToStaticMarkup(<Homepage projection={projection} />);
+    const region = markup.split('class="evidence-graph-focus-region"')[1]?.split('</section>')[0];
+
+    expect(region).toBeDefined();
+    expect(region).toContain('class="evidence-graph"');
+    expect(region).toContain('class="home-feature-grid"');
+    const occurrences =
+      region!.split('data-evidence-node="buildAppliedInWork-/work/bhatkal-time-luxe"').length - 1;
+    // one graph edge + one graph node + one RelationshipCard, all sharing the id
+    expect(occurrences).toBe(3);
   });
 
   it('uses one h1 and preserves ordered pillar headings', () => {

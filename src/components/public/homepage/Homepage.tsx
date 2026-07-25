@@ -9,7 +9,7 @@ import { publicRoute } from '@/lib/public/routes';
 import { PageContainer, PublicSection } from '../PageContainer';
 import { formatPublicDate, SectionHeader } from '../EditorialPrimitives';
 import { AxisDiagram } from '../EvidenceVisuals';
-import { EvidenceGraph } from '../evidence-graph';
+import { EvidenceGraph, EvidenceGraphFocusSync } from '../evidence-graph';
 import { EditorialCard } from './EditorialCard';
 
 const relationshipRoutes: Readonly<Record<string, boolean>> = PUBLIC_ENTITY_ROUTES;
@@ -30,6 +30,22 @@ export function Homepage({
   const hasEvidence = Boolean(
     work.length || builds.length || labs.length || notes.length || blueprint || profiles.length,
   );
+  /**
+   * The `#evidence` anchor (the Hero's "Inspect the evidence" link) must
+   * land on whichever evidence section actually renders first — Builds,
+   * Work, Blueprint, and Labs/Notes are each independently conditional, so
+   * "first" isn't fixed. Computed once here rather than re-deriving it at
+   * each section with a growing chain of negated-sibling checks.
+   */
+  const firstEvidenceSection = builds.length
+    ? 'builds'
+    : work.length
+      ? 'work'
+      : blueprint
+        ? 'blueprint'
+        : labs.length || notes.length
+          ? 'current'
+          : undefined;
   const currentTimeline = [
     ...labs.map((feature) => ({
       date: feature.entity.lastMajorUpdate ?? feature.entity.startDate,
@@ -47,10 +63,13 @@ export function Homepage({
 
   return (
     <main id="main-content" tabIndex={-1} className="home-main">
-      <Hero hasEvidence={hasEvidence} />
+      <Hero hasEvidence={hasEvidence} publishedRecordCount={projection.publishedRecordCount} />
 
       {builds.length ? (
-        <PublicSection className="home-feature-section" id="evidence">
+        <PublicSection
+          className="home-feature-section"
+          id={firstEvidenceSection === 'builds' ? 'evidence' : undefined}
+        >
           <PageContainer>
             <SectionHeader
               eyebrow="Products / shipped"
@@ -61,26 +80,28 @@ export function Homepage({
               }
               description="Products designed, engineered, and maintained inside HubZero."
             />
-            {builds[0]?.relationships.length ? (
-              <div className="home-section-artifact">
-                <EvidenceGraph
-                  subject={{ label: builds[0].entity.title, meta: 'Build' }}
-                  relationships={builds[0].relationships}
-                />
+            <EvidenceGraphFocusSync>
+              {builds[0]?.relationships.length ? (
+                <div className="home-section-artifact">
+                  <EvidenceGraph
+                    subject={{ label: builds[0].entity.title, meta: 'Build' }}
+                    relationships={builds[0].relationships}
+                  />
+                </div>
+              ) : null}
+              <div className="home-feature-grid">
+                {builds.map((feature, index) => (
+                  <EditorialCard
+                    key={feature.entity.url}
+                    feature={feature}
+                    routeEnabled
+                    relationshipRoutes={relationshipRoutes}
+                    prominent={index === 0}
+                    priority={index === 0}
+                  />
+                ))}
               </div>
-            ) : null}
-            <div className="home-feature-grid">
-              {builds.map((feature, index) => (
-                <EditorialCard
-                  key={feature.entity.url}
-                  feature={feature}
-                  routeEnabled
-                  relationshipRoutes={relationshipRoutes}
-                  prominent={index === 0}
-                  priority={index === 0}
-                />
-              ))}
-            </div>
+            </EvidenceGraphFocusSync>
           </PageContainer>
         </PublicSection>
       ) : null}
@@ -88,7 +109,7 @@ export function Homepage({
       <OperatingSystem />
 
       {work.length ? (
-        <PublicSection id={builds.length ? undefined : 'evidence'}>
+        <PublicSection id={firstEvidenceSection === 'work' ? 'evidence' : undefined}>
           <PageContainer>
             <SectionHeader
               title={
@@ -98,29 +119,31 @@ export function Homepage({
               }
               description="Client work is shown through the decisions and outcomes that can be verified."
             />
-            {work[0]?.relationships.length ? (
-              <div className="home-section-artifact">
-                <EvidenceGraph
-                  subject={{ label: work[0].entity.title, meta: 'Work' }}
-                  relationships={work[0].relationships}
+            <EvidenceGraphFocusSync>
+              {work[0]?.relationships.length ? (
+                <div className="home-section-artifact">
+                  <EvidenceGraph
+                    subject={{ label: work[0].entity.title, meta: 'Work' }}
+                    relationships={work[0].relationships}
+                  />
+                </div>
+              ) : null}
+              {work.map((feature) => (
+                <EditorialCard
+                  key={feature.entity.url}
+                  feature={feature}
+                  routeEnabled
+                  relationshipRoutes={relationshipRoutes}
+                  prominent
                 />
-              </div>
-            ) : null}
-            {work.map((feature) => (
-              <EditorialCard
-                key={feature.entity.url}
-                feature={feature}
-                routeEnabled
-                relationshipRoutes={relationshipRoutes}
-                prominent
-              />
-            ))}
+              ))}
+            </EvidenceGraphFocusSync>
           </PageContainer>
         </PublicSection>
       ) : null}
 
       {blueprint ? (
-        <PublicSection id={!builds.length && !work.length ? 'evidence' : undefined}>
+        <PublicSection id={firstEvidenceSection === 'blueprint' ? 'evidence' : undefined}>
           <PageContainer>
             <SectionHeader
               eyebrow="Blueprint / reusable foundation"
@@ -152,7 +175,7 @@ export function Homepage({
       ) : null}
 
       {labs.length || notes.length ? (
-        <PublicSection id={!builds.length && !work.length && !blueprint ? 'evidence' : undefined}>
+        <PublicSection id={firstEvidenceSection === 'current' ? 'evidence' : undefined}>
           <PageContainer>
             <SectionHeader
               title={
@@ -280,7 +303,13 @@ function ServicesPassage({
   );
 }
 
-function Hero({ hasEvidence }: { hasEvidence: boolean }) {
+function Hero({
+  hasEvidence,
+  publishedRecordCount,
+}: {
+  hasEvidence: boolean;
+  publishedRecordCount: number;
+}) {
   return (
     <section className="home-hero" aria-labelledby="home-title">
       <PageContainer className="home-hero-grid">
@@ -298,6 +327,12 @@ function Hero({ hasEvidence }: { hasEvidence: boolean }) {
         <aside className="home-hero-register" aria-label="HubZero publication principles">
           <p className="home-eyebrow">Public record / 001</p>
           <dl>
+            <div>
+              <dt>Published</dt>
+              <dd>
+                {publishedRecordCount} public {publishedRecordCount === 1 ? 'record' : 'records'}
+              </dd>
+            </div>
             <div>
               <dt>Source</dt>
               <dd>Published Studio records</dd>

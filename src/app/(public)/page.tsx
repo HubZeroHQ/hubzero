@@ -15,6 +15,7 @@ const EMPTY_HOMEPAGE: PublicHomepageProjection = {
   labs: [],
   notes: [],
   profiles: [],
+  publishedRecordCount: 0,
 };
 
 export const revalidate = 86_400;
