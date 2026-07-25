@@ -215,7 +215,7 @@ Reduced motion is a design mode, not a CSS cleanup at the end.
 
 ## Performance budget and implementation constraints
 
-Future implementation should establish a motion budget before choosing a library:
+Implementation establishes a motion budget before choosing a library:
 
 - Animate compositor-friendly properties (`transform`, `opacity`) for frequent interactions.
 - Use layout animation selectively; measure it with real collection sizes.
@@ -224,6 +224,8 @@ Future implementation should establish a motion budget before choosing a library
 - Prevent cumulative layout shift by reserving media dimensions.
 - Target sustained 60fps on representative mid-range mobile hardware; correctness and input response take priority over an effect.
 - Independently derive scroll, navigation, overlay, and active-section state, consistent with `.hubzero/principles.md`.
+
+**Shipped implementation:** the public site is dependency-free for motion everywhere except one component. The founder motif stroke-reveal (`AssembleStroke`/`PathBuilder`), every card lift, filter transition, and evidence-graph interaction is plain CSS or the platform's own zero-dependency SVG primitive — matching this document's default. The Search palette (`PublicSearchDialog`) is the one exception: it uses `framer-motion` for the considered scale-plus-opacity overlay entrance this document's "Search palette" section already describes, calling that library's own `useReducedMotion()` to satisfy the reduced-motion table above. This is a pre-existing dependency, not one added for a v2.5 phase, and it is scoped to exactly this one overlay — no other component imports it. Treat any second consumer of `framer-motion` as a reason to revisit this exception, not a precedent that it's generally available.
 
 ## Motion review questions
 
