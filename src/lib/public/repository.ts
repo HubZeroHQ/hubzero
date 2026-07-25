@@ -46,6 +46,7 @@ import {
   type HubZeroRelationshipKind,
 } from '@/lib/entity-graph';
 import { projectEvidence, type PublicEvidenceNode } from './evidence-projection';
+import { projectTrace } from './trace-projection';
 import {
   hasRoles,
   hasSubstantiveDocument,
@@ -493,6 +494,21 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
     return projection ? [...projection.relationships] : [];
   }
 
+  /**
+   * Trace (v2.5 Phase 6): the same `EvidenceContext` `resolveRelations`
+   * uses, walked multi-hop instead of one-hop. Backward direction (the
+   * default in `projectTrace`) reads naturally from a Work item: what
+   * Build informed it, what Lab that Build originated from.
+   */
+  async function resolveTrace(
+    entity: StudioPublicEntity,
+    context?: EvidenceContext,
+  ): Promise<PublicRelationship[]> {
+    const { query, destinations } = context ?? (await buildEvidenceQuery());
+    const projection = projectTrace(query, destinations, { type: entity.type, id: entity.id });
+    return projection ? [...projection.steps] : [];
+  }
+
   async function findSummary(type: PublicEntityType, slug: string) {
     const entity = await source.findEntityBySlug(type, slug);
     if (!entity) return null;
@@ -570,6 +586,7 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
           // Work repositories require a future explicit public-intent field. A populated
           // Studio URL alone is not sufficient evidence that a client repository is public.
           links: [],
+          trace: await resolveTrace(entity, evidence),
         };
       }
       case 'build': {

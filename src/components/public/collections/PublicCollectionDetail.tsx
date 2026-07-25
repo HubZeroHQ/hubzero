@@ -11,6 +11,7 @@ import {
   PublicBuildStateBadge,
   TechnologyList,
 } from '../EditorialPrimitives';
+import { EvidenceGraph, EvidenceGraphFocusSync } from '../evidence-graph';
 import { PageContainer, PublicSection } from '../PageContainer';
 import { ProseRenderer } from '../ProseRenderer';
 import { PublicImage } from '../PublicImage';
@@ -175,6 +176,27 @@ export function PublicCollectionDetail({ entity }: { entity: ImmutablePublic<Col
           sectionClassName="detail-relations"
           containerClassName="detail-relations-grid"
         />
+      ) : null}
+
+      {entity.type === 'work' && entity.trace.length ? (
+        <EvidenceGraphFocusSync>
+          <RelatedRecordsSection
+            id="relations-trace"
+            eyebrow="Trace / causal chain"
+            title="Follow this work back to where it began."
+            description="Each step is a real, publicly recorded relationship, walked backward through the same evidence graph — not an inferred or aggregated connection."
+            headerContent={
+              <EvidenceGraph
+                subject={{ label: entity.title, meta: 'Work' }}
+                relationships={entity.trace}
+                layout="chain"
+              />
+            }
+            groups={[{ relationships: entity.trace }]}
+            sectionClassName="detail-relations detail-trace"
+            containerClassName="detail-relations-grid"
+          />
+        </EvidenceGraphFocusSync>
       ) : null}
 
       {entity.type === 'lab' ? <LabProgress entity={entity} /> : null}
