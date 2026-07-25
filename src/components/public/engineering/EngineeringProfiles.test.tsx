@@ -4,9 +4,22 @@ import type {
   PublicEngineeringProfileIndexEntry,
   PublicEngineeringProfileSummary,
   PublicEntityDetail,
+  PublicMedia,
 } from '@/lib/public/domain';
 import { EngineeringProfileDetail } from './EngineeringProfileDetail';
 import { EngineeringProfilesIndex } from './EngineeringProfilesIndex';
+
+function media(url: string): PublicMedia {
+  return {
+    url,
+    width: 1600,
+    height: 1000,
+    alt: 'Screenshot',
+    role: 'gallery',
+    responsive: { srcSet: '', sizes: '' },
+    placeholder: { kind: 'color', value: '#141414' },
+  };
+}
 
 const summary: PublicEngineeringProfileSummary = {
   type: 'engineeringProfile',
@@ -96,6 +109,65 @@ describe('public Engineering Profiles experience', () => {
     expect(markup).toContain('<h3 id="boundaries">Boundaries before implementation</h3>');
     expect(markup).toContain('How HubZero operates');
   });
+
+  it.each([
+    ['rifaque', 'founder-profile-network'],
+    ['raif', 'founder-profile-dependency-graph'],
+    ['iyad', 'founder-profile-traveler'],
+    ['sultan', 'founder-profile-editorial-grid'],
+    ['salsabeel', 'founder-profile-pcb-trace'],
+  ] as const)(
+    'composes hero media, evidence, documents, and gallery from shared primitives for %s',
+    (slug, founderClass) => {
+      const detail: Extract<PublicEntityDetail, { type: 'engineeringProfile' }> = {
+        ...summary,
+        slug,
+        hero: media('/media/hero.png'),
+        engineeringPhilosophy: 'Systems should stay legible as they grow.',
+        currentInterests: [],
+        areasOfExpertise: ['Systems design'],
+        relationships,
+        gallery: [media('/media/gallery-one.png')],
+        documents: [
+          {
+            role: 'introduction',
+            outline: [{ id: 'boundaries', level: 2, text: 'Boundaries before implementation' }],
+            blocks: [
+              {
+                id: 'boundaries',
+                type: 'heading',
+                data: { level: 2, text: 'Boundaries before implementation' },
+              },
+            ],
+          },
+        ],
+      };
+      const markup = renderToStaticMarkup(<EngineeringProfileDetail profile={detail} />);
+
+      // one article, delegated to the bespoke composition, not the generic template
+      expect(markup.match(/<article/g)).toHaveLength(1);
+      expect(markup).toContain(founderClass);
+
+      // ProfileHeroMedia (Next's Image rewrites the src through /_next/image?url=...)
+      expect(markup).toContain('class="public-section profile-hero-media"');
+      expect(markup).toContain('url=%2Fmedia%2Fhero.png');
+
+      // RelatedRecordsSection + ProfileEvidenceGraph, replacing the founders'
+      // former inline evidence markup
+      expect(markup).toContain('Related Work');
+      expect(markup).toContain('Authored Notes');
+      expect(markup).toContain('class="evidence-graph"');
+
+      // ProfileDocuments
+      expect(markup).toContain('<h3 id="boundaries">Boundaries before implementation</h3>');
+
+      // DetailGallery
+      expect(markup).toContain('class="detail-gallery-grid"');
+      expect(markup).toContain('url=%2Fmedia%2Fgallery-one.png');
+
+      expect(markup).toContain('How HubZero operates');
+    },
+  );
 
   it('delegates a founder slug to its bespoke composition instead of the generic template', () => {
     const detail: Extract<PublicEntityDetail, { type: 'engineeringProfile' }> = {

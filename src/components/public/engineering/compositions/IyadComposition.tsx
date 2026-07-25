@@ -4,16 +4,18 @@ import {
   type FounderIdentity,
 } from '@/config/founder-identity';
 import type { ImmutablePublic } from '@/lib/public/domain';
+import { DetailGallery } from '../../DetailGallery';
 import { PublicBreadcrumbs, TechnologyList } from '../../EditorialPrimitives';
 import { EvidenceGraphFocusSync } from '../../evidence-graph';
 import { PageContainer, PublicSection } from '../../PageContainer';
-import { ProseRenderer } from '../../ProseRenderer';
 import { PublicImage } from '../../PublicImage';
+import { RelatedRecordsSection } from '../../RelatedRecordsSection';
 import { FounderMotif } from '../motifs';
 import {
+  ProfileDocuments,
   ProfileEvidenceGraph,
   ProfileFooter,
-  RelationshipGroup,
+  ProfileHeroMedia,
   resolveDocuments,
   resolveRelationshipGroups,
   type EngineeringProfile,
@@ -134,89 +136,32 @@ export function IyadComposition({
         </PageContainer>
       </PublicSection>
 
-      {profile.hero ? (
-        <PublicSection className="profile-hero-media" aria-label="Profile lead media">
-          <PageContainer>
-            <PublicImage media={profile.hero} />
-          </PageContainer>
-        </PublicSection>
-      ) : null}
+      <ProfileHeroMedia profile={profile} />
 
       {groups.length ? (
         <EvidenceGraphFocusSync>
-          <PublicSection
-            className="profile-evidence profile-chapter"
-            aria-labelledby="profile-evidence-title"
-          >
-            <PageContainer className="profile-evidence-grid">
-              <header>
-                <p className="home-eyebrow">Evidence / demonstrated contribution</p>
-                <h2 id="profile-evidence-title">Follow the product into the work.</h2>
-                <p>
-                  Every connection below is explicit in the public record. Internal creator metadata
-                  is never treated as contribution credit.
-                </p>
-                <ProfileEvidenceGraph profile={profile} />
-              </header>
-              <div className="detail-relation-groups">
-                {groups.map((group) => (
-                  <RelationshipGroup
-                    key={group.type}
-                    title={group.title}
-                    relationships={group.relationships}
-                  />
-                ))}
-              </div>
-            </PageContainer>
-          </PublicSection>
+          <RelatedRecordsSection
+            id="profile-evidence-title"
+            eyebrow="Evidence / demonstrated contribution"
+            title="Follow the product into the work."
+            description="Every connection below is explicit in the public record. Internal creator metadata is never treated as contribution credit."
+            headerContent={<ProfileEvidenceGraph profile={profile} />}
+            groups={groups}
+            sectionClassName="profile-evidence profile-chapter"
+            containerClassName="profile-evidence-grid"
+          />
         </EvidenceGraphFocusSync>
       ) : null}
 
-      {documents.map(({ document, eyebrow, title }) => (
-        <PublicSection
-          key={document.role}
-          className="profile-document profile-chapter"
-          aria-labelledby={`profile-document-${document.role}`}
-        >
-          <PageContainer className="profile-document-grid">
-            <header>
-              <p className="home-eyebrow">{eyebrow}</p>
-              <h2 id={`profile-document-${document.role}`}>{title}</h2>
-              {document.outline?.length && document.outline.length > 1 ? (
-                <nav className="detail-outline" aria-label={`${title} contents`}>
-                  <ol>
-                    {document.outline.map((item) => (
-                      <li key={item.id}>
-                        <a href={`#${item.id}`}>{item.text}</a>
-                      </li>
-                    ))}
-                  </ol>
-                </nav>
-              ) : null}
-            </header>
-            <ProseRenderer document={document} headingOffset={1} as="div" />
-          </PageContainer>
-        </PublicSection>
-      ))}
+      <ProfileDocuments documents={documents} />
 
-      {profile.gallery.length ? (
-        <PublicSection
-          className="profile-gallery profile-chapter"
-          aria-labelledby="profile-gallery-title"
-        >
-          <PageContainer>
-            <header className="detail-section-header">
-              <p className="home-eyebrow">Media / supporting evidence</p>
-              <h2 id="profile-gallery-title">Artifacts from the work</h2>
-            </header>
-            <div className="detail-gallery-grid">
-              {profile.gallery.map((media) => (
-                <PublicImage key={media.url} media={media} />
-              ))}
-            </div>
-          </PageContainer>
-        </PublicSection>
-      ) : null}
+      <DetailGallery
+        id="profile-gallery-title"
+        eyebrow="Media / supporting evidence"
+        title="Artifacts from the work"
+        media={profile.gallery}
+        sectionClassName="profile-gallery profile-chapter"
+      />
 
       <ProfileFooter profile={profile} />
     </article>
