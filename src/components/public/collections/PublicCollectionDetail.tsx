@@ -33,6 +33,14 @@ const DOCUMENT_LABELS: Record<string, { eyebrow: string; title: string }> = {
   researchNotes: { eyebrow: 'Research record', title: 'Research notes' },
 };
 
+/** `EvidenceGraph`'s `subject.meta` for each collection type — singular, matching the fan diagram's existing usage elsewhere (a Build's, a Work item's, an Engineer's). */
+const SUBJECT_META: Record<CollectionDetail['type'], string> = {
+  work: 'Work',
+  build: 'Build',
+  blueprint: 'Blueprint',
+  lab: 'Lab',
+};
+
 export function PublicCollectionDetail({ entity }: { entity: ImmutablePublic<CollectionDetail> }) {
   const collection =
     entity.type === 'work'
@@ -199,6 +207,27 @@ export function PublicCollectionDetail({ entity }: { entity: ImmutablePublic<Col
         </EvidenceGraphFocusSync>
       ) : null}
 
+      {entity.type === 'lab' && entity.trace.length ? (
+        <EvidenceGraphFocusSync>
+          <RelatedRecordsSection
+            id="relations-trace"
+            eyebrow="Trace / causal chain"
+            title="Follow this investigation forward to where it led."
+            description="Each step is a real, publicly recorded relationship, walked forward through the same evidence graph — not an inferred or aggregated connection."
+            headerContent={
+              <EvidenceGraph
+                subject={{ label: entity.title, meta: 'Lab' }}
+                relationships={entity.trace}
+                layout="chain"
+              />
+            }
+            groups={[{ relationships: entity.trace }]}
+            sectionClassName="detail-relations detail-trace"
+            containerClassName="detail-relations-grid"
+          />
+        </EvidenceGraphFocusSync>
+      ) : null}
+
       {entity.type === 'lab' ? <LabProgress entity={entity} /> : null}
 
       {entity.type === 'blueprint' ? <BlueprintSpecification entity={entity} /> : null}
@@ -264,43 +293,75 @@ export function PublicCollectionDetail({ entity }: { entity: ImmutablePublic<Col
       ) : null}
 
       {entity.type === 'work' && workRelationshipGroups.length ? (
-        <RelatedRecordsSection
-          id="grouped-connections-title"
-          title="Continue through the engineering record"
-          groups={workRelationshipGroups}
-          sectionClassName="detail-relations"
-          containerClassName="detail-relations-grid"
-        />
+        <EvidenceGraphFocusSync>
+          <RelatedRecordsSection
+            id="grouped-connections-title"
+            title="Continue through the engineering record"
+            headerContent={
+              <EvidenceGraph
+                subject={{ label: entity.title, meta: SUBJECT_META[entity.type] }}
+                relationships={connected}
+              />
+            }
+            groups={workRelationshipGroups}
+            sectionClassName="detail-relations"
+            containerClassName="detail-relations-grid"
+          />
+        </EvidenceGraphFocusSync>
       ) : null}
 
       {entity.type === 'blueprint' && blueprintRelationshipGroups.length ? (
-        <RelatedRecordsSection
-          id="grouped-connections-title"
-          title="Evidence and connected systems"
-          groups={blueprintRelationshipGroups}
-          sectionClassName="detail-relations"
-          containerClassName="detail-relations-grid"
-        />
+        <EvidenceGraphFocusSync>
+          <RelatedRecordsSection
+            id="grouped-connections-title"
+            title="Evidence and connected systems"
+            headerContent={
+              <EvidenceGraph
+                subject={{ label: entity.title, meta: SUBJECT_META[entity.type] }}
+                relationships={connected}
+              />
+            }
+            groups={blueprintRelationshipGroups}
+            sectionClassName="detail-relations"
+            containerClassName="detail-relations-grid"
+          />
+        </EvidenceGraphFocusSync>
       ) : null}
 
       {entity.type === 'build' && buildRelationshipGroups.length ? (
-        <RelatedRecordsSection
-          id="grouped-connections-title"
-          title="Continue through the engineering record"
-          groups={buildRelationshipGroups}
-          sectionClassName="detail-relations"
-          containerClassName="detail-relations-grid"
-        />
+        <EvidenceGraphFocusSync>
+          <RelatedRecordsSection
+            id="grouped-connections-title"
+            title="Continue through the engineering record"
+            headerContent={
+              <EvidenceGraph
+                subject={{ label: entity.title, meta: SUBJECT_META[entity.type] }}
+                relationships={connected}
+              />
+            }
+            groups={buildRelationshipGroups}
+            sectionClassName="detail-relations"
+            containerClassName="detail-relations-grid"
+          />
+        </EvidenceGraphFocusSync>
       ) : null}
 
       {entity.type === 'lab' && labRelationshipGroups.length ? (
-        <RelatedRecordsSection
-          id="grouped-connections-title"
-          title="Continue through the engineering record"
-          groups={labRelationshipGroups}
-          sectionClassName="detail-relations"
-          containerClassName="detail-relations-grid"
-        />
+        <EvidenceGraphFocusSync>
+          <RelatedRecordsSection
+            id="grouped-connections-title"
+            title="Continue through the engineering record"
+            headerContent={
+              <EvidenceGraph
+                subject={{ label: entity.title, meta: SUBJECT_META[entity.type] }}
+                relationships={connected}
+              />
+            }
+            groups={labRelationshipGroups}
+            sectionClassName="detail-relations"
+            containerClassName="detail-relations-grid"
+          />
+        </EvidenceGraphFocusSync>
       ) : null}
 
       <footer className="detail-footer">

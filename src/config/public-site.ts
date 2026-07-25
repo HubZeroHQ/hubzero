@@ -278,6 +278,13 @@ export const PUBLIC_NAVIGATION = [
     description: 'Short-form engineering journal',
   },
   {
+    label: 'Engineering',
+    href: publicRoute.collection('engineeringProfile'),
+    type: 'engineeringProfile',
+    enabled: true,
+    description: 'Documented expertise and evidence',
+  },
+  {
     label: 'Ledger',
     href: publicRoute.ledger(),
     type: 'ledger',

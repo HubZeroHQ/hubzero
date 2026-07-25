@@ -275,6 +275,16 @@ export type PublicEntityDetail =
       graduationCriteria: string;
       gallery: PublicMedia[];
       milestones: Array<{ title: string; date: string; summary: string }>;
+      /**
+       * Trace (v2.5 Phase 8): the forward causal chain this Lab is the
+       * origin of — this investigation graduated into a Build, that Build
+       * applied in Work — the same `projectTrace` walk Work's backward
+       * trace uses (Phase 6), just walked outbound instead of inbound.
+       * Empty when the investigation hasn't graduated into anything yet,
+       * or that Build hasn't been applied anywhere public. Same
+       * always-present-array convention as `gallery`/`documents`.
+       */
+      trace: PublicRelationship[];
     })
   | (PublicNoteSummary & {
       documents: PublicDocument[];

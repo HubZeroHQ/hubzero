@@ -495,17 +495,26 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
   }
 
   /**
-   * Trace (v2.5 Phase 6): the same `EvidenceContext` `resolveRelations`
-   * uses, walked multi-hop instead of one-hop. Backward direction (the
-   * default in `projectTrace`) reads naturally from a Work item: what
-   * Build informed it, what Lab that Build originated from.
+   * Trace: the same `EvidenceContext` `resolveRelations` uses, walked
+   * multi-hop instead of one-hop. `direction` defaults to `'inbound'`
+   * (Phase 6's original, unchanged behavior) — backward, reading naturally
+   * from a Work item: what Build informed it, what Lab that Build
+   * originated from. Passing `'outbound'` (Phase 8, for Lab) walks the
+   * same edges forward instead: what this Lab graduated into, where that
+   * Build was applied.
    */
   async function resolveTrace(
     entity: StudioPublicEntity,
     context?: EvidenceContext,
+    direction: 'inbound' | 'outbound' = 'inbound',
   ): Promise<PublicRelationship[]> {
     const { query, destinations } = context ?? (await buildEvidenceQuery());
-    const projection = projectTrace(query, destinations, { type: entity.type, id: entity.id });
+    const projection = projectTrace(
+      query,
+      destinations,
+      { type: entity.type, id: entity.id },
+      { direction },
+    );
     return projection ? [...projection.steps] : [];
   }
 
@@ -621,6 +630,7 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
             date: milestone.date.toISOString(),
             summary: milestone.summary,
           })),
+          trace: await resolveTrace(entity, evidence, 'outbound'),
         };
       }
       case 'note': {

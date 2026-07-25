@@ -353,6 +353,48 @@ export function RelationshipCard({
 }
 
 /**
+ * The shared "cap a relationship list at N and render the visible slice as
+ * `RelationshipCard`s" shape — previously reimplemented independently in
+ * `EditorialCard`'s `ProfileContributions` (Homepage's profile cards) and
+ * `EngineeringProfilesIndex` (the Engineering Profiles collection index),
+ * each slicing to 3 and rendering the same card markup. Deliberately does
+ * *not* own an overflow indicator or a leading count — the two existing
+ * callers show that differently ("+N more contribution(s)" beside the
+ * list vs. "Evidence / N connected" above it), which is a real, intended
+ * difference between a Homepage teaser and a collection index card, not
+ * duplication; only the cap-and-render part was ever actually identical.
+ */
+export function CappedRelationshipList({
+  relationships,
+  limit = 3,
+  ariaLabel,
+  enabled,
+  overflow,
+}: {
+  relationships: readonly ImmutablePublic<PublicRelationship>[];
+  limit?: number;
+  ariaLabel: string;
+  enabled: (relationship: ImmutablePublic<PublicRelationship>) => boolean;
+  /** Rendered as the last child inside the same wrapping list, e.g. an "+N more" chip — the one thing that does legitimately differ between callers. */
+  overflow?: ReactNode;
+}) {
+  const visible = relationships.slice(0, limit);
+  if (!visible.length) return null;
+  return (
+    <div className="home-relationships" aria-label={ariaLabel}>
+      {visible.map((relationship) => (
+        <RelationshipCard
+          key={relationshipKey(relationship)}
+          relationship={relationship}
+          enabled={enabled(relationship)}
+        />
+      ))}
+      {overflow}
+    </div>
+  );
+}
+
+/**
  * A titled group of `RelationshipCard`s — the shared shape behind every
  * "Related Work" / "Related Builds" / "Authored Notes" style block on the
  * public site (collection detail pages, Notes, Engineering Profiles).

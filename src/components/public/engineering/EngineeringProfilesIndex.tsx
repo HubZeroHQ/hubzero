@@ -1,12 +1,7 @@
 import Link from 'next/link';
 import { PUBLIC_ENTITY_ROUTES } from '@/config/public-site';
 import type { ImmutablePublic, PublicEngineeringProfileIndexEntry } from '@/lib/public/domain';
-import {
-  PublicEmptyState,
-  RelationshipCard,
-  relationshipKey,
-  TechnologyList,
-} from '../EditorialPrimitives';
+import { CappedRelationshipList, PublicEmptyState, TechnologyList } from '../EditorialPrimitives';
 import { PageContainer, PublicSection } from '../PageContainer';
 import { PublicImage } from '../PublicImage';
 
@@ -94,18 +89,13 @@ export function EngineeringProfilesIndex({
                           <p className="home-eyebrow">
                             Evidence / {relationships.length} connected
                           </p>
-                          <div
-                            className="home-relationships"
-                            aria-label={`${profile.title} selected evidence`}
-                          >
-                            {relationships.slice(0, 3).map((relationship) => (
-                              <RelationshipCard
-                                key={relationshipKey(relationship)}
-                                relationship={relationship}
-                                enabled={Boolean(PUBLIC_ENTITY_ROUTES[relationship.target.type])}
-                              />
-                            ))}
-                          </div>
+                          <CappedRelationshipList
+                            relationships={relationships}
+                            ariaLabel={`${profile.title} selected evidence`}
+                            enabled={(relationship) =>
+                              Boolean(PUBLIC_ENTITY_ROUTES[relationship.target.type])
+                            }
+                          />
                         </div>
                       ) : null}
                     </div>

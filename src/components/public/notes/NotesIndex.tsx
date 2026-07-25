@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { PUBLIC_ENTITY_ROUTES } from '@/config/public-site';
 import type { ImmutablePublic, PublicNoteIndexEntry } from '@/lib/public/domain';
+import { publicRoute } from '@/lib/public/routes';
 import {
   formatPublicDate,
   PublicEmptyState,
@@ -52,7 +53,12 @@ export function NotesIndex({
           <header className="collection-index-header notes-index-header">
             <p className="home-eyebrow">Chronology / newest first</p>
             <h2 id="notes-index-title">Published notes</h2>
-            {entries.length ? <p>A continuous record, ordered by publication date.</p> : null}
+            {entries.length ? (
+              <p>
+                A continuous record, ordered by publication date. Notes alongside Lab activity form
+                the <Link href={publicRoute.ledger()}>full Ledger</Link>.
+              </p>
+            ) : null}
           </header>
 
           {entries.length ? (

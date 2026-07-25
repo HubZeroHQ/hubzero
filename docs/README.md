@@ -24,6 +24,7 @@ This directory contains HubZero's engineering, design, and product documentation
 - [`ADR_PHASE_5_HOMEPAGE_REBUILD.md`](architecture/ADR_PHASE_5_HOMEPAGE_REBUILD.md) — How v2.5 Phase 5 found the homepage already well-composed, closed one real `EvidenceGraphFocusSync` adoption gap (correcting an inaccurate Phase 3 claim), and added a truthful `publishedRecordCount` opening statistic with zero new queries.
 - [`ADR_PHASE_6_TRACE.md`](architecture/ADR_PHASE_6_TRACE.md) — How v2.5 Phase 6 (Trace) found the existing layered graph layout already renders a causal chain correctly with no new layout module, added one backward-chain projection (`trace-projection.ts`) and one optional `EvidenceGraph` prop, and wired it into Work detail pages.
 - [`ADR_PHASE_7_LEDGER.md`](architecture/ADR_PHASE_7_LEDGER.md) — How v2.5 Phase 7 (Ledger) audited every collection for a trustworthy editorial date, found only Note and Lab qualify, and built the `/ledger` timeline entirely from existing queries and the `EditorialCard` row primitive with zero new persistence.
+- [`ADR_PHASE_8_COLLECTIONS_DISCOVERY.md`](architecture/ADR_PHASE_8_COLLECTIONS_DISCOVERY.md) — How v2.5 Phase 8 audited all six public collections against Phases 2–7's primitives, closing five real gaps (missing nav entry, missing Ledger cross-links, a duplicated capped-relationship-list pattern, five collections missing `EvidenceGraph`, Trace missing from Lab) without adding any new rendering pattern.
 
 ## Design
 

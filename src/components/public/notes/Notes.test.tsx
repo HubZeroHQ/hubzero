@@ -46,6 +46,7 @@ describe('public Notes experience', () => {
     expect(markup).toContain('HZ-NT-101 / HubZero');
     expect(markup).toContain('Next.js');
     expect(markup).toContain('href="/builds/release-ledger"');
+    expect(markup).toContain('href="/ledger"');
   });
 
   it('renders one semantic article with a readable body, references, and typed continuation', () => {
@@ -105,6 +106,10 @@ describe('public Notes experience', () => {
     expect(markup).toContain('Related Work');
     expect(markup).toContain('Attribution / engineering profile');
     expect(markup).toContain('Return to Notes');
+
+    // The "Continue through the record" section pairs an EvidenceGraph with its list.
+    expect(markup).toContain('class="evidence-graph-focus-region"');
+    expect(markup).toContain('class="evidence-graph"');
 
     // Contributors render as publication metadata, before the write-up body.
     expect(markup).toContain('Contributors');
