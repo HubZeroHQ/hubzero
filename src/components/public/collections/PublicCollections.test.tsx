@@ -167,6 +167,7 @@ describe('Builds and Labs public collections', () => {
           },
         },
       ],
+      trace: [],
     };
     const markup = renderToStaticMarkup(<PublicCollectionDetail entity={detail} />);
 
@@ -188,6 +189,59 @@ describe('Builds and Labs public collections', () => {
     expect(markup.indexOf('Contributors')).toBeLessThan(markup.indexOf('Context to consequence'));
     // No longer duplicated further down as a relationship group.
     expect(markup).not.toContain('Engineering attribution');
+    // No trace chain was resolved for this fixture — Trace stays absent, not an empty chapter.
+    expect(markup).not.toContain('Trace / causal chain');
+  });
+
+  it('renders Trace as a chain-mode EvidenceGraph paired with an ordered, focus-synced relationship list', () => {
+    const detail: Extract<PublicEntityDetail, { type: 'work' }> = {
+      ...workSummary,
+      links: [],
+      documents: [
+        {
+          role: 'caseStudy',
+          blocks: [{ id: 'constraint', type: 'heading', data: { level: 2, text: 'Constraint' } }],
+        },
+      ],
+      relationships: [
+        {
+          kind: 'buildAppliedInWork',
+          label: 'Informed by',
+          target: { type: 'build', title: 'Release Ledger', url: '/builds/release-ledger' },
+        },
+      ],
+      trace: [
+        {
+          kind: 'buildAppliedInWork',
+          label: 'Informed by',
+          target: { type: 'build', title: 'Release Ledger', url: '/builds/release-ledger' },
+        },
+        {
+          kind: 'labGraduatedToBuild',
+          label: 'Originated in',
+          target: {
+            type: 'lab',
+            title: labSummary.title,
+            url: labSummary.url,
+            referenceId: labSummary.referenceId,
+          },
+        },
+      ],
+    };
+    const markup = renderToStaticMarkup(<PublicCollectionDetail entity={detail} />);
+
+    expect(markup).toContain('Trace / causal chain');
+    expect(markup).toContain('Follow this work back to where it began.');
+    expect(markup).toContain('class="evidence-graph-focus-region"');
+    expect(markup).toContain('class="evidence-graph"');
+    expect(markup).toContain(
+      'aria-label="Trace: Operational release review → Release Ledger → Cache Consistency Study."',
+    );
+    expect(markup).toContain('href="/builds/release-ledger"');
+    expect(markup).toContain('href="/labs/cache-consistency-study"');
+    expect(markup.indexOf('href="/builds/release-ledger"')).toBeLessThan(
+      markup.indexOf('href="/labs/cache-consistency-study"'),
+    );
   });
 
   it('renders Build Documents, external destinations, and typed lineage', () => {

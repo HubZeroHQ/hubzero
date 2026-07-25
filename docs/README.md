@@ -22,6 +22,7 @@ This directory contains HubZero's engineering, design, and product documentation
 - [`ADR_PHASE_3_EVIDENCE_GRAPH.md`](architecture/ADR_PHASE_3_EVIDENCE_GRAPH.md) — How v2.5 Phase 3 extracted the Evidence Graph into a platform primitive (`EvidenceGraph`), added its first hover/focus interaction layer (`EvidenceGraphFocusSync`), and the scoped jsdom/Testing Library introduction that required.
 - [`ADR_PHASE_4_ENGINEERING_PROFILE_REBUILD.md`](architecture/ADR_PHASE_4_ENGINEERING_PROFILE_REBUILD.md) — How v2.5 Phase 4 removed six-times-duplicated hero/document/gallery/evidence blocks from the five founder compositions by adopting primitives that already existed, introducing no new infrastructure.
 - [`ADR_PHASE_5_HOMEPAGE_REBUILD.md`](architecture/ADR_PHASE_5_HOMEPAGE_REBUILD.md) — How v2.5 Phase 5 found the homepage already well-composed, closed one real `EvidenceGraphFocusSync` adoption gap (correcting an inaccurate Phase 3 claim), and added a truthful `publishedRecordCount` opening statistic with zero new queries.
+- [`ADR_PHASE_6_TRACE.md`](architecture/ADR_PHASE_6_TRACE.md) — How v2.5 Phase 6 (Trace) found the existing layered graph layout already renders a causal chain correctly with no new layout module, added one backward-chain projection (`trace-projection.ts`) and one optional `EvidenceGraph` prop, and wired it into Work detail pages.
 
 ## Design
 

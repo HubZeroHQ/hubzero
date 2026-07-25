@@ -81,11 +81,13 @@ export function projectEvidence(
   };
 }
 
-function refKey(ref: { type: string; id: string }): string {
+/** Exported for reuse by `trace-projection.ts` — the same identity key, one traversal-layer implementation. */
+export function refKey(ref: { type: string; id: string }): string {
   return `${ref.type}:${ref.id}`;
 }
 
-function labelFor(
+/** Exported for reuse by `trace-projection.ts` — a chain hop's label is the same directional label a one-hop relationship would carry. */
+export function labelFor(
   data: PublicRelationshipData,
   forward: boolean,
   targetType: PublicEntityType,

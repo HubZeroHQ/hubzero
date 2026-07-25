@@ -248,6 +248,16 @@ export type PublicEntityDetail =
       documents: PublicDocument[];
       relationships: PublicRelationship[];
       links: PublicExternalLink[];
+      /**
+       * Trace (v2.5 Phase 6): the backward causal chain this Work item sits
+       * at the end of — Work informed by a Build, that Build originated
+       * from a Lab — from `projectTrace`, walked over the same evidence
+       * graph `relationships` is resolved from. Empty when there's no
+       * lineage to trace (no connected Build, or that Build has no Lab
+       * origin), same convention as `gallery`/`documents` elsewhere in this
+       * union: an always-present array, not an optional field.
+       */
+      trace: PublicRelationship[];
     })
   | (PublicBuildSummary & {
       documents: PublicDocument[];
