@@ -5,13 +5,14 @@ import { DetailGallery } from '../DetailGallery';
 import { DetailSectionHeading, PublicBreadcrumbs, TechnologyList } from '../EditorialPrimitives';
 import { EvidenceGraphFocusSync } from '../evidence-graph';
 import { PageContainer, PublicSection } from '../PageContainer';
-import { ProseRenderer } from '../ProseRenderer';
 import { PublicImage } from '../PublicImage';
 import { RelatedRecordsSection } from '../RelatedRecordsSection';
 import { FOUNDER_COMPOSITIONS } from './compositions';
 import {
+  ProfileDocuments,
   ProfileEvidenceGraph,
   ProfileFooter,
+  ProfileHeroMedia,
   resolveDocuments,
   resolveRelationshipGroups,
   type EngineeringProfile as Profile,
@@ -81,13 +82,7 @@ export function EngineeringProfileDetail({ profile }: { profile: ImmutablePublic
         </PageContainer>
       </header>
 
-      {profile.hero ? (
-        <PublicSection className="profile-hero-media" aria-label="Profile lead media">
-          <PageContainer>
-            <PublicImage media={profile.hero} />
-          </PageContainer>
-        </PublicSection>
-      ) : null}
+      <ProfileHeroMedia profile={profile} />
 
       <PublicSection
         className="profile-position profile-chapter"
@@ -168,34 +163,7 @@ export function EngineeringProfileDetail({ profile }: { profile: ImmutablePublic
         </EvidenceGraphFocusSync>
       ) : null}
 
-      {documents.map(({ document, eyebrow, title }) => (
-        <PublicSection
-          key={document.role}
-          className="profile-document profile-chapter"
-          aria-labelledby={`profile-document-${document.role}`}
-        >
-          <PageContainer className="profile-document-grid">
-            <DetailSectionHeading
-              id={`profile-document-${document.role}`}
-              eyebrow={eyebrow}
-              title={title}
-            >
-              {document.outline?.length && document.outline.length > 1 ? (
-                <nav className="detail-outline" aria-label={`${title} contents`}>
-                  <ol>
-                    {document.outline.map((item) => (
-                      <li key={item.id}>
-                        <a href={`#${item.id}`}>{item.text}</a>
-                      </li>
-                    ))}
-                  </ol>
-                </nav>
-              ) : null}
-            </DetailSectionHeading>
-            <ProseRenderer document={document} headingOffset={1} as="div" />
-          </PageContainer>
-        </PublicSection>
-      ))}
+      <ProfileDocuments documents={documents} />
 
       <DetailGallery
         id="profile-gallery-title"

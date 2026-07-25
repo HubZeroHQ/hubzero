@@ -1,8 +1,11 @@
 import Link from 'next/link';
 import type { ImmutablePublic, PublicEntityDetail } from '@/lib/public/domain';
 import { publicRoute } from '@/lib/public/routes';
-import { PageContainer } from '../PageContainer';
+import { DetailSectionHeading } from '../EditorialPrimitives';
 import { EvidenceGraph } from '../evidence-graph';
+import { PageContainer, PublicSection } from '../PageContainer';
+import { ProseRenderer } from '../ProseRenderer';
+import { PublicImage } from '../PublicImage';
 
 /**
  * Re-exported, not redefined: `RelationshipGroup` used to be duplicated
@@ -57,6 +60,72 @@ export function resolveRelationshipGroups(profile: ImmutablePublic<EngineeringPr
       (relationship) => relationship.target.type === group.type,
     ),
   })).filter((group) => group.relationships.length);
+}
+
+/**
+ * The optional lead media block between the hero and every composition's
+ * first chapter — identical in every composition (generic template and all
+ * five founders) because it's the same one piece of profile-level media
+ * (`profile.hero`), not a founder-specific decision. Kept here rather than
+ * as a platform primitive: nothing outside Engineering Profiles renders a
+ * bare optional hero image with this exact aria-label and section class.
+ */
+export function ProfileHeroMedia({ profile }: { profile: ImmutablePublic<EngineeringProfile> }) {
+  if (!profile.hero) return null;
+  return (
+    <PublicSection className="profile-hero-media" aria-label="Profile lead media">
+      <PageContainer>
+        <PublicImage media={profile.hero} />
+      </PageContainer>
+    </PublicSection>
+  );
+}
+
+/**
+ * Renders every resolved profile document (`resolveDocuments`) — identical
+ * markup in every composition, so this replaces what used to be the same
+ * `.map` reimplemented six times. Not a platform primitive for the same
+ * reason as `ProfileHeroMedia`: the document-role model (`introduction`,
+ * `interview`, `quotes`, `timeline`, `achievements`) is specific to
+ * Engineering Profiles, not a generic detail-page pattern.
+ */
+export function ProfileDocuments({
+  documents,
+}: {
+  documents: readonly ReturnType<typeof resolveDocuments>[number][];
+}) {
+  return (
+    <>
+      {documents.map(({ document, eyebrow, title }) => (
+        <PublicSection
+          key={document.role}
+          className="profile-document profile-chapter"
+          aria-labelledby={`profile-document-${document.role}`}
+        >
+          <PageContainer className="profile-document-grid">
+            <DetailSectionHeading
+              id={`profile-document-${document.role}`}
+              eyebrow={eyebrow}
+              title={title}
+            >
+              {document.outline?.length && document.outline.length > 1 ? (
+                <nav className="detail-outline" aria-label={`${title} contents`}>
+                  <ol>
+                    {document.outline.map((item) => (
+                      <li key={item.id}>
+                        <a href={`#${item.id}`}>{item.text}</a>
+                      </li>
+                    ))}
+                  </ol>
+                </nav>
+              ) : null}
+            </DetailSectionHeading>
+            <ProseRenderer document={document} headingOffset={1} as="div" />
+          </PageContainer>
+        </PublicSection>
+      ))}
+    </>
+  );
 }
 
 /**
