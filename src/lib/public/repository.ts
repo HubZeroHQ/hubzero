@@ -660,6 +660,18 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
     };
   }
 
+  /**
+   * `publishedRecordCount` is the sum of `listEntities(type).length` for
+   * every type this function already fetches below — `status: 'published'`
+   * is applied at the query level (see `mongodb-source.ts`), so this is a
+   * true published-record count, not the length of the featured/capped
+   * arrays this function also returns for homepage display. No additional
+   * query: the six arrays summed here are already fetched for every other
+   * field on this projection. It intentionally does not depend on
+   * `PUBLIC_ENTITY_ROUTES` (a presentation-layer feature flag) — a record's
+   * published state is a data-layer fact independent of whether its
+   * section happens to be toggled on for navigation right now.
+   */
   async function getHomepage(now: Date): Promise<PublicHomepageProjection> {
     const [workEntities, buildEntities, blueprintEntities, labEntities, noteEntities, profiles] =
       await Promise.all([
@@ -748,6 +760,13 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
       notes,
       ...(blueprints[0] ? { blueprint: blueprints[0] } : {}),
       profiles: engineeringProfiles,
+      publishedRecordCount:
+        workEntities.length +
+        buildEntities.length +
+        blueprintEntities.length +
+        labEntities.length +
+        noteEntities.length +
+        profiles.length,
     };
   }
 

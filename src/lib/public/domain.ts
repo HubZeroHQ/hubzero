@@ -308,4 +308,13 @@ export interface PublicHomepageProjection {
   notes: PublicHomepageFeature<PublicNoteSummary>[];
   blueprint?: PublicHomepageFeature<PublicBlueprintSummary>;
   profiles: PublicHomepageFeature<PublicEngineeringProfileSummary>[];
+  /**
+   * The true count of published records across Work, Builds, Blueprints,
+   * Labs, Notes, and Engineering Profiles — not the length of the featured
+   * arrays above, which are capped subsets (`.slice(0, 2)` and similar) for
+   * homepage display. This is the homepage's one opening statistic, and it
+   * is a literal count of what's published, not a curated or weighted
+   * number. See `getHomepage`'s doc comment in `repository.ts`.
+   */
+  publishedRecordCount: number;
 }
