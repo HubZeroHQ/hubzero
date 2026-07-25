@@ -1222,7 +1222,8 @@
   }
 
   a.home-relationship-card:hover,
-  a.home-relationship-card:focus-visible {
+  a.home-relationship-card:focus-visible,
+  .home-relationship-card[data-evidence-active] {
     background: var(--color-surface-elevated);
     color: var(--color-text-primary);
   }
@@ -1429,6 +1430,31 @@
     font-size: 9px;
     letter-spacing: 0.05em;
     text-transform: uppercase;
+  }
+
+  /*
+   * `EvidenceGraphFocusSync` mirrors hover/focus of a relationship's real
+   * `<a>` link (or the SVG node itself) onto every element sharing its
+   * `data-evidence-node` id by toggling `data-evidence-active`. These rules
+   * are the only thing that reacts to it — the graph stays presentation,
+   * the transition is covered by the global `prefers-reduced-motion` rule
+   * above, and nothing here changes tab order or adds focusability.
+   */
+  .evidence-graph-line,
+  .evidence-graph-node {
+    transition:
+      stroke var(--duration-fast) var(--ease-standard),
+      stroke-width var(--duration-fast) var(--ease-standard);
+  }
+
+  .evidence-graph-line[data-evidence-active] {
+    stroke: var(--color-text-primary);
+    stroke-width: 1.5;
+  }
+
+  [data-evidence-node][data-evidence-active] .evidence-graph-node {
+    fill: var(--color-text-primary);
+    stroke: var(--color-text-primary);
   }
 
   .home-section-artifact {

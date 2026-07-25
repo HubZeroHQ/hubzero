@@ -3,6 +3,7 @@ import type { ImmutablePublic } from '@/lib/public/domain';
 import { publicRoute } from '@/lib/public/routes';
 import { DetailGallery } from '../DetailGallery';
 import { DetailSectionHeading, PublicBreadcrumbs, TechnologyList } from '../EditorialPrimitives';
+import { EvidenceGraphFocusSync } from '../evidence-graph';
 import { PageContainer, PublicSection } from '../PageContainer';
 import { ProseRenderer } from '../ProseRenderer';
 import { PublicImage } from '../PublicImage';
@@ -153,16 +154,18 @@ export function EngineeringProfileDetail({ profile }: { profile: ImmutablePublic
       </PublicSection>
 
       {groups.length ? (
-        <RelatedRecordsSection
-          id="profile-evidence-title"
-          eyebrow="Evidence / demonstrated contribution"
-          title="Follow the contribution into the work."
-          description="Every connection below is explicit in the public record. Internal creator metadata is never treated as contribution credit."
-          headerContent={<ProfileEvidenceGraph profile={profile} />}
-          groups={groups}
-          sectionClassName="profile-evidence profile-chapter"
-          containerClassName="profile-evidence-grid"
-        />
+        <EvidenceGraphFocusSync>
+          <RelatedRecordsSection
+            id="profile-evidence-title"
+            eyebrow="Evidence / demonstrated contribution"
+            title="Follow the contribution into the work."
+            description="Every connection below is explicit in the public record. Internal creator metadata is never treated as contribution credit."
+            headerContent={<ProfileEvidenceGraph profile={profile} />}
+            groups={groups}
+            sectionClassName="profile-evidence profile-chapter"
+            containerClassName="profile-evidence-grid"
+          />
+        </EvidenceGraphFocusSync>
       ) : null}
 
       {documents.map(({ document, eyebrow, title }) => (

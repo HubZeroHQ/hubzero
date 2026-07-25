@@ -8,7 +8,8 @@ import type {
 import { publicRoute } from '@/lib/public/routes';
 import { PageContainer, PublicSection } from '../PageContainer';
 import { formatPublicDate, SectionHeader } from '../EditorialPrimitives';
-import { AxisDiagram, RelationshipGraph } from '../EvidenceVisuals';
+import { AxisDiagram } from '../EvidenceVisuals';
+import { EvidenceGraph } from '../evidence-graph';
 import { EditorialCard } from './EditorialCard';
 
 const relationshipRoutes: Readonly<Record<string, boolean>> = PUBLIC_ENTITY_ROUTES;
@@ -62,7 +63,7 @@ export function Homepage({
             />
             {builds[0]?.relationships.length ? (
               <div className="home-section-artifact">
-                <RelationshipGraph
+                <EvidenceGraph
                   subject={{ label: builds[0].entity.title, meta: 'Build' }}
                   relationships={builds[0].relationships}
                 />
@@ -99,7 +100,7 @@ export function Homepage({
             />
             {work[0]?.relationships.length ? (
               <div className="home-section-artifact">
-                <RelationshipGraph
+                <EvidenceGraph
                   subject={{ label: work[0].entity.title, meta: 'Work' }}
                   relationships={work[0].relationships}
                 />

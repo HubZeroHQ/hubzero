@@ -335,12 +335,18 @@ export function RelationshipCard({
     </>
   );
   const style = identity ? founderAccentStyle(identity.accent) : undefined;
+  const evidenceNodeId = relationshipKey(relationship);
   return enabled && href ? (
-    <Link href={href} className="home-relationship-card" style={style}>
+    <Link
+      href={href}
+      className="home-relationship-card"
+      style={style}
+      data-evidence-node={evidenceNodeId}
+    >
       {content}
     </Link>
   ) : (
-    <div className="home-relationship-card" style={style}>
+    <div className="home-relationship-card" style={style} data-evidence-node={evidenceNodeId}>
       {content}
     </div>
   );
