@@ -278,6 +278,13 @@ export const PUBLIC_NAVIGATION = [
     description: 'Short-form engineering journal',
   },
   {
+    label: 'Ledger',
+    href: publicRoute.ledger(),
+    type: 'ledger',
+    enabled: true,
+    description: 'Chronological activity record',
+  },
+  {
     label: 'Services',
     href: publicRoute.collection('service'),
     type: 'service',
