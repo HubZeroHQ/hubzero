@@ -140,9 +140,11 @@ Each collection provides a Summary and, where it has a canonical detail route, a
 
 ### Work Detail
 
-**Required:** all Work Summary fields; case-study Document; typed relationships.
+**Required:** all Work Summary fields; case-study Document; typed relationships; `trace` (v2.5 Phase 6) — an ordered array of typed relationships, always present, empty when there's no chain to show.
 
 **Optional:** public repository link, additional media when explicitly modeled.
+
+**Trace (v2.5 Phase 6):** `trace` walks backward from this Work item — through the Build that informed it, to the Lab that Build originated from — using the same visibility-filtered relationship data as the Work's other typed relationships, not a separate query or a separate visibility path. It stops the moment a hop isn't publicly visible rather than skipping past the gap. An empty `trace` means no lineage exists to show, not a resolution failure.
 
 **Current-state information:** timeline only. Workflow status and raw timestamps are excluded.
 
@@ -196,11 +198,13 @@ Each collection provides a Summary and, where it has a canonical detail route, a
 
 ### Lab Detail
 
-**Required:** all Lab Summary fields; graduation criteria; at least one substantive approved Lab Document; milestones when claimed as progress; typed relationships.
+**Required:** all Lab Summary fields; graduation criteria; at least one substantive approved Lab Document; milestones when claimed as progress; typed relationships; `trace` (v2.5 Phase 8) — always present, empty when there's no chain to show.
 
 **Optional:** all populated Lab Document roles, gallery, public repository/demo, graduated Build.
 
 **Mapping note:** the public Detail accepts the four current Lab roles and exposes only populated roles.
+
+**Trace (v2.5 Phase 8):** the same mechanism as Work Detail's `trace`, walked forward instead of backward — through the Build this Lab graduated into, to the Work that Build was applied in. Introduced as the named follow-up to Work's backward Trace once the shared `direction` option existed; the underlying projection and visibility rules are identical.
 
 **Visibility:** Lab record is published and readable by the current source contract; Documents inherit Lab visibility; relationship targets are independently filtered; `internalRepoUrl` is excluded regardless of status.
 
@@ -313,6 +317,12 @@ The fallback never exposes the User name or account image and never fabricates a
 `createdByUserId` is never consulted for Work, Builds, Blueprints, Labs, Profiles, Services, Team, Media, Taxonomy, or Documents. Public contributor credit requires a future explicit contributor relation.
 
 ## Public discovery projections
+
+### Homepage projection
+
+A purpose-shaped, bounded projection distinct from any collection's Summary/Detail — homepage consumers never receive Studio curation fields. Featured `work`/`builds`/`labs`/`notes`/`profiles` arrays are curated, capped subsets (for example, at most one featured Work item, at most two featured Builds) selected for display; their lengths are not, and must never be read as, collection totals.
+
+`publishedRecordCount` (v2.5 Phase 5) is the one field that is a real total: the count of published records across Work, Builds, Blueprints, Labs, Notes, and Engineering Profiles, computed from the same already-fetched, already-visibility-filtered data as the featured arrays — no additional query. It is independent of any presentation-layer route toggle; a record's published state does not change because a section is currently hidden from navigation.
 
 ### Search result
 

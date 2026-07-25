@@ -42,8 +42,9 @@ The four pillars define what HubZero produces. Notes explains the thinking, Engi
 | `/labs/[slug]` | Expose objective, approach, experiments, progress, blockers, and graduation | Engineers, collaborators, evaluators | Labs, Note, Profile, search | Journal evidence, demo/repo, graduated Build, related Notes |
 | `/notes` | Publish the connective engineering journal once the content threshold is met | Engineers, search visitors, returning readers | Nav, search, relations, author profile | Note detail, referenced artifact, author Profile |
 | `/notes/[slug]` | Make one technical argument, record, or lesson legible and attributable | Engineers, technical leaders | Search, relation, Profile, Notes | Referenced Work/Build/Blueprint/Lab, author Profile |
-| `/engineering` | Index earned Engineering Profiles without implying every team member has one | Prospects, recruits, peers | About, content byline, search | Profile detail, person's evidence |
+| `/engineering` | Index earned Engineering Profiles without implying every team member has one | Prospects, recruits, peers | Nav, About, content byline, search | Profile detail, person's evidence |
 | `/engineering/[slug]` | Show how an engineer thinks through principles, decisions, and connected work | Peers, recruits, evaluators | Byline, About, related content | Featured evidence, authored Notes, Contact/About |
+| `/ledger` | Present a truthful, reverse-chronological view of published Note and Lab activity | Engineers, returning visitors, recruits | Nav, footer, Notes/Labs index cross-links | Note or Lab detail, back to the originating collection |
 | `/about` | Explain company structure and introduce the team | Prospects, recruits, partners | Nav, search, footer | Engineering Profile, evidence, Contact |
 | `/services` | Organize proven capabilities around visitor needs without duplicating evidence | Qualified prospects | Home, About, Work, search | Evidence entry, Contact |
 | `/contact` | Start a specific, expectation-set conversation | Qualified prospects, partners | Nav, evidence, Service | Confirmation with response timeframe |
@@ -56,10 +57,10 @@ The four pillars define what HubZero produces. Notes explains the thinking, Engi
 ### Long-term visible pill
 
 ```text
-[HubZero]  Work  Builds  Blueprints  Labs  Notes  About  [Search]  [Contact]
+[HubZero]  Work  Builds  Blueprints  Labs  Notes  Engineering  Ledger  About  [Search]  [Contact]
 ```
 
-This keeps the four pillars visible, promotes the connective editorial surface, and preserves a direct human/company path. Contact remains the differentiated action. Search is always labeled and visible.
+This keeps the four pillars visible, promotes the connective editorial surface, and preserves a direct human/company path. Engineering and Ledger (v2.5 Phases 7–8) sit alongside Notes as the site's other chronological/evidence surfaces — reachable, discoverable, and rendered from the same shared navigation configuration as everything else in the pill, not a separate mechanism. Contact remains the differentiated action. Search is always labeled and visible.
 
 Services remains a real, indexable route but is reached contextually from the homepage capability passage, About, Work evidence, search, and Contact. This is intentional: services exist, but products and engineering knowledge carry the identity.
 

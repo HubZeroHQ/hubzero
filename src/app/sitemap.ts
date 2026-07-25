@@ -15,6 +15,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { enabled: true, path: publicRoute.collection('lab') },
     { enabled: true, path: publicRoute.collection('note') },
     { enabled: true, path: publicRoute.collection('engineeringProfile') },
+    { enabled: true, path: publicRoute.ledger() },
     { enabled: true, path: publicRoute.about() },
     { enabled: true, path: publicRoute.collection('service') },
     { enabled: PUBLIC_SITE.release.contact, path: publicRoute.contact() },

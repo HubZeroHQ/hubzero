@@ -21,7 +21,7 @@ The four pillars remain permanent and distinct:
 - **Blueprints** turns proven patterns into reusable foundations.
 - **Labs** exposes active investigation before it becomes a finished product.
 
-Notes, Engineering Profiles, Services, About, and Contact support those pillars. They do not become competing pillars.
+Notes, Engineering Profiles, Services, About, and Contact support those pillars. They do not become competing pillars. Trace and Ledger (v2.5 Phases 6–7) are supporting surfaces in the same sense: Trace makes one causal chain of typed relationships walkable and visible on a Work or Lab record; Ledger is the reverse-chronological view across every Note and Lab update. Neither is a pillar, and neither introduces a new content type — both are read projections over relationships and dates that already exist.
 
 ## Primary transformation
 
@@ -68,8 +68,8 @@ The public system uses five recurring narrative moves. These are more important 
 | Orient | What is HubZero? | A direct identity statement and the four-pillar model |
 | Demonstrate | What has it actually made? | Product surfaces, case-study evidence, deployed previews, repositories, sourced outcomes |
 | Explain | How does it think? | Architecture, decisions, trade-offs, lessons, Engineering Profiles |
-| Connect | How does this relate to other work? | Typed relationships, backlinks, lineage, technologies, authorship |
-| Continue | Where should I go next? | Contextual next links, search, live artifacts, contact paths |
+| Connect | How does this relate to other work? | Typed relationships, backlinks, lineage, technologies, authorship, Trace (a Work or Lab's causal chain, shown as a walkable graph) |
+| Continue | Where should I go next? | Contextual next links, search, live artifacts, contact paths, Ledger (the chronological record of published Note and Lab activity) |
 
 Every major public surface should perform at least three of these moves. No surface should end with a generic “related content” grid when a specific relationship can be named.
 
