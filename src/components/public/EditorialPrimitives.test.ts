@@ -93,8 +93,22 @@ describe('RelationshipCard list rendering', () => {
       createElement(RelationshipCard, { relationship, enabled: true }),
     );
 
-    expect(markup).toContain('class="home-relationship-card" href="/about/first-contributor"');
+    expect(markup).toContain('class="home-relationship-card"');
+    expect(markup).toContain('href="/about/first-contributor"');
     expect(markup).not.toContain('tabindex');
+  });
+
+  it('carries the same data-evidence-node id EvidenceGraph uses, so EvidenceGraphFocusSync can pair them', () => {
+    const relationship = teamContributor(
+      'HZ-TM-001',
+      'First contributor',
+      '/about/first-contributor',
+    );
+    const markup = renderToStaticMarkup(
+      createElement(RelationshipCard, { relationship, enabled: true }),
+    );
+
+    expect(markup).toContain(`data-evidence-node="${relationshipKey(relationship)}"`);
   });
 
   it('links a contributor to their canonical Engineering Profile, never to the About index', () => {

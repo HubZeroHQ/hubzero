@@ -49,6 +49,8 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
     "@tailwindcss/postcss": "^4.1.14",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@types/node": "^24.7.2",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.1",
@@ -56,6 +58,7 @@
     "eslint-config-next": "15.5.20",
     "eslint-config-prettier": "^10.1.8",
     "husky": "^9.1.7",
+    "jsdom": "^29.1.1",
     "lint-staged": "^16.2.4",
     "prettier": "^3.6.2",
     "prettier-plugin-tailwindcss": "^0.6.14",

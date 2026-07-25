@@ -2,7 +2,7 @@ import Link from 'next/link';
 import type { ImmutablePublic, PublicEntityDetail } from '@/lib/public/domain';
 import { publicRoute } from '@/lib/public/routes';
 import { PageContainer } from '../PageContainer';
-import { RelationshipGraph } from '../EvidenceVisuals';
+import { EvidenceGraph } from '../evidence-graph';
 
 /**
  * Re-exported, not redefined: `RelationshipGroup` used to be duplicated
@@ -60,11 +60,17 @@ export function resolveRelationshipGroups(profile: ImmutablePublic<EngineeringPr
 }
 
 /**
- * Shared by the generic template and every founder composition (§18
- * evidence visualization) — a monochrome SVG summary of the same
- * `profile.relationships` the `RelationshipGroup` lists below it render
- * accessibly. One implementation, so a future composition gets it for free
- * instead of needing its own copy of this block.
+ * Shared by the generic template and every founder composition — the
+ * Engineering Profile adapter onto the platform `EvidenceGraph` primitive:
+ * it shapes `profile.relationships` into the generic `subject` +
+ * `relationships` projection `EvidenceGraph` expects and adds the profile
+ * -specific caption. It owns no rendering logic of its own beyond that
+ * translation, so a future consumer (Homepage, Search, Trace) reaches for
+ * `EvidenceGraph` directly rather than this profile-shaped wrapper.
+ *
+ * The caller is responsible for wrapping this together with the matching
+ * `RelationshipGroup` list in `EvidenceGraphFocusSync` — this component only
+ * renders the graph half of that pairing.
  */
 export function ProfileEvidenceGraph({
   profile,
@@ -81,7 +87,7 @@ export function ProfileEvidenceGraph({
         {total} {total === 1 ? 'connection' : 'connections'} across {collections}{' '}
         {collections === 1 ? 'collection' : 'collections'}
       </p>
-      <RelationshipGraph
+      <EvidenceGraph
         subject={{ label: profile.title, meta: 'Engineer' }}
         relationships={profile.relationships}
       />

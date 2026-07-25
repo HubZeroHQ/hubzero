@@ -5,6 +5,7 @@ import {
 } from '@/config/founder-identity';
 import type { ImmutablePublic } from '@/lib/public/domain';
 import { PublicBreadcrumbs } from '../../EditorialPrimitives';
+import { EvidenceGraphFocusSync } from '../../evidence-graph';
 import { PageContainer, PublicSection } from '../../PageContainer';
 import { ProseRenderer } from '../../ProseRenderer';
 import { PublicImage } from '../../PublicImage';
@@ -174,31 +175,33 @@ export function SalsabeelComposition({
       ) : null}
 
       {groups.length ? (
-        <PublicSection
-          className="profile-evidence profile-chapter"
-          aria-labelledby="profile-evidence-title"
-        >
-          <PageContainer className="profile-evidence-grid">
-            <header>
-              <p className="home-eyebrow">Evidence / demonstrated contribution</p>
-              <h2 id="profile-evidence-title">Follow the routing into the work.</h2>
-              <p>
-                Every connection below is explicit in the public record. Internal creator metadata
-                is never treated as contribution credit.
-              </p>
-              <ProfileEvidenceGraph profile={profile} />
-            </header>
-            <div className="detail-relation-groups">
-              {groups.map((group) => (
-                <RelationshipGroup
-                  key={group.type}
-                  title={group.title}
-                  relationships={group.relationships}
-                />
-              ))}
-            </div>
-          </PageContainer>
-        </PublicSection>
+        <EvidenceGraphFocusSync>
+          <PublicSection
+            className="profile-evidence profile-chapter"
+            aria-labelledby="profile-evidence-title"
+          >
+            <PageContainer className="profile-evidence-grid">
+              <header>
+                <p className="home-eyebrow">Evidence / demonstrated contribution</p>
+                <h2 id="profile-evidence-title">Follow the routing into the work.</h2>
+                <p>
+                  Every connection below is explicit in the public record. Internal creator metadata
+                  is never treated as contribution credit.
+                </p>
+                <ProfileEvidenceGraph profile={profile} />
+              </header>
+              <div className="detail-relation-groups">
+                {groups.map((group) => (
+                  <RelationshipGroup
+                    key={group.type}
+                    title={group.title}
+                    relationships={group.relationships}
+                  />
+                ))}
+              </div>
+            </PageContainer>
+          </PublicSection>
+        </EvidenceGraphFocusSync>
       ) : null}
 
       {documents.map(({ document, eyebrow, title }) => (
