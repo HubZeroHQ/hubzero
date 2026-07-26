@@ -14,7 +14,26 @@ import { createPublicRepository } from './repository';
 
 const repository = createPublicRepository(mongoPublicDataSource);
 
-export function getPublicDetail(type: PublicDetailEntityType, slug: string) {
+/**
+ * `preview: true` is Draft Mode's path (Experience v3 Preview Integrity
+ * milestone) — deliberately bypasses `unstable_cache` entirely rather than
+ * threading preview through the cache key. A previewed entity's `status`
+ * (and everything else about it) can change from one moment to the next
+ * while an editor is actively working on it; caching that under a key that
+ * could collide with — or go stale relative to — the real public cache
+ * entry for the same slug is exactly the kind of risk this bypasses.
+ * Next.js already renders the page fully dynamically whenever Draft Mode's
+ * cookie is present, so an uncached read here doesn't cost anything a real
+ * visitor would ever pay for.
+ */
+export function getPublicDetail(
+  type: PublicDetailEntityType,
+  slug: string,
+  options?: { preview?: boolean },
+) {
+  if (options?.preview) {
+    return repository.findDetail(type, slug, { preview: true });
+  }
   return unstable_cache(
     () => repository.findDetail(type, slug),
     cacheKey(type, 'public-detail', slug),

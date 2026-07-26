@@ -2,6 +2,7 @@ import { ObjectId } from 'mongodb';
 import { describe, expect, it } from 'vitest';
 import type {
   Blueprint,
+  Build,
   EngineeringProfile,
   MediaAsset,
   Note,
@@ -728,5 +729,146 @@ describe('public repository boundary', () => {
     expect(first?.target.referenceId).toBe('HZ-TM-301');
     expect(second?.target.referenceId).toBe('HZ-TM-302');
     expect(first?.target.referenceId).not.toBe(second?.target.referenceId);
+  });
+});
+
+describe('preview bypass (Experience v3 Preview Integrity milestone)', () => {
+  function draftWork(slug: string): { work: Work; document: DocumentRecord } {
+    const substantialText = Array.from({ length: 48 }, (_, index) => `evidence-${index}`).join(' ');
+    const work: Work = {
+      _id: new ObjectId(),
+      createdAt: now,
+      updatedAt: now,
+      createdByUserId: creator,
+      status: 'draft',
+      slug,
+      referenceId: 'HZ-WK-401',
+      title: 'Unpublished case study',
+      summary: 'A case study still being written.',
+      clientType: 'Product team',
+      categoryTagIds: [],
+      timeline: '4 weeks',
+      role: 'Product engineering',
+      technologyIds: [],
+      relatedBuildIds: [],
+      relatedBlueprintIds: [],
+      relatedLabIds: [],
+      contributors: [],
+    };
+    const document: DocumentRecord = {
+      _id: new ObjectId(),
+      ownerType: 'Work',
+      ownerId: work._id,
+      role: 'caseStudy',
+      blocks: [{ id: 'one', type: 'paragraph', data: { text: substantialText } }],
+      createdAt: now,
+      updatedAt: now,
+    };
+    return { work, document };
+  }
+
+  it('hides a draft entity from a normal findDetail call, exactly as before', async () => {
+    const { work, document } = draftWork('preview-hidden');
+    const repository = createPublicRepository(
+      fakeSource({ entities: [entity('work', work)], documents: [document] }),
+    );
+    expect(await repository.findDetail('work', work.slug)).toBeNull();
+  });
+
+  it('reveals that same draft entity when { preview: true } is passed', async () => {
+    const { work, document } = draftWork('preview-revealed');
+    const repository = createPublicRepository(
+      fakeSource({ entities: [entity('work', work)], documents: [document] }),
+    );
+    const detail = await repository.findDetail('work', work.slug, { preview: true });
+    expect(detail).not.toBeNull();
+    expect(detail?.type).toBe('work');
+  });
+
+  it("does not bypass a related entity's own visibility while previewing the subject", async () => {
+    const { work, document } = draftWork('preview-with-draft-relation');
+    const draftBuild: Build = {
+      _id: new ObjectId(),
+      createdAt: now,
+      updatedAt: now,
+      createdByUserId: creator,
+      status: 'draft',
+      slug: 'still-draft-build',
+      referenceId: 'HZ-BL-401',
+      title: 'Still-draft Build',
+      summary: 'Not ready yet.',
+      deploymentState: 'live',
+      technologyIds: [],
+      relatedWorkIds: [],
+      galleryImageIds: [],
+      featured: false,
+      contributors: [],
+    };
+    work.relatedBuildIds = [draftBuild._id];
+    const repository = createPublicRepository(
+      fakeSource({
+        entities: [entity('work', work), entity('build', draftBuild)],
+        documents: [document],
+      }),
+    );
+    const detail = await repository.findDetail('work', work.slug, { preview: true });
+    expect(detail).not.toBeNull();
+    expect(
+      detail?.relationships.some(
+        (relationship) => relationship.target.title === 'Still-draft Build',
+      ),
+    ).toBe(false);
+  });
+
+  it("still requires the linked Team to be publicProfile for a previewed Engineering Profile — bypassStatus only bypasses the profile's own status", async () => {
+    const hiddenTeam: Team = {
+      _id: new ObjectId(),
+      referenceId: 'HZ-TM-401',
+      name: 'Not yet public engineer',
+      role: 'Systems engineer',
+      bio: 'Builds explicit public systems.',
+      group: 'Engineering',
+      publicProfile: false,
+      founder: false,
+      publicCategory: 'leadership',
+      engineeringProfileEligible: true,
+      order: 0,
+      socialLinks: [],
+      archived: false,
+      createdAt: now,
+      updatedAt: now,
+    };
+    const draftProfile: EngineeringProfile = {
+      _id: new ObjectId(),
+      createdAt: now,
+      updatedAt: now,
+      createdByUserId: creator,
+      status: 'draft',
+      slug: 'draft-profile-hidden-team',
+      referenceId: 'EP-401',
+      teamMemberId: hiddenTeam._id,
+      overview: 'Builds public systems around explicit ownership and observable state.',
+      engineeringPhilosophy: 'Make the evidence boundary explicit before implementation.',
+      currentExploration: 'Deterministic public read models',
+      areasOfExpertise: ['Public data architecture'],
+      currentInterests: ['Dependency graphs'],
+      engineeringIdentity: [],
+      technologyIds: [],
+      featuredWorkIds: [],
+      featuredBuildIds: [],
+      featuredBlueprintIds: [],
+      featuredLabIds: [],
+      featuredNoteIds: [],
+      galleryImageIds: [],
+    };
+    const repository = createPublicRepository(
+      fakeSource({
+        entities: [entity('teamMember', hiddenTeam), entity('engineeringProfile', draftProfile)],
+      }),
+    );
+    const detail = await repository.findDetail('engineeringProfile', draftProfile.slug, {
+      preview: true,
+    });
+    expect(detail).toBeNull();
   });
 });

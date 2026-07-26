@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { objectIdString, publishStatusSchema, slugSchema } from './shared';
+import { objectIdString, publishStatusSchema, reviewNoteSchema, slugSchema } from './shared';
 
 /** PLANNING.md §26.1. */
 export const workSchema = z.object({
@@ -7,6 +7,7 @@ export const workSchema = z.object({
   summary: z.string().trim().min(1).max(320),
   slug: slugSchema,
   status: publishStatusSchema.default('draft'),
+  reviewNote: reviewNoteSchema,
   clientType: z.string().min(1),
   categoryTagIds: z.array(objectIdString).default([]),
   timeline: z.string().min(1),

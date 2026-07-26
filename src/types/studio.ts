@@ -66,6 +66,8 @@ interface PublishableEntity extends WithId, WithTimestamps {
   status: PublishStatus;
   slug: string;
   createdByUserId: ObjectId;
+  /** The reviewer's reason the last time this entry was sent back from `inReview` to `draft`. Cleared (`null`) on every other status transition, including the author's next resubmission — it is last-rejection feedback, not a running log. */
+  reviewNote?: string | null;
 }
 
 /**

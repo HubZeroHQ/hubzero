@@ -9,12 +9,15 @@ import {
   formatPublicDate,
   PublicBreadcrumbs,
   PublicBuildStateBadge,
+  relationshipHref,
+  relationshipKey,
   TechnologyList,
 } from '../EditorialPrimitives';
 import { EvidenceGraph, EvidenceGraphFocusSync } from '../evidence-graph';
 import { PageContainer, PublicSection } from '../PageContainer';
 import { ProseRenderer } from '../ProseRenderer';
 import { PublicImage } from '../PublicImage';
+import { ReferenceIdCopy } from '../ReferenceIdCopy';
 import { RelatedRecordsSection } from '../RelatedRecordsSection';
 import { BlueprintFeatureList } from './BlueprintFeatureList';
 
@@ -149,6 +152,25 @@ export function PublicCollectionDetail({ entity }: { entity: ImmutablePublic<Col
                       : 'Lab / active investigation'}
               </p>
               <h1>{entity.title}</h1>
+              {lineage.length ? (
+                <p className="detail-lineage-cue">
+                  <span aria-hidden="true">↳</span>{' '}
+                  {lineage.map((relationship, index) => {
+                    const href = relationshipHref(relationship);
+                    return (
+                      <span key={relationshipKey(relationship)}>
+                        {index > 0 ? ', ' : ''}
+                        {relationship.label}{' '}
+                        {href ? (
+                          <Link href={href}>{relationship.target.title}</Link>
+                        ) : (
+                          relationship.target.title
+                        )}
+                      </span>
+                    );
+                  })}
+                </p>
+              ) : null}
               <p className="detail-summary">{entity.summary}</p>
               {entity.links.length ? (
                 <ul className="detail-actions" aria-label="External destinations">
@@ -369,7 +391,7 @@ export function PublicCollectionDetail({ entity }: { entity: ImmutablePublic<Col
           <div>
             <p className="home-eyebrow">Publication record</p>
             <p>
-              {entity.referenceId} /{' '}
+              <ReferenceIdCopy value={entity.referenceId} /> /{' '}
               {entity.type === 'build' ? (
                 <PublicBuildStateBadge state={entity.deploymentState} />
               ) : (
@@ -390,14 +412,12 @@ function DetailRegister({ entity }: { entity: ImmutablePublic<CollectionDetail> 
   const values =
     entity.type === 'work'
       ? [
-          ['Reference', entity.referenceId],
           ['Client', entity.clientType],
           ['Timeline', entity.timeline],
           ['HubZero role', entity.hubZeroRole],
         ]
       : entity.type === 'build'
         ? [
-            ['Reference', entity.referenceId],
             [
               'Technology',
               entity.technologies.length ? `${entity.technologies.length} listed` : 'Not listed',
@@ -405,13 +425,11 @@ function DetailRegister({ entity }: { entity: ImmutablePublic<CollectionDetail> 
           ]
         : entity.type === 'blueprint'
           ? [
-              ['Reference', entity.referenceId],
               ['Version', `v${entity.version}`],
               ['Architecture', entity.architecture],
               ['Design language', entity.designLanguage],
             ]
           : [
-              ['Reference', entity.referenceId],
               ['Stage', formatMetadata(entity.stage)],
               ['Started', formatPublicDate(entity.startDate)],
               [
@@ -427,6 +445,12 @@ function DetailRegister({ entity }: { entity: ImmutablePublic<CollectionDetail> 
   return (
     <aside className="detail-register" aria-label={`${entity.title} publication metadata`}>
       <dl>
+        <div>
+          <dt>Reference</dt>
+          <dd>
+            <ReferenceIdCopy value={entity.referenceId} />
+          </dd>
+        </div>
         {entity.type === 'build' ? (
           <div>
             <dt>Maintenance status</dt>

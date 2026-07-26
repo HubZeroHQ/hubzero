@@ -12,9 +12,13 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { ReferenceIdBadge } from '@/components/ui/ReferenceIdBadge';
 import { Tag } from '@/components/ui/Tag';
 import { auth } from '@/lib/auth';
-import { canActOnEntry } from '@/lib/auth/permissions';
+import { canEditEntry } from '@/lib/auth/permissions';
 import { graduateLabToBuildAction, transitionLabStatusAction } from '@/lib/studio/actions/lab';
-import { canUnpublishOverride, getAvailableTransitions } from '@/lib/studio/workflow-permissions';
+import {
+  canReject,
+  canUnpublishOverride,
+  getAvailableTransitions,
+} from '@/lib/studio/workflow-permissions';
 import { blueprintRepository } from '@/lib/db/repositories/blueprint';
 import { buildRepository } from '@/lib/db/repositories/build';
 import { documentRepository } from '@/lib/db/repositories/document';
@@ -69,7 +73,7 @@ export default async function LabDetailPage({ params }: { params: Promise<{ id: 
 
   const session = await auth();
   const { role, id: userId } = session!.user;
-  const canEdit = canActOnEntry(lab, { role, userId });
+  const canEdit = canEditEntry(lab, { role, userId });
 
   const [
     labDocuments,
@@ -133,9 +137,19 @@ export default async function LabDetailPage({ params }: { params: Promise<{ id: 
         description={`${STAGE_LABEL[lab.stage]}${lab.featured ? ' · Featured' : ''}`}
         actions={
           canEdit ? (
-            <ButtonLink href={`/studio/content/labs/${id}/edit`} variant="secondary">
-              Edit
-            </ButtonLink>
+            <>
+              <ButtonLink
+                href={`/api/preview?type=lab&id=${id}`}
+                target="_blank"
+                rel="noreferrer"
+                variant="ghost"
+              >
+                Preview
+              </ButtonLink>
+              <ButtonLink href={`/studio/content/labs/${id}/edit`} variant="secondary">
+                Edit
+              </ButtonLink>
+            </>
           ) : undefined
         }
       />
@@ -180,6 +194,8 @@ export default async function LabDetailPage({ params }: { params: Promise<{ id: 
           status={lab.status}
           availableTransitions={availableTransitions}
           canUnpublishOverride={canOverride}
+          canReject={canReject(lab.status, role)}
+          reviewNote={lab.reviewNote}
           onTransition={boundTransitionAction}
         />
       </div>

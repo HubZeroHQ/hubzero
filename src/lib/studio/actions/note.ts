@@ -92,7 +92,8 @@ export const updateNoteAction = createEntryUpdateAction<Note, NoteInput>({
 
 export const transitionNoteStatusAction = createEntryTransitionAction<Note>({
   findById: noteRepository.findById,
-  setStatus: (id, status) => noteRepository.update(id, { status }),
+  setStatus: (id, status, reviewNote) =>
+    noteRepository.update(id, { status, reviewNote: reviewNote ?? null }),
   detailPath: noteDetailPath,
   publicType: 'note',
 });

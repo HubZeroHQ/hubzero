@@ -5,6 +5,7 @@ import { PublicJsonLd } from '@/components/public/PublicJsonLd';
 import { PUBLIC_SITE } from '@/config/public-site';
 import { createPublicMetadata } from '@/lib/public/discovery/metadata';
 import { breadcrumbJsonLd, publicArtifactJsonLd } from '@/lib/public/discovery/structured-data';
+import { isPreviewRequest } from '@/lib/public/preview';
 import { getPublicDetail, listPublicSummaries } from '@/lib/public/queries';
 
 export const revalidate = 86_400;
@@ -20,7 +21,8 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const entity = await getPublicDetail('lab', slug);
+  const preview = await isPreviewRequest();
+  const entity = await getPublicDetail('lab', slug, { preview });
   if (!entity || entity.type !== 'lab') {
     return createPublicMetadata({
       title: 'Lab not found',
@@ -34,14 +36,15 @@ export async function generateMetadata({
     description: entity.summary,
     path: entity.url,
     image: entity.hero,
-    noIndex: !PUBLIC_SITE.release.live,
+    noIndex: preview || !PUBLIC_SITE.release.live,
     type: 'article',
   });
 }
 
 export default async function LabDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const entity = await getPublicDetail('lab', slug);
+  const preview = await isPreviewRequest();
+  const entity = await getPublicDetail('lab', slug, { preview });
   if (!entity || entity.type !== 'lab') notFound();
   return (
     <>

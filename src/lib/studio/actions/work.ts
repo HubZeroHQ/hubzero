@@ -82,7 +82,8 @@ export const updateWorkAction = createEntryUpdateAction<Work, WorkInput>({
 
 export const transitionWorkStatusAction = createEntryTransitionAction<Work>({
   findById: workRepository.findById,
-  setStatus: (id, status) => workRepository.update(id, { status }),
+  setStatus: (id, status, reviewNote) =>
+    workRepository.update(id, { status, reviewNote: reviewNote ?? null }),
   detailPath: workDetailPath,
   publicType: 'work',
 });

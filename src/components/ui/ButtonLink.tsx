@@ -13,7 +13,14 @@ export function ButtonLink({
   className,
   children,
   ...props
-}: LinkProps & { variant?: ButtonVariant; className?: string; children: ReactNode }) {
+}: LinkProps & {
+  variant?: ButtonVariant;
+  className?: string;
+  children: ReactNode;
+  /** Only needed for links that leave the app (e.g. `/api/preview`, which redirects to a real navigation, not client-side routing) — `next/link`'s own type omits these. */
+  target?: string;
+  rel?: string;
+}) {
   return (
     <Link className={buttonClassName(variant, className)} {...props}>
       {children}

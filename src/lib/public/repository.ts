@@ -93,6 +93,7 @@ export interface PublicRepository {
   findDetail(
     type: PublicDetailEntityType,
     slug: string,
+    options?: { preview?: boolean },
   ): Promise<ImmutablePublic<PublicEntityDetail> | null>;
   listSummaries(type: PublicEntityType): Promise<ImmutablePublic<PublicEntitySummary[]>>;
   listNoteIndexEntries(): Promise<ImmutablePublic<PublicNoteIndexEntry[]>>;
@@ -116,7 +117,18 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
     destinations: ReadonlyMap<string, PublicEntityLink>;
   };
 
-  async function visible(entity: StudioPublicEntity): Promise<boolean> {
+  /**
+   * `bypassStatus` exists for exactly one caller: `findDetail`'s Draft Mode
+   * preview path (Experience v3 Preview Integrity milestone). It holds every
+   * other visibility rule constant — an Engineering Profile whose Team
+   * member isn't `publicProfile` still fails, since that's a genuinely
+   * different, independent switch — and only answers "if *this* entity's own
+   * publish status were `published` right now, would it be visible." It must
+   * never be threaded into `resolveRelations`/`resolveTrace`'s lookups of
+   * *other* entities — a still-draft related entry stays invisible in a
+   * preview exactly as it would once the subject actually publishes.
+   */
+  async function visible(entity: StudioPublicEntity, bypassStatus = false): Promise<boolean> {
     if (entity.type === 'teamMember') {
       return isPubliclyVisible({
         type: 'teamMember',
@@ -128,10 +140,11 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
       const team = await source.findEntityById('teamMember', profile.teamMemberId.toString());
       return isPubliclyVisible({
         type: 'engineeringProfile',
-        status: profile.status,
+        status: bypassStatus ? 'published' : profile.status,
         teamPublic: team ? (team.record as Team).publicProfile : false,
       });
     }
+    if (bypassStatus) return true;
     return isPubliclyVisible({
       type: entity.type,
       status: (entity.record as { status?: unknown }).status,
@@ -200,8 +213,9 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
     entity: StudioPublicEntity,
     includeRelationships = true,
     evidence?: EvidenceContext,
+    bypassStatus = false,
   ): Promise<PublicEntitySummary | null> {
-    if (!(await visible(entity))) return null;
+    if (!(await visible(entity, bypassStatus))) return null;
 
     switch (entity.type) {
       case 'work': {
@@ -601,10 +615,13 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
     type: PublicDetailEntityType,
     slug: string,
     evidence?: EvidenceContext,
+    options?: { preview?: boolean },
   ): Promise<PublicEntityDetail | null> {
     const entity = await source.findEntityBySlug(type, slug);
     if (!entity) return null;
-    const summary = await mapSummary(entity);
+    // Only the subject's own status gate bypasses — everything downstream
+    // (relationships, trace) still resolves other entities' real visibility.
+    const summary = await mapSummary(entity, true, undefined, options?.preview);
     if (!summary || summary.type !== type) return null;
     const documents = await publicDocuments(type, entity.id);
     const relationships = await resolveRelations(entity, evidence);
@@ -825,8 +842,8 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
     async findSummary(type, slug) {
       return freezePublicDto(await findSummary(type, slug));
     },
-    async findDetail(type, slug) {
-      return freezePublicDto(await findDetail(type, slug));
+    async findDetail(type, slug, options) {
+      return freezePublicDto(await findDetail(type, slug, undefined, options));
     },
     async listSummaries(type) {
       return freezePublicDto(await listSummaries(type));

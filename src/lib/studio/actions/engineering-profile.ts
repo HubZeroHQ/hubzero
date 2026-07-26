@@ -74,7 +74,8 @@ export const updateEngineeringProfileAction = createEntryUpdateAction<
 export const transitionEngineeringProfileStatusAction =
   createEntryTransitionAction<EngineeringProfile>({
     findById: engineeringProfileRepository.findById,
-    setStatus: (id, status) => engineeringProfileRepository.update(id, { status }),
+    setStatus: (id, status, reviewNote) =>
+      engineeringProfileRepository.update(id, { status, reviewNote: reviewNote ?? null }),
     detailPath,
     publicType: 'engineeringProfile',
   });

@@ -6,6 +6,7 @@ import {
   type OwnableEntry,
   requireCapability,
   requireEntryCapability,
+  requireEntryEditCapability,
 } from '@/lib/auth/permissions';
 import { zodErrorToFieldErrors } from '@/lib/validation/form-errors';
 import type { PublishStatus } from '@/types/studio';
@@ -92,8 +93,8 @@ export function createEntryCreateAction<
 }
 
 export function createEntryUpdateAction<
-  TRecord extends OwnableEntry & { slug: string },
-  TInput extends object,
+  TRecord extends OwnableEntry & { slug: string; status: PublishStatus },
+  TInput extends { status?: PublishStatus; reviewNote?: string | null },
 >(config: {
   findById: (id: string) => Promise<TRecord | null>;
   update: (id: string, input: Partial<TInput>) => Promise<TRecord | null>;
@@ -112,13 +113,25 @@ export function createEntryUpdateAction<
     }
 
     try {
-      await requireEntryCapability(existing);
+      await requireEntryEditCapability(existing);
     } catch (error) {
       return { error: actionErrorMessage(error) };
     }
 
+    // Editing an already-published entry can never be a silent overwrite of
+    // what's live — it re-enters the review workflow instead, the same trust
+    // boundary as publishing itself (only a `publish`-capable role reached
+    // this point at all, per `requireEntryEditCapability` above).
+    const requiresReReview = existing.status === 'published';
+
     try {
-      const updated = await config.update(id, config.parseFormData(formData));
+      const patch = config.parseFormData(formData);
+      const updated = await config.update(
+        id,
+        requiresReReview
+          ? ({ ...patch, status: 'inReview', reviewNote: null } as Partial<TInput>)
+          : patch,
+      );
       if (config.publicType) {
         invalidatePublicEntity(config.publicType, existing.slug);
         if (updated?.slug !== existing.slug)
@@ -140,30 +153,53 @@ export function createEntryUpdateAction<
 }
 
 /**
- * Moves an entry through the shared publish workflow (§28). `to === 'draft'`
- * from any non-draft status is treated as Head Admin's unpublish override
- * (§29) rather than a normal forward transition; every other move is
- * checked against `PUBLISH_WORKFLOW_TRANSITIONS` and the capability that
- * gates it (`workflow-permissions.ts`).
+ * Moves an entry through the shared publish workflow (§28). Three kinds of
+ * backward move are distinguished from the normal forward transitions
+ * (checked against `PUBLISH_WORKFLOW_TRANSITIONS` and the capability that
+ * gates each one, `workflow-permissions.ts`):
+ *
+ * - **Reject** (`inReview -> draft`): the explicit re-review path. Requires
+ *   the same `approve` capability as moving an entry forward from review,
+ *   plus a required, non-empty reviewer note that's stored on the entry so
+ *   the author sees why it was sent back.
+ * - **Unpublish override** (`draft`-bound from any other non-draft status,
+ *   when it isn't a reject): Head Admin's blanket escape hatch (§29), no
+ *   note required.
+ * - Every other `to` is a normal forward transition.
  */
 export function createEntryTransitionAction<
   TRecord extends OwnableEntry & { status: PublishStatus; slug: string },
 >(config: {
   findById: (id: string) => Promise<TRecord | null>;
-  setStatus: (id: string, status: PublishStatus) => Promise<TRecord | null>;
+  setStatus: (
+    id: string,
+    status: PublishStatus,
+    reviewNote?: string | null,
+  ) => Promise<TRecord | null>;
   detailPath: (id: string) => string;
   publicType?: PublicEntityType;
 }) {
-  return async function transitionAction(id: string, to: PublishStatus): Promise<EntryActionState> {
+  return async function transitionAction(
+    id: string,
+    to: PublishStatus,
+    note?: string,
+  ): Promise<EntryActionState> {
     const existing = await config.findById(id);
     if (!existing) {
       return { error: 'This entry no longer exists.' };
     }
 
-    const isOverride = to === 'draft' && existing.status !== 'draft';
+    const isReject = to === 'draft' && existing.status === 'inReview';
+    const isOverride = to === 'draft' && existing.status !== 'draft' && !isReject;
 
     try {
-      if (isOverride) {
+      if (isReject) {
+        if (!note?.trim()) {
+          return { error: 'A rejection reason is required.' };
+        }
+        await requireCapability('approve');
+        await requireEntryCapability(existing);
+      } else if (isOverride) {
         await requireCapability('unpublishOverride');
       } else {
         if (!isValidPublishTransition(existing.status, to)) {
@@ -180,7 +216,7 @@ export function createEntryTransitionAction<
       return { error: actionErrorMessage(error) };
     }
 
-    await config.setStatus(id, to);
+    await config.setStatus(id, to, isReject ? note!.trim() : null);
     if (config.publicType) invalidatePublicEntity(config.publicType, existing.slug);
     revalidatePath(config.detailPath(id));
     return {};

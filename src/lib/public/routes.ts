@@ -50,6 +50,13 @@ export const publicRoute = {
     `${COLLECTION_ROUTES[input.type]}/${encodeURIComponent(input.slug)}`,
   workCategory: (slug?: string) =>
     withQuery(COLLECTION_ROUTES.work, { category: slug ? slug : undefined }),
+  blueprintFilter: (query: { architecture?: string; designLanguage?: string }) =>
+    withQuery(COLLECTION_ROUTES.blueprint, {
+      architecture: query.architecture,
+      designLanguage: query.designLanguage,
+    }),
+  labStage: (stage?: string) =>
+    withQuery(COLLECTION_ROUTES.lab, { stage: stage ? stage : undefined }),
   taxonomy: (term: Pick<PublicTaxonomyTerm, 'kind' | 'label' | 'slug'>) =>
     term.kind === 'category'
       ? withQuery(COLLECTION_ROUTES.work, { category: term.slug })

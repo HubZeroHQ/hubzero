@@ -1,4 +1,5 @@
 import DOMPurify from 'isomorphic-dompurify';
+import type { ReactNode } from 'react';
 import type { ImmutablePublic, PublicBlock, PublicDocument } from '@/lib/public/domain';
 import { PublicImage } from './PublicImage';
 
@@ -34,7 +35,7 @@ function PublicBlockView({
 }: {
   block: ImmutablePublic<PublicBlock>;
   headingOffset: 0 | 1;
-}) {
+}): ReactNode {
   switch (block.type) {
     case 'heading': {
       const level = block.data.level + headingOffset;
@@ -216,5 +217,13 @@ function PublicBlockView({
           ))}
         </ol>
       );
+    default: {
+      // Exhaustiveness check — a new `PublicBlock` type added without a
+      // matching case here now fails to compile instead of silently
+      // rendering nothing on the public site (mirrors `BlockRenderer`'s
+      // equivalent `never` check, which this file previously lacked).
+      const exhaustive: never = block;
+      return exhaustive;
+    }
   }
 }

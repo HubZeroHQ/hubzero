@@ -135,6 +135,40 @@
     pointer-events: none;
   }
 
+  /*
+   * Preview mode (Experience v3 Preview Integrity milestone) — a fixed bar
+   * above the floating nav pill, with the nav pushed down to clear it rather
+   * than the two overlapping. `--color-danger` (not amber) per §2/§9: this is
+   * a caution state ("you are viewing unpublished content"), and amber is
+   * reserved exclusively for live/active/selected.
+   */
+  .public-preview-banner {
+    position: fixed;
+    z-index: 50;
+    inset-inline: 0;
+    top: 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    padding: 10px 16px;
+    background: var(--color-danger);
+    color: var(--color-bg-base);
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+  .public-preview-banner a {
+    color: var(--color-bg-base);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .public-preview-active .public-nav-wrap {
+    top: 56px;
+  }
+
   .public-nav {
     display: flex;
     min-height: 52px;
@@ -1412,6 +1446,25 @@
     line-height: 1.7;
   }
 
+  /* Compact one-line lineage cue near identity/state — separate from the full "Product lineage" section further down the page. */
+  .detail-lineage-cue {
+    margin-top: 16px;
+    color: var(--color-text-muted);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.02em;
+  }
+
+  .detail-lineage-cue a {
+    color: var(--color-text-secondary);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .detail-lineage-cue a:hover {
+    color: var(--color-text-primary);
+  }
+
   .collection-register,
   .detail-register dl {
     border-top: 1px solid var(--color-border-muted);
@@ -1439,6 +1492,31 @@
   .detail-register dd {
     color: var(--color-text-secondary);
     font-size: 13px;
+  }
+
+  .reference-id-copy {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .reference-id-copy button {
+    padding-inline: 6px;
+    border: 1px solid var(--color-border-default);
+    border-radius: 4px;
+    color: var(--color-text-muted);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    transition:
+      border-color var(--duration-fast) var(--ease-standard),
+      color var(--duration-fast) var(--ease-standard);
+  }
+
+  .reference-id-copy button:hover {
+    border-color: var(--color-border-strong);
+    color: var(--color-text-primary);
   }
 
   .collection-index-header,
@@ -1518,6 +1596,114 @@
 
   .collection-card {
     align-content: start;
+  }
+
+  /*
+   * Work's case-file list and Labs' stage rows — a distinct rhythm from
+   * `.collection-grid`'s card shelf, same "compact ledger row" family as
+   * `.home-ledger-row` / `.notes-ledger`: text leads, whole-row click target
+   * via the title's stretched `::after`, image demoted to a small secondary
+   * element instead of the dominant lead.
+   */
+  .collection-list {
+    border-top: 1px solid var(--color-border-muted);
+  }
+
+  .collection-row {
+    position: relative;
+    display: grid;
+    gap: 20px;
+    padding-block: 32px;
+    border-bottom: 1px solid var(--color-border-muted);
+    transition: background-color var(--duration-fast) var(--ease-standard);
+  }
+
+  .collection-row:hover,
+  .collection-row:has(a:focus-visible) {
+    background-color: var(--color-surface-default);
+  }
+
+  .collection-row-body {
+    min-width: 0;
+  }
+
+  .collection-row-title {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-top: 12px;
+    color: var(--color-text-primary);
+  }
+
+  .collection-row-title::after {
+    position: absolute;
+    inset: 0;
+    content: '';
+  }
+
+  .collection-row-title h3 {
+    font-size: clamp(22px, 3.2vw, 28px);
+    font-weight: 500;
+    line-height: 1.15;
+    text-wrap: balance;
+  }
+
+  .collection-row-title > span {
+    color: var(--color-text-muted);
+    transition:
+      color var(--duration-fast) var(--ease-standard),
+      transform var(--duration-fast) var(--ease-standard);
+  }
+
+  .collection-row:hover .collection-row-title > span,
+  .collection-row-title:focus-visible > span {
+    color: var(--color-text-primary);
+    transform: translateX(4px);
+  }
+
+  .collection-row-summary {
+    max-width: 64ch;
+    margin-top: 14px;
+    color: var(--color-text-secondary);
+    font-size: clamp(15px, 1.2vw, 17px);
+    line-height: 1.7;
+  }
+
+  .collection-row-body .home-technologies,
+  .collection-row-body .home-publication-meta {
+    margin-top: 16px;
+  }
+
+  .collection-row-media .public-media {
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    border-radius: 4px;
+  }
+
+  .collection-row-media .public-media img {
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* Builds' live/retired shelf grouping and Labs' stage grouping share this wrapper. */
+  .collection-group + .collection-group {
+    margin-top: 64px;
+  }
+
+  .collection-group-heading {
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--color-border-default);
+    color: var(--color-text-muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .collection-group .collection-grid,
+  .collection-group .collection-list {
+    margin-top: 32px;
   }
 
   .collection-empty {
@@ -2380,6 +2566,11 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .collection-row {
+    grid-template-columns: minmax(0, 1fr) minmax(160px, 220px);
+    align-items: start;
+  }
+
   .detail-document-grid,
   .detail-relations-grid {
     grid-template-columns: minmax(220px, 0.7fr) minmax(0, 1.6fr);
@@ -2430,6 +2621,10 @@
   .public-nav-wrap {
     top: 12px;
     width: calc(100% - 24px);
+  }
+
+  .public-preview-active .public-nav-wrap {
+    top: 52px;
   }
 
   .public-nav {

@@ -4,6 +4,7 @@ import {
   objectIdString,
   progressMilestoneSchema,
   publishStatusSchema,
+  reviewNoteSchema,
   slugSchema,
 } from './shared';
 
@@ -21,6 +22,7 @@ export const labSchema = z.object({
   title: z.string().min(1),
   slug: slugSchema,
   status: publishStatusSchema.default('draft'),
+  reviewNote: reviewNoteSchema,
   stage: labStageSchema,
   objective: z.string().min(1),
   researchDirection: z.string().min(1),

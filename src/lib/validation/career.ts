@@ -5,6 +5,7 @@ import {
   experienceLevelSchema,
   objectIdString,
   publishStatusSchema,
+  reviewNoteSchema,
   slugSchema,
 } from './shared';
 
@@ -15,6 +16,7 @@ export const careerSchema = z.object({
   title: z.string().min(1),
   slug: slugSchema,
   status: publishStatusSchema.default('draft'),
+  reviewNote: reviewNoteSchema,
   location: z.string().min(1),
   employmentType: employmentTypeSchema,
   experienceLevel: experienceLevelSchema,

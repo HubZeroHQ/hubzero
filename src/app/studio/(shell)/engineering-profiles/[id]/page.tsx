@@ -8,14 +8,18 @@ import { ButtonLink } from '@/components/ui/ButtonLink';
 import { ReferenceIdBadge } from '@/components/ui/ReferenceIdBadge';
 import { Tag } from '@/components/ui/Tag';
 import { auth } from '@/lib/auth';
-import { canActOnEntry } from '@/lib/auth/permissions';
+import { canEditEntry } from '@/lib/auth/permissions';
 import { engineeringProfileRepository } from '@/lib/db/repositories/engineering-profile';
 import { documentRepository } from '@/lib/db/repositories/document';
 import { teamRepository } from '@/lib/db/repositories/team';
 import { resolveMediaAssets } from '@/lib/media/resolve';
 import { getEngineeringProfileRelationOptions } from '@/lib/studio/engineering-profile-relations';
 import { transitionEngineeringProfileStatusAction } from '@/lib/studio/actions/engineering-profile';
-import { canUnpublishOverride, getAvailableTransitions } from '@/lib/studio/workflow-permissions';
+import {
+  canReject,
+  canUnpublishOverride,
+  getAvailableTransitions,
+} from '@/lib/studio/workflow-permissions';
 export default async function EngineeringProfilePage({
   params,
 }: {
@@ -40,7 +44,7 @@ export default async function EngineeringProfilePage({
     ),
   ]);
   const role = session!.user.role;
-  const canEdit = canActOnEntry(profile, { role, userId: session!.user.id });
+  const canEdit = canEditEntry(profile, { role, userId: session!.user.id });
   const mediaById = new Map(media.map((asset) => [asset._id.toString(), asset]));
   const labels = (
     options: Array<{ id: string; label: string; referenceId?: string }>,
@@ -62,9 +66,19 @@ export default async function EngineeringProfilePage({
         description={profile.overview}
         actions={
           canEdit ? (
-            <ButtonLink href={`/studio/engineering-profiles/${id}/edit`} variant="secondary">
-              Edit
-            </ButtonLink>
+            <>
+              <ButtonLink
+                href={`/api/preview?type=engineeringProfile&id=${id}`}
+                target="_blank"
+                rel="noreferrer"
+                variant="ghost"
+              >
+                Preview
+              </ButtonLink>
+              <ButtonLink href={`/studio/engineering-profiles/${id}/edit`} variant="secondary">
+                Edit
+              </ButtonLink>
+            </>
           ) : undefined
         }
       />
@@ -74,6 +88,8 @@ export default async function EngineeringProfilePage({
           status={profile.status}
           availableTransitions={getAvailableTransitions(profile.status, role, canEdit)}
           canUnpublishOverride={canUnpublishOverride(profile.status, role)}
+          canReject={canReject(profile.status, role)}
+          reviewNote={profile.reviewNote}
           onTransition={transitionEngineeringProfileStatusAction.bind(null, id)}
         />
       </div>

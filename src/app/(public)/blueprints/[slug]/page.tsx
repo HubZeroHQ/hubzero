@@ -6,6 +6,7 @@ import { PUBLIC_SITE } from '@/config/public-site';
 import type { ImmutablePublic, PublicEntityDetail } from '@/lib/public/domain';
 import { createPublicMetadata } from '@/lib/public/discovery/metadata';
 import { breadcrumbJsonLd, publicArtifactJsonLd } from '@/lib/public/discovery/structured-data';
+import { isPreviewRequest } from '@/lib/public/preview';
 import { getPublicDetail, listPublicSummaries } from '@/lib/public/queries';
 
 export const revalidate = 86_400;
@@ -21,7 +22,8 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const entity = await safeBlueprintDetail(slug);
+  const preview = await isPreviewRequest();
+  const entity = await safeBlueprintDetail(slug, preview);
   if (!entity || entity.type !== 'blueprint') {
     return createPublicMetadata({
       title: 'Blueprint not found',
@@ -35,7 +37,7 @@ export async function generateMetadata({
     description: entity.summary,
     path: entity.url,
     image: entity.hero,
-    noIndex: !PUBLIC_SITE.release.live,
+    noIndex: preview || !PUBLIC_SITE.release.live,
     type: 'article',
   });
 }
@@ -46,7 +48,8 @@ export default async function BlueprintDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const entity = await safeBlueprintDetail(slug);
+  const preview = await isPreviewRequest();
+  const entity = await safeBlueprintDetail(slug, preview);
   if (!entity || entity.type !== 'blueprint') notFound();
 
   return (
@@ -69,9 +72,10 @@ export default async function BlueprintDetailPage({
 
 async function safeBlueprintDetail(
   slug: string,
+  preview: boolean,
 ): Promise<ImmutablePublic<PublicEntityDetail> | null> {
   try {
-    return await getPublicDetail('blueprint', slug);
+    return await getPublicDetail('blueprint', slug, { preview });
   } catch (error) {
     console.error(`Blueprint public detail read failed for "${slug}".`, error);
     return null;

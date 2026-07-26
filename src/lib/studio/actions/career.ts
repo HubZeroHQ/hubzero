@@ -105,7 +105,8 @@ export const updateCareerAction = createEntryUpdateAction<Career, CareerInput>({
 
 export const transitionCareerStatusAction = createEntryTransitionAction<Career>({
   findById: careerRepository.findById,
-  setStatus: (id, status) => careerRepository.update(id, { status }),
+  setStatus: (id, status, reviewNote) =>
+    careerRepository.update(id, { status, reviewNote: reviewNote ?? null }),
   detailPath: careerDetailPath,
   publicType: 'career',
 });

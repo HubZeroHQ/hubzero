@@ -100,11 +100,17 @@ describe('Builds and Labs public collections', () => {
   });
 
   it('renders Work category filters as URL-addressable server navigation', () => {
+    // A facet with only one real value is deliberately suppressed (Design Spec §Collections),
+    // so this exercises the filter nav with two distinct categories.
+    const categoryFilters = [
+      ...workSummary.categories,
+      { kind: 'category' as const, label: 'Platform engineering', slug: 'platform-engineering' },
+    ];
     const markup = renderToStaticMarkup(
       <PublicCollectionIndex
         type="work"
         entries={[workSummary]}
-        categoryFilters={workSummary.categories}
+        categoryFilters={categoryFilters}
         activeCategory="developer-tools"
       />,
     );
@@ -114,6 +120,18 @@ describe('Builds and Labs public collections', () => {
     expect(markup).toContain('aria-current="page"');
     expect(markup).toContain('Developer tools');
     expect(markup).toContain('href="/work?category=developer-tools"');
+  });
+
+  it('does not render a Work category filter nav when only one real value exists', () => {
+    const markup = renderToStaticMarkup(
+      <PublicCollectionIndex
+        type="work"
+        entries={[workSummary]}
+        categoryFilters={workSummary.categories}
+      />,
+    );
+
+    expect(markup).not.toContain('aria-label="Filter Work by category"');
   });
 
   it('renders Work as a long-form engineering publication with typed continuation paths', () => {

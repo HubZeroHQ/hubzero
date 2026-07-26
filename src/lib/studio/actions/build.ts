@@ -96,7 +96,8 @@ export const updateBuildAction = createEntryUpdateAction<Build, BuildInput>({
 
 export const transitionBuildStatusAction = createEntryTransitionAction<Build>({
   findById: buildRepository.findById,
-  setStatus: (id, status) => buildRepository.update(id, { status }),
+  setStatus: (id, status, reviewNote) =>
+    buildRepository.update(id, { status, reviewNote: reviewNote ?? null }),
   detailPath: buildDetailPath,
   publicType: 'build',
 });

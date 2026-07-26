@@ -22,6 +22,8 @@ export const publishStatusSchema = z.enum([
   'published',
   'archived',
 ]);
+/** A reviewer's rejection reason (`inReview -> draft`) — `null` means no active note, `undefined`/omitted leaves the stored value untouched (see `parsePartialInput`). */
+export const reviewNoteSchema = z.string().trim().min(1).max(2000).nullable().optional();
 export const servicePublishStatusSchema = z.enum(['draft', 'published']);
 export const userRoleSchema = z.enum(['headAdmin', 'admin', 'member']);
 export const taxonomyKindSchema = z.enum(['technology', 'category', 'topic']);
