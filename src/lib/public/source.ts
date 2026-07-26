@@ -2,6 +2,7 @@ import type { DocumentRecord } from '@/lib/documents/schema';
 import type {
   Blueprint,
   Build,
+  Career,
   EngineeringProfile,
   Lab,
   MediaAsset,
@@ -15,7 +16,7 @@ import type {
 import type { PublicEntityType } from './domain';
 
 export type StudioPublicRecord =
-  Work | Build | Blueprint | Lab | Note | EngineeringProfile | Team | Service;
+  Work | Build | Blueprint | Lab | Note | EngineeringProfile | Team | Service | Career;
 
 export interface StudioPublicEntity<T extends StudioPublicRecord = StudioPublicRecord> {
   type: PublicEntityType;

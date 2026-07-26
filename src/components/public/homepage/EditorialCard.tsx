@@ -59,6 +59,7 @@ export function EditorialCard({
           limit={relationships.length}
           ariaLabel="Connected evidence"
           enabled={enabled}
+          showFounderAccent={false}
         />
       </article>
     );
@@ -92,6 +93,7 @@ export function EditorialCard({
             limit={relationships.length}
             ariaLabel="Connected evidence"
             enabled={enabled}
+            showFounderAccent={false}
           />
         )}
       </div>
@@ -118,6 +120,7 @@ function ProfileContributions({
       relationships={contributions}
       ariaLabel="Public contributions"
       enabled={enabled}
+      showFounderAccent={false}
       overflow={
         remaining > 0 ? (
           <div className="home-relationship-card home-relationship-summary">

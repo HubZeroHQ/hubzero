@@ -5,6 +5,8 @@ import type { DocumentVersionRecord } from '@/lib/documents/version';
 import type {
   Blueprint,
   Build,
+  Career,
+  CareerInterest,
   EngineeringProfile,
   Lab,
   Lead,
@@ -37,7 +39,9 @@ export const collections = {
   engineeringProfiles: () => collection<EngineeringProfile>('engineeringProfiles'),
   team: () => collection<Team>('team'),
   services: () => collection<Service>('services'),
+  careers: () => collection<Career>('careers'),
   leads: () => collection<Lead>('leads'),
+  careerInterests: () => collection<CareerInterest>('careerInterests'),
   users: () => collection<User>('users'),
   media: () => collection<MediaAsset>('media'),
   taxonomy: () => collection<TaxonomyEntry>('taxonomy'),

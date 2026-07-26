@@ -163,6 +163,13 @@ export function PublicSearchDialog() {
         onClick={() => setOpen(true)}
       >
         <Search className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+        {/*
+          Below the mobile breakpoint this renders instead of the kbd hint —
+          there is no hover state on touch to reveal it, and "⌘K" has no
+          meaning without a keyboard. See `.public-nav-search-label` in
+          globals.css.
+        */}
+        <span className="public-nav-search-label">Search</span>
         <kbd aria-hidden="true">⌘K</kbd>
       </button>
 

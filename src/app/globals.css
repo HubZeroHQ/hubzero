@@ -155,8 +155,7 @@
   .public-nav-brand,
   .public-nav-link,
   .public-nav-search,
-  .public-nav-contact,
-  .public-nav-menu-toggle {
+  .public-nav-contact {
     display: inline-flex;
     min-height: 44px;
     flex: 0 0 auto;
@@ -183,8 +182,7 @@
 
   .public-nav-link:hover,
   .public-nav-search:hover,
-  .public-nav-brand:hover,
-  .public-nav-menu-toggle:hover {
+  .public-nav-brand:hover {
     color: var(--color-text-primary);
     background: var(--color-surface-elevated);
   }
@@ -252,130 +250,28 @@
     opacity: 1;
   }
 
+  /*
+   * Hidden by default — the kbd hint above is the resting-state affordance
+   * on pointer devices (revealed on hover/focus). Below the mobile
+   * breakpoint there's no hover to reveal it and "⌘K" means nothing without
+   * a keyboard, so this plain-text label takes its place instead.
+   */
+  .public-nav-search-label {
+    display: none;
+  }
+
   .public-nav-contact {
     background: var(--color-text-primary);
     color: var(--color-bg-base);
     font-weight: 600;
   }
 
-  /*
-   * Hidden by default — the mobile breakpoint below swaps this in for
-   * `.public-nav-track`, which has no room (and no scroll affordance) for
-   * six links plus brand/search/contact on a phone-width pill.
-   */
-  .public-nav-menu-toggle {
-    display: none;
-    width: 44px;
-    border: 0;
-    background: transparent;
-    cursor: pointer;
-  }
-
   .public-nav-brand:active,
   .public-nav-link:active,
   .public-nav-search:active,
   .public-nav-contact:active,
-  .public-nav-menu-toggle:active,
   .public-button-secondary:active {
     transform: scale(0.97);
-  }
-
-  /*
-   * The public site has no sidebar chrome, so this drops from the nav pill
-   * as a compact card rather than borrowing the Studio's full-height side
-   * drawer — same border/radius/surface/shadow tokens as
-   * `.public-search-dialog-surface` so it reads as the same kind of
-   * overlay, just anchored under the trigger instead of centered.
-   */
-  .public-mobile-nav-scrim {
-    position: fixed;
-    inset: 0;
-    z-index: 50;
-    background: rgb(0 0 0 / 0.6);
-  }
-
-  .public-mobile-nav-panel {
-    position: fixed;
-    top: 72px;
-    right: 12px;
-    left: 12px;
-    z-index: 50;
-    max-width: 420px;
-    max-height: calc(100svh - 96px);
-    margin-inline: auto;
-    overflow-y: auto;
-    padding: 8px;
-    border: 1px solid var(--color-border-default);
-    border-radius: var(--radius-overlay);
-    background: var(--color-surface-overlay);
-    box-shadow: 0 32px 80px -24px rgb(0 0 0 / 0.85);
-  }
-
-  .public-mobile-nav-close {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    display: inline-flex;
-    height: 36px;
-    width: 36px;
-    align-items: center;
-    justify-content: center;
-    border-radius: 100px;
-    color: var(--color-text-muted);
-    transition:
-      color var(--duration-fast) var(--ease-standard),
-      background-color var(--duration-fast) var(--ease-standard);
-  }
-
-  .public-mobile-nav-close:hover,
-  .public-mobile-nav-close:focus-visible {
-    color: var(--color-text-primary);
-    background: var(--color-surface-elevated);
-  }
-
-  .public-mobile-nav-list {
-    display: flex;
-    flex-direction: column;
-    padding-top: 44px;
-  }
-
-  .public-mobile-nav-link {
-    display: grid;
-    min-height: 48px;
-    align-content: center;
-    gap: 2px;
-    border-radius: var(--radius-control);
-    padding-block: 8px;
-    padding-inline: 16px;
-    color: var(--color-text-secondary);
-    font-size: 16px;
-    font-weight: 500;
-    transition:
-      color var(--duration-fast) var(--ease-standard),
-      background-color var(--duration-fast) var(--ease-standard);
-  }
-
-  .public-mobile-nav-description {
-    color: var(--color-text-muted);
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 400;
-    letter-spacing: 0.04em;
-  }
-
-  .public-mobile-nav-link:hover,
-  .public-mobile-nav-link:focus-visible,
-  .public-mobile-nav-link[aria-current='page'] {
-    color: var(--color-text-primary);
-    background: var(--color-surface-elevated);
-  }
-
-  /* Belt-and-suspenders: the trigger is already display:none above the mobile breakpoint, so this can only be reached by resizing past it while open. */
-  @media (min-width: 768px) {
-    .public-mobile-nav-scrim,
-    .public-mobile-nav-panel {
-      display: none !important;
-    }
   }
 
   .public-footer {
@@ -434,7 +330,8 @@
 
   @media (min-width: 640px) {
     .public-footer-top {
-      grid-template-columns: minmax(0, 1fr) auto auto;
+      /* Brand + three editorial sections (Record / Company / Resources) — see PublicFooter.tsx. */
+      grid-template-columns: minmax(0, 1fr) auto auto auto;
       gap: 64px;
     }
   }
@@ -2536,6 +2433,13 @@
   }
 
   .public-nav {
+    /*
+     * Unbounded (`width: max-content`) above this breakpoint because every
+     * destination already fits. Here it fills its wrapper instead, so
+     * `.public-nav-track` — the only flexible child — is what overflows
+     * and scrolls, rather than the whole pill growing past the viewport.
+     */
+    width: 100%;
     margin-left: 0;
   }
 
@@ -2547,15 +2451,37 @@
 
   .public-nav-search {
     font-size: 13px;
+    /*
+     * Permanently in its "expanded" state — the hover/focus-triggered
+     * width transition above has no equivalent on touch, so the label
+     * stays visible at rest instead of waiting for an interaction this
+     * input can't produce.
+     */
+    width: auto;
+    gap: 6px;
+    padding-inline-end: 14px;
   }
 
-  /* The link track has no room — and no scroll affordance — at this width; swap it for the disclosed menu. */
-  .public-nav-track {
+  .public-nav-search-label {
+    display: inline;
+    white-space: nowrap;
+  }
+
+  .public-nav-search kbd {
+    /* Meaningless without a keyboard; `.public-nav-search-label` replaces it here. */
     display: none;
   }
 
-  .public-nav-menu-toggle {
-    display: inline-flex;
+  /*
+   * No destination is ever hidden behind a menu control at this width — the
+   * track keeps every link, scrolling horizontally when they don't all
+   * fit. The trailing mask fade leaves whatever's just past the visible
+   * edge legibly cropped rather than cleanly cut off, so the fact that
+   * more exists is obvious without requiring anyone to already know that.
+   */
+  .public-nav-track {
+    -webkit-mask-image: linear-gradient(to right, black calc(100% - 28px), transparent 100%);
+    mask-image: linear-gradient(to right, black calc(100% - 28px), transparent 100%);
   }
 
   .public-footer-top {

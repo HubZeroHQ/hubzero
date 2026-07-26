@@ -28,8 +28,11 @@ export const taxonomyKindSchema = z.enum(['technology', 'category', 'topic']);
 export const leadStatusSchema = z.enum(['new', 'contacted', 'closed']);
 export const labStageSchema = z.enum(['exploring', 'building', 'testing']);
 export const buildDeploymentStateSchema = z.enum(['live', 'retired']);
+export const employmentTypeSchema = z.enum(['fullTime', 'partTime', 'contract', 'internship']);
+export const experienceLevelSchema = z.enum(['entry', 'mid', 'senior', 'lead']);
 const evidenceOwnerTypeSchema = z.enum(['Work', 'Build', 'Blueprint', 'Lab']);
 const serviceEvidenceOwnerTypeSchema = z.enum(['Work', 'Build', 'Blueprint', 'Lab', 'Note']);
+const careerEvidenceOwnerTypeSchema = z.enum(['Work', 'Build', 'Lab', 'Note']);
 
 /** A reference into a Work/Build/Blueprint/Lab entry (§13, §24). */
 export const entryReferenceSchema = z.object({
@@ -39,6 +42,12 @@ export const entryReferenceSchema = z.object({
 
 export const serviceEvidenceReferenceSchema = z.object({
   ownerType: serviceEvidenceOwnerTypeSchema,
+  ownerId: objectIdString,
+});
+
+/** A Career listing's reference into a Work/Build/Lab/Note entry — deliberately excludes Blueprint (§ Career listing field list). */
+export const careerEntryReferenceSchema = z.object({
+  ownerType: careerEvidenceOwnerTypeSchema,
   ownerId: objectIdString,
 });
 

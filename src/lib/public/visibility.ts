@@ -18,6 +18,7 @@ const PUBLIC_DOCUMENT_ROLES: Readonly<Record<OwnerType, readonly DocumentRole[]>
   Note: ['body'],
   EngineeringProfile: ['introduction', 'interview', 'timeline', 'quotes', 'achievements'],
   Team: [],
+  Career: ['overview'],
 };
 
 /** The one fail-closed predicate used before any public expansion or mapping. */

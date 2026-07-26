@@ -240,6 +240,19 @@ export const PUBLIC_ABOUT = {
  * no room for subtitles) and as a visible line under each label in the
  * disclosed mobile menu (which does). Kept to a few words, not a repeat of
  * the fuller `PUBLIC_HOME.pillars` copy.
+ *
+ * `enabled` and `primary` answer two different questions and must not be
+ * conflated: `enabled` means "this route is real and published" — the
+ * footer, sitemap, and search all iterate the full enabled set. `primary`
+ * means "this belongs in the persistent top-level pill." Primary navigation
+ * orients a first-time visitor to what HubZero *is* (Work, Builds,
+ * Blueprints, Labs, About); Notes, Engineering, and Ledger are fully real,
+ * fully enabled, fully indexed destinations that are deliberately reached
+ * contextually instead — a relationship rail, a byline, the Homepage's
+ * current-momentum section, Search, or the footer — never by clicking a nav
+ * item with no context yet for what it leads to. See the Design
+ * Specification §5 ("Primary, secondary, and contextual navigation are
+ * different jobs") for the full reasoning.
  */
 export const PUBLIC_NAVIGATION = [
   {
@@ -247,6 +260,7 @@ export const PUBLIC_NAVIGATION = [
     href: publicRoute.collection('work'),
     type: 'work',
     enabled: true,
+    primary: true,
     description: 'Client case studies',
   },
   {
@@ -254,6 +268,7 @@ export const PUBLIC_NAVIGATION = [
     href: publicRoute.collection('build'),
     type: 'build',
     enabled: true,
+    primary: true,
     description: 'Products HubZero ships',
   },
   {
@@ -261,6 +276,7 @@ export const PUBLIC_NAVIGATION = [
     href: publicRoute.collection('blueprint'),
     type: 'blueprint',
     enabled: true,
+    primary: true,
     description: 'Reusable engineering foundations',
   },
   {
@@ -268,6 +284,7 @@ export const PUBLIC_NAVIGATION = [
     href: publicRoute.collection('lab'),
     type: 'lab',
     enabled: true,
+    primary: true,
     description: 'Investigations in progress',
   },
   {
@@ -275,6 +292,7 @@ export const PUBLIC_NAVIGATION = [
     href: publicRoute.collection('note'),
     type: 'note',
     enabled: true,
+    primary: false,
     description: 'Short-form engineering journal',
   },
   {
@@ -282,6 +300,7 @@ export const PUBLIC_NAVIGATION = [
     href: publicRoute.collection('engineeringProfile'),
     type: 'engineeringProfile',
     enabled: true,
+    primary: false,
     description: 'Documented expertise and evidence',
   },
   {
@@ -289,6 +308,7 @@ export const PUBLIC_NAVIGATION = [
     href: publicRoute.ledger(),
     type: 'ledger',
     enabled: true,
+    primary: false,
     description: 'Chronological activity record',
   },
   {
@@ -296,6 +316,7 @@ export const PUBLIC_NAVIGATION = [
     href: publicRoute.collection('service'),
     type: 'service',
     enabled: false,
+    primary: false,
     description: 'Capability by evidence',
   },
   {
@@ -303,7 +324,16 @@ export const PUBLIC_NAVIGATION = [
     href: publicRoute.about(),
     type: 'teamMember',
     enabled: true,
+    primary: true,
     description: 'Team & operating model',
+  },
+  {
+    label: 'Careers',
+    href: publicRoute.collection('career'),
+    type: 'career',
+    enabled: true,
+    primary: false,
+    description: 'Open roles and how to reach us',
   },
 ] as const;
 
@@ -316,6 +346,7 @@ export const PUBLIC_ENTITY_ROUTES = {
   engineeringProfile: true,
   teamMember: true,
   service: true,
+  career: true,
 } as const;
 
 export const PUBLIC_SEARCH_GROUPS = [
@@ -327,4 +358,5 @@ export const PUBLIC_SEARCH_GROUPS = [
   { type: 'engineeringProfile', label: 'Engineering profiles' },
   { type: 'teamMember', label: 'Team' },
   { type: 'service', label: 'Services' },
+  { type: 'career', label: 'Careers' },
 ] as const;

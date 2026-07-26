@@ -33,6 +33,7 @@ const TYPE_LABELS: Record<PublicEntityType, string> = {
   engineeringProfile: 'engineering profile',
   teamMember: 'team member',
   service: 'service',
+  career: 'open role',
 };
 
 /** Keeps every public search consumer behind one normalized, bounded entry point. */

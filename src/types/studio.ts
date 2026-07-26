@@ -12,7 +12,7 @@ export type PublishStatus = 'draft' | 'inReview' | 'approved' | 'published' | 'a
 /** Services carries a deliberately lighter two-state workflow (§26.7). */
 export type ServicePublishStatus = 'draft' | 'published';
 
-export type ReferenceIdPrefix = 'WK' | 'BL' | 'BP' | 'LB' | 'NT' | 'TM' | 'EP';
+export type ReferenceIdPrefix = 'WK' | 'BL' | 'BP' | 'LB' | 'NT' | 'TM' | 'EP' | 'CR';
 
 /** Permanent Studio identifier. Existing content uses `HZ-{PREFIX}-{NNN}`; Engineering Profiles use `EP-{NNN}`. */
 export type ReferenceId<Prefix extends ReferenceIdPrefix = ReferenceIdPrefix> = Prefix extends 'EP'
@@ -37,6 +37,10 @@ export type LeadStatus = 'new' | 'contacted' | 'closed';
 export type LabStage = 'exploring' | 'building' | 'testing';
 
 export type BuildDeploymentState = 'live' | 'retired';
+
+export type EmploymentType = 'fullTime' | 'partTime' | 'contract' | 'internship';
+
+export type ExperienceLevel = 'entry' | 'mid' | 'senior' | 'lead';
 
 export interface WithId {
   _id: ObjectId;
@@ -74,6 +78,14 @@ interface PublishableEntity extends WithId, WithTimestamps {
 export type EvidenceOwnerType = 'Work' | 'Build' | 'Blueprint' | 'Lab';
 export type ServiceEvidenceOwnerType = EvidenceOwnerType | 'Note';
 
+/**
+ * A role relates to the products it would touch (Build), the client work it
+ * resembles (Work), the investigation it grew out of (Lab), and the writing
+ * that gives it technical context (Note) — deliberately excludes Blueprint,
+ * which isn't part of the field list a Career listing actually needs.
+ */
+export type CareerEvidenceOwnerType = 'Work' | 'Build' | 'Lab' | 'Note';
+
 /** A reference into a Work/Build/Blueprint/Lab entry — evidence links (§13) and Note cross-references (§24). */
 export interface EntryReference {
   ownerType: EvidenceOwnerType;
@@ -83,6 +95,12 @@ export interface EntryReference {
 /** Services may also use a published Note when the writing itself is material evidence. */
 export interface ServiceEvidenceReference {
   ownerType: ServiceEvidenceOwnerType;
+  ownerId: ObjectId;
+}
+
+/** A Career listing's typed connection to a Work/Build/Lab/Note entry. */
+export interface CareerEntryReference {
+  ownerType: CareerEvidenceOwnerType;
   ownerId: ObjectId;
 }
 
@@ -304,6 +322,36 @@ export interface Note extends PublishableEntity {
   contributors: ObjectId[];
 }
 
+/**
+ * A role HubZero is trying to fill, held to the same publishing standard as
+ * every other Content collection — full five-state workflow, a reference ID,
+ * typed relationships, one owned Document (`role: 'overview'`) for the
+ * long-form write-up. Deliberately carries no hero/gallery imagery: a role
+ * isn't a visual artifact the way a product or a case study is, and adding
+ * image fields with no real use would be exactly the kind of unjustified
+ * field this codebase's own conventions warn against.
+ */
+export interface Career extends PublishableEntity {
+  referenceId: ReferenceId<'CR'>;
+  title: string;
+  location: string;
+  employmentType: EmploymentType;
+  experienceLevel: ExperienceLevel;
+  /** Card/list-view summary — mirrors Note's `summary`; the full write-up lives in the owned `overview` Document. */
+  summary: string;
+  responsibilities: string[];
+  requirements: string[];
+  benefits: string[];
+  /** Deliberately optional — not every role has settled compensation at the time it's drafted. */
+  compensation?: string;
+  /** Stated plainly and explicitly, never buried in the Document body — a visitor should always be able to find "how do I apply" without reading the full narrative first. */
+  applicationProcess: string;
+  technologyIds: ObjectId[];
+  /** Optional — a role may be drafted before a hiring manager is assigned. Resolves to a Team record, the same canonical-person pattern every other public-credit field in this codebase uses. */
+  hiringManagerTeamId?: ObjectId;
+  relatedEntries: CareerEntryReference[];
+}
+
 /** An earned, evidence-led record of how one Team Member thinks and works. */
 export interface EngineeringProfile extends PublishableEntity {
   referenceId: ReferenceId<'EP'>;
@@ -347,6 +395,34 @@ export interface Lead extends WithId, WithTimestamps {
   email: string;
   message: string;
   source: string;
+  status: LeadStatus;
+  assignedToUserId?: ObjectId;
+  internalNotes?: string;
+  archived: boolean;
+}
+
+/**
+ * A candidate expressing interest when no Career listing currently fits —
+ * deliberately its own type rather than a repurposed Lead: a résumé,
+ * portfolio, and social links don't belong on the general sales-inquiry
+ * record, and conflating the two would blur an internal-only hiring
+ * pipeline with an external-facing one. Mirrors Lead's shape and
+ * conventions exactly otherwise — no reference ID (internal-only, no
+ * citation purpose), the same `archived` shelf orthogonal to `status`.
+ */
+export interface CareerInterest extends WithId, WithTimestamps {
+  name: string;
+  email: string;
+  location?: string;
+  resumeUrl?: string;
+  portfolioUrl?: string;
+  githubUrl?: string;
+  linkedinUrl?: string;
+  websiteUrl?: string;
+  areasOfInterest: string[];
+  introduction: string;
+  /** Set when the submission came from a specific listing's page rather than the general "no roles open" state. */
+  careerId?: ObjectId;
   status: LeadStatus;
   assignedToUserId?: ObjectId;
   internalNotes?: string;

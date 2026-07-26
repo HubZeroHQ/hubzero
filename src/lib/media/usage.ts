@@ -2,6 +2,7 @@ import { ObjectId } from 'mongodb';
 import { collections } from '@/lib/db/collections';
 import { blueprintRepository } from '@/lib/db/repositories/blueprint';
 import { buildRepository } from '@/lib/db/repositories/build';
+import { careerRepository } from '@/lib/db/repositories/career';
 import { labRepository } from '@/lib/db/repositories/lab';
 import { noteRepository } from '@/lib/db/repositories/note';
 import { teamRepository } from '@/lib/db/repositories/team';
@@ -37,6 +38,7 @@ const OWNER_DETAIL_PATH: Record<OwnerType, (id: string) => string> = {
   Note: (id) => `/studio/content/notes/${id}`,
   Team: (id) => `/studio/team/${id}`,
   EngineeringProfile: (id) => `/studio/engineering-profiles/${id}`,
+  Career: (id) => `/studio/content/careers/${id}`,
 };
 
 /** True if any block in `blocks` (searching nested `imageGallery.images` too) references `mediaId`. */
@@ -123,6 +125,10 @@ async function resolveOwnerLabel(
         title: team?.name ?? 'Unknown Engineering Profile',
         referenceId: entry?.referenceId,
       };
+    }
+    case 'Career': {
+      const entry = await careerRepository.findById(ownerId);
+      return { title: entry?.title ?? 'Unknown Career listing', referenceId: entry?.referenceId };
     }
     default: {
       const exhaustive: never = ownerType;

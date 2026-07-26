@@ -10,7 +10,15 @@ export type ImmutablePublic<T> = T extends (...args: never[]) => unknown
       : T;
 
 export type PublicEntityType =
-  'work' | 'build' | 'blueprint' | 'lab' | 'note' | 'engineeringProfile' | 'teamMember' | 'service';
+  | 'work'
+  | 'build'
+  | 'blueprint'
+  | 'lab'
+  | 'note'
+  | 'engineeringProfile'
+  | 'teamMember'
+  | 'service'
+  | 'career';
 
 export type PublicDetailEntityType = Exclude<PublicEntityType, 'teamMember' | 'service'>;
 export type PublicTaxonomyKind = 'technology' | 'category' | 'topic';
@@ -76,7 +84,9 @@ export type PublicRelationshipKind =
   | 'serviceProvenBy'
   | 'profileFeaturesEvidence'
   | 'noteAuthoredBy'
-  | 'teamHasProfile';
+  | 'teamHasProfile'
+  | 'careerRelatesArtifact'
+  | 'careerHiringManager';
 
 export interface PublicRelationship {
   kind: PublicRelationshipKind;
@@ -233,6 +243,22 @@ export interface PublicServiceSummary extends PublicSummaryBase {
   evidence: PublicRelationship[];
 }
 
+export interface PublicCareerSummary extends PublicSummaryBase {
+  type: 'career';
+  slug: string;
+  referenceId: string;
+  location: string;
+  employmentType: 'fullTime' | 'partTime' | 'contract' | 'internship';
+  experienceLevel: 'entry' | 'mid' | 'senior' | 'lead';
+  /** Deliberately optional — not every listing states a figure (matches `Career.compensation`'s own optionality). */
+  compensation?: string;
+}
+
+export interface PublicCareerIndexEntry {
+  career: PublicCareerSummary;
+  relationships: PublicRelationship[];
+}
+
 export type PublicEntitySummary =
   | PublicWorkSummary
   | PublicBuildSummary
@@ -241,7 +267,8 @@ export type PublicEntitySummary =
   | PublicNoteSummary
   | PublicEngineeringProfileSummary
   | PublicTeamMemberSummary
-  | PublicServiceSummary;
+  | PublicServiceSummary
+  | PublicCareerSummary;
 
 export type PublicEntityDetail =
   | (PublicWorkSummary & {
@@ -299,6 +326,17 @@ export type PublicEntityDetail =
       currentInterests: string[];
       areasOfExpertise: string[];
       gallery: PublicMedia[];
+    })
+  | (PublicCareerSummary & {
+      documents: PublicDocument[];
+      relationships: PublicRelationship[];
+      responsibilities: string[];
+      requirements: string[];
+      benefits: string[];
+      /** Stated plainly and always present on the detail page — never folded into the Document body (Design Specification, Careers §3). */
+      applicationProcess: string;
+      /** Resolves `hiringManagerTeamId` to a real Team credit — absent when a role hasn't had one assigned yet. */
+      hiringManager?: PublicEntityLink;
     });
 
 export interface PublicDiscoveryEntry {

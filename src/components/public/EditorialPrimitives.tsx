@@ -310,12 +310,21 @@ export function PublicationMetadata({ entity }: { entity: ImmutablePublic<Public
 export function RelationshipCard({
   relationship,
   enabled,
+  showFounderAccent = true,
 }: {
   relationship: ImmutablePublic<PublicRelationship>;
   enabled: boolean;
+  /**
+   * The Homepage is held to the strictest reading of the one-accent rule —
+   * no founder-specific color anywhere on it, independent of how the
+   * broader founder-identity system is resolved elsewhere. Every other
+   * caller (detail pages, the Engineering Profiles index) keeps the
+   * existing founder-accent treatment; this only opts a caller *out*.
+   */
+  showFounderAccent?: boolean;
 }) {
   const identity =
-    relationship.target.type === 'engineeringProfile'
+    showFounderAccent && relationship.target.type === 'engineeringProfile'
       ? getFounderIdentity(slugFromProfileUrl(relationship.target.url) ?? '')
       : undefined;
   const href = relationshipHref(relationship);
@@ -370,6 +379,7 @@ export function CappedRelationshipList({
   ariaLabel,
   enabled,
   overflow,
+  showFounderAccent = true,
 }: {
   relationships: readonly ImmutablePublic<PublicRelationship>[];
   limit?: number;
@@ -377,6 +387,8 @@ export function CappedRelationshipList({
   enabled: (relationship: ImmutablePublic<PublicRelationship>) => boolean;
   /** Rendered as the last child inside the same wrapping list, e.g. an "+N more" chip — the one thing that does legitimately differ between callers. */
   overflow?: ReactNode;
+  /** See `RelationshipCard` — passed straight through. */
+  showFounderAccent?: boolean;
 }) {
   const visible = relationships.slice(0, limit);
   if (!visible.length) return null;
@@ -387,6 +399,7 @@ export function CappedRelationshipList({
           key={relationshipKey(relationship)}
           relationship={relationship}
           enabled={enabled(relationship)}
+          showFounderAccent={showFounderAccent}
         />
       ))}
       {overflow}

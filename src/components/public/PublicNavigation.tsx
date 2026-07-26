@@ -6,10 +6,14 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useRef } from 'react';
 import { PUBLIC_NAVIGATION, PUBLIC_SITE } from '@/config/public-site';
 import { publicRoute } from '@/lib/public/routes';
-import { PublicMobileNav } from './PublicMobileNav';
 import { PublicSearchDialog } from './search/PublicSearchDialog';
 
-const activeItems = PUBLIC_NAVIGATION.filter((item) => item.enabled);
+// Primary nav orients a first-time visitor to what HubZero *is* — it is not
+// a full sitemap. Notes, Engineering, and Ledger are real, enabled routes
+// reached contextually instead (relationship rails, bylines, Search, the
+// footer) — see PUBLIC_NAVIGATION's own doc comment and Design
+// Specification §5.
+const activeItems = PUBLIC_NAVIGATION.filter((item) => item.enabled && item.primary);
 
 export function PublicNavigation() {
   const pathname = usePathname();
@@ -33,6 +37,11 @@ export function PublicNavigation() {
           />
         </Link>
         {activeItems.length ? (
+          // Scrolls horizontally at every width, including below the mobile
+          // breakpoint — there is no separate collapsed/hamburger nav. See
+          // `.public-nav-track` in globals.css for the trailing mask fade
+          // that signals overflow instead of hiding destinations behind a
+          // menu control.
           <div className="public-nav-track">
             {activeItems.map((item) => {
               const current = pathname === item.href || pathname.startsWith(`${item.href}/`);
@@ -51,7 +60,6 @@ export function PublicNavigation() {
             })}
           </div>
         ) : null}
-        <PublicMobileNav items={activeItems} />
         {PUBLIC_SITE.release.search ? <PublicSearchDialog /> : null}
         {PUBLIC_SITE.release.contact ? (
           <Link href={publicRoute.contact({ from: 'navigation' })} className="public-nav-contact">

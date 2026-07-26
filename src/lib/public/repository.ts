@@ -2,6 +2,8 @@ import type { OwnerType } from '@/lib/documents/schema';
 import type {
   Blueprint,
   Build,
+  Career,
+  CareerEntryReference,
   EngineeringProfile,
   EntryReference,
   ServiceEvidenceReference,
@@ -18,6 +20,8 @@ import type {
   PublicAuthor,
   PublicBlueprintSummary,
   PublicBuildSummary,
+  PublicCareerSummary,
+  PublicCareerIndexEntry,
   PublicDetailEntityType,
   PublicDiscoveryEntry,
   PublicEngineeringProfileSummary,
@@ -78,6 +82,7 @@ const TYPE_TO_OWNER: Record<PublicDetailEntityType, OwnerType> = {
   lab: 'Lab',
   note: 'Note',
   engineeringProfile: 'EngineeringProfile',
+  career: 'Career',
 };
 
 export interface PublicRepository {
@@ -431,6 +436,25 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
           summary: record.description,
           technologies: [],
           evidence: relationships,
+        };
+        return summary;
+      }
+      case 'career': {
+        const record = entity.record as Career;
+        if (!record.summary?.trim()) return null;
+        const technologies = await terms(record.technologyIds, 'technology');
+        const summary: PublicCareerSummary = {
+          type: 'career',
+          title: record.title,
+          slug: record.slug,
+          url: publicRoute.entity({ type: 'career', slug: record.slug }),
+          referenceId: record.referenceId,
+          summary: record.summary,
+          location: record.location,
+          employmentType: record.employmentType,
+          experienceLevel: record.experienceLevel,
+          technologies,
+          ...(record.compensation ? { compensation: record.compensation } : {}),
         };
         return summary;
       }

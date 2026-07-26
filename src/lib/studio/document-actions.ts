@@ -16,6 +16,7 @@ const PUBLIC_TYPE_BY_OWNER: Partial<Record<OwnerType, PublicEntityType>> = {
   Lab: 'lab',
   Note: 'note',
   EngineeringProfile: 'engineeringProfile',
+  Career: 'career',
 };
 
 /**

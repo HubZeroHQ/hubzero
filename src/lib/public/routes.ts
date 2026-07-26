@@ -12,6 +12,7 @@ const COLLECTION_ROUTES = {
   engineeringProfile: '/engineering',
   teamMember: '/about',
   service: '/services',
+  career: '/careers',
 } as const satisfies Record<PublicEntityType, string>;
 
 const DETAIL_ROUTE_TYPES = new Set<PublicDetailEntityType>([
@@ -21,6 +22,7 @@ const DETAIL_ROUTE_TYPES = new Set<PublicDetailEntityType>([
   'lab',
   'note',
   'engineeringProfile',
+  'career',
 ]);
 
 function withQuery(path: string, query: Query = {}): string {
