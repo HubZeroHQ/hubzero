@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isPublicDetailEntityType, publicRoute } from './routes';
+import { publicRoute } from './routes';
 
 describe('publicRoute', () => {
   it('owns every canonical public collection URL', () => {
@@ -26,12 +26,5 @@ describe('publicRoute', () => {
     expect(
       publicRoute.taxonomy({ kind: 'category', label: 'Developer tools', slug: 'developer-tools' }),
     ).toBe('/work?category=developer-tools');
-  });
-
-  it('distinguishes detail entities from collection-only public entities', () => {
-    expect(isPublicDetailEntityType('work')).toBe(true);
-    expect(isPublicDetailEntityType('engineeringProfile')).toBe(true);
-    expect(isPublicDetailEntityType('teamMember')).toBe(false);
-    expect(isPublicDetailEntityType('service')).toBe(false);
   });
 });

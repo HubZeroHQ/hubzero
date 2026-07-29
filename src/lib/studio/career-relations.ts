@@ -5,6 +5,8 @@ import { taxonomyRepository } from '@/lib/db/repositories/taxonomy';
 import { teamRepository } from '@/lib/db/repositories/team';
 import { workRepository } from '@/lib/db/repositories/work';
 import type { CareerEntryReference, CareerEvidenceOwnerType } from '@/types/studio';
+import { toPlainOptions, toRelationOptions } from './relation-options';
+import { splitEntriesByOwnerType } from './relation-fields';
 
 /**
  * The option lists behind a Career listing's relation pickers — technologies,
@@ -24,35 +26,12 @@ export async function getCareerRelationOptions() {
   ]);
 
   return {
-    technologyOptions: technologies.map((entry) => ({
-      id: entry._id.toString(),
-      label: entry.label,
-    })),
-    hiringManagerOptions: team.map((entry) => ({
-      id: entry._id.toString(),
-      label: entry.name,
-      referenceId: entry.referenceId,
-    })),
-    workOptions: work.map((entry) => ({
-      id: entry._id.toString(),
-      label: entry.title,
-      referenceId: entry.referenceId,
-    })),
-    buildOptions: builds.map((entry) => ({
-      id: entry._id.toString(),
-      label: entry.title,
-      referenceId: entry.referenceId,
-    })),
-    labOptions: labs.map((entry) => ({
-      id: entry._id.toString(),
-      label: entry.title,
-      referenceId: entry.referenceId,
-    })),
-    noteOptions: notes.map((entry) => ({
-      id: entry._id.toString(),
-      label: entry.title,
-      referenceId: entry.referenceId,
-    })),
+    technologyOptions: toPlainOptions(technologies),
+    hiringManagerOptions: toRelationOptions(team, (entry) => entry.name),
+    workOptions: toRelationOptions(work, (entry) => entry.title),
+    buildOptions: toRelationOptions(builds, (entry) => entry.title),
+    labOptions: toRelationOptions(labs, (entry) => entry.title),
+    noteOptions: toRelationOptions(notes, (entry) => entry.title),
   };
 }
 
@@ -80,18 +59,10 @@ export function splitCareerRelatedEntries(relatedEntries: CareerEntryReference[]
   relatedLabIds: string[];
   relatedNoteIds: string[];
 } {
-  const result = {
-    relatedWorkIds: [] as string[],
-    relatedBuildIds: [] as string[],
-    relatedLabIds: [] as string[],
-    relatedNoteIds: [] as string[],
+  return splitEntriesByOwnerType(relatedEntries, CAREER_RELATED_ENTRY_FIELDS) as {
+    relatedWorkIds: string[];
+    relatedBuildIds: string[];
+    relatedLabIds: string[];
+    relatedNoteIds: string[];
   };
-
-  for (const { key, field } of CAREER_RELATED_ENTRY_FIELDS) {
-    result[field as keyof typeof result] = relatedEntries
-      .filter((entry) => entry.ownerType === key)
-      .map((entry) => entry.ownerId.toString());
-  }
-
-  return result;
 }

@@ -6,6 +6,7 @@ import { ZodError } from 'zod';
 import { requireCapability } from '@/lib/auth/permissions';
 import { serviceRepository } from '@/lib/db/repositories/service';
 import { SERVICE_EVIDENCE_FIELDS } from '@/lib/studio/service-relations';
+import { readEntriesFromFormData } from '@/lib/studio/relation-fields';
 import type { EntryActionState } from '@/lib/studio/entry-actions';
 import { zodErrorToFieldErrors } from '@/lib/validation/form-errors';
 import type { ServiceInput } from '@/lib/validation/service';
@@ -20,9 +21,7 @@ function actionErrorMessage(error: unknown): string {
 
 /** Merges the form's five typed evidence pickers into one `evidenceLinks` array — the inverse of `service-relations.ts`'s `splitServiceEvidenceLinks`. */
 function readEvidenceLinks(formData: FormData): ServiceInput['evidenceLinks'] {
-  return SERVICE_EVIDENCE_FIELDS.flatMap(({ key, field }) =>
-    formData.getAll(field).map((id) => ({ ownerType: key, ownerId: String(id) })),
-  );
+  return readEntriesFromFormData(formData, SERVICE_EVIDENCE_FIELDS);
 }
 
 function readServiceMetadataFields(formData: FormData) {

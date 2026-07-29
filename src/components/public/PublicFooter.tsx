@@ -20,7 +20,13 @@ const recordLinks = (['work', 'build', 'blueprint', 'lab', 'note', 'ledger'] as 
   .map(byType)
   .filter((item): item is NonNullable<typeof item> => Boolean(item));
 
-const companyContentLinks = (['teamMember', 'engineeringProfile'] as const)
+/**
+ * Careers is included unconditionally regardless of how many roles are
+ * currently open (Experience v3 Careers milestone) — the page itself is a
+ * permanent Company destination, not a "we're hiring" banner that appears
+ * only when convenient.
+ */
+const companyContentLinks = (['teamMember', 'engineeringProfile', 'service', 'career'] as const)
   .map(byType)
   .filter((item): item is NonNullable<typeof item> => Boolean(item));
 
@@ -97,7 +103,9 @@ export function PublicFooter() {
       </div>
 
       <div className="public-container public-footer-inner">
-        <p>© {new Date().getFullYear()} HubZero</p>
+        <p>
+          © {new Date().getFullYear()} HubZero · <Link href={publicRoute.privacy()}>Privacy</Link>
+        </p>
         <p>Evidence before claims.</p>
       </div>
     </footer>

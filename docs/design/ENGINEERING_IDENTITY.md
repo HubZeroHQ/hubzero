@@ -1,6 +1,6 @@
 # Engineering Identity
 
-**Status:** Implemented. Phase 12 design proposal; this identity language is live across the public site.
+**Status:** Implemented, with one exception — see "Roster stage" below, whose designed interaction hasn't shipped. Phase 12 design proposal; the rest of this identity language is live across the public site.
 
 Engineering identity is the visible consequence of how HubZero works. It is not an illustration style and should never depend on terminal wallpaper, circuit traces, blueprint grids, code rain, or invented system telemetry.
 
@@ -86,7 +86,7 @@ Approved motifs are functional patterns with a real data source.
 | Version marker | Blueprint version or release data | Evolution |
 | Technology path | Taxonomy | Cross-collection exploration |
 
-Prohibited motifs remain those rejected by `DESIGN_SYSTEM.md`: decorative blueprint/circuit language, floating schematics, animated particles, coordinate overlays with no meaning, and generic terminal blocks.
+Prohibited motifs remain those rejected by `DESIGN_SYSTEM.md`: decorative blueprint/circuit language, floating schematics, animated particles, coordinate overlays with no meaning, and generic terminal blocks. See "Founder identity scope" below for the one narrow, accountable exception to this list.
 
 ## Accent system
 
@@ -125,9 +125,26 @@ Each module may contain:
 
 The module's job is to connect organizational responsibility to evidence. Social links, decorative skill meters, availability badges, and long biographies do not belong.
 
+### Founder identity scope
+
+Each founder has one procedural motif and one accent color (`src/config/founder-identity.ts`) — a deliberate, narrow exception to the single-amber-accent rule above and to the "prohibited motifs" line, not an oversight. This section is the boundary that exception operates inside.
+
+**What makes a motif acceptable here, when the same visual language is prohibited elsewhere:** the prohibition on "decorative blueprint/circuit language, floating schematics... coordinate overlays with no meaning" targets iconography with no real referent — ornamental engineering-diagram wallpaper. A founder motif is the opposite case by construction: every motif is required to trace to that specific person's own documented expertise, not be assigned arbitrarily. Concretely — the `pcbTrace` motif ("right-angled circuit traces routing between board vias") belongs to Salsabeel Kobattey, an electronics engineer whose own bio names embedded systems, VLSI, and FPGA design; the `network` motif ("a distributed system of routing lines splitting, merging, and terminating") belongs to Rifaque Ahmed, whose real work is platform/orchestration engineering. Each motif's `motifDescription` field is the accessible, plain-language check on this — if a motif's description doesn't map to something true about that person, it's decoration and doesn't belong here regardless of how it looks.
+
+**Where it applies:**
+- The founder's own Engineering Profile route — the full page, including that route's own bespoke per-founder composition classes (e.g. `.founder-eyebrow`, `.founder-decision-list`, `.founder-editorial-outline`, `.founder-pinout`), none of which render anywhere else.
+- The About page's founder card, which links into that route.
+- The smaller cross-reference tier a founder's name gets wherever they're credited outside their own profile (`FounderCrossLink` — a Notes byline, a relationship card crediting a founder on a Work/Build/Lab/Note detail page): the same accent plus a compact motif variant, degrading gracefully to a plain link for anyone without a designed identity. This is a real, considered part of the system, not scope creep — a founder's name should look like the same person's name everywhere it's credited.
+
+**Where it explicitly does not apply:** the Homepage is held to the strictest reading of the single-amber-accent rule — no founder color anywhere on it, regardless of how the rest of this system resolves (`RelationshipCard`'s `showFounderAccent` prop, `EditorialPrimitives.tsx`). This is the one deliberate opt-out, not an inconsistency to fix.
+
+**Choreography:** the profile hero's motif draws once on mount — a genuine signature moment (see `--duration-motif` in `MOTION_GUIDELINES.md`), not a recurring interaction. The About card's copy of the same motif stays fully undrawn at rest and reveals only on hover/focus, via an interruptible CSS `transition` (not a keyframe animation) — hovering across several founder cards in the roster doesn't replay a committed sequence per card, it tracks the hover state directly like any other hover-reveal metadata row. On a browser that supports the View Transitions API (and without `prefers-reduced-motion`), navigating from the About card into the profile route treats the two motifs as one continuous object (`FounderProfileLink`, `founderMotifViewTransitionStyle`) rather than restarting cold.
+
 ### Roster stage
 
-The canonical roster-stage pattern remains the primary About interaction:
+**Not implemented.** The design below describes the intended interaction; the current About page (`src/components/public/about/About.tsx`) renders three static CSS grids instead — no focus/hover/click-to-select state, no single-person stage. This section is kept as the design target for whoever picks this up, not as a description of current behavior.
+
+The canonical roster-stage pattern is intended as the primary About interaction:
 
 - One person is in focus.
 - A compact list makes every public Team member directly reachable.

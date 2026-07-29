@@ -9,6 +9,21 @@ import { authConfig } from '@/lib/auth/config';
  * Edge runtime, which cannot load the `mongodb` driver pulled in by the
  * full config in `lib/auth/index.ts`.
  *
+ * A per-request CSP nonce (`script-src 'nonce-...' 'strict-dynamic'`) was
+ * tried here and reverted — see `next.config.ts`'s CSP comment for why: it
+ * requires this middleware to run on every route, and its nonce fails to
+ * match on any statically-generated/ISR page in production (that HTML is
+ * pre-rendered once, outside any request middleware ever touches, so it
+ * can't carry a nonce matching whatever middleware freshly generates for
+ * the request that later happens to serve the cached response). Broadening
+ * this middleware for that purpose also had a real side effect worth
+ * remembering if this is revisited: wrapping every request in `auth()`
+ * (this file's original form) makes Auth.js set its CSRF/callback-url
+ * cookies on anonymous public page views too — verified live, and directly
+ * false against what `/privacy` tells visitors. If a future attempt scopes
+ * middleware more broadly again, keep the `auth()` call itself scoped to
+ * `/studio/**` for that reason, the way the branch below already does.
+ *
  * `/studio/login` is the one Studio route that must stay reachable while signed
  * out; every other matched route requires a session. Page routes redirect
  * to login with a `callbackUrl`; API routes get a plain 401 instead of a

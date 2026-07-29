@@ -13,6 +13,8 @@ import {
   UserCog,
   UserRoundSearch,
   Briefcase,
+  GraduationCap,
+  UsersRound,
   type LucideIcon,
 } from 'lucide-react';
 import type { UserRole } from '@/types/studio';
@@ -81,6 +83,7 @@ const CONTENT: StudioNavGroup = {
     leaf('Blueprints', '/studio/content/blueprints', Blocks, resource('Blueprint')),
     leaf('Labs', '/studio/content/labs', FlaskConical, resource('Lab')),
     leaf('Notes', '/studio/content/notes', NotebookPen, resource('Note')),
+    leaf('Careers', '/studio/content/careers', GraduationCap, resource('Career')),
   ],
 };
 
@@ -104,6 +107,13 @@ const LEADS = leaf(
   '/studio/leads',
   Inbox,
   resource('Lead', { create: false, edit: false }),
+);
+
+const CANDIDATES = leaf(
+  'Candidates',
+  '/studio/candidates',
+  UsersRound,
+  resource('Candidate', { create: false, edit: false }),
 );
 
 const LIBRARY: StudioNavGroup = {
@@ -151,12 +161,16 @@ const PROFILE_SETTINGS: StudioNavGroup = {
  */
 export function getVisibleNav(
   role: UserRole,
-  opts: { hasAssignedLeads: boolean },
+  opts: { hasAssignedLeads: boolean; hasAssignedCandidates: boolean },
 ): StudioNavEntry[] {
   const entries: StudioNavEntry[] = [DASHBOARD, CONTENT, STUDIO];
 
   if (role !== 'member' || opts.hasAssignedLeads) {
     entries.push(LEADS);
+  }
+
+  if (role !== 'member' || opts.hasAssignedCandidates) {
+    entries.push(CANDIDATES);
   }
 
   entries.push(LIBRARY);
@@ -174,6 +188,7 @@ const ALL_ENTRIES: StudioNavEntry[] = [
   CONTENT,
   STUDIO,
   LEADS,
+  CANDIDATES,
   LIBRARY,
   SETTINGS,
   PROFILE,

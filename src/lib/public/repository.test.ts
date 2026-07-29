@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type {
   Blueprint,
   Build,
+  Career,
   EngineeringProfile,
   MediaAsset,
   Note,
@@ -870,5 +871,152 @@ describe('preview bypass (Experience v3 Preview Integrity milestone)', () => {
       preview: true,
     });
     expect(detail).toBeNull();
+  });
+});
+
+describe('Careers (Experience v3 Careers milestone)', () => {
+  it('participates in the relationship system: relatedEntries and hiringManagerTeamId resolve as real relationships', async () => {
+    const hiringManager: Team = {
+      _id: new ObjectId(),
+      referenceId: 'HZ-TM-501',
+      name: 'Hiring Manager',
+      role: 'Engineering Lead',
+      bio: 'Builds and hires for explicit public systems.',
+      group: 'Engineering',
+      publicProfile: true,
+      founder: false,
+      publicCategory: 'team',
+      engineeringProfileEligible: false,
+      order: 0,
+      socialLinks: [],
+      archived: false,
+      createdAt: now,
+      updatedAt: now,
+    };
+    const relatedWork: Work = {
+      _id: new ObjectId(),
+      createdAt: now,
+      updatedAt: now,
+      createdByUserId: creator,
+      status: 'published',
+      slug: 'career-related-work',
+      referenceId: 'HZ-WK-501',
+      title: 'Related Work',
+      summary: 'A published case study this role would touch.',
+      clientType: 'Product team',
+      categoryTagIds: [],
+      timeline: '8 weeks',
+      role: 'Product engineering',
+      technologyIds: [],
+      relatedBuildIds: [],
+      relatedBlueprintIds: [],
+      relatedLabIds: [],
+      contributors: [],
+    };
+    const career: Career = {
+      _id: new ObjectId(),
+      createdAt: now,
+      updatedAt: now,
+      createdByUserId: creator,
+      status: 'published',
+      slug: 'senior-engineer',
+      referenceId: 'HZ-CR-001',
+      title: 'Senior Engineer',
+      location: 'Remote',
+      employmentType: 'fullTime',
+      experienceLevel: 'senior',
+      summary: 'A published, open role.',
+      responsibilities: ['Ship real systems.'],
+      requirements: ['Explicit ownership.'],
+      benefits: ['Real equity.'],
+      applicationProcess: 'Send an email with what you have built.',
+      technologyIds: [],
+      hiringManagerTeamId: hiringManager._id,
+      relatedEntries: [{ ownerType: 'Work', ownerId: relatedWork._id }],
+    };
+    const overviewDocument: DocumentRecord = {
+      _id: new ObjectId(),
+      ownerType: 'Career',
+      ownerId: career._id,
+      role: 'overview',
+      blocks: [
+        { id: 'one', type: 'paragraph', data: { text: 'What the role actually involves.' } },
+      ],
+      createdAt: now,
+      updatedAt: now,
+    };
+    const repository = createPublicRepository(
+      fakeSource({
+        entities: [
+          entity('career', career),
+          entity('teamMember', hiringManager),
+          entity('work', relatedWork),
+        ],
+        documents: [overviewDocument],
+      }),
+    );
+
+    const detail = await repository.findDetail('career', career.slug);
+    expect(detail).not.toBeNull();
+    if (detail?.type !== 'career') throw new Error('Expected a career detail');
+
+    expect(detail.hiringManager?.title).toBe('Hiring Manager');
+    const relatesArtifact = detail.relationships.find(
+      (relationship) => relationship.kind === 'careerRelatesArtifact',
+    );
+    expect(relatesArtifact?.target.title).toBe('Related Work');
+    const hiringManagerRelationship = detail.relationships.find(
+      (relationship) => relationship.kind === 'careerHiringManager',
+    );
+    expect(hiringManagerRelationship?.target.title).toBe('Hiring Manager');
+  });
+
+  it('omits hiringManager when the assigned Team member is not publicly visible', async () => {
+    const hiddenManager: Team = {
+      _id: new ObjectId(),
+      referenceId: 'HZ-TM-502',
+      name: 'Internal Only',
+      role: 'Engineering Lead',
+      bio: 'Not yet public.',
+      group: 'Engineering',
+      publicProfile: false,
+      founder: false,
+      publicCategory: 'team',
+      engineeringProfileEligible: false,
+      order: 0,
+      socialLinks: [],
+      archived: false,
+      createdAt: now,
+      updatedAt: now,
+    };
+    const career: Career = {
+      _id: new ObjectId(),
+      createdAt: now,
+      updatedAt: now,
+      createdByUserId: creator,
+      status: 'published',
+      slug: 'hidden-manager-role',
+      referenceId: 'HZ-CR-002',
+      title: 'Role with an internal-only manager',
+      location: 'Remote',
+      employmentType: 'contract',
+      experienceLevel: 'mid',
+      summary: 'A published, open role.',
+      responsibilities: [],
+      requirements: [],
+      benefits: [],
+      applicationProcess: 'Apply via email.',
+      technologyIds: [],
+      hiringManagerTeamId: hiddenManager._id,
+      relatedEntries: [],
+    };
+    const repository = createPublicRepository(
+      fakeSource({ entities: [entity('career', career), entity('teamMember', hiddenManager)] }),
+    );
+
+    const detail = await repository.findDetail('career', career.slug);
+    expect(detail).not.toBeNull();
+    if (detail?.type !== 'career') throw new Error('Expected a career detail');
+    expect(detail.hiringManager).toBeUndefined();
   });
 });

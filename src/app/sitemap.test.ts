@@ -33,7 +33,7 @@ vi.mock('@/lib/public/queries', () => ({
 const sitemap = (await import('./sitemap')).default;
 
 describe('public sitemap', () => {
-  it('includes every top-level collection route, including Ledger', async () => {
+  it('includes every top-level collection route, including Ledger, Privacy, and Careers', async () => {
     const entries = await sitemap();
     const urls = entries.map((entry) => entry.url);
 
@@ -47,13 +47,15 @@ describe('public sitemap', () => {
       '/engineering',
       '/ledger',
       '/about',
+      '/privacy',
       '/services',
+      '/careers',
     ]) {
       expect(urls.some((url) => url.endsWith(path))).toBe(true);
     }
   });
 
-  it('places Ledger between Engineering Profiles and About, leaving every other route in its original order', async () => {
+  it('places Ledger between Engineering Profiles and About, and Privacy right after About, leaving every other route in its original order', async () => {
     const entries = await sitemap();
     const paths = entries.map((entry) => new URL(entry.url).pathname);
     const staticPaths = [
@@ -66,7 +68,9 @@ describe('public sitemap', () => {
       '/engineering',
       '/ledger',
       '/about',
+      '/privacy',
       '/services',
+      '/careers',
     ];
 
     expect(paths.filter((path) => staticPaths.includes(path))).toEqual(staticPaths);

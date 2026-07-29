@@ -21,7 +21,6 @@ import type {
   PublicBlueprintSummary,
   PublicBuildSummary,
   PublicCareerSummary,
-  PublicCareerIndexEntry,
   PublicDetailEntityType,
   PublicDiscoveryEntry,
   PublicEngineeringProfileSummary,
@@ -49,7 +48,7 @@ import {
   type GraphQuery,
   type HubZeroRelationshipKind,
 } from '@/lib/entity-graph';
-import { projectEvidence, type PublicEvidenceNode } from './evidence-projection';
+import { projectEvidence, refKey, type PublicEvidenceNode } from './evidence-projection';
 import { projectTrace } from './trace-projection';
 import {
   hasRoles,
@@ -84,6 +83,17 @@ const TYPE_TO_OWNER: Record<PublicDetailEntityType, OwnerType> = {
   engineeringProfile: 'EngineeringProfile',
   career: 'Career',
 };
+
+/**
+ * The inverse of `TYPE_TO_OWNER`, derived rather than hand-duplicated so the
+ * two directions can't drift apart. Exported for `document-actions.ts`,
+ * which needs the same OwnerType→PublicEntityType fact to invalidate the
+ * right public cache entry after a Document save.
+ */
+export const OWNER_TO_PUBLIC_TYPE: Partial<Record<OwnerType, PublicEntityType>> =
+  Object.fromEntries(
+    Object.entries(TYPE_TO_OWNER).map(([publicType, owner]) => [owner, publicType]),
+  );
 
 export interface PublicRepository {
   findSummary(
@@ -206,6 +216,41 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
           : publicRoute.about(),
       profileAvailable,
       ...(technologies.length ? { technologies } : {}),
+    };
+  }
+
+  /**
+   * A Career listing's `hiringManagerTeamId` resolved to a real credit — the
+   * same "absent, not fabricated" discipline as `resolveAuthor`. Absent both
+   * when no hiring manager is assigned yet, and when the assigned Team
+   * member isn't (or isn't yet) publicly visible — exposing an internal-only
+   * person on a public page would violate their own visibility switch, not
+   * just the Career listing's.
+   */
+  async function resolveHiringManager(teamId?: string): Promise<PublicEntityLink | undefined> {
+    if (!teamId) return undefined;
+    const entity = await source.findEntityById('teamMember', teamId);
+    if (!entity) return undefined;
+    const record = entity.record as Team;
+    if (!record.publicProfile) return undefined;
+    const profile = await source.findProfileByTeamId(teamId);
+    const profileVisible = Boolean(
+      profile &&
+      isPubliclyVisible({
+        type: 'engineeringProfile',
+        status: profile.status,
+        teamPublic: record.publicProfile,
+      }),
+    );
+    return {
+      type: 'teamMember',
+      title: record.name,
+      url: publicRoute.collection('teamMember'),
+      referenceId: record.referenceId,
+      ...(record.role ? { role: record.role } : {}),
+      ...(profileVisible && profile
+        ? { profileUrl: publicRoute.entity({ type: 'engineeringProfile', slug: profile.slug }) }
+        : {}),
     };
   }
 
@@ -475,35 +520,52 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
     }
   }
 
-  async function buildEvidenceQuery(): Promise<EvidenceContext> {
-    const records = (
-      await Promise.all(ALL_PUBLIC_TYPES.map((type) => source.listEntities(type)))
-    ).flat();
-    const visible = compact(
-      await Promise.all(
-        records.map(async (record) => {
-          const summary = await mapSummary(record, false);
-          return summary ? { record, summary } : null;
-        }),
-      ),
+  /**
+   * The one place a public evidence/discovery graph gets built: list every
+   * entity of the given types, keep only what's publicly visible, then
+   * assemble the node/destination/assertion inputs `createGraphQuery` needs.
+   * `buildEvidenceQuery` and `listDiscoveryEntries` used to each duplicate
+   * this sequence independently; both now call this with their own `types`.
+   */
+  async function buildGraph(
+    types: readonly PublicEntityType[],
+  ): Promise<
+    EvidenceContext & { visible: { entity: StudioPublicEntity; summary: PublicEntitySummary }[] }
+  > {
+    const entities = (await Promise.all(types.map((type) => source.listEntities(type)))).flat();
+    const projected = await Promise.all(
+      entities.map(async (entity) => {
+        const summary = await mapSummary(entity, false);
+        return summary ? { entity, summary } : null;
+      }),
     );
-    const nodes: PublicEvidenceNode[] = visible.map(({ record, summary }) => ({
-      ref: { type: record.type, id: record.id },
+    const visible = compact(projected);
+    const destinations = new Map(
+      visible.map(({ entity, summary }) => [
+        refKey({ type: entity.type, id: entity.id }),
+        toEntityLink(summary),
+      ]),
+    );
+    const nodes: PublicEvidenceNode[] = visible.map(({ entity, summary }) => ({
+      ref: { type: entity.type, id: entity.id },
       label: summary.title,
       data: undefined,
     }));
-    const destinations = new Map(
-      visible.map(({ record, summary }) => [`${record.type}:${record.id}`, toEntityLink(summary)]),
-    );
     return {
       query: createGraphQuery(
         normalizePublicEntityGraph(
           nodes,
-          visible.flatMap(({ record }) => assertionsFrom(record)),
+          visible.flatMap(({ entity }) => assertionsFrom(entity)),
         ),
       ),
       destinations,
+      visible,
     };
+  }
+
+  async function buildEvidenceQuery(): Promise<EvidenceContext> {
+    const { query, destinations } = await buildGraph(ALL_PUBLIC_TYPES);
+    return { query, destinations };
   }
 
   async function resolveRelations(
@@ -699,6 +761,21 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
           gallery: await gallery(record.galleryImageIds),
         };
       }
+      case 'career': {
+        if (summary.type !== 'career') return null;
+        const record = entity.record as Career;
+        const hiringManager = await resolveHiringManager(record.hiringManagerTeamId?.toString());
+        return {
+          ...summary,
+          documents,
+          relationships,
+          responsibilities: [...record.responsibilities],
+          requirements: [...record.requirements],
+          benefits: [...record.benefits],
+          applicationProcess: record.applicationProcess,
+          ...(hiringManager ? { hiringManager } : {}),
+        };
+      }
     }
   }
 
@@ -855,32 +932,10 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
       return freezePublicDto(await listEngineeringProfileIndexEntries());
     },
     async listDiscoveryEntries(types = ALL_PUBLIC_TYPES) {
-      const entities = (await Promise.all(types.map((type) => source.listEntities(type)))).flat();
-      const projected = await Promise.all(
-        entities.map(async (entity) => {
-          const summary = await mapSummary(entity, false);
-          return summary ? { entity, summary } : null;
-        }),
-      );
-      const visible = compact(projected);
-      const links = new Map(
-        visible.map(({ entity, summary }) => [
-          `${entity.type}:${entity.id}`,
-          toEntityLink(summary),
-        ]),
-      );
-      const graph = normalizePublicEntityGraph(
-        visible.map(({ entity, summary }) => ({
-          ref: { type: entity.type, id: entity.id },
-          label: summary.title,
-          data: undefined,
-        })),
-        visible.flatMap(({ entity }) => assertionsFrom(entity)),
-      );
-      const query = createGraphQuery(graph);
+      const { query, destinations, visible } = await buildGraph(types);
       const entries = await Promise.all(
         visible.map(async ({ entity, summary }) =>
-          projectSearchEntry(query, links, { type: entity.type, id: entity.id }, summary),
+          projectSearchEntry(query, destinations, { type: entity.type, id: entity.id }, summary),
         ),
       );
       return freezePublicDto(entries);
@@ -908,6 +963,7 @@ const ALL_PUBLIC_TYPES: readonly PublicEntityType[] = [
   'engineeringProfile',
   'teamMember',
   'service',
+  'career',
 ];
 
 function externalLink(
@@ -1008,6 +1064,11 @@ function isHomepageEligible(detail: PublicEntityDetail, now: Date): boolean {
         ).length,
         documents: detail.documents,
       });
+    case 'career':
+      // Careers is not one of the Homepage's four pillars — `getHomepage()`
+      // never fetches it, so this branch exists only to keep this switch
+      // exhaustive over `PublicEntityDetail`.
+      return false;
   }
 }
 
@@ -1026,14 +1087,10 @@ export function compareHomepageEngineeringProfiles(
   );
 }
 
-function evidenceType(reference: EntryReference | ServiceEvidenceReference): PublicEntityType {
-  return {
-    Work: 'work',
-    Build: 'build',
-    Blueprint: 'blueprint',
-    Lab: 'lab',
-    Note: 'note',
-  }[reference.ownerType] as PublicEntityType;
+function evidenceType(
+  reference: EntryReference | ServiceEvidenceReference | CareerEntryReference,
+): PublicEntityType {
+  return OWNER_TO_PUBLIC_TYPE[reference.ownerType] as PublicEntityType;
 }
 
 function assertionsFrom(entity: StudioPublicEntity): RelationshipAssertion[] {
@@ -1194,6 +1251,29 @@ function assertionsFrom(entity: StudioPublicEntity): RelationshipAssertion[] {
       toType,
       toId: target.toString(),
     }));
+  }
+  if (type === 'career') {
+    const record = entity.record as Career;
+    return [
+      ...(record.relatedEntries ?? []).map((reference) => ({
+        kind: 'careerRelatesArtifact' as const,
+        fromType: 'career' as const,
+        fromId: id,
+        toType: evidenceType(reference),
+        toId: reference.ownerId.toString(),
+      })),
+      ...(record.hiringManagerTeamId
+        ? [
+            {
+              kind: 'careerHiringManager' as const,
+              fromType: 'career' as const,
+              fromId: id,
+              toType: 'teamMember' as const,
+              toId: record.hiringManagerTeamId.toString(),
+            },
+          ]
+        : []),
+    ];
   }
   return [];
 }

@@ -2,6 +2,7 @@ import { blueprintRepository } from '@/lib/db/repositories/blueprint';
 import { buildRepository } from '@/lib/db/repositories/build';
 import { taxonomyRepository } from '@/lib/db/repositories/taxonomy';
 import { teamRepository } from '@/lib/db/repositories/team';
+import { toPlainOptions, toRelationOptions } from './relation-options';
 
 /**
  * The option lists behind Lab's relation pickers (technologies, related
@@ -20,24 +21,9 @@ export async function getLabRelationOptions() {
   ]);
 
   return {
-    technologyOptions: technologies.map((entry) => ({
-      id: entry._id.toString(),
-      label: entry.label,
-    })),
-    buildOptions: builds.map((entry) => ({
-      id: entry._id.toString(),
-      label: entry.title,
-      referenceId: entry.referenceId,
-    })),
-    blueprintOptions: blueprints.map((entry) => ({
-      id: entry._id.toString(),
-      label: entry.name,
-      referenceId: entry.referenceId,
-    })),
-    contributorOptions: team.map((entry) => ({
-      id: entry._id.toString(),
-      label: entry.name,
-      referenceId: entry.referenceId,
-    })),
+    technologyOptions: toPlainOptions(technologies),
+    buildOptions: toRelationOptions(builds, (entry) => entry.title),
+    blueprintOptions: toRelationOptions(blueprints, (entry) => entry.name),
+    contributorOptions: toRelationOptions(team, (entry) => entry.name),
   };
 }

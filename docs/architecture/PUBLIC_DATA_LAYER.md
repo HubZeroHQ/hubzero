@@ -353,7 +353,7 @@ Rules:
 - Public cache entries contain public DTOs only and cannot be promoted from preview or authenticated Studio responses.
 - Structured data, RSS, and search receive no broader access than canonical routes.
 
-Any future preview capability is a separate authenticated read path with separate cache rules. It must not weaken the public visibility predicate.
+**Updated (Experience v3 Preview Integrity milestone):** preview now exists, as a separate authenticated read path with separate cache rules, exactly as anticipated here. `findDetail`'s `bypassStatus`/`options.preview` path (repository.ts) bypasses only the subject entity's own status gate — never propagated into relation/trace resolution, so a still-draft related entry stays invisible in a preview exactly as it would once the subject actually publishes — and `getPublicDetail` skips `unstable_cache` entirely when previewing. It does not weaken the public visibility predicate for any request that isn't an authorized Draft Mode session.
 
 ## Failure behavior
 

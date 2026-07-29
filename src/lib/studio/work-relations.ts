@@ -3,6 +3,7 @@ import { buildRepository } from '@/lib/db/repositories/build';
 import { labRepository } from '@/lib/db/repositories/lab';
 import { taxonomyRepository } from '@/lib/db/repositories/taxonomy';
 import { teamRepository } from '@/lib/db/repositories/team';
+import { toPlainOptions, toRelationOptions } from './relation-options';
 
 /**
  * The option lists behind Work's relation pickers (technologies, category
@@ -27,30 +28,11 @@ export async function getWorkRelationOptions() {
   ]);
 
   return {
-    technologyOptions: technologies.map((entry) => ({
-      id: entry._id.toString(),
-      label: entry.label,
-    })),
-    categoryOptions: categories.map((entry) => ({ id: entry._id.toString(), label: entry.label })),
-    buildOptions: builds.map((entry) => ({
-      id: entry._id.toString(),
-      label: entry.title,
-      referenceId: entry.referenceId,
-    })),
-    blueprintOptions: blueprints.map((entry) => ({
-      id: entry._id.toString(),
-      label: entry.name,
-      referenceId: entry.referenceId,
-    })),
-    labOptions: labs.map((entry) => ({
-      id: entry._id.toString(),
-      label: entry.title,
-      referenceId: entry.referenceId,
-    })),
-    contributorOptions: team.map((entry) => ({
-      id: entry._id.toString(),
-      label: entry.name,
-      referenceId: entry.referenceId,
-    })),
+    technologyOptions: toPlainOptions(technologies),
+    categoryOptions: toPlainOptions(categories),
+    buildOptions: toRelationOptions(builds, (entry) => entry.title),
+    blueprintOptions: toRelationOptions(blueprints, (entry) => entry.name),
+    labOptions: toRelationOptions(labs, (entry) => entry.title),
+    contributorOptions: toRelationOptions(team, (entry) => entry.name),
   };
 }

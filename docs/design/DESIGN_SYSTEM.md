@@ -29,7 +29,7 @@ This document is the source of truth for HubZero's product design language. It d
 **Intentionally avoid:**
 - Bento grids, glassmorphism, glowing gradient backgrounds, animated blobs, particle fields.
 - Giant floating device mockups, stock hero videos, agency-cliché imagery.
-- Blueprint lines, circuit traces, exploded diagrams, or any literal "engineering" iconography as decoration.
+- Blueprint lines, circuit traces, exploded diagrams, or any literal "engineering" iconography as decoration. (The Founder identity system in `ENGINEERING_IDENTITY.md` is the one accountable, non-decorative exception — see §2's "Editorial illustration content is not interface chrome.")
 - Cursor-replacement effects, spotlight-follow reveals, parallax-for-its-own-sake.
 - Any interaction that exists only because it's clever — every interaction must help a visitor understand, explore, or start working with HubZero.
 - Scroll-triggered entrance animations that play once and never respond to the user again.
@@ -46,6 +46,8 @@ This document is the source of truth for HubZero's product design language. It d
 - Focus rings and primary interactive affordances that need to stand out from monochrome chrome (e.g. the search/palette hint).
 
 **Where amber is forbidden.** Never as a background fill for large areas. Never as decoration (borders "just because," icon fills, gradients). Never repeated more than once in the same viewport for emphasis — if everything is accented, nothing is. Never used for both a positive and a neutral meaning in the same context (don't overload it).
+
+**Editorial illustration content is not interface chrome.** A photograph's natural colors aren't a monochrome violation (§11 already permits "genuine photographic warmth" in portraits) because a photo is content, not a control. The same distinction extends to a bounded, named editorial illustration: content *may* carry color the way a photo does, provided it never leaks into interface chrome a visitor would parse as a state signal — text, borders, list markers, table cells, or any control shared with pages that don't own that illustration. The one instance of this today is `ENGINEERING_IDENTITY.md`'s Founder identity scope — one accent per founder, contained to that founder's own profile route, their About card, and a documented cross-reference tier, never appearing as a functional-state color anywhere amber's meaning could be confused. This is an accountable, narrow exception, not a general license — a new one needs the same two things this one has: a real, non-arbitrary reason tied to content, and a written boundary for exactly where it's allowed to appear.
 
 **Status green** (`#4ade80`) is reserved exclusively for "system nominal / success / submitted" states — never decorative, never interchangeable with amber.
 

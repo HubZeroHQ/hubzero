@@ -254,11 +254,6 @@ export interface PublicCareerSummary extends PublicSummaryBase {
   compensation?: string;
 }
 
-export interface PublicCareerIndexEntry {
-  career: PublicCareerSummary;
-  relationships: PublicRelationship[];
-}
-
 export type PublicEntitySummary =
   | PublicWorkSummary
   | PublicBuildSummary

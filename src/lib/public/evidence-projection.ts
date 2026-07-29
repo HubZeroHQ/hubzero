@@ -120,5 +120,9 @@ export function labelFor(
         : targetType === 'lab'
           ? 'Current exploration'
           : 'Selected work';
+    case 'careerRelatesArtifact':
+      return forward ? 'Related evidence' : 'Related opening';
+    case 'careerHiringManager':
+      return forward ? 'Hiring manager' : 'Hiring manager for this role';
   }
 }

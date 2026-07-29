@@ -7,6 +7,7 @@ import {
   DetailSectionHeading,
   formatMetadata,
   formatPublicDate,
+  groupRelationshipsByType,
   PublicBreadcrumbs,
   PublicBuildStateBadge,
   relationshipHref,
@@ -57,76 +58,55 @@ export function PublicCollectionDetail({ entity }: { entity: ImmutablePublic<Col
   const lineage = entity.relationships.filter(
     (relationship) => relationship.kind === 'labGraduatedToBuild',
   );
+  /**
+   * Excludes `labGraduatedToBuild` (shown separately above, as "Product
+   * lineage") and `teamContributedToEntry` (shown separately in
+   * `DetailRegister`'s `ContributorList`) — the same "don't draw a credit
+   * twice, at two different visual weights" rule the Homepage's own
+   * `evidenceGraphRelationships()` already applies. This keeps the graph fed
+   * here and the `groups` list below it describing the same relationships,
+   * per `EvidenceGraph`'s own contract.
+   */
   const connected = entity.relationships.filter(
-    (relationship) => relationship.kind !== 'labGraduatedToBuild',
+    (relationship) =>
+      relationship.kind !== 'labGraduatedToBuild' && relationship.kind !== 'teamContributedToEntry',
   );
   const workRelationshipGroups =
     entity.type === 'work'
-      ? [
-          {
-            title: 'Engineering foundations',
-            relationships: connected.filter((item) => item.target.type === 'build'),
-          },
-          {
-            title: 'Reusable foundations',
-            relationships: connected.filter((item) => item.target.type === 'blueprint'),
-          },
-          {
-            title: 'Connected investigations',
-            relationships: connected.filter((item) => item.target.type === 'lab'),
-          },
-          {
-            title: 'Engineering notes',
-            relationships: connected.filter((item) => item.target.type === 'note'),
-          },
-        ].filter((group) => group.relationships.length)
+      ? groupRelationshipsByType(connected, [
+          { type: 'build', title: 'Engineering foundations' },
+          { type: 'blueprint', title: 'Reusable foundations' },
+          { type: 'lab', title: 'Connected investigations' },
+          { type: 'note', title: 'Engineering notes' },
+          { type: 'career', title: 'Open roles' },
+        ])
       : [];
   const buildRelationshipGroups =
     entity.type === 'build'
-      ? [
-          {
-            title: 'Applied in client work',
-            relationships: connected.filter((item) => item.target.type === 'work'),
-          },
-          {
-            title: 'Connected investigations',
-            relationships: connected.filter((item) => item.target.type === 'lab'),
-          },
-        ].filter((group) => group.relationships.length)
+      ? groupRelationshipsByType(connected, [
+          { type: 'work', title: 'Applied in client work' },
+          { type: 'lab', title: 'Connected investigations' },
+          { type: 'note', title: 'Engineering notes' },
+          { type: 'career', title: 'Open roles' },
+        ])
       : [];
   const labRelationshipGroups =
     entity.type === 'lab'
-      ? [
-          {
-            title: 'Related Builds',
-            relationships: connected.filter((item) => item.target.type === 'build'),
-          },
-          {
-            title: 'Related Blueprints',
-            relationships: connected.filter((item) => item.target.type === 'blueprint'),
-          },
-        ].filter((group) => group.relationships.length)
+      ? groupRelationshipsByType(connected, [
+          { type: 'build', title: 'Related Builds' },
+          { type: 'blueprint', title: 'Related Blueprints' },
+          { type: 'note', title: 'Engineering notes' },
+          { type: 'career', title: 'Open roles' },
+        ])
       : [];
   const blueprintRelationshipGroups =
     entity.type === 'blueprint'
-      ? [
-          {
-            title: 'Proven in client work',
-            relationships: connected.filter((item) => item.target.type === 'work'),
-          },
-          {
-            title: 'Connected products',
-            relationships: connected.filter((item) => item.target.type === 'build'),
-          },
-          {
-            title: 'Explored in Labs',
-            relationships: connected.filter((item) => item.target.type === 'lab'),
-          },
-          {
-            title: 'Engineering notes',
-            relationships: connected.filter((item) => item.target.type === 'note'),
-          },
-        ].filter((group) => group.relationships.length)
+      ? groupRelationshipsByType(connected, [
+          { type: 'work', title: 'Proven in client work' },
+          { type: 'build', title: 'Connected products' },
+          { type: 'lab', title: 'Explored in Labs' },
+          { type: 'note', title: 'Engineering notes' },
+        ])
       : [];
 
   return (

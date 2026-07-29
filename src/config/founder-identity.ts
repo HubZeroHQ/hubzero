@@ -1,9 +1,17 @@
 /**
  * The Founder Engineering Identity System (Phase 23) — a deliberate, scoped
- * exception to DESIGN_SYSTEM.md's single-amber-accent rule. It applies only
- * to a founder's own Engineering Profile route and the About founder card
- * that leads into it; every other public surface stays monochrome + amber.
- * See ENGINEERING_IDENTITY.md's "Founder accent exception" note.
+ * exception to DESIGN_SYSTEM.md's single-amber-accent rule, for editorial
+ * identity content only. It applies to: a founder's own Engineering Profile
+ * route (`compositions/*.tsx`, plus this route's own bespoke composition
+ * classes like `.founder-eyebrow`/`.founder-pinout` — these render nowhere
+ * else); the About founder card that leads into it; and the smaller
+ * cross-reference tier a founder's name gets wherever it's credited outside
+ * their own profile (`FounderCrossLink`, e.g. a Notes byline) — the same
+ * accent plus a compact motif variant, never a functional-state color.
+ * Every other public surface (Homepage explicitly, by its own documented
+ * exception in `EditorialPrimitives.tsx`'s `RelationshipCard`) stays
+ * monochrome + amber. See ENGINEERING_IDENTITY.md's "Founder identity scope"
+ * section for the full boundary and rationale.
  *
  * This is static, hand-authored, and permanent by design (PUBLIC brief:
  * "the visual identity should never be editable — only editorial content
@@ -67,7 +75,6 @@ export function getFounderIdentity(slug: string): FounderIdentity | undefined {
 export function founderAccentStyle(accent: string): Record<string, string> {
   return {
     '--founder-accent': accent,
-    '--founder-accent-subtle': hexToRgba(accent, 0.12),
   };
 }
 
@@ -75,16 +82,9 @@ export function founderAccentStyle(accent: string): Record<string, string> {
  * Same value applied to the motif element on the About founder card and on
  * the Engineering Profile hero — the two elements a supported browser's
  * View Transitions API needs to treat as one continuous object across the
- * navigation. See useFounderMotifTransition (engineering/useFounderMotifTransition.ts).
+ * navigation. See `FounderProfileLink` (engineering/FounderProfileLink.tsx),
+ * which wraps the navigation in `document.startViewTransition`.
  */
 export function founderMotifViewTransitionStyle(slug: string): Record<string, string> {
   return { viewTransitionName: `founder-motif-${slug}` };
-}
-
-function hexToRgba(hex: string, alpha: number): string {
-  const value = hex.replace('#', '');
-  const r = parseInt(value.slice(0, 2), 16);
-  const g = parseInt(value.slice(2, 4), 16);
-  const b = parseInt(value.slice(4, 6), 16);
-  return `rgb(${r} ${g} ${b} / ${alpha})`;
 }

@@ -9,6 +9,7 @@ import {
 import type {
   ImmutablePublic,
   PublicEntitySummary,
+  PublicEntityType,
   PublicRelationship,
   PublicTaxonomyTerm,
 } from '@/lib/public/domain';
@@ -436,6 +437,27 @@ export function RelationshipGroup({
       </div>
     </section>
   );
+}
+
+/**
+ * Buckets a flat relationships array into named groups by `target.type`,
+ * dropping any group with zero matches — the shape every `RelationshipGroup`
+ * caller needs before it can render one. Previously reimplemented
+ * identically as a local `{type, title}` map + filter + drop-empty in
+ * `profile-shared.tsx`, `NoteDetail.tsx`, and `CareerDetail.tsx`.
+ */
+export function groupRelationshipsByType<TType extends PublicEntityType>(
+  relationships: readonly ImmutablePublic<PublicRelationship>[],
+  groups: readonly { type: TType; title: string }[],
+): { type: TType; title: string; relationships: readonly ImmutablePublic<PublicRelationship>[] }[] {
+  return groups
+    .map((group) => ({
+      ...group,
+      relationships: relationships.filter(
+        (relationship) => relationship.target.type === group.type,
+      ),
+    }))
+    .filter((group) => group.relationships.length > 0);
 }
 
 export function formatMetadata(value: string): string {

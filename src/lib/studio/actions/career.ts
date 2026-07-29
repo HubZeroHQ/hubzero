@@ -14,6 +14,7 @@ import {
 } from '@/lib/studio/generate-content-actions';
 import { careerRepository } from '@/lib/db/repositories/career';
 import { CAREER_RELATED_ENTRY_FIELDS } from '@/lib/studio/career-relations';
+import { readEntriesFromFormData } from '@/lib/studio/relation-fields';
 import type { CareerInput } from '@/lib/validation/career';
 import type { Career } from '@/types/studio';
 
@@ -37,9 +38,7 @@ function readLineList(formData: FormData, key: string): string[] {
 
 /** Merges the form's four typed relation pickers into one `relatedEntries` array — the inverse of `career-relations.ts`'s `splitCareerRelatedEntries`. */
 function readCareerRelatedEntries(formData: FormData): CareerInput['relatedEntries'] {
-  return CAREER_RELATED_ENTRY_FIELDS.flatMap(({ key, field }) =>
-    formData.getAll(field).map((id) => ({ ownerType: key, ownerId: String(id) })),
-  );
+  return readEntriesFromFormData(formData, CAREER_RELATED_ENTRY_FIELDS);
 }
 
 function readCareerMetadataFields(formData: FormData) {

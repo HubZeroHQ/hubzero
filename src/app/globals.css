@@ -20,11 +20,15 @@
   --color-surface-default: #141414;
   --color-surface-elevated: #1c1c1c;
   --color-surface-overlay: #141414;
+  /* §7 Inputs & Textareas — "fill lightens marginally" on focus; distinct from --color-surface-elevated. */
+  --color-surface-input-focus: #171717;
 
   /* Borders — edges of surfaces, never decoration (§2 Border language) */
   --color-border-default: #262626;
   --color-border-muted: #1c1c1c;
   --color-border-strong: #3a3a3a;
+  /* §7 Tags/Badges' and Inputs' own literal border value — distinct from --color-border-default, not a duplicate of it. */
+  --color-border-subtle: #2a2a2a;
 
   /* Text */
   --color-text-primary: #ffffff;
@@ -53,6 +57,8 @@
   --ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
   --duration-fast: 200ms;
   --duration-considered: 400ms;
+  /* Press feedback (§6: "100-120ms, scale(.96-.97) only for pressable controls") — its own token since it's a distinct physical "click" timing, not a generalization of --duration-fast. */
+  --duration-press: 110ms;
 
   /*
    * The one documented chapter-specific exception to the 500ms motion
@@ -202,7 +208,8 @@
     transition:
       color var(--duration-fast) var(--ease-standard),
       background-color var(--duration-fast) var(--ease-standard),
-      transform 110ms linear;
+      filter var(--duration-fast) var(--ease-standard),
+      transform var(--duration-press) linear;
   }
 
   .public-nav-brand {
@@ -219,6 +226,11 @@
   .public-nav-brand:hover {
     color: var(--color-text-primary);
     background: var(--color-surface-elevated);
+  }
+
+  /* §7 Buttons: "primary brightens (brightness(1.08))" on hover — this pill is the nav's one solid/primary affordance, so it gets that treatment instead of the transparent-to-filled hover the other nav items use. */
+  .public-nav-contact:hover {
+    filter: brightness(1.08);
   }
 
   .public-nav-link[aria-current='page'] {
@@ -253,7 +265,7 @@
       width var(--duration-fast) var(--ease-standard),
       color var(--duration-fast) var(--ease-standard),
       background-color var(--duration-fast) var(--ease-standard),
-      transform 110ms linear;
+      transform var(--duration-press) linear;
   }
 
   .public-nav-search:hover,
@@ -441,7 +453,7 @@
     transition:
       background-color var(--duration-fast) var(--ease-standard),
       border-color var(--duration-fast) var(--ease-standard),
-      transform 110ms linear;
+      transform var(--duration-press) linear;
   }
 
   .public-button-secondary:hover {
@@ -793,7 +805,7 @@
     margin-top: 32px;
     font-size: 14px;
     font-weight: 600;
-    transition: transform 110ms linear;
+    transition: transform var(--duration-press) linear;
   }
 
   /*
@@ -812,7 +824,7 @@
     text-underline-offset: 6px;
     transition:
       text-decoration-color var(--duration-fast) var(--ease-standard),
-      transform 110ms linear;
+      transform var(--duration-press) linear;
   }
 
   .home-text-link:hover {
@@ -825,7 +837,7 @@
     background: var(--color-text-primary);
     color: var(--color-bg-base);
     transition:
-      transform 110ms linear,
+      transform var(--duration-press) linear,
       opacity var(--duration-fast) var(--ease-standard);
   }
 
@@ -1032,6 +1044,7 @@
   .public-build-state {
     display: inline-flex;
     align-items: center;
+    gap: 6px;
     width: fit-content;
     padding: 3px 8px;
     border: 1px solid var(--color-border-default);
@@ -1044,6 +1057,19 @@
     line-height: 1;
     letter-spacing: 0.06em;
     text-transform: uppercase;
+  }
+
+  /* §7 Status Indicators: "small filled dot (6-9px) + mono label... never animate a status dot with a persistent pulse/glow." */
+  .public-build-state::before {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--color-text-muted);
+    content: '';
+  }
+
+  .public-build-state[data-tone='active']::before {
+    background: var(--color-success);
   }
 
   .public-build-state[data-tone='historical'] {
@@ -1575,7 +1601,7 @@
       border-color var(--duration-fast) var(--ease-standard),
       background-color var(--duration-fast) var(--ease-standard),
       color var(--duration-fast) var(--ease-standard),
-      transform 110ms linear;
+      transform var(--duration-press) linear;
   }
 
   .collection-filter:hover {
@@ -1856,12 +1882,12 @@
     transition:
       border-color var(--duration-fast) var(--ease-standard),
       background-color var(--duration-fast) var(--ease-standard),
-      transform 110ms linear;
+      transform var(--duration-press) linear;
   }
 
   .detail-actions a:hover {
     border-color: var(--color-border-strong);
-    background: var(--color-surface-default);
+    background: var(--color-surface-elevated);
   }
 
   .detail-actions a:active,
@@ -1963,7 +1989,7 @@
     cursor: pointer;
     transition:
       text-decoration-color var(--duration-fast) var(--ease-standard),
-      transform 110ms linear;
+      transform var(--duration-press) linear;
   }
 
   .blueprint-features-toggle:hover {
@@ -1979,6 +2005,15 @@
     border: 1px solid var(--color-border-default);
     border-radius: var(--radius-card);
     background: var(--color-surface-default);
+  }
+
+  .career-detail-list {
+    margin-top: 12px;
+    padding-left: 18px;
+    list-style: disc;
+    color: var(--color-text-secondary);
+    font-size: 14px;
+    line-height: 1.7;
   }
 
   .detail-progress-grid h3,
@@ -2111,7 +2146,7 @@
     text-underline-offset: 6px;
     transition:
       text-decoration-color var(--duration-fast) var(--ease-standard),
-      transform 110ms linear;
+      transform var(--duration-press) linear;
   }
 
   .detail-footer a:hover {
@@ -2398,14 +2433,22 @@
     margin-bottom: 0;
   }
 
+  /*
+   * `margin-bottom`/`border-width` change instantly at the same trigger
+   * instead of easing alongside `max-height`/`opacity`/`padding` — they
+   * mostly affect spacing between items, not this item's own visible
+   * content, so dropping them from the transition list cuts two of five
+   * simultaneously-animating layout properties with no visible cost.
+   * `max-height` itself is unavoidable here (a real, variable-height text
+   * reveal, not a candidate for a `transform`-only technique that would
+   * visually compress the type) for this rare, mobile-only interaction.
+   */
   .blueprint-features li.blueprint-feature-overflow {
     max-height: 200px;
     transition:
       max-height var(--duration-considered) var(--ease-standard),
       opacity var(--duration-fast) var(--ease-standard),
-      padding var(--duration-considered) var(--ease-standard),
-      margin-bottom var(--duration-considered) var(--ease-standard),
-      border-width var(--duration-considered) var(--ease-standard);
+      padding var(--duration-considered) var(--ease-standard);
   }
 
   .blueprint-features ul[data-state='collapsed'] li.blueprint-feature-overflow {
@@ -2819,7 +2862,7 @@
     transition:
       color var(--duration-fast) var(--ease-standard),
       background-color var(--duration-fast) var(--ease-standard),
-      transform 110ms linear;
+      transform var(--duration-press) linear;
   }
 
   .public-search-dialog-header > button:hover {
@@ -3065,7 +3108,7 @@
     font-weight: 600;
     transition:
       filter var(--duration-fast) var(--ease-standard),
-      transform 110ms linear;
+      transform var(--duration-press) linear;
   }
 
   .search-input-wrap button:hover {
@@ -3298,6 +3341,7 @@
   .contact-hero-grid,
   .services-close-grid,
   .contact-brief-grid,
+  .careers-interest-grid,
   .home-services-grid {
     display: grid;
     gap: 48px;
@@ -3370,6 +3414,7 @@
   .services-engagement,
   .services-process,
   .contact-brief,
+  .careers-interest,
   .home-services {
     padding-block: clamp(72px, 8vw, 112px);
     border-top: 1px solid var(--color-border-muted);
@@ -3383,6 +3428,7 @@
   .services-close h2,
   .contact-brief-grid > header h2,
   .home-services-grid h2,
+  .careers-interest-grid h2,
   .contact-confirmation h2 {
     max-width: 19ch;
     margin-top: 20px;
@@ -3756,6 +3802,7 @@
 
   .services-close-grid,
   .contact-brief-grid,
+  .careers-interest-grid,
   .home-services-grid {
     grid-template-columns: minmax(220px, 0.7fr) minmax(0, 1.6fr);
     gap: clamp(64px, 8vw, 128px);
@@ -3818,6 +3865,11 @@
 
   .home-card:hover,
   .home-card:has(a:focus-visible) {
+    transform: none;
+  }
+
+  .about-person-linkable:hover,
+  .about-person-linkable:focus-within {
     transform: none;
   }
 }
@@ -4119,11 +4171,18 @@
   .about-person-linkable {
     position: relative;
     cursor: pointer;
+    transition:
+      transform var(--duration-considered) var(--ease-standard),
+      border-color var(--duration-fast) var(--ease-standard),
+      box-shadow var(--duration-considered) var(--ease-standard);
   }
 
+  /* Same lift treatment as `.home-card` — this is a full click target like any other card (§7 Cards: "lift 4-6px"). */
   .about-person-linkable:hover,
   .about-person-linkable:focus-within {
     border-color: var(--founder-accent, var(--color-border-strong));
+    transform: translateY(-4px);
+    box-shadow: 0 28px 56px -28px rgb(0 0 0 / 0.68);
   }
 
   .about-person-linkable .about-person-content a::after {
@@ -4439,11 +4498,11 @@
     padding: 7px 10px;
     border: 1px solid var(--color-border-default);
     border-radius: 100px;
-    background: var(--color-surface-default);
+    background: var(--color-surface-elevated);
     color: var(--color-text-secondary);
     font-family: var(--font-mono);
     font-size: 10px;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.05em;
     text-transform: uppercase;
   }
 

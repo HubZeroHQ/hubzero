@@ -7,17 +7,7 @@ import type { DocumentRole, OwnerType } from '@/lib/documents/schema';
 import { zodErrorToFieldErrors } from '@/lib/validation/form-errors';
 import type { EntryActionState } from './entry-actions';
 import { invalidatePublicEntity } from '@/lib/public/cache';
-import type { PublicEntityType } from '@/lib/public/domain';
-
-const PUBLIC_TYPE_BY_OWNER: Partial<Record<OwnerType, PublicEntityType>> = {
-  Work: 'work',
-  Build: 'build',
-  Blueprint: 'blueprint',
-  Lab: 'lab',
-  Note: 'note',
-  EngineeringProfile: 'engineeringProfile',
-  Career: 'career',
-};
+import { OWNER_TO_PUBLIC_TYPE } from '@/lib/public/repository';
 
 /**
  * The Document Engine (§25) is already schema/persistence-shared across
@@ -77,7 +67,7 @@ export function createDocumentSaveAction<TOwner extends OwnableEntry & { slug: s
     }
 
     revalidatePath(config.detailPath(ownerId));
-    const publicType = PUBLIC_TYPE_BY_OWNER[config.ownerType];
+    const publicType = OWNER_TO_PUBLIC_TYPE[config.ownerType];
     if (publicType) invalidatePublicEntity(publicType, owner.slug);
     return {};
   };

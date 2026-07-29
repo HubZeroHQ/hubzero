@@ -253,6 +253,18 @@ export function About({
           </Link>
         </PageContainer>
       </footer>
+
+      <footer className="about-close">
+        <PageContainer className="about-close-grid">
+          <div>
+            <p className="home-eyebrow">Careers / join the record</p>
+            <h2>Interested in building with HubZero?</h2>
+          </div>
+          <Link href={publicRoute.collection('career')}>
+            View Careers <span aria-hidden="true">→</span>
+          </Link>
+        </PageContainer>
+      </footer>
     </main>
   );
 }

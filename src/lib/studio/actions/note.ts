@@ -14,6 +14,7 @@ import {
 } from '@/lib/studio/generate-content-actions';
 import { noteRepository } from '@/lib/db/repositories/note';
 import { RELATED_ENTRY_FIELDS } from '@/lib/studio/note-relations';
+import { readEntriesFromFormData } from '@/lib/studio/relation-fields';
 import type { NoteInput } from '@/lib/validation/note';
 import type { Note } from '@/types/studio';
 
@@ -28,9 +29,7 @@ function readOptionalString(formData: FormData, key: string): string | undefined
 
 /** Merges the form's four typed relation pickers into one `relatedEntries` array (§24) — the inverse of `note-relations.ts`'s `splitRelatedEntries`. */
 function readRelatedEntries(formData: FormData): NoteInput['relatedEntries'] {
-  return RELATED_ENTRY_FIELDS.flatMap(({ key, field }) =>
-    formData.getAll(field).map((id) => ({ ownerType: key, ownerId: String(id) })),
-  );
+  return readEntriesFromFormData(formData, RELATED_ENTRY_FIELDS);
 }
 
 function readNoteMetadataFields(formData: FormData) {
