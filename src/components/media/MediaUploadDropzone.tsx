@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { Field } from '@/components/ui/Field';
 import { Input } from '@/components/ui/Input';
 import type { MediaAssetDTO } from '@/lib/media/dto';
-import { uploadToCloudinary, UploadError } from '@/lib/media/upload-client';
+import { uploadToCloudinary, UploadError, validateImageFile } from '@/lib/media/upload-client';
 import {
   createMediaFromUploadAction,
   requestUploadSignatureAction,
@@ -53,6 +53,28 @@ export function MediaUploadDropzone({
     async (file: File) => {
       const key = `${file.name}-${file.size}-${Date.now()}-${Math.random()}`;
       const previewUrl = URL.createObjectURL(file);
+
+      // Validated before the item ever reaches "uploading" — an invalid
+      // file (wrong type, or dragged in past the picker's `accept` filter)
+      // never starts a request, and its error shows immediately rather than
+      // after a doomed round trip to Cloudinary.
+      const validationError = validateImageFile(file);
+      if (validationError) {
+        setItems((prev) => [
+          ...prev,
+          {
+            key,
+            file,
+            previewUrl,
+            status: 'error',
+            progress: 0,
+            altText: '',
+            error: validationError,
+          },
+        ]);
+        return;
+      }
+
       setItems((prev) => [
         ...prev,
         { key, file, previewUrl, status: 'uploading', progress: 0, altText: '' },

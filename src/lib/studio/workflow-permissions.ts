@@ -9,18 +9,22 @@ import type { PublishStatus, UserRole } from '@/types/studio';
  * collections runs the exact same state machine, so this is the single
  * place "who can move what" is decided, never a per-collection guess.
  *
- * `published -> archived` reuses `publish` rather than inventing a new
- * capability — §29 never names a distinct "archive" capability, and the
- * people who may publish are the same people who may retire an entry from
- * public view. Head Admin's unpublish override (any state back to `draft`)
- * is handled separately by `unpublishOverride`, not modeled as a forward
- * transition here.
+ * `published -> archived` and `archived -> draft` ("Restore") both reuse
+ * `publish` rather than inventing new capabilities — §29 never names a
+ * distinct "archive" or "restore" capability, and the people who may
+ * publish are the same people who may retire an entry from public view or
+ * bring it back. Head Admin's unpublish override (`published`/`approved`/
+ * `inReview` back to `draft`, for states with no other defined path) is
+ * handled separately by `unpublishOverride`, not modeled as a forward
+ * transition here — `archived` no longer needs that escape hatch now that
+ * it has a real modeled transition of its own (see `canUnpublishOverride`).
  */
 const TRANSITION_CAPABILITY: Record<string, Capability> = {
   'draft->inReview': 'submitForReview',
   'inReview->approved': 'approve',
   'approved->published': 'publish',
   'published->archived': 'publish',
+  'archived->draft': 'publish',
 };
 
 export function capabilityForTransition(from: PublishStatus, to: PublishStatus): Capability | null {
@@ -53,9 +57,18 @@ export function getAvailableTransitions(
   });
 }
 
-/** Whether `role` may invoke Head Admin's unpublish override on `current` — Head Admin always passes `requireEntryCapability` via `editAnyEntry`, so no separate entry check is needed here. */
+/**
+ * Whether `role` may invoke Head Admin's unpublish override on `current` —
+ * Head Admin always passes `requireEntryCapability` via `editAnyEntry`, so
+ * no separate entry check is needed here. `archived` is excluded: it now has
+ * its own modeled, non-override "Restore" transition (`archived -> draft`,
+ * gated by `publish` via `capabilityForTransition`), so the blanket override
+ * would otherwise just be a redundant second button doing the same thing.
+ */
 export function canUnpublishOverride(current: PublishStatus, role: UserRole): boolean {
-  return current !== 'draft' && roleHasCapability(role, 'unpublishOverride');
+  return (
+    current !== 'draft' && current !== 'archived' && roleHasCapability(role, 'unpublishOverride')
+  );
 }
 
 /**

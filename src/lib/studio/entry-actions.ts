@@ -153,19 +153,26 @@ export function createEntryUpdateAction<
 }
 
 /**
- * Moves an entry through the shared publish workflow (§28). Three kinds of
+ * Moves an entry through the shared publish workflow (§28). Two kinds of
  * backward move are distinguished from the normal forward transitions
  * (checked against `PUBLISH_WORKFLOW_TRANSITIONS` and the capability that
- * gates each one, `workflow-permissions.ts`):
+ * gates each one, `workflow-permissions.ts`) — a third, `archived -> draft`
+ * ("Restore"), is *not* special-cased and instead falls through to the same
+ * generic branch as Approve/Publish/Archive, since `PUBLISH_WORKFLOW_TRANSITIONS`
+ * now models it as a real forward transition:
  *
  * - **Reject** (`inReview -> draft`): the explicit re-review path. Requires
  *   the same `approve` capability as moving an entry forward from review,
  *   plus a required, non-empty reviewer note that's stored on the entry so
  *   the author sees why it was sent back.
- * - **Unpublish override** (`draft`-bound from any other non-draft status,
- *   when it isn't a reject): Head Admin's blanket escape hatch (§29), no
- *   note required.
- * - Every other `to` is a normal forward transition.
+ * - **Unpublish override** (`draft`-bound from `published`/`approved`/
+ *   `inReview` — the states with no other defined path back): Head Admin's
+ *   blanket escape hatch (§29), no note required. Excludes `archived`, which
+ *   has its own non-override path now (see below), so this must be checked
+ *   *after* ruling out reject and restore, not merely "any non-draft status".
+ * - Every other `to`, including `archived -> draft`, is a normal forward
+ *   transition validated against `isValidPublishTransition` +
+ *   `capabilityForTransition` like any other step in the workflow.
  */
 export function createEntryTransitionAction<
   TRecord extends OwnableEntry & { status: PublishStatus; slug: string },
@@ -191,7 +198,8 @@ export function createEntryTransitionAction<
     }
 
     const isReject = to === 'draft' && existing.status === 'inReview';
-    const isOverride = to === 'draft' && existing.status !== 'draft' && !isReject;
+    const isRestore = to === 'draft' && existing.status === 'archived';
+    const isOverride = to === 'draft' && existing.status !== 'draft' && !isReject && !isRestore;
 
     try {
       if (isReject) {

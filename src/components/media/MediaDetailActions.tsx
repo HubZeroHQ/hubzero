@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { Dialog } from '@/components/ui/Dialog';
 import type { MediaAssetDTO } from '@/lib/media/dto';
 import type { MediaUsageRef } from '@/lib/media/usage';
-import { uploadToCloudinary } from '@/lib/media/upload-client';
+import { uploadToCloudinary, validateImageFile } from '@/lib/media/upload-client';
 import {
   deleteMediaAction,
   replaceMediaAssetFileAction,
@@ -39,6 +39,11 @@ export function MediaDetailActions({
 
   async function handleReplaceFile(file: File) {
     setReplaceError(undefined);
+    const validationError = validateImageFile(file);
+    if (validationError) {
+      setReplaceError(validationError);
+      return;
+    }
     setReplaceProgress(0);
     try {
       const params = await requestUploadSignatureAction(asset.folder);
