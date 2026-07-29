@@ -47,7 +47,11 @@ const contentSecurityPolicy = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' https://res.cloudinary.com data: blob:",
   "font-src 'self'",
-  `connect-src 'self'${isDev ? ' ws: wss:' : ''}`,
+  // `api.cloudinary.com` is required because uploads go directly
+  // browser→Cloudinary (`lib/media/upload-client.ts`) — our server only
+  // issues a signature, it never proxies the file — so the browser itself
+  // must be allowed to open that connection.
+  `connect-src 'self' https://api.cloudinary.com${isDev ? ' ws: wss:' : ''}`,
   "frame-src 'none'",
   "frame-ancestors 'none'",
   "object-src 'none'",
