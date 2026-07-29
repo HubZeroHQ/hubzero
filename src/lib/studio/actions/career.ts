@@ -107,6 +107,7 @@ export const transitionCareerStatusAction = createEntryTransitionAction<Career>(
   setStatus: (id, status, reviewNote) =>
     careerRepository.update(id, { status, reviewNote: reviewNote ?? null }),
   detailPath: careerDetailPath,
+  listPath: CAREERS_LIST_PATH,
   publicType: 'career',
 });
 

@@ -77,6 +77,7 @@ export const transitionEngineeringProfileStatusAction =
     setStatus: (id, status, reviewNote) =>
       engineeringProfileRepository.update(id, { status, reviewNote: reviewNote ?? null }),
     detailPath,
+    listPath: LIST_PATH,
     publicType: 'engineeringProfile',
   });
 

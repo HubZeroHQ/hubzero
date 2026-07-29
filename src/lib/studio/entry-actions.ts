@@ -177,6 +177,7 @@ export function createEntryTransitionAction<
     reviewNote?: string | null,
   ) => Promise<TRecord | null>;
   detailPath: (id: string) => string;
+  listPath: string;
   publicType?: PublicEntityType;
 }) {
   return async function transitionAction(
@@ -218,7 +219,12 @@ export function createEntryTransitionAction<
 
     await config.setStatus(id, to, isReject ? note!.trim() : null);
     if (config.publicType) invalidatePublicEntity(config.publicType, existing.slug);
+    // Both the detail page just acted on and the collection list (whose
+    // status column/filters go stale otherwise) need invalidating — a
+    // Link/back-button return to the list would otherwise serve the
+    // pre-transition Router Cache entry until a hard reload.
     revalidatePath(config.detailPath(id));
+    revalidatePath(config.listPath);
     return {};
   };
 }

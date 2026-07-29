@@ -85,6 +85,7 @@ export const transitionWorkStatusAction = createEntryTransitionAction<Work>({
   setStatus: (id, status, reviewNote) =>
     workRepository.update(id, { status, reviewNote: reviewNote ?? null }),
   detailPath: workDetailPath,
+  listPath: WORK_LIST_PATH,
   publicType: 'work',
 });
 

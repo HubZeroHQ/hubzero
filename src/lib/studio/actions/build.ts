@@ -99,6 +99,7 @@ export const transitionBuildStatusAction = createEntryTransitionAction<Build>({
   setStatus: (id, status, reviewNote) =>
     buildRepository.update(id, { status, reviewNote: reviewNote ?? null }),
   detailPath: buildDetailPath,
+  listPath: BUILDS_LIST_PATH,
   publicType: 'build',
 });
 

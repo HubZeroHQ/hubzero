@@ -122,6 +122,7 @@ export const transitionLabStatusAction = createEntryTransitionAction<Lab>({
   setStatus: (id, status, reviewNote) =>
     labRepository.update(id, { status, reviewNote: reviewNote ?? null }),
   detailPath: labDetailPath,
+  listPath: LABS_LIST_PATH,
   publicType: 'lab',
 });
 

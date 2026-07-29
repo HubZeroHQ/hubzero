@@ -94,6 +94,7 @@ export const transitionNoteStatusAction = createEntryTransitionAction<Note>({
   setStatus: (id, status, reviewNote) =>
     noteRepository.update(id, { status, reviewNote: reviewNote ?? null }),
   detailPath: noteDetailPath,
+  listPath: NOTES_LIST_PATH,
   publicType: 'note',
 });
 
