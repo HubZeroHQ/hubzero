@@ -18,7 +18,7 @@ import { revalidatePath } from 'next/cache';
 import { auth } from '@/lib/auth';
 import { createEntryTransitionAction } from './entry-actions';
 
-function mockSession(role: 'headAdmin') {
+function mockSession(role: 'headAdmin' | 'admin' | 'member') {
   vi.mocked(auth).mockResolvedValue({
     user: { role, id: 'user-1' },
   } as unknown as Awaited<ReturnType<typeof auth>>);
@@ -73,5 +73,51 @@ describe('createEntryTransitionAction', () => {
     expect(setStatus).toHaveBeenCalledWith('entry-2', 'draft', 'Needs another pass.');
     expect(vi.mocked(revalidatePath)).toHaveBeenCalledWith('/studio/content/notes/entry-2');
     expect(vi.mocked(revalidatePath)).toHaveBeenCalledWith('/studio/content/notes');
+  });
+
+  describe('Restore (archived -> draft)', () => {
+    it('succeeds for Admin, who has publish but not unpublishOverride — proves restore is classified as a normal forward transition, not swallowed by the Head-Admin-only override branch', async () => {
+      vi.mocked(revalidatePath).mockClear();
+      mockSession('admin');
+
+      const record = { _id: 'entry-3', status: 'archived' as const, slug: 'entry-3' };
+      const setStatus = vi.fn().mockResolvedValue({ ...record, status: 'draft' });
+      const findById = vi.fn().mockResolvedValue(record);
+
+      const transitionAction = createEntryTransitionAction({
+        findById,
+        setStatus,
+        detailPath: (id) => `/studio/content/blueprints/${id}`,
+        listPath: '/studio/content/blueprints',
+      });
+
+      const result = await transitionAction('entry-3', 'draft');
+
+      expect(result).toEqual({});
+      // No note required for Restore, unlike Reject.
+      expect(setStatus).toHaveBeenCalledWith('entry-3', 'draft', null);
+      expect(vi.mocked(revalidatePath)).toHaveBeenCalledWith('/studio/content/blueprints/entry-3');
+      expect(vi.mocked(revalidatePath)).toHaveBeenCalledWith('/studio/content/blueprints');
+    });
+
+    it('is rejected for Member, who lacks `publish`', async () => {
+      mockSession('member');
+
+      const record = { _id: 'entry-4', status: 'archived' as const, slug: 'entry-4' };
+      const setStatus = vi.fn();
+      const findById = vi.fn().mockResolvedValue(record);
+
+      const transitionAction = createEntryTransitionAction({
+        findById,
+        setStatus,
+        detailPath: (id) => `/studio/content/blueprints/${id}`,
+        listPath: '/studio/content/blueprints',
+      });
+
+      const result = await transitionAction('entry-4', 'draft');
+
+      expect(result.error).toBeTruthy();
+      expect(setStatus).not.toHaveBeenCalled();
+    });
   });
 });

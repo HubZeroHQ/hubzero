@@ -23,6 +23,26 @@ const STATUS_ANNOUNCEMENT: Record<PublishStatus, string> = {
 };
 
 /**
+ * `TRANSITION_LABEL`/`STATUS_ANNOUNCEMENT` are keyed by `to` only, which is
+ * ambiguous for `draft`: reaching it from `archived` ("Restore") reads very
+ * differently than the plain `draft` copy written for other paths — "Save as
+ * draft" implies the viewer is choosing to save in-progress work, not
+ * recovering something retired. This is the one pair (`from`, `to`) that
+ * needs its own copy; every other transition's label/announcement is
+ * unambiguous from `to` alone, so it isn't worth restructuring both maps to
+ * be keyed by the full pair just for this single case.
+ */
+function transitionLabel(from: PublishStatus, to: PublishStatus): string {
+  if (from === 'archived' && to === 'draft') return 'Restore';
+  return TRANSITION_LABEL[to];
+}
+
+function transitionAnnouncement(from: PublishStatus, to: PublishStatus): string {
+  if (from === 'archived' && to === 'draft') return 'Restored to draft.';
+  return STATUS_ANNOUNCEMENT[to];
+}
+
+/**
  * CMS_PRODUCT_DESIGN.md §5/§30 — "the status stepper shows only the
  * transition(s) valid for the acting role, never a five-option dropdown."
  * `availableTransitions`/`canUnpublishOverride`/`canReject` are computed
@@ -65,7 +85,7 @@ export function StatusStepper({
       // Announced via `aria-live` below — a screen-reader user triggering a
       // transition otherwise has no non-visual signal that it succeeded
       // once `router.refresh()` re-renders the stepper with new props.
-      setAnnouncement(STATUS_ANNOUNCEMENT[to]);
+      setAnnouncement(transitionAnnouncement(status, to));
       setRejecting(false);
       setRejectNote('');
       router.refresh();
@@ -101,7 +121,7 @@ export function StatusStepper({
             disabled={isPending}
             onClick={() => handleTransition(to)}
           >
-            {TRANSITION_LABEL[to]}
+            {transitionLabel(status, to)}
           </Button>
         ))}
         {canReject && !rejecting ? (
