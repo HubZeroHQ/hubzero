@@ -26,6 +26,7 @@ const ALL_PUBLIC_TYPES: readonly PublicEntityType[] = [
   'engineeringProfile',
   'teamMember',
   'service',
+  'career',
 ];
 
 function invalidateAllCollections(): void {

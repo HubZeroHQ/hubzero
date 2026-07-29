@@ -11,9 +11,13 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { ReferenceIdBadge } from '@/components/ui/ReferenceIdBadge';
 import { Tag } from '@/components/ui/Tag';
 import { auth } from '@/lib/auth';
-import { canActOnEntry } from '@/lib/auth/permissions';
+import { canEditEntry } from '@/lib/auth/permissions';
 import { transitionBuildStatusAction } from '@/lib/studio/actions/build';
-import { canUnpublishOverride, getAvailableTransitions } from '@/lib/studio/workflow-permissions';
+import {
+  canReject,
+  canUnpublishOverride,
+  getAvailableTransitions,
+} from '@/lib/studio/workflow-permissions';
 import { buildRepository } from '@/lib/db/repositories/build';
 import { documentRepository } from '@/lib/db/repositories/document';
 import { labRepository } from '@/lib/db/repositories/lab';
@@ -47,7 +51,7 @@ export default async function BuildDetailPage({ params }: { params: Promise<{ id
 
   const session = await auth();
   const { role, id: userId } = session!.user;
-  const canEdit = canActOnEntry(build, { role, userId });
+  const canEdit = canEditEntry(build, { role, userId });
 
   const [
     caseStudyDocument,
@@ -132,9 +136,19 @@ export default async function BuildDetailPage({ params }: { params: Promise<{ id
         description={`${DEPLOYMENT_STATE_LABEL[build.deploymentState]}${build.featured ? ' · Featured' : ''}`}
         actions={
           canEdit ? (
-            <ButtonLink href={`/studio/content/builds/${id}/edit`} variant="secondary">
-              Edit
-            </ButtonLink>
+            <>
+              <ButtonLink
+                href={`/api/preview?type=build&id=${id}`}
+                target="_blank"
+                rel="noreferrer"
+                variant="ghost"
+              >
+                Preview
+              </ButtonLink>
+              <ButtonLink href={`/studio/content/builds/${id}/edit`} variant="secondary">
+                Edit
+              </ButtonLink>
+            </>
           ) : undefined
         }
       />
@@ -170,6 +184,8 @@ export default async function BuildDetailPage({ params }: { params: Promise<{ id
           status={build.status}
           availableTransitions={availableTransitions}
           canUnpublishOverride={canOverride}
+          canReject={canReject(build.status, role)}
+          reviewNote={build.reviewNote}
           onTransition={boundTransitionAction}
         />
       </div>

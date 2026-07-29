@@ -97,7 +97,8 @@ export const updateBlueprintAction = createEntryUpdateAction<Blueprint, Blueprin
 
 export const transitionBlueprintStatusAction = createEntryTransitionAction<Blueprint>({
   findById: blueprintRepository.findById,
-  setStatus: (id, status) => blueprintRepository.update(id, { status }),
+  setStatus: (id, status, reviewNote) =>
+    blueprintRepository.update(id, { status, reviewNote: reviewNote ?? null }),
   detailPath: blueprintDetailPath,
   publicType: 'blueprint',
 });

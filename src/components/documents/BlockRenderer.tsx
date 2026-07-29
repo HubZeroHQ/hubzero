@@ -5,18 +5,24 @@ import type { Block } from '@/lib/documents/blocks';
 import { cn } from '@/lib/utils/cn';
 
 /**
- * PLANNING.md §25 — "the same `BlockRenderer` renders a Document... one
- * pipeline, so authored content can never visually diverge." This covers
- * the full 21-block catalog (`lib/documents/blocks.ts`) and is used both by
- * the public Work case study page and by the editor's Preview toggle
- * (`BlockEditor`) — literally the same component tree in both places, per
- * CMS_PRODUCT_DESIGN.md §5.
+ * Studio's read-only rendering of a saved Document — shown on a collection
+ * entry's detail page (`[id]/page.tsx`) so an editor can see what's been
+ * written without opening the block editor. This is deliberately a Studio-
+ * internal admin view, not a promise of what the public site renders: it
+ * uses Studio's own Tailwind-utility design system (dark admin chrome),
+ * operates on the raw editor `Block` union (ids, not resolved objects), and
+ * intentionally does not attempt pixel parity with the public site's
+ * `ProseRenderer`, which runs on the public site's own semantic-class CSS
+ * system (`globals.css`'s `.public-*` classes) against the fully-resolved
+ * `PublicBlock` projection. Merging the two would mean loading one design
+ * system's stylesheet into the other's context, or rewriting the public
+ * renderer to look like a Studio admin panel — a real regression either way.
  *
- * `technologyLabels` is optional and resolves a `technologyStack` block's
- * Taxonomy references to real labels when the caller already has them
- * loaded (Work's detail/edit pages do, from `taxonomyRepository`); falling
- * back to the raw id keeps the block renderable rather than broken when a
- * caller hasn't threaded that data through yet.
+ * The actual trust boundary this file used to (incorrectly) claim to serve —
+ * "what will visitors see if I publish this" — is answered instead by the
+ * true page preview (`/api/preview`, Next.js Draft Mode), which renders the
+ * exact public route through `ProseRenderer`, not this component. See the
+ * Experience v3 Preview Integrity milestone.
  */
 export function BlockRenderer({
   blocks,
@@ -61,12 +67,24 @@ function BlockView({
     case 'heading': {
       const { level, text } = block.data;
       if (level === 2) {
-        return <h2 className="text-text-primary text-xl font-semibold">{text}</h2>;
+        return (
+          <h2 id={block.id} className="text-text-primary text-xl font-semibold">
+            {text}
+          </h2>
+        );
       }
       if (level === 3) {
-        return <h3 className="text-text-primary text-lg font-semibold">{text}</h3>;
+        return (
+          <h3 id={block.id} className="text-text-primary text-lg font-semibold">
+            {text}
+          </h3>
+        );
       }
-      return <h4 className="text-text-primary text-base font-semibold">{text}</h4>;
+      return (
+        <h4 id={block.id} className="text-text-primary text-base font-semibold">
+          {text}
+        </h4>
+      );
     }
     case 'paragraph':
       return <p className="text-text-secondary text-sm leading-relaxed">{block.data.text}</p>;
@@ -95,9 +113,17 @@ function BlockView({
       );
     case 'code':
       return (
-        <pre className="bg-surface-default rounded-card border-border-muted overflow-x-auto border p-3 text-xs">
-          <code>{block.data.code}</code>
-        </pre>
+        <figure className="flex flex-col gap-1">
+          <figcaption className="text-text-muted font-mono text-[10px] tracking-[0.05em] uppercase">
+            {block.data.language}
+          </figcaption>
+          <pre
+            className="bg-surface-default rounded-card border-border-muted overflow-x-auto border p-3 text-xs"
+            aria-label={`${block.data.language} code example`}
+          >
+            <code>{block.data.code}</code>
+          </pre>
+        </figure>
       );
     case 'image': {
       const { url, altText, caption, width, height } = block.data;

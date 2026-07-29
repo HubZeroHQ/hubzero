@@ -57,3 +57,14 @@ export function getAvailableTransitions(
 export function canUnpublishOverride(current: PublishStatus, role: UserRole): boolean {
   return current !== 'draft' && roleHasCapability(role, 'unpublishOverride');
 }
+
+/**
+ * Whether `role` may reject an entry currently `inReview` back to `draft`
+ * with a required reviewer note — the explicit re-review path, distinct from
+ * Head Admin's blanket, note-less `unpublishOverride`. Gated by the same
+ * `approve` capability as moving the entry forward, since a rejection is the
+ * other half of the same review decision.
+ */
+export function canReject(current: PublishStatus, role: UserRole): boolean {
+  return current === 'inReview' && roleHasCapability(role, 'approve');
+}

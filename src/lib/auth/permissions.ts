@@ -1,6 +1,6 @@
 import type { ObjectId } from 'mongodb';
 import { type Capability, roleHasCapability } from '@/config/permissions';
-import type { UserRole } from '@/types/studio';
+import type { PublishStatus, UserRole } from '@/types/studio';
 import { auth } from './index';
 
 export class UnauthorizedError extends Error {
@@ -98,4 +98,47 @@ export function canActOnEntry(entry: OwnableEntry, session: SessionIdentity): bo
     roleHasCapability(role, 'editAssignedEntry') && entry.assignedToUserId?.toString() === userId;
 
   return isAnyEntryEditor || isOwner || isAssignee;
+}
+
+/** The subset of a workflow entry's fields the status-aware edit gate reads. */
+export interface StatusGatedEntry extends OwnableEntry {
+  status: PublishStatus;
+}
+
+/**
+ * `canActOnEntry`'s ownership check, plus one additional rule: once an entry
+ * is `published`, editing it is held to the same gate as publishing itself —
+ * a Member who owns a published entry can no longer silently rewrite it;
+ * only a role with `publish` capability (Admin, Head Admin) can, and doing
+ * so forces the entry back through review (`createEntryUpdateAction` resets
+ * its status to `inReview`). Every collection's detail/edit page should use
+ * this instead of `canActOnEntry` directly — see `requireEntryEditCapability`
+ * for the throwing, server-action-side counterpart.
+ */
+export function canEditEntry(entry: StatusGatedEntry, session: SessionIdentity): boolean {
+  if (entry.status === 'published' && !roleHasCapability(session.role, 'publish')) {
+    return false;
+  }
+  return canActOnEntry(entry, session);
+}
+
+/** The throwing sibling of `canEditEntry`, mirroring `requireEntryCapability`'s relationship to `canActOnEntry`. */
+export async function requireEntryEditCapability(
+  entry: StatusGatedEntry,
+): Promise<SessionIdentity> {
+  const session = await auth();
+  if (!session) {
+    throw new UnauthorizedError();
+  }
+
+  const identity = { role: session.user.role, userId: session.user.id };
+  if (!canEditEntry(entry, identity)) {
+    throw new ForbiddenError(
+      entry.status === 'published'
+        ? 'Editing a published entry requires publish permission.'
+        : `Role "${session.user.role}" cannot act on this entry.`,
+    );
+  }
+
+  return identity;
 }

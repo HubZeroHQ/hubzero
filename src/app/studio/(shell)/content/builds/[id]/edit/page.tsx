@@ -6,7 +6,7 @@ import { DocumentRoleTabs } from '@/components/documents/DocumentRoleTabs';
 import { ButtonLink } from '@/components/ui/ButtonLink';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { auth } from '@/lib/auth';
-import { canActOnEntry } from '@/lib/auth/permissions';
+import { canEditEntry } from '@/lib/auth/permissions';
 import {
   generateBuildCaseStudyBlockAction,
   generateBuildCaseStudyDocumentAction,
@@ -37,7 +37,7 @@ export default async function EditBuildPage({ params }: { params: Promise<{ id: 
 
   const session = await auth();
   const { role, id: userId } = session!.user;
-  const canEdit = canActOnEntry(build, { role, userId });
+  const canEdit = canEditEntry(build, { role, userId });
 
   if (!canEdit) {
     return (
@@ -133,6 +133,7 @@ export default async function EditBuildPage({ params }: { params: Promise<{ id: 
             },
           ]}
           technologyOptions={technologyOptions}
+          previewHref={`/api/preview?type=build&id=${id}`}
         />
       </section>
     </div>

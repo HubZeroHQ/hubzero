@@ -9,9 +9,13 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { ReferenceIdBadge } from '@/components/ui/ReferenceIdBadge';
 import { Tag } from '@/components/ui/Tag';
 import { auth } from '@/lib/auth';
-import { canActOnEntry } from '@/lib/auth/permissions';
+import { canEditEntry } from '@/lib/auth/permissions';
 import { transitionWorkStatusAction } from '@/lib/studio/actions/work';
-import { canUnpublishOverride, getAvailableTransitions } from '@/lib/studio/workflow-permissions';
+import {
+  canReject,
+  canUnpublishOverride,
+  getAvailableTransitions,
+} from '@/lib/studio/workflow-permissions';
 import { blueprintRepository } from '@/lib/db/repositories/blueprint';
 import { buildRepository } from '@/lib/db/repositories/build';
 import { labRepository } from '@/lib/db/repositories/lab';
@@ -31,7 +35,7 @@ export default async function WorkDetailPage({ params }: { params: Promise<{ id:
 
   const session = await auth();
   const { role, id: userId } = session!.user;
-  const canEdit = canActOnEntry(work, { role, userId });
+  const canEdit = canEditEntry(work, { role, userId });
 
   const [document, technologies, categories, builds, blueprints, labs, team] = await Promise.all([
     documentRepository.findByOwnerAndRole('Work', id, 'caseStudy'),
@@ -83,9 +87,19 @@ export default async function WorkDetailPage({ params }: { params: Promise<{ id:
         description={`${work.clientType} · ${work.timeline} · ${work.role}`}
         actions={
           canEdit ? (
-            <ButtonLink href={`/studio/content/work/${id}/edit`} variant="secondary">
-              Edit
-            </ButtonLink>
+            <>
+              <ButtonLink
+                href={`/api/preview?type=work&id=${id}`}
+                target="_blank"
+                rel="noreferrer"
+                variant="ghost"
+              >
+                Preview
+              </ButtonLink>
+              <ButtonLink href={`/studio/content/work/${id}/edit`} variant="secondary">
+                Edit
+              </ButtonLink>
+            </>
           ) : undefined
         }
       />
@@ -110,6 +124,8 @@ export default async function WorkDetailPage({ params }: { params: Promise<{ id:
           status={work.status}
           availableTransitions={availableTransitions}
           canUnpublishOverride={canOverride}
+          canReject={canReject(work.status, role)}
+          reviewNote={work.reviewNote}
           onTransition={boundTransitionAction}
         />
       </div>

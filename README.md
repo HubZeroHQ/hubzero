@@ -55,6 +55,8 @@ public/           Static assets served from the web root.
 
 Architecture, design, product, and operations documentation lives in [`docs/`](docs/README.md). Start there rather than in this file — this README stays high-level by design.
 
+See [`CHANGELOG.md`](CHANGELOG.md) for release history.
+
 ---
 
 ## Development

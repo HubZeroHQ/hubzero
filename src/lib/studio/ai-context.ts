@@ -2,6 +2,7 @@ import type { ObjectId } from 'mongodb';
 import type { GenerationEntryMetadata, RelatedEntrySummary } from '@/lib/ai/types';
 import { blueprintRepository } from '@/lib/db/repositories/blueprint';
 import { buildRepository } from '@/lib/db/repositories/build';
+import { careerRepository } from '@/lib/db/repositories/career';
 import { labRepository } from '@/lib/db/repositories/lab';
 import { noteRepository } from '@/lib/db/repositories/note';
 import { taxonomyRepository } from '@/lib/db/repositories/taxonomy';
@@ -9,7 +10,12 @@ import { teamRepository } from '@/lib/db/repositories/team';
 import { engineeringProfileRepository } from '@/lib/db/repositories/engineering-profile';
 import { workRepository } from '@/lib/db/repositories/work';
 import type { DocumentRole, OwnerType } from '@/lib/documents/schema';
-import type { EntryReference, EvidenceOwnerType } from '@/types/studio';
+import type {
+  CareerEntryReference,
+  CareerEvidenceOwnerType,
+  EntryReference,
+  EvidenceOwnerType,
+} from '@/types/studio';
 
 /**
  * Assembles a generation request's entry context (Context Awareness in the
@@ -69,6 +75,37 @@ async function resolveEntryReferences(entries: EntryReference[]): Promise<Relate
   }
   const resolved = await Promise.all(
     Array.from(idsByType.entries()).map(([ownerType, ids]) => resolveRelatedByType(ownerType, ids)),
+  );
+  return resolved.flat();
+}
+
+/** Career's related-entry union includes Note, which `RELATED_ENTRY_REPOSITORIES` above doesn't cover — a small parallel resolver rather than widening that map for every other collection's sake. */
+const CAREER_RELATED_ENTRY_REPOSITORIES: Record<
+  CareerEvidenceOwnerType,
+  { findById: (id: string) => Promise<{ title?: string; name?: string } | null> }
+> = {
+  Work: workRepository,
+  Build: buildRepository,
+  Lab: labRepository,
+  Note: noteRepository,
+};
+
+async function resolveCareerEntryReferences(
+  entries: CareerEntryReference[],
+): Promise<RelatedEntrySummary[]> {
+  const idsByType = new Map<CareerEvidenceOwnerType, ObjectId[]>();
+  for (const entry of entries) {
+    idsByType.set(entry.ownerType, [...(idsByType.get(entry.ownerType) ?? []), entry.ownerId]);
+  }
+  const resolved = await Promise.all(
+    Array.from(idsByType.entries()).map(async ([ownerType, ids]) => {
+      if (ids.length === 0) return [];
+      const repository = CAREER_RELATED_ENTRY_REPOSITORIES[ownerType];
+      const records = await Promise.all(ids.map((id) => repository.findById(id.toString())));
+      return records
+        .filter((record): record is NonNullable<typeof record> => record !== null)
+        .map((record) => ({ ownerType, title: record.title ?? record.name ?? 'Untitled' }));
+    }),
   );
   return resolved.flat();
 }
@@ -189,6 +226,23 @@ export async function buildGenerationEntryMetadata(
         referenceId: entry.referenceId,
         summary: entry.overview,
         technologies: await resolveTechnologyLabels(entry.technologyIds),
+      };
+    }
+    case 'Career': {
+      const entry = await careerRepository.findById(ownerId);
+      if (!entry) throw new GenerationEntryNotFoundError();
+      const [technologies, relatedEntries] = await Promise.all([
+        resolveTechnologyLabels(entry.technologyIds),
+        resolveCareerEntryReferences(entry.relatedEntries),
+      ]);
+      return {
+        ownerType,
+        role,
+        title: entry.title,
+        referenceId: entry.referenceId,
+        summary: entry.summary,
+        technologies,
+        relatedEntries,
       };
     }
     default: {

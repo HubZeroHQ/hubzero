@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import type { ImmutablePublic, PublicEntityDetail } from '@/lib/public/domain';
 import { publicRoute } from '@/lib/public/routes';
-import { DetailSectionHeading } from '../EditorialPrimitives';
+import { DetailSectionHeading, groupRelationshipsByType } from '../EditorialPrimitives';
 import { EvidenceGraph } from '../evidence-graph';
 import { PageContainer, PublicSection } from '../PageContainer';
 import { ProseRenderer } from '../ProseRenderer';
@@ -44,6 +44,7 @@ const RELATIONSHIP_GROUPS = [
   { type: 'lab', title: 'Related Labs' },
   { type: 'blueprint', title: 'Related Blueprints' },
   { type: 'note', title: 'Authored Notes' },
+  { type: 'career', title: 'Hiring for' },
 ] as const;
 
 export function resolveDocuments(profile: ImmutablePublic<EngineeringProfile>) {
@@ -54,12 +55,7 @@ export function resolveDocuments(profile: ImmutablePublic<EngineeringProfile>) {
 }
 
 export function resolveRelationshipGroups(profile: ImmutablePublic<EngineeringProfile>) {
-  return RELATIONSHIP_GROUPS.map((group) => ({
-    ...group,
-    relationships: profile.relationships.filter(
-      (relationship) => relationship.target.type === group.type,
-    ),
-  })).filter((group) => group.relationships.length);
+  return groupRelationshipsByType(profile.relationships, RELATIONSHIP_GROUPS);
 }
 
 /**

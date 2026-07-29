@@ -6,7 +6,7 @@ import { BlockEditor } from '@/components/documents/BlockEditor';
 import { ButtonLink } from '@/components/ui/ButtonLink';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { auth } from '@/lib/auth';
-import { canActOnEntry } from '@/lib/auth/permissions';
+import { canEditEntry } from '@/lib/auth/permissions';
 import {
   generateWorkCaseStudyBlockAction,
   generateWorkCaseStudyDocumentAction,
@@ -30,7 +30,7 @@ export default async function EditWorkPage({ params }: { params: Promise<{ id: s
 
   const session = await auth();
   const { role, id: userId } = session!.user;
-  const canEdit = canActOnEntry(work, { role, userId });
+  const canEdit = canEditEntry(work, { role, userId });
 
   if (!canEdit) {
     return (
@@ -113,6 +113,7 @@ export default async function EditWorkPage({ params }: { params: Promise<{ id: s
           onSave={boundSaveDocumentAction}
           technologyOptions={technologyOptions}
           ai={caseStudyAiConfig}
+          previewHref={`/api/preview?type=work&id=${id}`}
         />
       </section>
     </div>

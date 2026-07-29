@@ -6,7 +6,7 @@ import { DocumentRoleTabs } from '@/components/documents/DocumentRoleTabs';
 import { ButtonLink } from '@/components/ui/ButtonLink';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { auth } from '@/lib/auth';
-import { canActOnEntry } from '@/lib/auth/permissions';
+import { canEditEntry } from '@/lib/auth/permissions';
 import {
   generateLabEngineeringJournalBlockAction,
   generateLabEngineeringJournalDocumentAction,
@@ -51,7 +51,7 @@ export default async function EditLabPage({ params }: { params: Promise<{ id: st
 
   const session = await auth();
   const { role, id: userId } = session!.user;
-  const canEdit = canActOnEntry(lab, { role, userId });
+  const canEdit = canEditEntry(lab, { role, userId });
 
   if (!canEdit) {
     return (
@@ -200,6 +200,7 @@ export default async function EditLabPage({ params }: { params: Promise<{ id: st
             },
           ]}
           technologyOptions={technologyOptions}
+          previewHref={`/api/preview?type=lab&id=${id}`}
         />
       </section>
     </div>

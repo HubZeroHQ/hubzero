@@ -1,7 +1,13 @@
 import Link from 'next/link';
-import { PUBLIC_ENTITY_ROUTES, PUBLIC_HOME, PUBLIC_SITE } from '@/config/public-site';
+import {
+  PUBLIC_ENTITY_ROUTES,
+  PUBLIC_HOME,
+  PUBLIC_NAVIGATION,
+  PUBLIC_SITE,
+} from '@/config/public-site';
 import type {
   ImmutablePublic,
+  PublicHomepageFeature,
   PublicHomepageProjection,
   PublicServiceSummary,
 } from '@/lib/public/domain';
@@ -13,6 +19,22 @@ import { EvidenceGraph, EvidenceGraphFocusSync } from '../evidence-graph';
 import { EditorialCard } from './EditorialCard';
 
 const relationshipRoutes: Readonly<Record<string, boolean>> = PUBLIC_ENTITY_ROUTES;
+const ledgerEnabled = Boolean(PUBLIC_NAVIGATION.find((item) => item.type === 'ledger')?.enabled);
+
+/**
+ * The Evidence Graph's node-and-line grammar is reserved for genuine
+ * cross-collection relationships (originated in, applied in, generalized
+ * as) — never reused for a plain contributor credit, which `EditorialCard`
+ * already renders as its own quiet metadata row. Without this filter, the
+ * lead feature's `teamContributedToEntry` relationships would render as
+ * graph nodes here *and* as a text row on the card below it — the same
+ * credit shown twice, at two different visual weights.
+ */
+function evidenceGraphRelationships(
+  relationships: ImmutablePublic<PublicHomepageFeature>['relationships'],
+) {
+  return relationships.filter((relationship) => relationship.kind !== 'teamContributedToEntry');
+}
 
 export function Homepage({
   projection,
@@ -81,11 +103,11 @@ export function Homepage({
               description="Products designed, engineered, and maintained inside HubZero."
             />
             <EvidenceGraphFocusSync>
-              {builds[0]?.relationships.length ? (
+              {builds[0] && evidenceGraphRelationships(builds[0].relationships).length ? (
                 <div className="home-section-artifact">
                   <EvidenceGraph
                     subject={{ label: builds[0].entity.title, meta: 'Build' }}
-                    relationships={builds[0].relationships}
+                    relationships={evidenceGraphRelationships(builds[0].relationships)}
                   />
                 </div>
               ) : null}
@@ -120,11 +142,11 @@ export function Homepage({
               description="Client work is shown through the decisions and outcomes that can be verified."
             />
             <EvidenceGraphFocusSync>
-              {work[0]?.relationships.length ? (
+              {work[0] && evidenceGraphRelationships(work[0].relationships).length ? (
                 <div className="home-section-artifact">
                   <EvidenceGraph
                     subject={{ label: work[0].entity.title, meta: 'Work' }}
-                    relationships={work[0].relationships}
+                    relationships={evidenceGraphRelationships(work[0].relationships)}
                   />
                 </div>
               ) : null}
@@ -185,6 +207,17 @@ export function Homepage({
               }
               description="Dated investigations and technical notes, included only while they remain current."
             />
+            {/*
+              Ledger doesn't appear in primary navigation (Design
+              Specification §5) — this section surfaces the same underlying
+              data the Ledger presents in full, so it's the natural place to
+              point a visitor toward the complete chronological record.
+            */}
+            {ledgerEnabled ? (
+              <Link href={publicRoute.ledger()} className="home-text-link">
+                See the full chronological record <span aria-hidden="true">→</span>
+              </Link>
+            ) : null}
             {currentTimeline.length ? (
               <div className="home-section-artifact">
                 <AxisDiagram
@@ -365,15 +398,17 @@ function OperatingSystem() {
           }
           description="Ideas can move between research, products, client application, and reusable foundations. Relationships record the paths that actually happened."
         />
-        <div className="home-section-artifact">
-          <AxisDiagram
-            label="Operating model"
-            items={PUBLIC_HOME.pillars.map((pillar, index) => ({
-              label: String(index + 1).padStart(2, '0'),
-              value: pillar.label,
-            }))}
-          />
-        </div>
+        {/*
+          Deliberately no diagram here. A numbered, line-connected axis
+          (the same primitive used for the Blueprint spec sheet and the
+          publication timeline below) would draw this as a sequence with a
+          start and an end — but the model is a recurring one: a Blueprint
+          can inform new Work, a Lab can restart from a lesson a Note
+          surfaced. The plain, ordered list below states the relationship
+          in words instead of asserting a tidier shape than what's real.
+          Revisit once cross-collection relationship density is real enough
+          to render this as an honest, data-derived graph instead.
+        */}
         <ol className="home-pillar-list">
           {PUBLIC_HOME.pillars.map((pillar, index) => {
             const enabled = PUBLIC_ENTITY_ROUTES[pillar.type];

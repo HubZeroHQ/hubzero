@@ -46,6 +46,11 @@ const relationships = [
     label: 'Authored notes',
     target: { type: 'note' as const, title: 'Ownership first', url: '/notes/ownership-first' },
   },
+  {
+    kind: 'careerHiringManager' as const,
+    label: 'Hiring for',
+    target: { type: 'career' as const, title: 'Senior Engineer', url: '/careers/senior-engineer' },
+  },
 ];
 
 describe('public Engineering Profiles experience', () => {
@@ -108,6 +113,16 @@ describe('public Engineering Profiles experience', () => {
     expect(markup).toContain('Position and practice');
     expect(markup).toContain('<h3 id="boundaries">Boundaries before implementation</h3>');
     expect(markup).toContain('How HubZero operates');
+
+    // Milestone 4 (Relationship Integrity): a group a grouping array had
+    // previously forgotten (Career→Profile) now surfaces, and the same
+    // relationships array is what the graph draws — so it must appear there too.
+    expect(markup).toContain('Hiring for');
+    expect(markup).toContain('href="/careers/senior-engineer"');
+    const graphAriaLabel = markup.match(
+      /class="evidence-graph" role="img" aria-label="([^"]*)"/,
+    )?.[1];
+    expect(graphAriaLabel).toContain('Senior Engineer');
   });
 
   it.each([

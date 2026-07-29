@@ -10,10 +10,14 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { ReferenceIdBadge } from '@/components/ui/ReferenceIdBadge';
 import { Tag } from '@/components/ui/Tag';
 import { auth } from '@/lib/auth';
-import { canActOnEntry } from '@/lib/auth/permissions';
+import { canEditEntry } from '@/lib/auth/permissions';
 import { transitionBlueprintStatusAction } from '@/lib/studio/actions/blueprint';
 import { getBlueprintReferencingWork } from '@/lib/studio/blueprint-relations';
-import { canUnpublishOverride, getAvailableTransitions } from '@/lib/studio/workflow-permissions';
+import {
+  canReject,
+  canUnpublishOverride,
+  getAvailableTransitions,
+} from '@/lib/studio/workflow-permissions';
 import { blueprintRepository } from '@/lib/db/repositories/blueprint';
 import { documentRepository } from '@/lib/db/repositories/document';
 import { resolveHeroAndGallery } from '@/lib/media/resolve';
@@ -31,7 +35,7 @@ export default async function BlueprintDetailPage({ params }: { params: Promise<
 
   const session = await auth();
   const { role, id: userId } = session!.user;
-  const canEdit = canActOnEntry(blueprint, { role, userId });
+  const canEdit = canEditEntry(blueprint, { role, userId });
 
   const [
     caseStudyDocument,
@@ -67,9 +71,19 @@ export default async function BlueprintDetailPage({ params }: { params: Promise<
         description={`${blueprint.architecture} · ${blueprint.designLanguage} · v${blueprint.version}${blueprint.featured ? ' · Featured' : ''}`}
         actions={
           canEdit ? (
-            <ButtonLink href={`/studio/content/blueprints/${id}/edit`} variant="secondary">
-              Edit
-            </ButtonLink>
+            <>
+              <ButtonLink
+                href={`/api/preview?type=blueprint&id=${id}`}
+                target="_blank"
+                rel="noreferrer"
+                variant="ghost"
+              >
+                Preview
+              </ButtonLink>
+              <ButtonLink href={`/studio/content/blueprints/${id}/edit`} variant="secondary">
+                Edit
+              </ButtonLink>
+            </>
           ) : undefined
         }
       />
@@ -114,6 +128,8 @@ export default async function BlueprintDetailPage({ params }: { params: Promise<
           status={blueprint.status}
           availableTransitions={availableTransitions}
           canUnpublishOverride={canOverride}
+          canReject={canReject(blueprint.status, role)}
+          reviewNote={blueprint.reviewNote}
           onTransition={boundTransitionAction}
         />
       </div>

@@ -88,6 +88,8 @@ The canonical two speed bands remain:
 - No bounce, elastic overshoot, ambient float, or spring behavior that reads as playful instability.
 - No public transition exceeds 500ms without an approved, documented chapter-specific reason.
 
+**The one approved exception**: the founder motif's mount-time construction draw (`--duration-motif: 900ms` in `globals.css`, `AssembleStroke`/`PathBuilder` in `src/components/public/motion/assemble.tsx`) on a founder's own Engineering Profile route. This is a single signature moment per profile, drawn once on arrival — not a recurring interaction — matching the "Construct" pattern above ("an Engineering Profile transition retains the person's identity while evidence modules assemble around it"). The About card's own copy of the same motif is a separate, shorter-lived hover/focus reveal (an interruptible CSS `transition`, not this mount animation) and does not carry this exception — see `ENGINEERING_IDENTITY.md`'s "Founder identity scope" for the full boundary.
+
 Delay is generally zero. Small sequencing delays are allowed only when they express dependency. Never stagger long lists; the visitor already understands list order.
 
 ## Pattern specifications

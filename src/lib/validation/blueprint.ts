@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { objectIdString, publishStatusSchema, slugSchema } from './shared';
+import { objectIdString, publishStatusSchema, reviewNoteSchema, slugSchema } from './shared';
 
 /**
  * PLANNING.md §26.3. `name` is validated against the mandatory
@@ -14,6 +14,7 @@ export const blueprintSchema = z.object({
   name: z.string().regex(blueprintNamePattern, 'Must follow the Blueprint-X-Y naming convention'),
   slug: slugSchema,
   status: publishStatusSchema.default('draft'),
+  reviewNote: reviewNoteSchema,
   architecture: z.string().min(1),
   designLanguage: z.string().min(1),
   shortDescription: z.string().min(1),

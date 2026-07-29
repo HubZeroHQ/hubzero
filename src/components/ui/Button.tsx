@@ -26,8 +26,13 @@ const variantClasses: Record<ButtonVariant, string> = {
 export function buttonClassName(variant: ButtonVariant, className?: string): string {
   return cn(
     'rounded-control inline-flex min-h-11 items-center justify-center gap-2 px-4 text-sm font-semibold',
-    'duration-fast ease-standard transition-[filter,background-color,border-color,transform]',
-    'active:scale-[0.97] disabled:pointer-events-none disabled:opacity-40',
+    'duration-fast ease-standard transition-[filter,background-color,border-color,transform,opacity]',
+    // Press feedback gets its own dedicated timing (§6: "100-120ms... only for pressable controls"),
+    // not the general 200ms interaction duration used for hover/color changes above. Swapping
+    // transition-duration/-timing-function via the same :active state that changes the transform
+    // means the scale specifically animates at the press speed without a second transition rule.
+    'active:scale-[0.97] active:duration-press active:ease-linear',
+    'disabled:pointer-events-none disabled:opacity-40',
     variantClasses[variant],
     className,
   );

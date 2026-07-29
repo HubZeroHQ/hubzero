@@ -2,6 +2,8 @@ import { ObjectId } from 'mongodb';
 import { describe, expect, it } from 'vitest';
 import type {
   Blueprint,
+  Build,
+  Career,
   EngineeringProfile,
   MediaAsset,
   Note,
@@ -728,5 +730,293 @@ describe('public repository boundary', () => {
     expect(first?.target.referenceId).toBe('HZ-TM-301');
     expect(second?.target.referenceId).toBe('HZ-TM-302');
     expect(first?.target.referenceId).not.toBe(second?.target.referenceId);
+  });
+});
+
+describe('preview bypass (Experience v3 Preview Integrity milestone)', () => {
+  function draftWork(slug: string): { work: Work; document: DocumentRecord } {
+    const substantialText = Array.from({ length: 48 }, (_, index) => `evidence-${index}`).join(' ');
+    const work: Work = {
+      _id: new ObjectId(),
+      createdAt: now,
+      updatedAt: now,
+      createdByUserId: creator,
+      status: 'draft',
+      slug,
+      referenceId: 'HZ-WK-401',
+      title: 'Unpublished case study',
+      summary: 'A case study still being written.',
+      clientType: 'Product team',
+      categoryTagIds: [],
+      timeline: '4 weeks',
+      role: 'Product engineering',
+      technologyIds: [],
+      relatedBuildIds: [],
+      relatedBlueprintIds: [],
+      relatedLabIds: [],
+      contributors: [],
+    };
+    const document: DocumentRecord = {
+      _id: new ObjectId(),
+      ownerType: 'Work',
+      ownerId: work._id,
+      role: 'caseStudy',
+      blocks: [{ id: 'one', type: 'paragraph', data: { text: substantialText } }],
+      createdAt: now,
+      updatedAt: now,
+    };
+    return { work, document };
+  }
+
+  it('hides a draft entity from a normal findDetail call, exactly as before', async () => {
+    const { work, document } = draftWork('preview-hidden');
+    const repository = createPublicRepository(
+      fakeSource({ entities: [entity('work', work)], documents: [document] }),
+    );
+    expect(await repository.findDetail('work', work.slug)).toBeNull();
+  });
+
+  it('reveals that same draft entity when { preview: true } is passed', async () => {
+    const { work, document } = draftWork('preview-revealed');
+    const repository = createPublicRepository(
+      fakeSource({ entities: [entity('work', work)], documents: [document] }),
+    );
+    const detail = await repository.findDetail('work', work.slug, { preview: true });
+    expect(detail).not.toBeNull();
+    expect(detail?.type).toBe('work');
+  });
+
+  it("does not bypass a related entity's own visibility while previewing the subject", async () => {
+    const { work, document } = draftWork('preview-with-draft-relation');
+    const draftBuild: Build = {
+      _id: new ObjectId(),
+      createdAt: now,
+      updatedAt: now,
+      createdByUserId: creator,
+      status: 'draft',
+      slug: 'still-draft-build',
+      referenceId: 'HZ-BL-401',
+      title: 'Still-draft Build',
+      summary: 'Not ready yet.',
+      deploymentState: 'live',
+      technologyIds: [],
+      relatedWorkIds: [],
+      galleryImageIds: [],
+      featured: false,
+      contributors: [],
+    };
+    work.relatedBuildIds = [draftBuild._id];
+    const repository = createPublicRepository(
+      fakeSource({
+        entities: [entity('work', work), entity('build', draftBuild)],
+        documents: [document],
+      }),
+    );
+    const detail = await repository.findDetail('work', work.slug, { preview: true });
+    expect(detail).not.toBeNull();
+    expect(
+      detail?.relationships.some(
+        (relationship) => relationship.target.title === 'Still-draft Build',
+      ),
+    ).toBe(false);
+  });
+
+  it("still requires the linked Team to be publicProfile for a previewed Engineering Profile — bypassStatus only bypasses the profile's own status", async () => {
+    const hiddenTeam: Team = {
+      _id: new ObjectId(),
+      referenceId: 'HZ-TM-401',
+      name: 'Not yet public engineer',
+      role: 'Systems engineer',
+      bio: 'Builds explicit public systems.',
+      group: 'Engineering',
+      publicProfile: false,
+      founder: false,
+      publicCategory: 'leadership',
+      engineeringProfileEligible: true,
+      order: 0,
+      socialLinks: [],
+      archived: false,
+      createdAt: now,
+      updatedAt: now,
+    };
+    const draftProfile: EngineeringProfile = {
+      _id: new ObjectId(),
+      createdAt: now,
+      updatedAt: now,
+      createdByUserId: creator,
+      status: 'draft',
+      slug: 'draft-profile-hidden-team',
+      referenceId: 'EP-401',
+      teamMemberId: hiddenTeam._id,
+      overview: 'Builds public systems around explicit ownership and observable state.',
+      engineeringPhilosophy: 'Make the evidence boundary explicit before implementation.',
+      currentExploration: 'Deterministic public read models',
+      areasOfExpertise: ['Public data architecture'],
+      currentInterests: ['Dependency graphs'],
+      engineeringIdentity: [],
+      technologyIds: [],
+      featuredWorkIds: [],
+      featuredBuildIds: [],
+      featuredBlueprintIds: [],
+      featuredLabIds: [],
+      featuredNoteIds: [],
+      galleryImageIds: [],
+    };
+    const repository = createPublicRepository(
+      fakeSource({
+        entities: [entity('teamMember', hiddenTeam), entity('engineeringProfile', draftProfile)],
+      }),
+    );
+    const detail = await repository.findDetail('engineeringProfile', draftProfile.slug, {
+      preview: true,
+    });
+    expect(detail).toBeNull();
+  });
+});
+
+describe('Careers (Experience v3 Careers milestone)', () => {
+  it('participates in the relationship system: relatedEntries and hiringManagerTeamId resolve as real relationships', async () => {
+    const hiringManager: Team = {
+      _id: new ObjectId(),
+      referenceId: 'HZ-TM-501',
+      name: 'Hiring Manager',
+      role: 'Engineering Lead',
+      bio: 'Builds and hires for explicit public systems.',
+      group: 'Engineering',
+      publicProfile: true,
+      founder: false,
+      publicCategory: 'team',
+      engineeringProfileEligible: false,
+      order: 0,
+      socialLinks: [],
+      archived: false,
+      createdAt: now,
+      updatedAt: now,
+    };
+    const relatedWork: Work = {
+      _id: new ObjectId(),
+      createdAt: now,
+      updatedAt: now,
+      createdByUserId: creator,
+      status: 'published',
+      slug: 'career-related-work',
+      referenceId: 'HZ-WK-501',
+      title: 'Related Work',
+      summary: 'A published case study this role would touch.',
+      clientType: 'Product team',
+      categoryTagIds: [],
+      timeline: '8 weeks',
+      role: 'Product engineering',
+      technologyIds: [],
+      relatedBuildIds: [],
+      relatedBlueprintIds: [],
+      relatedLabIds: [],
+      contributors: [],
+    };
+    const career: Career = {
+      _id: new ObjectId(),
+      createdAt: now,
+      updatedAt: now,
+      createdByUserId: creator,
+      status: 'published',
+      slug: 'senior-engineer',
+      referenceId: 'HZ-CR-001',
+      title: 'Senior Engineer',
+      location: 'Remote',
+      employmentType: 'fullTime',
+      experienceLevel: 'senior',
+      summary: 'A published, open role.',
+      responsibilities: ['Ship real systems.'],
+      requirements: ['Explicit ownership.'],
+      benefits: ['Real equity.'],
+      applicationProcess: 'Send an email with what you have built.',
+      technologyIds: [],
+      hiringManagerTeamId: hiringManager._id,
+      relatedEntries: [{ ownerType: 'Work', ownerId: relatedWork._id }],
+    };
+    const overviewDocument: DocumentRecord = {
+      _id: new ObjectId(),
+      ownerType: 'Career',
+      ownerId: career._id,
+      role: 'overview',
+      blocks: [
+        { id: 'one', type: 'paragraph', data: { text: 'What the role actually involves.' } },
+      ],
+      createdAt: now,
+      updatedAt: now,
+    };
+    const repository = createPublicRepository(
+      fakeSource({
+        entities: [
+          entity('career', career),
+          entity('teamMember', hiringManager),
+          entity('work', relatedWork),
+        ],
+        documents: [overviewDocument],
+      }),
+    );
+
+    const detail = await repository.findDetail('career', career.slug);
+    expect(detail).not.toBeNull();
+    if (detail?.type !== 'career') throw new Error('Expected a career detail');
+
+    expect(detail.hiringManager?.title).toBe('Hiring Manager');
+    const relatesArtifact = detail.relationships.find(
+      (relationship) => relationship.kind === 'careerRelatesArtifact',
+    );
+    expect(relatesArtifact?.target.title).toBe('Related Work');
+    const hiringManagerRelationship = detail.relationships.find(
+      (relationship) => relationship.kind === 'careerHiringManager',
+    );
+    expect(hiringManagerRelationship?.target.title).toBe('Hiring Manager');
+  });
+
+  it('omits hiringManager when the assigned Team member is not publicly visible', async () => {
+    const hiddenManager: Team = {
+      _id: new ObjectId(),
+      referenceId: 'HZ-TM-502',
+      name: 'Internal Only',
+      role: 'Engineering Lead',
+      bio: 'Not yet public.',
+      group: 'Engineering',
+      publicProfile: false,
+      founder: false,
+      publicCategory: 'team',
+      engineeringProfileEligible: false,
+      order: 0,
+      socialLinks: [],
+      archived: false,
+      createdAt: now,
+      updatedAt: now,
+    };
+    const career: Career = {
+      _id: new ObjectId(),
+      createdAt: now,
+      updatedAt: now,
+      createdByUserId: creator,
+      status: 'published',
+      slug: 'hidden-manager-role',
+      referenceId: 'HZ-CR-002',
+      title: 'Role with an internal-only manager',
+      location: 'Remote',
+      employmentType: 'contract',
+      experienceLevel: 'mid',
+      summary: 'A published, open role.',
+      responsibilities: [],
+      requirements: [],
+      benefits: [],
+      applicationProcess: 'Apply via email.',
+      technologyIds: [],
+      hiringManagerTeamId: hiddenManager._id,
+      relatedEntries: [],
+    };
+    const repository = createPublicRepository(
+      fakeSource({ entities: [entity('career', career), entity('teamMember', hiddenManager)] }),
+    );
+
+    const detail = await repository.findDetail('career', career.slug);
+    expect(detail).not.toBeNull();
+    if (detail?.type !== 'career') throw new Error('Expected a career detail');
+    expect(detail.hiringManager).toBeUndefined();
   });
 });

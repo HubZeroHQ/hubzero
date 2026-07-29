@@ -37,6 +37,8 @@ async function findById(type: PublicEntityType, id: string): Promise<StudioPubli
       return wrap(type, await (await collections.team()).findOne({ _id }));
     case 'service':
       return wrap(type, await (await collections.services()).findOne({ _id }));
+    case 'career':
+      return wrap(type, await (await collections.careers()).findOne({ _id }));
   }
 }
 
@@ -57,6 +59,8 @@ async function findBySlug(
       return wrap(type, await (await collections.notes()).findOne({ slug }));
     case 'engineeringProfile':
       return wrap(type, await (await collections.engineeringProfiles()).findOne({ slug }));
+    case 'career':
+      return wrap(type, await (await collections.careers()).findOne({ slug }));
     case 'teamMember':
     case 'service':
       return null;
@@ -93,6 +97,9 @@ async function list(type: PublicEntityType): Promise<StudioPublicEntity[]> {
       break;
     case 'service':
       records = await (await collections.services()).find({ status: 'published' }).toArray();
+      break;
+    case 'career':
+      records = await (await collections.careers()).find({ status: 'published' }).toArray();
       break;
   }
   return records.map((record) => ({ type, id: record._id.toString(), record }));

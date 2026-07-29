@@ -15,6 +15,7 @@ const SIDEBAR_COLLAPSED_STORAGE_KEY = 'hubzero-studio-sidebar-collapsed';
 interface StudioShellProps {
   role: UserRole;
   hasAssignedLeads: boolean;
+  hasAssignedCandidates: boolean;
   user: { name: string; email: string; role: UserRole };
   children: ReactNode;
 }
@@ -32,13 +33,22 @@ interface StudioShellProps {
  * across the server→client boundary. `getVisibleNav` has no server-only
  * dependency, so constructing it here costs nothing.
  */
-export function StudioShell({ role, hasAssignedLeads, user, children }: StudioShellProps) {
+export function StudioShell({
+  role,
+  hasAssignedLeads,
+  hasAssignedCandidates,
+  user,
+  children,
+}: StudioShellProps) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
 
-  const nav = useMemo(() => getVisibleNav(role, { hasAssignedLeads }), [role, hasAssignedLeads]);
+  const nav = useMemo(
+    () => getVisibleNav(role, { hasAssignedLeads, hasAssignedCandidates }),
+    [role, hasAssignedLeads, hasAssignedCandidates],
+  );
 
   useEffect(() => {
     const stored = window.localStorage.getItem(SIDEBAR_COLLAPSED_STORAGE_KEY);

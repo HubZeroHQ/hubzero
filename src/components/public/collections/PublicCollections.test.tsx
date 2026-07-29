@@ -100,11 +100,17 @@ describe('Builds and Labs public collections', () => {
   });
 
   it('renders Work category filters as URL-addressable server navigation', () => {
+    // A facet with only one real value is deliberately suppressed (Design Spec §Collections),
+    // so this exercises the filter nav with two distinct categories.
+    const categoryFilters = [
+      ...workSummary.categories,
+      { kind: 'category' as const, label: 'Platform engineering', slug: 'platform-engineering' },
+    ];
     const markup = renderToStaticMarkup(
       <PublicCollectionIndex
         type="work"
         entries={[workSummary]}
-        categoryFilters={workSummary.categories}
+        categoryFilters={categoryFilters}
         activeCategory="developer-tools"
       />,
     );
@@ -114,6 +120,18 @@ describe('Builds and Labs public collections', () => {
     expect(markup).toContain('aria-current="page"');
     expect(markup).toContain('Developer tools');
     expect(markup).toContain('href="/work?category=developer-tools"');
+  });
+
+  it('does not render a Work category filter nav when only one real value exists', () => {
+    const markup = renderToStaticMarkup(
+      <PublicCollectionIndex
+        type="work"
+        entries={[workSummary]}
+        categoryFilters={workSummary.categories}
+      />,
+    );
+
+    expect(markup).not.toContain('aria-label="Filter Work by category"');
   });
 
   it('renders Work as a long-form engineering publication with typed continuation paths', () => {
@@ -178,6 +196,11 @@ describe('Builds and Labs public collections', () => {
             role: 'Founder & Full-Stack Engineer',
           },
         },
+        {
+          kind: 'careerRelatesArtifact',
+          label: 'Related opening',
+          target: { type: 'career', title: 'Senior Engineer', url: '/careers/senior-engineer' },
+        },
       ],
       trace: [],
     };
@@ -209,6 +232,20 @@ describe('Builds and Labs public collections', () => {
     expect(markup).not.toContain('Engineering attribution');
     // No trace chain was resolved for this fixture — Trace stays absent, not an empty chapter.
     expect(markup).not.toContain('Trace / causal chain');
+
+    // Milestone 4 (Relationship Integrity): the contributor is shown in the
+    // register, never re-drawn as an evidence-graph node — the graph's own
+    // aria-label (its full accessible summary) must not mention it. A
+    // relationship a grouping array had previously forgotten (Career→Work)
+    // now surfaces as its own group.
+    const graphAriaLabel = markup.match(
+      /class="evidence-graph" role="img" aria-label="([^"]*)"/,
+    )?.[1];
+    expect(graphAriaLabel).toBeDefined();
+    expect(graphAriaLabel).not.toContain('Public Engineer');
+    expect(graphAriaLabel).toContain('Senior Engineer');
+    expect(markup).toContain('Open roles');
+    expect(markup).toContain('href="/careers/senior-engineer"');
   });
 
   it('renders Trace as a chain-mode EvidenceGraph paired with an ordered, focus-synced relationship list', () => {
@@ -307,6 +344,20 @@ describe('Builds and Labs public collections', () => {
             role: 'Backend Engineer',
           },
         },
+        {
+          kind: 'noteDiscussesArtifact',
+          label: 'Discussed in',
+          target: {
+            type: 'note',
+            title: 'Release ledger notes',
+            url: '/notes/release-ledger-notes',
+          },
+        },
+        {
+          kind: 'careerRelatesArtifact',
+          label: 'Related opening',
+          target: { type: 'career', title: 'Senior Engineer', url: '/careers/senior-engineer' },
+        },
       ],
       gallery: [],
     };
@@ -329,6 +380,21 @@ describe('Builds and Labs public collections', () => {
     expect(markup).toContain('Applied in client work');
     expect(markup).toContain('class="evidence-graph-focus-region"');
     expect(markup).toContain('class="evidence-graph"');
+
+    // Milestone 4 (Relationship Integrity): the contributor is register-only,
+    // never re-drawn as an evidence-graph node. Two groups a grouping array
+    // had previously forgotten (Note→Build, Career→Build) now surface.
+    const graphAriaLabel = markup.match(
+      /class="evidence-graph" role="img" aria-label="([^"]*)"/,
+    )?.[1];
+    expect(graphAriaLabel).toBeDefined();
+    expect(graphAriaLabel).not.toContain('Public Engineer');
+    expect(graphAriaLabel).toContain('Release ledger notes');
+    expect(graphAriaLabel).toContain('Senior Engineer');
+    expect(markup).toContain('Engineering notes');
+    expect(markup).toContain('href="/notes/release-ledger-notes"');
+    expect(markup).toContain('Open roles');
+    expect(markup).toContain('href="/careers/senior-engineer"');
   });
 
   it('renders Lab state, milestones, and research Documents in narrative order', () => {
@@ -355,6 +421,16 @@ describe('Builds and Labs public collections', () => {
           kind: 'labRelatedBuild',
           label: 'Related Build',
           target: { type: 'build', title: 'Release Ledger', url: '/builds/release-ledger' },
+        },
+        {
+          kind: 'noteDiscussesArtifact',
+          label: 'Discussed in',
+          target: { type: 'note', title: 'Cache study notes', url: '/notes/cache-study-notes' },
+        },
+        {
+          kind: 'careerRelatesArtifact',
+          label: 'Related opening',
+          target: { type: 'career', title: 'Senior Engineer', url: '/careers/senior-engineer' },
         },
       ],
       graduationCriteria: 'The resolver remains deterministic across every visibility transition.',
@@ -388,6 +464,21 @@ describe('Builds and Labs public collections', () => {
     expect(markup).toContain('class="evidence-graph"');
     // No trace chain was resolved for this fixture — Trace stays absent, not an empty chapter.
     expect(markup).not.toContain('Trace / causal chain');
+
+    // Milestone 4 (Relationship Integrity): the contributor is register-only,
+    // never re-drawn as an evidence-graph node. Two groups a grouping array
+    // had previously forgotten (Note→Lab, Career→Lab) now surface.
+    const graphAriaLabel = markup.match(
+      /class="evidence-graph" role="img" aria-label="([^"]*)"/,
+    )?.[1];
+    expect(graphAriaLabel).toBeDefined();
+    expect(graphAriaLabel).not.toContain('Public Engineer');
+    expect(graphAriaLabel).toContain('Cache study notes');
+    expect(graphAriaLabel).toContain('Senior Engineer');
+    expect(markup).toContain('Engineering notes');
+    expect(markup).toContain('href="/notes/cache-study-notes"');
+    expect(markup).toContain('Open roles');
+    expect(markup).toContain('href="/careers/senior-engineer"');
   });
 
   it('renders a Lab’s forward Trace as a chain-mode EvidenceGraph through Build to Work', () => {

@@ -9,6 +9,7 @@ import {
 import type {
   ImmutablePublic,
   PublicEntitySummary,
+  PublicEntityType,
   PublicRelationship,
   PublicTaxonomyTerm,
 } from '@/lib/public/domain';
@@ -310,12 +311,21 @@ export function PublicationMetadata({ entity }: { entity: ImmutablePublic<Public
 export function RelationshipCard({
   relationship,
   enabled,
+  showFounderAccent = true,
 }: {
   relationship: ImmutablePublic<PublicRelationship>;
   enabled: boolean;
+  /**
+   * The Homepage is held to the strictest reading of the one-accent rule —
+   * no founder-specific color anywhere on it, independent of how the
+   * broader founder-identity system is resolved elsewhere. Every other
+   * caller (detail pages, the Engineering Profiles index) keeps the
+   * existing founder-accent treatment; this only opts a caller *out*.
+   */
+  showFounderAccent?: boolean;
 }) {
   const identity =
-    relationship.target.type === 'engineeringProfile'
+    showFounderAccent && relationship.target.type === 'engineeringProfile'
       ? getFounderIdentity(slugFromProfileUrl(relationship.target.url) ?? '')
       : undefined;
   const href = relationshipHref(relationship);
@@ -370,6 +380,7 @@ export function CappedRelationshipList({
   ariaLabel,
   enabled,
   overflow,
+  showFounderAccent = true,
 }: {
   relationships: readonly ImmutablePublic<PublicRelationship>[];
   limit?: number;
@@ -377,6 +388,8 @@ export function CappedRelationshipList({
   enabled: (relationship: ImmutablePublic<PublicRelationship>) => boolean;
   /** Rendered as the last child inside the same wrapping list, e.g. an "+N more" chip — the one thing that does legitimately differ between callers. */
   overflow?: ReactNode;
+  /** See `RelationshipCard` — passed straight through. */
+  showFounderAccent?: boolean;
 }) {
   const visible = relationships.slice(0, limit);
   if (!visible.length) return null;
@@ -387,6 +400,7 @@ export function CappedRelationshipList({
           key={relationshipKey(relationship)}
           relationship={relationship}
           enabled={enabled(relationship)}
+          showFounderAccent={showFounderAccent}
         />
       ))}
       {overflow}
@@ -423,6 +437,27 @@ export function RelationshipGroup({
       </div>
     </section>
   );
+}
+
+/**
+ * Buckets a flat relationships array into named groups by `target.type`,
+ * dropping any group with zero matches — the shape every `RelationshipGroup`
+ * caller needs before it can render one. Previously reimplemented
+ * identically as a local `{type, title}` map + filter + drop-empty in
+ * `profile-shared.tsx`, `NoteDetail.tsx`, and `CareerDetail.tsx`.
+ */
+export function groupRelationshipsByType<TType extends PublicEntityType>(
+  relationships: readonly ImmutablePublic<PublicRelationship>[],
+  groups: readonly { type: TType; title: string }[],
+): { type: TType; title: string; relationships: readonly ImmutablePublic<PublicRelationship>[] }[] {
+  return groups
+    .map((group) => ({
+      ...group,
+      relationships: relationships.filter(
+        (relationship) => relationship.target.type === group.type,
+      ),
+    }))
+    .filter((group) => group.relationships.length > 0);
 }
 
 export function formatMetadata(value: string): string {

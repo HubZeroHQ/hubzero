@@ -173,7 +173,7 @@ Shared library: `Nav`, `CommandPalette`, `Button`, `Input`, `PillarCard`, `Filte
 
 - `ReferenceIdBadge` — mono-styled permanent ID display, used across every pillar detail page.
 - `LifecycleLinks` — the inline linked stage-names used on the homepage and pillar index callouts.
-- `BlockRenderer` — the single component tree that renders a Document (§25) into the design system's existing typographic language — the one guarantee that CMS-authored content and hand-designed pages never visually diverge.
+- `BlockRenderer` — renders a Document (§25) inside Studio's own admin views (editor canvas, entry detail). **Updated (Experience v3):** the public site renders the same Document data through a separate component, `ProseRenderer`, styled to the public `.public-*` CSS rather than Studio's Tailwind admin chrome — a deliberate split, not a merge candidate. What guarantees "what I'm about to publish matches what ships" is Draft Mode preview (`CMS_PRODUCT_DESIGN.md` §5's updated Preview section), not a shared renderer.
 - `EvidenceLinkList` — the repeated pattern on the Services page tying one service to its linked evidence.
 
 `PillarDetailLayout` is extended, not replaced, per pillar's needs (Builds renders two Documents, Labs renders structured fields plus a journal Document, Blueprints adds the live-preview element).
@@ -266,7 +266,7 @@ This ownership model also has a direct performance benefit at scale (§40): inde
 
 New block types are added purely as new entries in the schema's discriminated union plus a corresponding `BlockRenderer` case (§18) — no redesign of storage, the editor shell, or existing documents.
 
-**Rendering:** the same `BlockRenderer` renders a Document in both the CMS's live preview and the public site — one pipeline, so authored content can never visually drift from hand-built pages.
+**Rendering:** `BlockRenderer` renders a Document inside Studio; the public site renders the same Document through its own `ProseRenderer` (both carry an exhaustiveness check over the block union, so a new block type without a case fails to build rather than silently rendering nothing). **Updated (Experience v3):** the "never visually drift" guarantee is Draft Mode preview — visiting the real public page, unpublished — not a shared component tree; see `CMS_PRODUCT_DESIGN.md` §5.
 
 ## 26. Collections
 

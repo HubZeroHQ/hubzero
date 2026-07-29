@@ -1,11 +1,12 @@
 import { z } from 'zod';
-import { objectIdString, publishStatusSchema, slugSchema } from './shared';
+import { objectIdString, publishStatusSchema, reviewNoteSchema, slugSchema } from './shared';
 
 const stringList = z.array(z.string().trim().min(1)).default([]);
 
 export const engineeringProfileSchema = z.object({
   slug: slugSchema,
   status: publishStatusSchema.default('draft'),
+  reviewNote: reviewNoteSchema,
   teamMemberId: objectIdString,
   overview: z.string().trim().min(1),
   engineeringPhilosophy: z.string().trim().min(1),

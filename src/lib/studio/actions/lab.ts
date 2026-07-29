@@ -119,7 +119,8 @@ export const updateLabAction = createEntryUpdateAction<Lab, LabInput>({
 
 export const transitionLabStatusAction = createEntryTransitionAction<Lab>({
   findById: labRepository.findById,
-  setStatus: (id, status) => labRepository.update(id, { status }),
+  setStatus: (id, status, reviewNote) =>
+    labRepository.update(id, { status, reviewNote: reviewNote ?? null }),
   detailPath: labDetailPath,
   publicType: 'lab',
 });

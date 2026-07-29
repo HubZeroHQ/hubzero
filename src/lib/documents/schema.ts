@@ -22,6 +22,7 @@ const ownerTypeSchema = z.enum([
   'Note',
   'Team',
   'EngineeringProfile',
+  'Career',
 ]);
 export type OwnerType = z.infer<typeof ownerTypeSchema>;
 

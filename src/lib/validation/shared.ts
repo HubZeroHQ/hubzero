@@ -22,14 +22,19 @@ export const publishStatusSchema = z.enum([
   'published',
   'archived',
 ]);
+/** A reviewer's rejection reason (`inReview -> draft`) — `null` means no active note, `undefined`/omitted leaves the stored value untouched (see `parsePartialInput`). */
+export const reviewNoteSchema = z.string().trim().min(1).max(2000).nullable().optional();
 export const servicePublishStatusSchema = z.enum(['draft', 'published']);
 export const userRoleSchema = z.enum(['headAdmin', 'admin', 'member']);
 export const taxonomyKindSchema = z.enum(['technology', 'category', 'topic']);
 export const leadStatusSchema = z.enum(['new', 'contacted', 'closed']);
 export const labStageSchema = z.enum(['exploring', 'building', 'testing']);
 export const buildDeploymentStateSchema = z.enum(['live', 'retired']);
+export const employmentTypeSchema = z.enum(['fullTime', 'partTime', 'contract', 'internship']);
+export const experienceLevelSchema = z.enum(['entry', 'mid', 'senior', 'lead']);
 const evidenceOwnerTypeSchema = z.enum(['Work', 'Build', 'Blueprint', 'Lab']);
 const serviceEvidenceOwnerTypeSchema = z.enum(['Work', 'Build', 'Blueprint', 'Lab', 'Note']);
+const careerEvidenceOwnerTypeSchema = z.enum(['Work', 'Build', 'Lab', 'Note']);
 
 /** A reference into a Work/Build/Blueprint/Lab entry (§13, §24). */
 export const entryReferenceSchema = z.object({
@@ -39,6 +44,12 @@ export const entryReferenceSchema = z.object({
 
 export const serviceEvidenceReferenceSchema = z.object({
   ownerType: serviceEvidenceOwnerTypeSchema,
+  ownerId: objectIdString,
+});
+
+/** A Career listing's reference into a Work/Build/Lab/Note entry — deliberately excludes Blueprint (§ Career listing field list). */
+export const careerEntryReferenceSchema = z.object({
+  ownerType: careerEvidenceOwnerTypeSchema,
   ownerId: objectIdString,
 });
 

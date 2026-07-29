@@ -6,6 +6,8 @@ import { teamRepository } from '@/lib/db/repositories/team';
 import { userRepository } from '@/lib/db/repositories/user';
 import { workRepository } from '@/lib/db/repositories/work';
 import type { EntryReference, EvidenceOwnerType } from '@/types/studio';
+import { toPlainOptions, toRelationOptions } from './relation-options';
+import { splitEntriesByOwnerType } from './relation-fields';
 
 /**
  * The option lists behind Note's relation pickers — technologies, the
@@ -28,36 +30,13 @@ export async function getNoteRelationOptions() {
   ]);
 
   return {
-    technologyOptions: technologies.map((entry) => ({
-      id: entry._id.toString(),
-      label: entry.label,
-    })),
+    technologyOptions: toPlainOptions(technologies),
     authorOptions: users.map((entry) => ({ id: entry._id.toString(), label: entry.name })),
-    workOptions: work.map((entry) => ({
-      id: entry._id.toString(),
-      label: entry.title,
-      referenceId: entry.referenceId,
-    })),
-    buildOptions: builds.map((entry) => ({
-      id: entry._id.toString(),
-      label: entry.title,
-      referenceId: entry.referenceId,
-    })),
-    blueprintOptions: blueprints.map((entry) => ({
-      id: entry._id.toString(),
-      label: entry.name,
-      referenceId: entry.referenceId,
-    })),
-    labOptions: labs.map((entry) => ({
-      id: entry._id.toString(),
-      label: entry.title,
-      referenceId: entry.referenceId,
-    })),
-    contributorOptions: team.map((entry) => ({
-      id: entry._id.toString(),
-      label: entry.name,
-      referenceId: entry.referenceId,
-    })),
+    workOptions: toRelationOptions(work, (entry) => entry.title),
+    buildOptions: toRelationOptions(builds, (entry) => entry.title),
+    blueprintOptions: toRelationOptions(blueprints, (entry) => entry.name),
+    labOptions: toRelationOptions(labs, (entry) => entry.title),
+    contributorOptions: toRelationOptions(team, (entry) => entry.name),
   };
 }
 
@@ -89,18 +68,10 @@ export function splitRelatedEntries(relatedEntries: EntryReference[]): {
   relatedBlueprintIds: string[];
   relatedLabIds: string[];
 } {
-  const result = {
-    relatedWorkIds: [] as string[],
-    relatedBuildIds: [] as string[],
-    relatedBlueprintIds: [] as string[],
-    relatedLabIds: [] as string[],
+  return splitEntriesByOwnerType(relatedEntries, RELATED_ENTRY_FIELDS) as {
+    relatedWorkIds: string[];
+    relatedBuildIds: string[];
+    relatedBlueprintIds: string[];
+    relatedLabIds: string[];
   };
-
-  for (const { key, field } of RELATED_ENTRY_FIELDS) {
-    result[field as keyof typeof result] = relatedEntries
-      .filter((entry) => entry.ownerType === key)
-      .map((entry) => entry.ownerId.toString());
-  }
-
-  return result;
 }

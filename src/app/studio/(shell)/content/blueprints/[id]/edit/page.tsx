@@ -6,7 +6,7 @@ import { BlockEditor } from '@/components/documents/BlockEditor';
 import { ButtonLink } from '@/components/ui/ButtonLink';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { auth } from '@/lib/auth';
-import { canActOnEntry } from '@/lib/auth/permissions';
+import { canEditEntry } from '@/lib/auth/permissions';
 import {
   generateBlueprintCaseStudyBlockAction,
   generateBlueprintCaseStudyDocumentAction,
@@ -32,7 +32,7 @@ export default async function EditBlueprintPage({ params }: { params: Promise<{ 
 
   const session = await auth();
   const { role, id: userId } = session!.user;
-  const canEdit = canActOnEntry(blueprint, { role, userId });
+  const canEdit = canEditEntry(blueprint, { role, userId });
 
   if (!canEdit) {
     return (
@@ -109,6 +109,7 @@ export default async function EditBlueprintPage({ params }: { params: Promise<{ 
           onSave={boundSaveCaseStudyAction}
           technologyOptions={technologyOptions}
           ai={caseStudyAiConfig}
+          previewHref={`/api/preview?type=blueprint&id=${id}`}
         />
       </section>
     </div>

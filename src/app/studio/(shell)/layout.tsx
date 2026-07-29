@@ -2,6 +2,7 @@ import { ObjectId } from 'mongodb';
 import { redirect } from 'next/navigation';
 import { StudioShell } from '@/components/studio/shell/StudioShell';
 import { auth } from '@/lib/auth';
+import { careerInterestRepository } from '@/lib/db/repositories/career-interest';
 import { leadRepository } from '@/lib/db/repositories/lead';
 
 /**
@@ -19,15 +20,23 @@ export default async function StudioShellLayout({ children }: { children: React.
   }
 
   const { role } = session.user;
-  const hasAssignedLeads =
+  const [hasAssignedLeads, hasAssignedCandidates] =
     role === 'member'
-      ? (await leadRepository.list({ assignedToUserId: new ObjectId(session.user.id) })).length > 0
-      : false;
+      ? await Promise.all([
+          leadRepository
+            .list({ assignedToUserId: new ObjectId(session.user.id) })
+            .then((entries) => entries.length > 0),
+          careerInterestRepository
+            .list({ assignedToUserId: new ObjectId(session.user.id) })
+            .then((entries) => entries.length > 0),
+        ])
+      : [false, false];
 
   return (
     <StudioShell
       role={role}
       hasAssignedLeads={hasAssignedLeads}
+      hasAssignedCandidates={hasAssignedCandidates}
       user={{
         name: session.user.name ?? session.user.email ?? 'Unknown',
         email: session.user.email ?? '',

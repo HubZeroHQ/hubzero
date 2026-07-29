@@ -1,6 +1,6 @@
 'use client';
 
-import { ClipboardPaste, Eye, Pencil, Redo2, Sparkles, Undo2 } from 'lucide-react';
+import { ClipboardPaste, ExternalLink, Redo2, Sparkles, Undo2 } from 'lucide-react';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import {
@@ -30,7 +30,6 @@ import { BlockInspector } from './editor/BlockInspector';
 import { DocumentOutline } from './editor/DocumentOutline';
 import { EmptyDocumentState } from './editor/EmptyDocumentState';
 import { useEditorShortcuts } from './editor/use-editor-shortcuts';
-import { BlockRenderer } from './BlockRenderer';
 
 export interface BlockEditorSaveResult {
   error?: string;
@@ -61,12 +60,22 @@ export function BlockEditor({
   onSave,
   technologyOptions = [],
   ai,
+  previewHref,
 }: {
   initialBlocks: Block[];
   onSave: (blocks: Block[]) => Promise<BlockEditorSaveResult>;
   technologyOptions?: Array<{ id: string; label: string }>;
   /** Omit entirely to hide every AI affordance — AI assistance stays strictly opt-in per call site (CMS_PRODUCT_DESIGN.md §30). */
   ai?: BlockEditorAiConfig;
+  /**
+   * The owning entry's real public URL, opened through `/api/preview` (Draft
+   * Mode) in a new tab — the true "what will visitors see" check. Omitted
+   * entirely hides the Preview button rather than falling back to the old
+   * isolated in-editor block preview, which this replaces (Experience v3
+   * Preview Integrity milestone): a preview that renders through the actual
+   * public page is the only one worth showing.
+   */
+  previewHref?: string;
 }) {
   const { blocks, commit, undo, redo, canUndo, canRedo } = useDocumentHistory(initialBlocks);
   const autosave = useAutosave({ blocks, onSave });
@@ -74,7 +83,6 @@ export function BlockEditor({
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
   const [collapsedBlockIds, setCollapsedBlockIds] = useState<Set<string>>(new Set());
   const [insertMenuOpen, setInsertMenuOpen] = useState(false);
-  const [previewMode, setPreviewMode] = useState(false);
   const [pasteError, setPasteError] = useState<string | undefined>();
   const [generatePanelOpen, setGeneratePanelOpen] = useState(false);
   const [aiGeneratedBlockIds, setAiGeneratedBlockIds] = useState<Set<string>>(new Set());
@@ -91,11 +99,6 @@ export function BlockEditor({
   // re-rendering blocks that weren't touched by a given edit.
   const blocksRef = useRef(blocks);
   blocksRef.current = blocks;
-
-  const technologyLabels = useMemo(
-    () => new Map(technologyOptions.map((option) => [option.id, option.label])),
-    [technologyOptions],
-  );
 
   const selectedBlock = blocks.find((block) => block.id === selectedBlockId) ?? null;
   const documentValidation = useMemo(() => validateDocument(blocks), [blocks]);
@@ -286,6 +289,15 @@ export function BlockEditor({
     onMoveSelectedDown: () => selectedBlockId && handleMoveDown(selectedBlockId),
   });
 
+  // Flushes the latest edits before opening the real page — otherwise a
+  // preview opened right after typing could still show the previous
+  // autosave rather than what's on screen right now.
+  function handlePreview() {
+    if (!previewHref) return;
+    void autosave.saveNow();
+    window.open(previewHref, '_blank', 'noopener,noreferrer');
+  }
+
   return (
     <div ref={containerRef} className="flex flex-col gap-3">
       <EditorHeader
@@ -299,8 +311,8 @@ export function BlockEditor({
         onRedo={redo}
         onSave={() => void autosave.saveNow()}
         onPaste={() => void handlePaste()}
-        previewMode={previewMode}
-        onTogglePreview={() => setPreviewMode((prev) => !prev)}
+        previewHref={previewHref}
+        onPreview={handlePreview}
         onGenerate={ai ? () => setGeneratePanelOpen(true) : undefined}
       />
 
@@ -321,15 +333,7 @@ export function BlockEditor({
         </p>
       ) : null}
 
-      {previewMode ? (
-        <div className="rounded-card border-border-default border p-6">
-          {blocks.length === 0 ? (
-            <p className="text-text-muted text-sm">Nothing to preview yet.</p>
-          ) : (
-            <BlockRenderer blocks={blocks} technologyLabels={technologyLabels} />
-          )}
-        </div>
-      ) : blocks.length === 0 ? (
+      {blocks.length === 0 ? (
         <EmptyDocumentState onInsert={() => openInsertMenuAt(0)} />
       ) : (
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_300px]">
@@ -392,8 +396,8 @@ function EditorHeader({
   onRedo,
   onSave,
   onPaste,
-  previewMode,
-  onTogglePreview,
+  previewHref,
+  onPreview,
   onGenerate,
 }: {
   autosaveStatus: 'idle' | 'dirty' | 'saving' | 'saved' | 'invalid' | 'error';
@@ -406,8 +410,8 @@ function EditorHeader({
   onRedo: () => void;
   onSave: () => void;
   onPaste: () => void;
-  previewMode: boolean;
-  onTogglePreview: () => void;
+  previewHref?: string;
+  onPreview: () => void;
   /** Omitted entirely when the editor has no `ai` config — the "Generate content" entry is opt-in per call site, not a default toolbar fixture (CMS_PRODUCT_DESIGN.md §30). */
   onGenerate?: () => void;
 }) {
@@ -422,7 +426,7 @@ function EditorHeader({
           variant="ghost"
           type="button"
           onClick={onUndo}
-          disabled={!canUndo || previewMode}
+          disabled={!canUndo}
           aria-label="Undo"
           title="Undo (Ctrl/Cmd+Z)"
         >
@@ -432,7 +436,7 @@ function EditorHeader({
           variant="ghost"
           type="button"
           onClick={onRedo}
-          disabled={!canRedo || previewMode}
+          disabled={!canRedo}
           aria-label="Redo"
           title="Redo (Ctrl/Cmd+Shift+Z)"
         >
@@ -442,7 +446,6 @@ function EditorHeader({
           variant="ghost"
           type="button"
           onClick={onPaste}
-          disabled={previewMode}
           aria-label="Paste block"
           title="Paste a copied block"
         >
@@ -453,26 +456,23 @@ function EditorHeader({
             variant="secondary"
             type="button"
             onClick={onGenerate}
-            disabled={previewMode}
             title="Generate content with AI"
           >
             <Sparkles className="h-3.5 w-3.5" aria-hidden />
             Generate content
           </Button>
         ) : null}
-        <Button variant="secondary" type="button" onClick={onTogglePreview}>
-          {previewMode ? (
-            <>
-              <Pencil className="h-3.5 w-3.5" aria-hidden />
-              Edit
-            </>
-          ) : (
-            <>
-              <Eye className="h-3.5 w-3.5" aria-hidden />
-              Preview
-            </>
-          )}
-        </Button>
+        {previewHref ? (
+          <Button
+            variant="secondary"
+            type="button"
+            onClick={onPreview}
+            title="Save and open the real public page in a new tab"
+          >
+            <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+            Preview
+          </Button>
+        ) : null}
         <Button
           type="button"
           onClick={onSave}

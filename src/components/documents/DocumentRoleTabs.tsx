@@ -36,9 +36,12 @@ export interface DocumentRoleTab {
 export function DocumentRoleTabs({
   tabs,
   technologyOptions,
+  previewHref,
 }: {
   tabs: DocumentRoleTab[];
   technologyOptions?: Array<{ id: string; label: string }>;
+  /** The owning entry's real public URL — the same one regardless of which Document role is active, since all roles belong to the same entry (see `BlockEditor`'s own doc comment). */
+  previewHref?: string;
 }) {
   const [activeRole, setActiveRole] = useState<DocumentRole>(tabs[0]?.role ?? 'caseStudy');
   const activeTab = tabs.find((tab) => tab.role === activeRole) ?? tabs[0];
@@ -54,6 +57,7 @@ export function DocumentRoleTabs({
         onSave={activeTab.onSave}
         technologyOptions={technologyOptions}
         ai={activeTab.ai}
+        previewHref={previewHref}
       />
     );
   }
@@ -90,6 +94,7 @@ export function DocumentRoleTabs({
         onSave={activeTab.onSave}
         technologyOptions={technologyOptions}
         ai={activeTab.ai}
+        previewHref={previewHref}
       />
     </div>
   );

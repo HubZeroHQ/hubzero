@@ -3,6 +3,7 @@ import {
   buildDeploymentStateSchema,
   objectIdString,
   publishStatusSchema,
+  reviewNoteSchema,
   slugSchema,
 } from './shared';
 
@@ -12,6 +13,7 @@ export const buildSchema = z.object({
   summary: z.string().trim().min(1).max(320),
   slug: slugSchema,
   status: publishStatusSchema.default('draft'),
+  reviewNote: reviewNoteSchema,
   deploymentState: buildDeploymentStateSchema,
   liveUrl: z.string().url().optional(),
   repoUrl: z.string().url().optional(),

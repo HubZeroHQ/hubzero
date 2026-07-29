@@ -122,6 +122,55 @@ export const PUBLIC_CONTACT = {
     'Your name, email, message, and the public page that led here are stored so HubZero can review the enquiry. They are not published.',
 } as const;
 
+/**
+ * Describes only what the current implementation actually does — verified
+ * directly against the code, not a generic template. Update this alongside
+ * any change to what the Contact or Career Interest forms collect, store,
+ * or do with submitted data.
+ */
+export const PUBLIC_PRIVACY = {
+  eyebrow: 'Privacy',
+  title: 'How HubZero handles the information you share.',
+  lastUpdated: '28 July 2026',
+  introduction:
+    'This page describes what HubZero collects through this website, why, and what happens to it. It covers the current implementation only — nothing more is done with your information than what is written here.',
+  sections: [
+    {
+      heading: 'What is collected',
+      body: [
+        'The Contact form collects your name, email address, message, and the public page you came from.',
+        'The Career Interest form collects your name, email address, and any of the following you choose to provide: a résumé link, a portfolio link, a GitHub link, a LinkedIn link, your areas of interest, and a short introduction. If you submit interest from a specific role, that role is recorded alongside your submission.',
+        'Both forms include a hidden field used only to detect automated spam submissions; it is never shown to you and holds no information about you.',
+      ],
+    },
+    {
+      heading: 'Why it is collected',
+      body: [
+        'Solely to review your enquiry or expression of interest and, where relevant, to follow up with you by email.',
+      ],
+    },
+    {
+      heading: 'How it is stored',
+      body: [
+        "Submissions are stored in HubZero's own database and are not published on the website. They are kept for as long as needed to review and respond, and are not sold, rented, or shared with any third party for marketing purposes.",
+      ],
+    },
+    {
+      heading: 'What this site does not do',
+      body: [
+        'This site does not use analytics, advertising, or tracking cookies, and does not share visitor data with any third-party analytics or marketing service.',
+        'A cookie is set only when a HubZero team member signs in to the internal content-management system used to run this site. It is not set for visitors browsing the public site, and it does not identify or track you.',
+      ],
+    },
+    {
+      heading: 'Your options',
+      body: [
+        'To ask what information HubZero holds about you, or to request that it be corrected or removed, use the Contact form — this is the only contact channel this site currently provides.',
+      ],
+    },
+  ],
+} as const;
+
 export const PUBLIC_HOME = {
   eyebrow: 'Independent technology studio',
   title: {
@@ -163,6 +212,44 @@ export const PUBLIC_HOME = {
     title: 'Bring the problem, not a prepared solution.',
     body: 'Start with the constraint, the people affected, and what has already been tried. We will begin by making the problem precise.',
   },
+} as const;
+
+/**
+ * Careers is a permanent Company destination, not a "we're hiring" banner —
+ * the hiring-philosophy copy here stays visible whether or not any listing
+ * is currently published (Experience v3 Careers milestone). `approach`
+ * answers the three questions the page owes a visitor regardless of current
+ * openings: how hiring works, who fits, and how a role comes to exist at all.
+ */
+export const PUBLIC_CAREERS = {
+  eyebrow: 'Careers / how we work',
+  title: {
+    lead: 'People who make',
+    emphasis: 'evidence',
+    close: 'their default.',
+  },
+  introduction:
+    'HubZero is small by design. Everyone here does work that becomes part of the public record — case studies, products, research, and reusable systems that carry their name. Openings are listed here only when they reflect real, current need.',
+  approach: [
+    {
+      label: 'How hiring works',
+      title: 'One real conversation, then real work.',
+      body: 'A first conversation covers what you have built and how you think through a constraint. Where it continues, the next step is usually a small, paid, real piece of work — not a take-home exercise designed to be thrown away.',
+    },
+    {
+      label: 'Who fits',
+      title: 'Ownership over specialization.',
+      body: 'HubZero looks for people who can take a problem from first principles to a shipped, documented outcome, and who want their own work to be inspectable rather than just delivered.',
+    },
+    {
+      label: 'How roles open',
+      title: 'A role exists when the work does.',
+      body: 'Openings are tied to real, current need rather than a pipeline kept warm by default. A published listing here is real; nothing is posted to look active.',
+    },
+  ],
+  noOpeningsTitle: 'There is no open role that matches today.',
+  noOpeningsBody:
+    'That will change. If HubZero sounds like a fit, introduce yourself below — submissions are reviewed as new work opens up, not filed away.',
 } as const;
 
 /**
@@ -240,6 +327,25 @@ export const PUBLIC_ABOUT = {
  * no room for subtitles) and as a visible line under each label in the
  * disclosed mobile menu (which does). Kept to a few words, not a repeat of
  * the fuller `PUBLIC_HOME.pillars` copy.
+ *
+ * `enabled` and `primary` answer two different questions and must not be
+ * conflated: `enabled` here governs nav/footer visibility only (`PublicFooter`'s
+ * `byType()` is its one reader) — it does NOT mean "this route is real."
+ * Whether a route actually exists and should be indexed (sitemap, search,
+ * discovery) is a separate fact, `PUBLIC_ENTITY_ROUTES` — a route can be
+ * `PUBLIC_ENTITY_ROUTES`-enabled but `PUBLIC_NAVIGATION`-disabled (a route
+ * can be real, working, and indexed while still being reached only through
+ * Search, the sitemap, or a single contextual link elsewhere, never a nav
+ * or footer entry, if that's the right amount of prominence for it).
+ * `primary` means "this belongs in the persistent top-level pill." Primary navigation
+ * orients a first-time visitor to what HubZero *is* (Work, Builds,
+ * Blueprints, Labs, About); Notes, Engineering, Ledger, and Services are fully
+ * real, fully enabled, fully indexed destinations that are deliberately reached
+ * contextually instead — a relationship rail, a byline, the Homepage's
+ * current-momentum section, Search, or the footer — never by clicking a nav
+ * item with no context yet for what it leads to. See the Design
+ * Specification §5 ("Primary, secondary, and contextual navigation are
+ * different jobs") for the full reasoning.
  */
 export const PUBLIC_NAVIGATION = [
   {
@@ -247,6 +353,7 @@ export const PUBLIC_NAVIGATION = [
     href: publicRoute.collection('work'),
     type: 'work',
     enabled: true,
+    primary: true,
     description: 'Client case studies',
   },
   {
@@ -254,6 +361,7 @@ export const PUBLIC_NAVIGATION = [
     href: publicRoute.collection('build'),
     type: 'build',
     enabled: true,
+    primary: true,
     description: 'Products HubZero ships',
   },
   {
@@ -261,6 +369,7 @@ export const PUBLIC_NAVIGATION = [
     href: publicRoute.collection('blueprint'),
     type: 'blueprint',
     enabled: true,
+    primary: true,
     description: 'Reusable engineering foundations',
   },
   {
@@ -268,6 +377,7 @@ export const PUBLIC_NAVIGATION = [
     href: publicRoute.collection('lab'),
     type: 'lab',
     enabled: true,
+    primary: true,
     description: 'Investigations in progress',
   },
   {
@@ -275,6 +385,7 @@ export const PUBLIC_NAVIGATION = [
     href: publicRoute.collection('note'),
     type: 'note',
     enabled: true,
+    primary: false,
     description: 'Short-form engineering journal',
   },
   {
@@ -282,6 +393,7 @@ export const PUBLIC_NAVIGATION = [
     href: publicRoute.collection('engineeringProfile'),
     type: 'engineeringProfile',
     enabled: true,
+    primary: false,
     description: 'Documented expertise and evidence',
   },
   {
@@ -289,13 +401,24 @@ export const PUBLIC_NAVIGATION = [
     href: publicRoute.ledger(),
     type: 'ledger',
     enabled: true,
+    primary: false,
     description: 'Chronological activity record',
   },
   {
     label: 'Services',
     href: publicRoute.collection('service'),
     type: 'service',
-    enabled: false,
+    // Footer-visible (Design Specification §5's "contextual" tier, same as
+    // Notes/Engineering/Ledger below) — not primary. Services has no
+    // relationship-graph presence of its own to be reached through
+    // (unlike Notes' bylines or a Work item's evidence trail), so unlike
+    // those routes its only paths in were previously a single Homepage
+    // sentence plus Search/sitemap — the weakest hub on the site. Adding it
+    // to the footer's Company group closes that without promoting it into
+    // the primary pill, which would misrepresent it as one of the handful
+    // of things that orient a first-time visitor to what HubZero *is*.
+    enabled: true,
+    primary: false,
     description: 'Capability by evidence',
   },
   {
@@ -303,7 +426,16 @@ export const PUBLIC_NAVIGATION = [
     href: publicRoute.about(),
     type: 'teamMember',
     enabled: true,
+    primary: true,
     description: 'Team & operating model',
+  },
+  {
+    label: 'Careers',
+    href: publicRoute.collection('career'),
+    type: 'career',
+    enabled: true,
+    primary: false,
+    description: 'Open roles and how to reach us',
   },
 ] as const;
 
@@ -316,6 +448,7 @@ export const PUBLIC_ENTITY_ROUTES = {
   engineeringProfile: true,
   teamMember: true,
   service: true,
+  career: true,
 } as const;
 
 export const PUBLIC_SEARCH_GROUPS = [
@@ -327,4 +460,5 @@ export const PUBLIC_SEARCH_GROUPS = [
   { type: 'engineeringProfile', label: 'Engineering profiles' },
   { type: 'teamMember', label: 'Team' },
   { type: 'service', label: 'Services' },
+  { type: 'career', label: 'Careers' },
 ] as const;

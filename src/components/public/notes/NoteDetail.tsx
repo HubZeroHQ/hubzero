@@ -8,6 +8,7 @@ import {
   ContributorList,
   DetailSectionHeading,
   formatPublicDate,
+  groupRelationshipsByType,
   PublicBreadcrumbs,
   TechnologyList,
 } from '../EditorialPrimitives';
@@ -26,18 +27,22 @@ const RELATIONSHIP_GROUPS = [
   { type: 'build', title: 'Related Builds' },
   { type: 'lab', title: 'Related Labs' },
   { type: 'blueprint', title: 'Related Blueprints' },
+  { type: 'career', title: 'Open roles' },
 ] as const;
 
 export function NoteDetail({ note }: { note: ImmutablePublic<Note> }) {
   const body = note.documents.find((document) => document.role === 'body');
-  const groups = RELATIONSHIP_GROUPS.map((group) => ({
-    ...group,
-    relationships: note.relationships.filter(
-      (relationship) => relationship.target.type === group.type,
-    ),
-  })).filter((group) => group.relationships.length);
+  const groups = groupRelationshipsByType(note.relationships, RELATIONSHIP_GROUPS);
   const contributors = note.relationships.filter(
     (relationship) => relationship.kind === 'teamContributedToEntry',
+  );
+  /**
+   * Excludes contributor credits — shown separately via `ContributorList`
+   * below — so the graph and its adjacent `groups` list describe the same
+   * relationships (mirrors `PublicCollectionDetail.tsx`'s `connected`).
+   */
+  const graphRelationships = note.relationships.filter(
+    (relationship) => relationship.kind !== 'teamContributedToEntry',
   );
   const authorDestinationAvailable =
     note.author.kind === 'person' &&
@@ -146,7 +151,7 @@ export function NoteDetail({ note }: { note: ImmutablePublic<Note> }) {
             headerContent={
               <EvidenceGraph
                 subject={{ label: note.title, meta: 'Note' }}
-                relationships={note.relationships}
+                relationships={graphRelationships}
               />
             }
             groups={groups}

@@ -4,6 +4,8 @@ import { labRepository } from '@/lib/db/repositories/lab';
 import { noteRepository } from '@/lib/db/repositories/note';
 import { workRepository } from '@/lib/db/repositories/work';
 import type { ServiceEvidenceOwnerType, ServiceEvidenceReference } from '@/types/studio';
+import { toRelationOptions } from './relation-options';
+import { splitEntriesByOwnerType } from './relation-fields';
 
 /**
  * Service's evidence links (Services completion sprint, Part 4) are the
@@ -23,31 +25,11 @@ export async function getServiceRelationOptions() {
   ]);
 
   return {
-    workOptions: work.map((entry) => ({
-      id: entry._id.toString(),
-      label: entry.title,
-      referenceId: entry.referenceId,
-    })),
-    buildOptions: builds.map((entry) => ({
-      id: entry._id.toString(),
-      label: entry.title,
-      referenceId: entry.referenceId,
-    })),
-    blueprintOptions: blueprints.map((entry) => ({
-      id: entry._id.toString(),
-      label: entry.name,
-      referenceId: entry.referenceId,
-    })),
-    labOptions: labs.map((entry) => ({
-      id: entry._id.toString(),
-      label: entry.title,
-      referenceId: entry.referenceId,
-    })),
-    noteOptions: notes.map((entry) => ({
-      id: entry._id.toString(),
-      label: entry.title,
-      referenceId: entry.referenceId,
-    })),
+    workOptions: toRelationOptions(work, (entry) => entry.title),
+    buildOptions: toRelationOptions(builds, (entry) => entry.title),
+    blueprintOptions: toRelationOptions(blueprints, (entry) => entry.name),
+    labOptions: toRelationOptions(labs, (entry) => entry.title),
+    noteOptions: toRelationOptions(notes, (entry) => entry.title),
   };
 }
 
@@ -67,19 +49,11 @@ export function splitServiceEvidenceLinks(evidenceLinks: ServiceEvidenceReferenc
   evidenceLabIds: string[];
   evidenceNoteIds: string[];
 } {
-  const result = {
-    evidenceWorkIds: [] as string[],
-    evidenceBuildIds: [] as string[],
-    evidenceBlueprintIds: [] as string[],
-    evidenceLabIds: [] as string[],
-    evidenceNoteIds: [] as string[],
+  return splitEntriesByOwnerType(evidenceLinks, SERVICE_EVIDENCE_FIELDS) as {
+    evidenceWorkIds: string[];
+    evidenceBuildIds: string[];
+    evidenceBlueprintIds: string[];
+    evidenceLabIds: string[];
+    evidenceNoteIds: string[];
   };
-
-  for (const { key, field } of SERVICE_EVIDENCE_FIELDS) {
-    result[field as keyof typeof result] = evidenceLinks
-      .filter((entry) => entry.ownerType === key)
-      .map((entry) => entry.ownerId.toString());
-  }
-
-  return result;
 }

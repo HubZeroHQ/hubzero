@@ -1,6 +1,7 @@
 import { taxonomyRepository } from '@/lib/db/repositories/taxonomy';
 import { teamRepository } from '@/lib/db/repositories/team';
 import { workRepository } from '@/lib/db/repositories/work';
+import { toPlainOptions, toRelationOptions } from './relation-options';
 
 /**
  * The option lists behind Blueprint's relation pickers — technologies and
@@ -17,15 +18,8 @@ export async function getBlueprintRelationOptions() {
   ]);
 
   return {
-    technologyOptions: technologies.map((entry) => ({
-      id: entry._id.toString(),
-      label: entry.label,
-    })),
-    contributorOptions: team.map((entry) => ({
-      id: entry._id.toString(),
-      label: entry.name,
-      referenceId: entry.referenceId,
-    })),
+    technologyOptions: toPlainOptions(technologies),
+    contributorOptions: toRelationOptions(team, (entry) => entry.name),
   };
 }
 

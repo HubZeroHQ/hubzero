@@ -96,5 +96,9 @@ function graphKind(assertion: RelationshipAssertion): HubZeroRelationshipKind {
       return 'proven_by';
     case 'profileFeaturesEvidence':
       return 'features';
+    case 'careerRelatesArtifact':
+      return 'documents';
+    case 'careerHiringManager':
+      return 'related_to';
   }
 }

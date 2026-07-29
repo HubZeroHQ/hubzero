@@ -10,9 +10,13 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { ReferenceIdBadge } from '@/components/ui/ReferenceIdBadge';
 import { Tag } from '@/components/ui/Tag';
 import { auth } from '@/lib/auth';
-import { canActOnEntry } from '@/lib/auth/permissions';
+import { canEditEntry } from '@/lib/auth/permissions';
 import { transitionNoteStatusAction } from '@/lib/studio/actions/note';
-import { canUnpublishOverride, getAvailableTransitions } from '@/lib/studio/workflow-permissions';
+import {
+  canReject,
+  canUnpublishOverride,
+  getAvailableTransitions,
+} from '@/lib/studio/workflow-permissions';
 import { blueprintRepository } from '@/lib/db/repositories/blueprint';
 import { buildRepository } from '@/lib/db/repositories/build';
 import { documentRepository } from '@/lib/db/repositories/document';
@@ -37,7 +41,7 @@ export default async function NoteDetailPage({ params }: { params: Promise<{ id:
 
   const session = await auth();
   const { role, id: userId } = session!.user;
-  const canEdit = canActOnEntry(note, { role, userId });
+  const canEdit = canEditEntry(note, { role, userId });
 
   const [
     bodyDocument,
@@ -118,9 +122,19 @@ export default async function NoteDetailPage({ params }: { params: Promise<{ id:
         description={`${author?.name ?? 'Unknown author'} · ${new Intl.DateTimeFormat('en-US', { dateStyle: 'medium' }).format(note.publicationDate)} · ${readingTimeMinutes} min read${note.featured ? ' · Featured' : ''}`}
         actions={
           canEdit ? (
-            <ButtonLink href={`/studio/content/notes/${id}/edit`} variant="secondary">
-              Edit
-            </ButtonLink>
+            <>
+              <ButtonLink
+                href={`/api/preview?type=note&id=${id}`}
+                target="_blank"
+                rel="noreferrer"
+                variant="ghost"
+              >
+                Preview
+              </ButtonLink>
+              <ButtonLink href={`/studio/content/notes/${id}/edit`} variant="secondary">
+                Edit
+              </ButtonLink>
+            </>
           ) : undefined
         }
       />
@@ -138,6 +152,8 @@ export default async function NoteDetailPage({ params }: { params: Promise<{ id:
           status={note.status}
           availableTransitions={availableTransitions}
           canUnpublishOverride={canOverride}
+          canReject={canReject(note.status, role)}
+          reviewNote={note.reviewNote}
           onTransition={boundTransitionAction}
         />
       </div>

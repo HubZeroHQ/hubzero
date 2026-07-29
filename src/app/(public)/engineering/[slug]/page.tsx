@@ -9,6 +9,7 @@ import {
   breadcrumbJsonLd,
   publicEngineeringProfileJsonLd,
 } from '@/lib/public/discovery/structured-data';
+import { isPreviewRequest } from '@/lib/public/preview';
 import { getPublicDetail, listPublicEngineeringProfileIndexEntries } from '@/lib/public/queries';
 
 export const revalidate = 86_400;
@@ -24,7 +25,8 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const profile = await safeEngineeringProfile(slug);
+  const preview = await isPreviewRequest();
+  const profile = await safeEngineeringProfile(slug, preview);
   if (!profile || profile.type !== 'engineeringProfile') {
     return createPublicMetadata({
       title: 'Engineering Profile not found',
@@ -38,7 +40,7 @@ export async function generateMetadata({
     description: profile.summary,
     path: profile.url,
     image: profile.portrait ?? profile.hero,
-    noIndex: !PUBLIC_SITE.release.live,
+    noIndex: preview || !PUBLIC_SITE.release.live,
   });
 }
 
@@ -48,7 +50,8 @@ export default async function EngineeringProfilePage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const profile = await safeEngineeringProfile(slug);
+  const preview = await isPreviewRequest();
+  const profile = await safeEngineeringProfile(slug, preview);
   if (!profile || profile.type !== 'engineeringProfile') notFound();
 
   return (
@@ -71,9 +74,10 @@ export default async function EngineeringProfilePage({
 
 async function safeEngineeringProfile(
   slug: string,
+  preview: boolean,
 ): Promise<ImmutablePublic<PublicEntityDetail> | null> {
   try {
-    return await getPublicDetail('engineeringProfile', slug);
+    return await getPublicDetail('engineeringProfile', slug, { preview });
   } catch (error) {
     console.error(`Engineering Profile public detail read failed for "${slug}".`, error);
     return null;

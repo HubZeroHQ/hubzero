@@ -3,12 +3,32 @@ import Link from 'next/link';
 import { PUBLIC_NAVIGATION, PUBLIC_SITE } from '@/config/public-site';
 import { publicRoute } from '@/lib/public/routes';
 
-const contentLinks = PUBLIC_NAVIGATION.filter(
-  (item) => item.type !== 'teamMember' && item.type !== 'service' && item.enabled,
-);
-const studioLinks = PUBLIC_NAVIGATION.filter(
-  (item) => (item.type === 'teamMember' || item.type === 'service') && item.enabled,
-);
+/**
+ * The footer is the site's real secondary navigation — the deeper structure
+ * a visitor sees once they want it, organized editorially rather than as a
+ * mechanical dump of every route. It's the one place Notes and Ledger
+ * appear as direct links, since primary navigation deliberately doesn't
+ * carry them (Design Specification §5). Sections are hand-composed here,
+ * not derived generically from `PUBLIC_NAVIGATION`'s route list, so the
+ * grouping stays a deliberate editorial decision instead of drifting to
+ * match whatever order the config happens to declare routes in.
+ */
+const byType = (type: (typeof PUBLIC_NAVIGATION)[number]['type']) =>
+  PUBLIC_NAVIGATION.find((item) => item.type === type && item.enabled);
+
+const recordLinks = (['work', 'build', 'blueprint', 'lab', 'note', 'ledger'] as const)
+  .map(byType)
+  .filter((item): item is NonNullable<typeof item> => Boolean(item));
+
+/**
+ * Careers is included unconditionally regardless of how many roles are
+ * currently open (Experience v3 Careers milestone) — the page itself is a
+ * permanent Company destination, not a "we're hiring" banner that appears
+ * only when convenient.
+ */
+const companyContentLinks = (['teamMember', 'engineeringProfile', 'service', 'career'] as const)
+  .map(byType)
+  .filter((item): item is NonNullable<typeof item> => Boolean(item));
 
 export function PublicFooter() {
   return (
@@ -22,11 +42,11 @@ export function PublicFooter() {
           <p>Engineering products, systems, and the public record behind them.</p>
         </div>
 
-        {contentLinks.length ? (
-          <nav className="public-footer-nav" aria-label="Public record">
+        {recordLinks.length ? (
+          <nav className="public-footer-nav" aria-label="Record">
             <p className="public-footer-nav-heading">Record</p>
             <ul>
-              {contentLinks.map((item) => (
+              {recordLinks.map((item) => (
                 <li key={item.href}>
                   <Link href={item.href}>{item.label}</Link>
                 </li>
@@ -35,11 +55,11 @@ export function PublicFooter() {
           </nav>
         ) : null}
 
-        {studioLinks.length || PUBLIC_SITE.release.contact ? (
-          <nav className="public-footer-nav" aria-label="Studio">
-            <p className="public-footer-nav-heading">Studio</p>
+        {companyContentLinks.length || PUBLIC_SITE.release.contact ? (
+          <nav className="public-footer-nav" aria-label="Company">
+            <p className="public-footer-nav-heading">Company</p>
             <ul>
-              {studioLinks.map((item) => (
+              {companyContentLinks.map((item) => (
                 <li key={item.href}>
                   <Link href={item.href}>{item.label}</Link>
                 </li>
@@ -52,10 +72,40 @@ export function PublicFooter() {
             </ul>
           </nav>
         ) : null}
+
+        {/*
+          Only real destinations — same discipline the footer's "Connect"
+          column followed in the product's earlier design generation
+          (`dev-legacy`): a link with nothing real behind it is worse than
+          no link. RSS appears automatically once `release.feed` flips on;
+          no further change needed here when it does. A GitHub entry was
+          considered and left out — no organization-level GitHub is
+          configured anywhere in `PUBLIC_SITE` today, only per-person and
+          per-Build repository links that already live on their own pages.
+        */}
+        {PUBLIC_SITE.release.search || PUBLIC_SITE.release.feed ? (
+          <nav className="public-footer-nav" aria-label="Resources">
+            <p className="public-footer-nav-heading">Resources</p>
+            <ul>
+              {PUBLIC_SITE.release.search ? (
+                <li>
+                  <Link href={publicRoute.search()}>Search</Link>
+                </li>
+              ) : null}
+              {PUBLIC_SITE.release.feed ? (
+                <li>
+                  <Link href="/feed.xml">RSS</Link>
+                </li>
+              ) : null}
+            </ul>
+          </nav>
+        ) : null}
       </div>
 
       <div className="public-container public-footer-inner">
-        <p>© {new Date().getFullYear()} HubZero</p>
+        <p>
+          © {new Date().getFullYear()} HubZero · <Link href={publicRoute.privacy()}>Privacy</Link>
+        </p>
         <p>Evidence before claims.</p>
       </div>
     </footer>

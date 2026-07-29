@@ -6,7 +6,7 @@ import { PageHeader } from '@/components/studio/PageHeader';
 import { ButtonLink } from '@/components/ui/ButtonLink';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { auth } from '@/lib/auth';
-import { canActOnEntry } from '@/lib/auth/permissions';
+import { canEditEntry } from '@/lib/auth/permissions';
 import { engineeringProfileRepository } from '@/lib/db/repositories/engineering-profile';
 import { documentRepository } from '@/lib/db/repositories/document';
 import { resolveMediaAssets } from '@/lib/media/resolve';
@@ -25,7 +25,7 @@ export default async function EditEngineeringProfilePage({
   const profile = await engineeringProfileRepository.findById(id);
   if (!profile) notFound();
   const session = await auth();
-  if (!canActOnEntry(profile, { role: session!.user.role, userId: session!.user.id })) {
+  if (!canEditEntry(profile, { role: session!.user.role, userId: session!.user.id })) {
     return (
       <ErrorState
         title="You can't edit this profile."
@@ -95,6 +95,7 @@ export default async function EditEngineeringProfilePage({
             initialBlocks={documents[index]?.blocks ?? []}
             onSave={saveEngineeringProfileDocumentAction.bind(null, role, id)}
             technologyOptions={options.technologyOptions}
+            previewHref={`/api/preview?type=engineeringProfile&id=${id}`}
           />
         </section>
       ))}

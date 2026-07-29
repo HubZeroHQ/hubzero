@@ -7,14 +7,18 @@ import {
   DetailSectionHeading,
   formatMetadata,
   formatPublicDate,
+  groupRelationshipsByType,
   PublicBreadcrumbs,
   PublicBuildStateBadge,
+  relationshipHref,
+  relationshipKey,
   TechnologyList,
 } from '../EditorialPrimitives';
 import { EvidenceGraph, EvidenceGraphFocusSync } from '../evidence-graph';
 import { PageContainer, PublicSection } from '../PageContainer';
 import { ProseRenderer } from '../ProseRenderer';
 import { PublicImage } from '../PublicImage';
+import { ReferenceIdCopy } from '../ReferenceIdCopy';
 import { RelatedRecordsSection } from '../RelatedRecordsSection';
 import { BlueprintFeatureList } from './BlueprintFeatureList';
 
@@ -54,76 +58,55 @@ export function PublicCollectionDetail({ entity }: { entity: ImmutablePublic<Col
   const lineage = entity.relationships.filter(
     (relationship) => relationship.kind === 'labGraduatedToBuild',
   );
+  /**
+   * Excludes `labGraduatedToBuild` (shown separately above, as "Product
+   * lineage") and `teamContributedToEntry` (shown separately in
+   * `DetailRegister`'s `ContributorList`) — the same "don't draw a credit
+   * twice, at two different visual weights" rule the Homepage's own
+   * `evidenceGraphRelationships()` already applies. This keeps the graph fed
+   * here and the `groups` list below it describing the same relationships,
+   * per `EvidenceGraph`'s own contract.
+   */
   const connected = entity.relationships.filter(
-    (relationship) => relationship.kind !== 'labGraduatedToBuild',
+    (relationship) =>
+      relationship.kind !== 'labGraduatedToBuild' && relationship.kind !== 'teamContributedToEntry',
   );
   const workRelationshipGroups =
     entity.type === 'work'
-      ? [
-          {
-            title: 'Engineering foundations',
-            relationships: connected.filter((item) => item.target.type === 'build'),
-          },
-          {
-            title: 'Reusable foundations',
-            relationships: connected.filter((item) => item.target.type === 'blueprint'),
-          },
-          {
-            title: 'Connected investigations',
-            relationships: connected.filter((item) => item.target.type === 'lab'),
-          },
-          {
-            title: 'Engineering notes',
-            relationships: connected.filter((item) => item.target.type === 'note'),
-          },
-        ].filter((group) => group.relationships.length)
+      ? groupRelationshipsByType(connected, [
+          { type: 'build', title: 'Engineering foundations' },
+          { type: 'blueprint', title: 'Reusable foundations' },
+          { type: 'lab', title: 'Connected investigations' },
+          { type: 'note', title: 'Engineering notes' },
+          { type: 'career', title: 'Open roles' },
+        ])
       : [];
   const buildRelationshipGroups =
     entity.type === 'build'
-      ? [
-          {
-            title: 'Applied in client work',
-            relationships: connected.filter((item) => item.target.type === 'work'),
-          },
-          {
-            title: 'Connected investigations',
-            relationships: connected.filter((item) => item.target.type === 'lab'),
-          },
-        ].filter((group) => group.relationships.length)
+      ? groupRelationshipsByType(connected, [
+          { type: 'work', title: 'Applied in client work' },
+          { type: 'lab', title: 'Connected investigations' },
+          { type: 'note', title: 'Engineering notes' },
+          { type: 'career', title: 'Open roles' },
+        ])
       : [];
   const labRelationshipGroups =
     entity.type === 'lab'
-      ? [
-          {
-            title: 'Related Builds',
-            relationships: connected.filter((item) => item.target.type === 'build'),
-          },
-          {
-            title: 'Related Blueprints',
-            relationships: connected.filter((item) => item.target.type === 'blueprint'),
-          },
-        ].filter((group) => group.relationships.length)
+      ? groupRelationshipsByType(connected, [
+          { type: 'build', title: 'Related Builds' },
+          { type: 'blueprint', title: 'Related Blueprints' },
+          { type: 'note', title: 'Engineering notes' },
+          { type: 'career', title: 'Open roles' },
+        ])
       : [];
   const blueprintRelationshipGroups =
     entity.type === 'blueprint'
-      ? [
-          {
-            title: 'Proven in client work',
-            relationships: connected.filter((item) => item.target.type === 'work'),
-          },
-          {
-            title: 'Connected products',
-            relationships: connected.filter((item) => item.target.type === 'build'),
-          },
-          {
-            title: 'Explored in Labs',
-            relationships: connected.filter((item) => item.target.type === 'lab'),
-          },
-          {
-            title: 'Engineering notes',
-            relationships: connected.filter((item) => item.target.type === 'note'),
-          },
-        ].filter((group) => group.relationships.length)
+      ? groupRelationshipsByType(connected, [
+          { type: 'work', title: 'Proven in client work' },
+          { type: 'build', title: 'Connected products' },
+          { type: 'lab', title: 'Explored in Labs' },
+          { type: 'note', title: 'Engineering notes' },
+        ])
       : [];
 
   return (
@@ -149,6 +132,25 @@ export function PublicCollectionDetail({ entity }: { entity: ImmutablePublic<Col
                       : 'Lab / active investigation'}
               </p>
               <h1>{entity.title}</h1>
+              {lineage.length ? (
+                <p className="detail-lineage-cue">
+                  <span aria-hidden="true">↳</span>{' '}
+                  {lineage.map((relationship, index) => {
+                    const href = relationshipHref(relationship);
+                    return (
+                      <span key={relationshipKey(relationship)}>
+                        {index > 0 ? ', ' : ''}
+                        {relationship.label}{' '}
+                        {href ? (
+                          <Link href={href}>{relationship.target.title}</Link>
+                        ) : (
+                          relationship.target.title
+                        )}
+                      </span>
+                    );
+                  })}
+                </p>
+              ) : null}
               <p className="detail-summary">{entity.summary}</p>
               {entity.links.length ? (
                 <ul className="detail-actions" aria-label="External destinations">
@@ -369,7 +371,7 @@ export function PublicCollectionDetail({ entity }: { entity: ImmutablePublic<Col
           <div>
             <p className="home-eyebrow">Publication record</p>
             <p>
-              {entity.referenceId} /{' '}
+              <ReferenceIdCopy value={entity.referenceId} /> /{' '}
               {entity.type === 'build' ? (
                 <PublicBuildStateBadge state={entity.deploymentState} />
               ) : (
@@ -390,14 +392,12 @@ function DetailRegister({ entity }: { entity: ImmutablePublic<CollectionDetail> 
   const values =
     entity.type === 'work'
       ? [
-          ['Reference', entity.referenceId],
           ['Client', entity.clientType],
           ['Timeline', entity.timeline],
           ['HubZero role', entity.hubZeroRole],
         ]
       : entity.type === 'build'
         ? [
-            ['Reference', entity.referenceId],
             [
               'Technology',
               entity.technologies.length ? `${entity.technologies.length} listed` : 'Not listed',
@@ -405,13 +405,11 @@ function DetailRegister({ entity }: { entity: ImmutablePublic<CollectionDetail> 
           ]
         : entity.type === 'blueprint'
           ? [
-              ['Reference', entity.referenceId],
               ['Version', `v${entity.version}`],
               ['Architecture', entity.architecture],
               ['Design language', entity.designLanguage],
             ]
           : [
-              ['Reference', entity.referenceId],
               ['Stage', formatMetadata(entity.stage)],
               ['Started', formatPublicDate(entity.startDate)],
               [
@@ -427,6 +425,12 @@ function DetailRegister({ entity }: { entity: ImmutablePublic<CollectionDetail> 
   return (
     <aside className="detail-register" aria-label={`${entity.title} publication metadata`}>
       <dl>
+        <div>
+          <dt>Reference</dt>
+          <dd>
+            <ReferenceIdCopy value={entity.referenceId} />
+          </dd>
+        </div>
         {entity.type === 'build' ? (
           <div>
             <dt>Maintenance status</dt>

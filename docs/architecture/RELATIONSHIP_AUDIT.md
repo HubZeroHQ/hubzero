@@ -1,6 +1,8 @@
 # Relationship Audit
 
-**Status:** Implemented. Phase 13 relationship contract; the behavior audited below is live across collection detail pages.
+**Historical — superseded.** This is a point-in-time content/model audit from before the public DTO layer, the public site, and Careers existed (see the P0/P1 repair priorities below, written "before any public DTO implementation" / "before collection launch"). Its content-snapshot rows (specific records, specific broken links) describe the database as it was on the audit date, not current data. Two concrete gaps this predates: it has no `career` row in the canonical relationship kinds table (`careerRelatesArtifact`, `careerHiringManager` — added when Careers shipped; see `evidence-projection.ts`'s `labelFor` for the current, complete list), and its P0/P1 repair items were since addressed by the public DTO implementation and the Experience v3 Relationship Integrity milestone (which specifically closed graph/accessible-list drift and missing relationship groups across every collection). Kept for its still-accurate *principles* (the 8 numbered rules below) and as a historical record of what the pre-launch data actually looked like — not as a current-state reference.
+
+**Status:** Implemented. Phase 13 relationship contract; the behavior audited below was live across collection detail pages as of the audit date.
 
 **Audit snapshot:** 17 July 2026
 

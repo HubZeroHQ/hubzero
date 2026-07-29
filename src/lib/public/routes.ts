@@ -12,16 +12,8 @@ const COLLECTION_ROUTES = {
   engineeringProfile: '/engineering',
   teamMember: '/about',
   service: '/services',
+  career: '/careers',
 } as const satisfies Record<PublicEntityType, string>;
-
-const DETAIL_ROUTE_TYPES = new Set<PublicDetailEntityType>([
-  'work',
-  'build',
-  'blueprint',
-  'lab',
-  'note',
-  'engineeringProfile',
-]);
 
 function withQuery(path: string, query: Query = {}): string {
   const parameters = new URLSearchParams();
@@ -41,6 +33,7 @@ export const publicRoute = {
   home: () => '/' as const,
   about: () => '/about' as const,
   ledger: () => '/ledger' as const,
+  privacy: () => '/privacy' as const,
   contact: (query?: Query) => withQuery('/contact', query),
   search: (query?: Query) => withQuery('/search', query),
   collection: (type: PublicEntityType) => COLLECTION_ROUTES[type],
@@ -48,12 +41,15 @@ export const publicRoute = {
     `${COLLECTION_ROUTES[input.type]}/${encodeURIComponent(input.slug)}`,
   workCategory: (slug?: string) =>
     withQuery(COLLECTION_ROUTES.work, { category: slug ? slug : undefined }),
+  blueprintFilter: (query: { architecture?: string; designLanguage?: string }) =>
+    withQuery(COLLECTION_ROUTES.blueprint, {
+      architecture: query.architecture,
+      designLanguage: query.designLanguage,
+    }),
+  labStage: (stage?: string) =>
+    withQuery(COLLECTION_ROUTES.lab, { stage: stage ? stage : undefined }),
   taxonomy: (term: Pick<PublicTaxonomyTerm, 'kind' | 'label' | 'slug'>) =>
     term.kind === 'category'
       ? withQuery(COLLECTION_ROUTES.work, { category: term.slug })
       : withQuery('/search', { q: term.label }),
 };
-
-export function isPublicDetailEntityType(type: PublicEntityType): type is PublicDetailEntityType {
-  return DETAIL_ROUTE_TYPES.has(type as PublicDetailEntityType);
-}

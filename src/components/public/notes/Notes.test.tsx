@@ -95,6 +95,11 @@ describe('public Notes experience', () => {
             role: 'Backend Engineer',
           },
         },
+        {
+          kind: 'careerRelatesArtifact',
+          label: 'Related opening',
+          target: { type: 'career', title: 'Senior Engineer', url: '/careers/senior-engineer' },
+        },
       ],
     };
     const markup = renderToStaticMarkup(<NoteDetail note={detail} />);
@@ -118,5 +123,20 @@ describe('public Notes experience', () => {
     expect(markup.indexOf('Contributors')).toBeLessThan(
       markup.indexOf('Ownership before invalidation'),
     );
+
+    // Milestone 4 (Relationship Integrity): the contributor credit is shown
+    // in the register (ContributorList), never re-drawn as an evidence-graph
+    // node/edge — the graph's own aria-label (its full accessible summary of
+    // every node it draws) must not mention the contributor at all.
+    const graphAriaLabel = markup.match(
+      /class="evidence-graph" role="img" aria-label="([^"]*)"/,
+    )?.[1];
+    expect(graphAriaLabel).toBeDefined();
+    expect(graphAriaLabel).not.toContain('Public Engineer');
+    expect(graphAriaLabel).toContain('Senior Engineer');
+
+    // A relationship a grouping array had previously forgotten (Career→Note) now surfaces.
+    expect(markup).toContain('Open roles');
+    expect(markup).toContain('href="/careers/senior-engineer"');
   });
 });

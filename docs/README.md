@@ -8,6 +8,7 @@ This directory contains HubZero's engineering, design, and product documentation
 | [`design/`](design) | The design system, motion, and visual identity language the interface follows. |
 | [`product/`](product) | Public-facing information architecture, narrative strategy, and content-model documentation. |
 | [`operations/`](operations) | Production trust boundaries, security posture, and operational limitations. |
+| [`releases/`](releases) | Permanent historical records of completed releases — why they were built the way they were, not just what shipped. |
 
 ## Architecture
 
@@ -25,6 +26,7 @@ This directory contains HubZero's engineering, design, and product documentation
 - [`ADR_PHASE_6_TRACE.md`](architecture/ADR_PHASE_6_TRACE.md) — How v2.5 Phase 6 (Trace) found the existing layered graph layout already renders a causal chain correctly with no new layout module, added one backward-chain projection (`trace-projection.ts`) and one optional `EvidenceGraph` prop, and wired it into Work detail pages.
 - [`ADR_PHASE_7_LEDGER.md`](architecture/ADR_PHASE_7_LEDGER.md) — How v2.5 Phase 7 (Ledger) audited every collection for a trustworthy editorial date, found only Note and Lab qualify, and built the `/ledger` timeline entirely from existing queries and the `EditorialCard` row primitive with zero new persistence.
 - [`ADR_PHASE_8_COLLECTIONS_DISCOVERY.md`](architecture/ADR_PHASE_8_COLLECTIONS_DISCOVERY.md) — How v2.5 Phase 8 audited all six public collections against Phases 2–7's primitives, closing five real gaps (missing nav entry, missing Ledger cross-links, a duplicated capped-relationship-list pattern, five collections missing `EvidenceGraph`, Trace missing from Lab) without adding any new rendering pattern.
+- [`EXPERIENCE_V3_PROGRESS.md`](architecture/EXPERIENCE_V3_PROGRESS.md) — The canonical, in-repo log of what Experience v3 has shipped, milestone by milestone. Read this for current project stage instead of relying on conversation memory.
 
 ## Design
 
@@ -42,3 +44,9 @@ This directory contains HubZero's engineering, design, and product documentation
 ## Operations
 
 - [`AI_AUTHORING_SECURITY.md`](operations/AI_AUTHORING_SECURITY.md) — Trust boundaries, validation, and rate-limiting for the AI authoring feature in production.
+- [`ENGINEERING_BOOTSTRAP.md`](operations/ENGINEERING_BOOTSTRAP.md) — The canonical engineering startup sequence: required reading order, skill discovery, working assumptions, and a pre-implementation checklist. Run this at the start of every session.
+- [`ENGINEERING_SKILLS_ROADMAP.md`](operations/ENGINEERING_SKILLS_ROADMAP.md) — Classification of every current `.claude/skills` / `.agents/skills` skill (Core, Specialized, Obsolete, candidate for consolidation) and the named gaps in that library relative to this repository's actual engineering work.
+
+## Releases
+
+- [`EXPERIENCE_V3_RELEASE_RECORD.md`](releases/EXPERIENCE_V3_RELEASE_RECORD.md) — The canonical historical record of Experience v3: why it was built the way it was, what decisions future contributors must preserve, and what it hands off to whatever comes next.

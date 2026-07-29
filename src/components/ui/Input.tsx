@@ -8,9 +8,9 @@ import { cn } from '@/lib/utils/cn';
  * the exact same look instead of hand-copying the class string.
  */
 export const fieldClassName = cn(
-  'bg-surface-default text-text-primary rounded-[4px] border border-[#2a2a2a] px-3 py-2 text-sm',
+  'bg-surface-default text-text-primary rounded-[4px] border border-border-subtle px-3 py-2 text-sm',
   'placeholder:text-text-muted',
-  'focus-visible:border-accent focus-visible:bg-[#171717] focus-visible:outline-none',
+  'focus-visible:border-accent focus-visible:bg-surface-input-focus focus-visible:outline-none',
   'duration-fast ease-standard transition-colors',
   'disabled:opacity-40',
 );

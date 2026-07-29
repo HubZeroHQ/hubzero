@@ -6,7 +6,7 @@ import { BlockEditor } from '@/components/documents/BlockEditor';
 import { ButtonLink } from '@/components/ui/ButtonLink';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { auth } from '@/lib/auth';
-import { canActOnEntry } from '@/lib/auth/permissions';
+import { canEditEntry } from '@/lib/auth/permissions';
 import {
   generateNoteBodyBlockAction,
   generateNoteBodyDocumentAction,
@@ -36,7 +36,7 @@ export default async function EditNotePage({ params }: { params: Promise<{ id: s
 
   const session = await auth();
   const { role, id: userId } = session!.user;
-  const canEdit = canActOnEntry(note, { role, userId });
+  const canEdit = canEditEntry(note, { role, userId });
 
   if (!canEdit) {
     return (
@@ -102,6 +102,7 @@ export default async function EditNotePage({ params }: { params: Promise<{ id: s
           onSave={boundSaveBodyAction}
           technologyOptions={relationOptions.technologyOptions}
           ai={bodyAiConfig}
+          previewHref={`/api/preview?type=note&id=${id}`}
         />
       </section>
     </div>

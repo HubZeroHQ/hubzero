@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { IBM_Plex_Mono, Instrument_Sans, Instrument_Serif } from 'next/font/google';
 import './globals.css';
 import { PUBLIC_SITE } from '@/config/public-site';
@@ -55,6 +55,13 @@ export const metadata: Metadata = {
   appleWebApp: {
     title: PUBLIC_SITE.name,
   },
+};
+
+// Mirrors `manifest.json`'s `theme_color`/`background_color` — the browser
+// chrome (mobile address bar, task switcher) and the PWA manifest should
+// never disagree about what color this site is.
+export const viewport: Viewport = {
+  themeColor: '#000000',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
