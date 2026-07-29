@@ -1,0 +1,51 @@
+import type { Collection } from 'mongodb';
+import { getDb } from './mongodb';
+import type { DocumentRecord } from '@/lib/documents/schema';
+import type { DocumentVersionRecord } from '@/lib/documents/version';
+import type {
+  Blueprint,
+  Build,
+  Career,
+  CareerInterest,
+  EngineeringProfile,
+  Lab,
+  Lead,
+  MediaAsset,
+  Note,
+  Service,
+  StudioSettings,
+  TaxonomyEntry,
+  Team,
+  User,
+  Work,
+} from '@/types/studio';
+
+/**
+ * Typed accessors for every collection in PLANNING.md §26 — the single
+ * place collection names are spelled out, so a rename never means chasing
+ * down every `db.collection('...')` call.
+ */
+async function collection<T extends object>(name: string): Promise<Collection<T>> {
+  const db = await getDb();
+  return db.collection<T>(name);
+}
+
+export const collections = {
+  work: () => collection<Work>('work'),
+  builds: () => collection<Build>('builds'),
+  blueprints: () => collection<Blueprint>('blueprints'),
+  labs: () => collection<Lab>('labs'),
+  notes: () => collection<Note>('notes'),
+  engineeringProfiles: () => collection<EngineeringProfile>('engineeringProfiles'),
+  team: () => collection<Team>('team'),
+  services: () => collection<Service>('services'),
+  careers: () => collection<Career>('careers'),
+  leads: () => collection<Lead>('leads'),
+  careerInterests: () => collection<CareerInterest>('careerInterests'),
+  users: () => collection<User>('users'),
+  media: () => collection<MediaAsset>('media'),
+  taxonomy: () => collection<TaxonomyEntry>('taxonomy'),
+  documents: () => collection<DocumentRecord>('documents'),
+  documentVersions: () => collection<DocumentVersionRecord>('documentVersions'),
+  settings: () => collection<StudioSettings>('settings'),
+};

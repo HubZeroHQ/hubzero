@@ -1,0 +1,90 @@
+/**
+ * The Founder Engineering Identity System (Phase 23) — a deliberate, scoped
+ * exception to DESIGN_SYSTEM.md's single-amber-accent rule, for editorial
+ * identity content only. It applies to: a founder's own Engineering Profile
+ * route (`compositions/*.tsx`, plus this route's own bespoke composition
+ * classes like `.founder-eyebrow`/`.founder-pinout` — these render nowhere
+ * else); the About founder card that leads into it; and the smaller
+ * cross-reference tier a founder's name gets wherever it's credited outside
+ * their own profile (`FounderCrossLink`, e.g. a Notes byline) — the same
+ * accent plus a compact motif variant, never a functional-state color.
+ * Every other public surface (Homepage explicitly, by its own documented
+ * exception in `EditorialPrimitives.tsx`'s `RelationshipCard`) stays
+ * monochrome + amber. See ENGINEERING_IDENTITY.md's "Founder identity scope"
+ * section for the full boundary and rationale.
+ *
+ * This is static, hand-authored, and permanent by design (PUBLIC brief:
+ * "the visual identity should never be editable — only editorial content
+ * evolves"). It is keyed by the Team/EngineeringProfile `slug`, not stored
+ * in Studio, and deliberately does not cover every possible future profile —
+ * a profile with no entry here renders through the generic template, which
+ * is exactly how a future non-founder Engineering Profile should behave
+ * until leadership deliberately designs an identity for them.
+ */
+
+export type FounderMotifId =
+  'network' | 'dependencyGraph' | 'traveler' | 'editorialGrid' | 'pcbTrace';
+
+export interface FounderIdentity {
+  slug: string;
+  accent: string;
+  motif: FounderMotifId;
+  /** Accessible description of what the motif diagrams — read by screen readers, never decorative alt text. */
+  motifDescription: string;
+}
+
+const FOUNDER_IDENTITIES: readonly FounderIdentity[] = [
+  {
+    slug: 'rifaque',
+    accent: '#4d8dff',
+    motif: 'network',
+    motifDescription: 'A distributed system of routing lines splitting, merging, and terminating.',
+  },
+  {
+    slug: 'raif',
+    accent: '#22d3ee',
+    motif: 'dependencyGraph',
+    motifDescription: 'Parallel systems routing through fixed checkpoints into shared pipelines.',
+  },
+  {
+    slug: 'iyad',
+    accent: '#a78bfa',
+    motif: 'traveler',
+    motifDescription:
+      'One routed line turning through several stages, set among short independent records.',
+  },
+  {
+    slug: 'sultan',
+    accent: '#f5943b',
+    motif: 'editorialGrid',
+    motifDescription: 'A set of long horizontal rules structuring an editorial layout.',
+  },
+  {
+    slug: 'salsabeel',
+    accent: '#34d399',
+    motif: 'pcbTrace',
+    motifDescription: 'Right-angled circuit traces routing between board vias.',
+  },
+] as const;
+
+export function getFounderIdentity(slug: string): FounderIdentity | undefined {
+  return FOUNDER_IDENTITIES.find((founder) => founder.slug === slug);
+}
+
+/** Scoped CSS custom-property override — never applied globally, only on the profile/card root. */
+export function founderAccentStyle(accent: string): Record<string, string> {
+  return {
+    '--founder-accent': accent,
+  };
+}
+
+/**
+ * Same value applied to the motif element on the About founder card and on
+ * the Engineering Profile hero — the two elements a supported browser's
+ * View Transitions API needs to treat as one continuous object across the
+ * navigation. See `FounderProfileLink` (engineering/FounderProfileLink.tsx),
+ * which wraps the navigation in `document.startViewTransition`.
+ */
+export function founderMotifViewTransitionStyle(slug: string): Record<string, string> {
+  return { viewTransitionName: `founder-motif-${slug}` };
+}

@@ -1,0 +1,450 @@
+import type { ObjectId } from 'mongodb';
+import type { DocumentRole } from '@/lib/documents/schema';
+
+/**
+ * Shared type vocabulary for every Studio collection (PLANNING.md §24, §26).
+ * Relationships are modeled as ObjectId references, never embedding — most
+ * are queried independently (e.g. "all Notes referencing this Build").
+ */
+
+export type PublishStatus = 'draft' | 'inReview' | 'approved' | 'published' | 'archived';
+
+/** Services carries a deliberately lighter two-state workflow (§26.7). */
+export type ServicePublishStatus = 'draft' | 'published';
+
+export type ReferenceIdPrefix = 'WK' | 'BL' | 'BP' | 'LB' | 'NT' | 'TM' | 'EP' | 'CR';
+
+/** Permanent Studio identifier. Existing content uses `HZ-{PREFIX}-{NNN}`; Engineering Profiles use `EP-{NNN}`. */
+export type ReferenceId<Prefix extends ReferenceIdPrefix = ReferenceIdPrefix> = Prefix extends 'EP'
+  ? `EP-${string}`
+  : `HZ-${Prefix}-${string}`;
+
+export type UserRole = 'headAdmin' | 'admin' | 'member';
+
+export type TaxonomyKind = 'technology' | 'category' | 'topic';
+
+/**
+ * One-level grouping only, matching "avoid unnecessary nesting"
+ * (CMS_PRODUCT_DESIGN.md §6) — a lightweight tag for where an asset is
+ * mainly used, not a folder hierarchy. `general` is the default for
+ * anything that doesn't obviously belong to one collection.
+ */
+export type MediaFolder =
+  'work' | 'builds' | 'blueprints' | 'labs' | 'notes' | 'team' | 'engineeringProfiles' | 'general';
+
+export type LeadStatus = 'new' | 'contacted' | 'closed';
+
+export type LabStage = 'exploring' | 'building' | 'testing';
+
+export type BuildDeploymentState = 'live' | 'retired';
+
+export type EmploymentType = 'fullTime' | 'partTime' | 'contract' | 'internship';
+
+export type ExperienceLevel = 'entry' | 'mid' | 'senior' | 'lead';
+
+export interface WithId {
+  _id: ObjectId;
+}
+
+export interface WithTimestamps {
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * Shared by every collection that runs through the full publishing workflow
+ * (§28). `createdByUserId` is permanent provenance metadata — assigned once
+ * at create time, never editable afterward (§29) — not an authorization
+ * mechanism itself; permissions are still decided by `config/permissions.ts`'s
+ * role/capability table (`lib/auth/permissions.ts`'s `requireEntryCapability`
+ * reads this field only to scope which entries a Team Member's
+ * `editOwnEntry` capability applies to). Extending this later with e.g. a
+ * `contributorUserIds` or `maintainerUserId` field is additive to this one
+ * base interface, not a change to Work/Build/Blueprint/Lab/Note individually.
+ */
+interface PublishableEntity extends WithId, WithTimestamps {
+  status: PublishStatus;
+  slug: string;
+  createdByUserId: ObjectId;
+  /** The reviewer's reason the last time this entry was sent back from `inReview` to `draft`. Cleared (`null`) on every other status transition, including the author's next resubmission — it is last-rejection feedback, not a running log. */
+  reviewNote?: string | null;
+}
+
+/**
+ * The collections evidence-style cross-references are allowed to point at
+ * (§13, §24: Service → {Work, Build, Blueprint, Lab}; Note → the same four).
+ * Deliberately narrower than the Document Engine's `OwnerType` (§25), which
+ * also includes Team and Note — an evidence link and a Document owner are
+ * different concepts that happen to overlap, not the same type.
+ */
+export type EvidenceOwnerType = 'Work' | 'Build' | 'Blueprint' | 'Lab';
+export type ServiceEvidenceOwnerType = EvidenceOwnerType | 'Note';
+
+/**
+ * A role relates to the products it would touch (Build), the client work it
+ * resembles (Work), the investigation it grew out of (Lab), and the writing
+ * that gives it technical context (Note) — deliberately excludes Blueprint,
+ * which isn't part of the field list a Career listing actually needs.
+ */
+export type CareerEvidenceOwnerType = 'Work' | 'Build' | 'Lab' | 'Note';
+
+/** A reference into a Work/Build/Blueprint/Lab entry — evidence links (§13) and Note cross-references (§24). */
+export interface EntryReference {
+  ownerType: EvidenceOwnerType;
+  ownerId: ObjectId;
+}
+
+/** Services may also use a published Note when the writing itself is material evidence. */
+export interface ServiceEvidenceReference {
+  ownerType: ServiceEvidenceOwnerType;
+  ownerId: ObjectId;
+}
+
+/** A Career listing's typed connection to a Work/Build/Lab/Note entry. */
+export interface CareerEntryReference {
+  ownerType: CareerEvidenceOwnerType;
+  ownerId: ObjectId;
+}
+
+export interface TaxonomyEntry extends WithId, WithTimestamps {
+  kind: TaxonomyKind;
+  label: string;
+  slug: string;
+}
+
+/** Every uploaded asset is a Cloudinary reference — never binary data in the database (§26.10, §33). */
+export interface MediaAsset extends WithId, WithTimestamps {
+  cloudinaryPublicId: string;
+  url: string;
+  altText: string;
+  caption?: string;
+  credit?: string;
+  width?: number;
+  height?: number;
+  /** Read from Cloudinary's upload response, never entered by hand (CMS_PRODUCT_DESIGN.md §6). */
+  fileSizeBytes?: number;
+  mimeType?: string;
+  originalFilename?: string;
+  folder: MediaFolder;
+  reuseTags: string[];
+  /** Provenance only, like every other collection's `createdByUserId` — not itself an authorization mechanism. */
+  createdByUserId?: ObjectId;
+}
+
+/** System identity for Studio access (§26.9) — never rendered publicly by itself; see Team for public presentation. */
+export interface User extends WithId, WithTimestamps {
+  name: string;
+  email: string;
+  role: UserRole;
+  passwordHash?: string;
+  image?: string;
+  /** A disabled account can no longer sign in (`credentials.ts` checks this at `authorize()`), but is never deleted outright by that alone — Users management §29. */
+  disabled: boolean;
+  /** Set when Head Admin resets this user's password on their behalf; cleared by the user's own successful password change. A UX prompt, not a security boundary — the old password already stopped working the moment it was reset. */
+  mustChangePassword: boolean;
+}
+
+/** One entry in a Team member's public social links list — platform is free-text (e.g. "GitHub", "X") rather than an enum, matching `group`'s "adjustable, never hardcoded" precedent below. */
+interface TeamSocialLink {
+  platform: string;
+  url: string;
+}
+
+/** A user's public-facing profile, if they have one — optional and separate from system identity (§24, §26.6). */
+export interface Team extends WithId, WithTimestamps {
+  referenceId: ReferenceId<'TM'>;
+  name: string;
+  role: string;
+  bio: string;
+  /** e.g. "Founders" | "Operating Team" | "Engineering Team" today — adjustable, never hardcoded. */
+  group: string;
+  portraitId?: ObjectId;
+  publicProfile: boolean;
+  userId?: ObjectId;
+  /** Distinct from `group === 'Founders'` — a lightweight editorial flag (e.g. for a "Founder" badge) independent of which group a member is currently sorted into. */
+  founder: boolean;
+  /**
+   * Which public About-page section this person appears in. Independent of
+   * `founder` — a founder is a permanent historical fact, `publicCategory`
+   * is a current organizational position, and the two can disagree in
+   * either direction (a founder who has stepped back from leadership; a
+   * later leadership hire who was never a founder).
+   */
+  publicCategory: 'leadership' | 'team';
+  /**
+   * Editorial eligibility to have an Engineering Profile created, decided
+   * independently of `publicCategory` — today set `true` exactly for
+   * Leadership, but it's a standalone decision, not derived, so extending
+   * eligibility to an individual Member later never requires touching
+   * organizational structure.
+   */
+  engineeringProfileEligible: boolean;
+  /** Optional — shown only on the compact Engineering Team card, never on Leadership's premium card. */
+  joinedAt?: Date;
+  /** Lower sorts first, within a group and in the admin list's default order. */
+  order: number;
+  socialLinks: TeamSocialLink[];
+  /** Soft-removed from the public site query and the default admin list, without losing the record (Users management §1's "safeguards" precedent applied to Team). */
+  archived: boolean;
+}
+
+export interface Work extends PublishableEntity {
+  referenceId: ReferenceId<'WK'>;
+  title: string;
+  /** Concise public/editorial summary for indexes, metadata, search, and relationship context. */
+  summary: string;
+  clientType: string;
+  categoryTagIds: ObjectId[];
+  timeline: string;
+  role: string;
+  technologyIds: ObjectId[];
+  relatedBuildIds: ObjectId[];
+  relatedBlueprintIds: ObjectId[];
+  relatedLabIds: ObjectId[];
+  /** Explicit public credit, always via Team (the canonical person identity) — never `EngineeringProfile` directly; `createdByUserId` remains internal provenance. */
+  contributors: ObjectId[];
+  heroImageId?: ObjectId;
+  /** Additive beyond §26.1 — mirrors Build's `repoUrl` (§26.2). */
+  repoUrl?: string;
+}
+
+export interface Build extends PublishableEntity {
+  referenceId: ReferenceId<'BL'>;
+  title: string;
+  /** Concise public/editorial summary for indexes, metadata, search, and relationship context — distinct from the owned `caseStudy` Document (§25). */
+  summary: string;
+  deploymentState: BuildDeploymentState;
+  liveUrl?: string;
+  repoUrl?: string;
+  technologyIds: ObjectId[];
+  originatingLabId?: ObjectId;
+  relatedWorkIds: ObjectId[];
+  /** Additive beyond PLANNING.md §26.2 — the product hero image and supporting gallery (§10's "screenshots"). */
+  heroImageId?: ObjectId;
+  galleryImageIds: ObjectId[];
+  /** Additive beyond §26.2 — surfaces a Build on the homepage's "Featured Build" slot (PLANNING.md §8). */
+  featured: boolean;
+  /** Explicit public credit, always via Team (the canonical person identity) — never `EngineeringProfile` directly; `createdByUserId` remains internal provenance. */
+  contributors: ObjectId[];
+}
+
+export interface Blueprint extends PublishableEntity {
+  referenceId: ReferenceId<'BP'>;
+  /** Enforced `Blueprint-X-Y` format at the schema level (§11, §26.3). */
+  name: `Blueprint-${string}-${string}`;
+  architecture: string;
+  designLanguage: string;
+  /** Card/list-view summary — the long-form narrative lives in the owned `caseStudy` Document (§25) instead. */
+  shortDescription: string;
+  features: string[];
+  technologyIds: ObjectId[];
+  liveDeploymentUrl: string;
+  /** Additive beyond §26.3 — mirrors Work/Build's `repoUrl` for a public or internal repository link. */
+  repoUrl?: string;
+  /** Additive beyond §26.3 — optional standalone documentation site, distinct from the in-CMS case study Document. */
+  docsUrl?: string;
+  /** Additive beyond §26.3 — mirrors Build's `heroImageId`/`galleryImageIds` split between a lead image and supporting gallery. */
+  heroImageId?: ObjectId;
+  previewAssetIds: ObjectId[];
+  /** Additive beyond §26.3 — mirrors Build's homepage "Featured" slot (PLANNING.md §8). */
+  featured: boolean;
+  /** Additive beyond §26.3 — a foundation evolves after its first release; free-form so `1.2.0` and `2024.1` both fit. */
+  version: string;
+  /** Explicit public credit, always via Team (the canonical person identity) — never `EngineeringProfile` directly; `createdByUserId` remains internal provenance. */
+  contributors: ObjectId[];
+}
+
+/**
+ * A single entry in a collection entry's progress timeline — generic and
+ * reusable (`lib/validation/shared.ts`'s `progressMilestoneSchema`), not
+ * modeled as Lab-specific. `relatedDocumentRole` optionally names one of the
+ * owning entry's own Documents (§25) that backs the milestone up.
+ */
+export interface ProgressMilestone {
+  title: string;
+  date: Date;
+  summary: string;
+  relatedDocumentRole?: DocumentRole;
+}
+
+export interface Lab extends PublishableEntity {
+  referenceId: ReferenceId<'LB'>;
+  title: string;
+  /** Where the research currently sits — distinct from `status` (§28's publishing workflow). */
+  stage: LabStage;
+  objective: string;
+  /** Additive beyond §26.4 — current technical approach/direction, separate from `objective`'s "what/why." */
+  researchDirection: string;
+  /** Renamed from §26.4's `nextMilestone` — the milestone actively being worked toward right now. */
+  currentMilestone: string;
+  graduationCriteria: string;
+  graduatedToBuildId?: ObjectId;
+  /** Additive beyond §26.4 — when this exploration began. */
+  startDate: Date;
+  /** Additive beyond §26.4 — deliberately curated, distinct from the record's own `updatedAt` (which changes on every trivial edit). */
+  lastMajorUpdateAt?: Date;
+  /** Additive beyond §26.4 — mirrors Build/Blueprint's `repoUrl`, split into internal vs. optionally-public. */
+  internalRepoUrl: string;
+  publicRepoUrl?: string;
+  /** Additive beyond §26.4 — mirrors Blueprint's `liveDeploymentUrl`, optional since not every Lab has a running demo. */
+  liveDemoUrl?: string;
+  technologyIds: ObjectId[];
+  /** Additive beyond §26.4 — mirrors Work's forward relation shape (§24), distinct from `graduatedToBuildId`'s graduation-specific link. */
+  relatedBuildIds: ObjectId[];
+  relatedBlueprintIds: ObjectId[];
+  /** Additive beyond §26.4 — mirrors Build/Blueprint's hero + gallery split. */
+  heroImageId?: ObjectId;
+  galleryImageIds: ObjectId[];
+  /** Additive beyond §26.4 — mirrors Build/Blueprint's homepage "Featured" slot. */
+  featured: boolean;
+  /** The Progress Timeline (Phase 10). */
+  milestones: ProgressMilestone[];
+  /** Explicit public credit, always via Team (the canonical person identity) — never `EngineeringProfile` directly; `createdByUserId` remains internal provenance. */
+  contributors: ObjectId[];
+}
+
+export interface Note extends PublishableEntity {
+  referenceId: ReferenceId<'NT'>;
+  title: string;
+  /** System identity, not a Team public profile (§24) — set at creation, reassignable by anyone who can edit the entry. */
+  authorId: ObjectId;
+  /** Card/list-view summary — mirrors Blueprint's `shortDescription`; the long-form write-up lives in the owned `body` Document (§25) instead. */
+  summary: string;
+  /** Renamed from §26.5's combined "tags/technologies" facet — consistent with every other collection's `technologyIds`, referencing the shared Taxonomy's `technology` kind (§26.11). */
+  technologyIds: ObjectId[];
+  relatedEntries: EntryReference[];
+  /** Additive beyond §26.5 — an editorial date distinct from `createdAt` and the workflow's `published` transition, for backdating or scheduling a write-up. */
+  publicationDate: Date;
+  /** Additive beyond §26.5 — mirrors every other Content collection's homepage "Featured" slot. */
+  featured: boolean;
+  /** Additive beyond §26.5 — mirrors Build/Blueprint/Lab's optional hero + gallery split. */
+  heroImageId?: ObjectId;
+  galleryImageIds: ObjectId[];
+  /** Explicit public credit, always via Team (the canonical person identity) — never `EngineeringProfile` directly; distinct from `authorId` (the system identity that owns/edits the write-up) — a Note can credit contributors beyond its author. */
+  contributors: ObjectId[];
+}
+
+/**
+ * A role HubZero is trying to fill, held to the same publishing standard as
+ * every other Content collection — full five-state workflow, a reference ID,
+ * typed relationships, one owned Document (`role: 'overview'`) for the
+ * long-form write-up. Deliberately carries no hero/gallery imagery: a role
+ * isn't a visual artifact the way a product or a case study is, and adding
+ * image fields with no real use would be exactly the kind of unjustified
+ * field this codebase's own conventions warn against.
+ */
+export interface Career extends PublishableEntity {
+  referenceId: ReferenceId<'CR'>;
+  title: string;
+  location: string;
+  employmentType: EmploymentType;
+  experienceLevel: ExperienceLevel;
+  /** Card/list-view summary — mirrors Note's `summary`; the full write-up lives in the owned `overview` Document. */
+  summary: string;
+  responsibilities: string[];
+  requirements: string[];
+  benefits: string[];
+  /** Deliberately optional — not every role has settled compensation at the time it's drafted. */
+  compensation?: string;
+  /** Stated plainly and explicitly, never buried in the Document body — a visitor should always be able to find "how do I apply" without reading the full narrative first. */
+  applicationProcess: string;
+  technologyIds: ObjectId[];
+  /** Optional — a role may be drafted before a hiring manager is assigned. Resolves to a Team record, the same canonical-person pattern every other public-credit field in this codebase uses. */
+  hiringManagerTeamId?: ObjectId;
+  relatedEntries: CareerEntryReference[];
+}
+
+/** An earned, evidence-led record of how one Team Member thinks and works. */
+export interface EngineeringProfile extends PublishableEntity {
+  referenceId: ReferenceId<'EP'>;
+  teamMemberId: ObjectId;
+  overview: string;
+  engineeringPhilosophy: string;
+  currentExploration: string;
+  areasOfExpertise: string[];
+  currentInterests: string[];
+  engineeringIdentity: string[];
+  technologyIds: ObjectId[];
+  featuredWorkIds: ObjectId[];
+  featuredBuildIds: ObjectId[];
+  featuredBlueprintIds: ObjectId[];
+  featuredLabIds: ObjectId[];
+  featuredNoteIds: ObjectId[];
+  portraitId?: ObjectId;
+  heroMediaId?: ObjectId;
+  galleryImageIds: ObjectId[];
+}
+
+/** Small, low-volume — no reference ID, simplified status (§26.7). */
+export interface Service extends WithId, WithTimestamps {
+  title: string;
+  description: string;
+  status: ServicePublishStatus;
+  evidenceLinks: ServiceEvidenceReference[];
+  /** Lower sorts first in the public list and the admin list's default order. */
+  order: number;
+  /** Homepage "Featured" slot, mirroring Build/Blueprint/Lab/Note's existing `featured` flag. */
+  featured: boolean;
+}
+
+/**
+ * Deliberately minimal — not a CRM (§26.8). No reference ID: internal-only, no citation purpose.
+ * `archived` is orthogonal to `status`: a shelf for leads no longer worth surfacing by default,
+ * not a fourth workflow state — closing a lead and archiving it are independent actions.
+ */
+export interface Lead extends WithId, WithTimestamps {
+  name: string;
+  email: string;
+  message: string;
+  source: string;
+  status: LeadStatus;
+  assignedToUserId?: ObjectId;
+  internalNotes?: string;
+  archived: boolean;
+}
+
+/**
+ * A candidate expressing interest when no Career listing currently fits —
+ * deliberately its own type rather than a repurposed Lead: a résumé,
+ * portfolio, and social links don't belong on the general sales-inquiry
+ * record, and conflating the two would blur an internal-only hiring
+ * pipeline with an external-facing one. Mirrors Lead's shape and
+ * conventions exactly otherwise — no reference ID (internal-only, no
+ * citation purpose), the same `archived` shelf orthogonal to `status`.
+ */
+export interface CareerInterest extends WithId, WithTimestamps {
+  name: string;
+  email: string;
+  location?: string;
+  resumeUrl?: string;
+  portfolioUrl?: string;
+  githubUrl?: string;
+  linkedinUrl?: string;
+  websiteUrl?: string;
+  areasOfInterest: string[];
+  introduction: string;
+  /** Set when the submission came from a specific listing's page rather than the general "no roles open" state. */
+  careerId?: ObjectId;
+  status: LeadStatus;
+  assignedToUserId?: ObjectId;
+  internalNotes?: string;
+  archived: boolean;
+}
+
+/**
+ * Singleton Studio configuration (§26.9-adjacent, no PLANNING.md section of
+ * its own — this collection didn't exist before the Users/Team/Leads/
+ * Services/Taxonomy/Settings completion sprint). Exactly one document ever
+ * exists, at the fixed `_id` `lib/db/repositories/settings.ts` uses.
+ * Deliberately minimal: only the fields Settings → System's "Studio
+ * information / Branding" section actually needs today. Environment, build,
+ * and integration-status information is derived read-only from existing
+ * config (`src/config/*`, `serverEnv()`) and never persisted here.
+ */
+export interface StudioSettings extends WithId, WithTimestamps {
+  studioName: string;
+  tagline: string;
+  contactEmail: string;
+  logoMediaId?: ObjectId;
+  accentColor?: string;
+}

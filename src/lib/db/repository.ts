@@ -1,0 +1,128 @@
+import { ObjectId } from 'mongodb';
+import type { Collection, Filter, OptionalUnlessRequiredId, UpdateFilter } from 'mongodb';
+import type { z } from 'zod';
+import { generateReferenceId } from '@/lib/ids/reference-id';
+import type { ReferenceIdPrefix, WithId, WithTimestamps } from '@/types/studio';
+
+export interface RepositoryOptions {
+  /** When set, `create()` assigns a permanent reference ID (§27) exactly once. */
+  referenceIdPrefix?: ReferenceIdPrefix;
+}
+
+/**
+ * Parses a partial update payload against an entity's full Zod schema
+ * without letting a field's `.default(...)` silently reintroduce it.
+ *
+ * `schema.partial().parse(input)` alone isn't safe for updates: Zod fills in
+ * any `.default(...)` for a field the caller omitted, and that substituted
+ * value (e.g. `technologyIds: []`) is indistinguishable from a real value
+ * once parsing finishes — `base.update()` then `$set`s it, wiping out
+ * whatever was already stored. Filtering the parsed result down to keys
+ * actually present in `input` keeps every other field untouched, which is
+ * what every caller of `xRepository.update()` actually intends by omitting
+ * a field.
+ */
+export function parsePartialInput<Schema extends z.ZodType<object>>(
+  schema: Schema,
+  input: Partial<z.input<Schema>>,
+): Partial<z.output<Schema>> {
+  const parsed = (schema as unknown as { partial: () => z.ZodType })
+    .partial()
+    .parse(input) as Record<string, unknown>;
+  return Object.fromEntries(Object.entries(parsed).filter(([key]) => key in input)) as Partial<
+    z.output<Schema>
+  >;
+}
+
+/**
+ * Shared CRUD shape for every Studio collection (PLANNING.md §26) — one
+ * implementation of "validate, timestamp, optionally assign a reference ID"
+ * instead of hand-rolling the same operations across eleven collections.
+ * Collection-specific modules under `lib/db/repositories/` wrap this with
+ * their Zod schema (`lib/validation/*`) for parsing and any bespoke queries
+ * (e.g. `findBySlug`). Callers are expected to pass already-validated input;
+ * this layer owns persistence, not validation.
+ */
+export function createRepository<TRecord extends WithId & WithTimestamps, TInput extends object>(
+  getCollection: () => Promise<Collection<TRecord>>,
+  options: RepositoryOptions = {},
+) {
+  return {
+    async findById(id: string): Promise<TRecord | null> {
+      const collection = await getCollection();
+      const result = await collection.findOne({ _id: new ObjectId(id) } as Filter<TRecord>);
+      return result as TRecord | null;
+    },
+
+    async list(filter: Filter<TRecord> = {}): Promise<TRecord[]> {
+      const collection = await getCollection();
+      const results = await collection.find(filter).toArray();
+      return results as TRecord[];
+    },
+
+    async create(input: TInput, meta: { createdByUserId?: string } = {}): Promise<TRecord> {
+      const now = new Date();
+      const referenceId = options.referenceIdPrefix
+        ? await generateReferenceId(options.referenceIdPrefix)
+        : undefined;
+
+      // The runtime contract: every field TRecord requires beyond TInput
+      // (referenceId, createdByUserId, _id, timestamps) is supplied here.
+      // `referenceIdPrefix` must be set for any TRecord whose type requires
+      // a `referenceId`; callers for any TRecord requiring `createdByUserId`
+      // (PublishableEntity, §24) must pass `meta.createdByUserId` — it's
+      // permanent provenance (§29), assigned exactly once and never part of
+      // TInput, so `update()` can never touch it.
+      const doc = {
+        ...input,
+        ...(referenceId ? { referenceId } : {}),
+        ...(meta.createdByUserId ? { createdByUserId: new ObjectId(meta.createdByUserId) } : {}),
+        createdAt: now,
+        updatedAt: now,
+      } as unknown as TRecord;
+
+      const collection = await getCollection();
+      const { insertedId } = await collection.insertOne(
+        doc as unknown as OptionalUnlessRequiredId<TRecord>,
+      );
+      return { ...doc, _id: insertedId };
+    },
+
+    async update(id: string, patch: Partial<TInput>): Promise<TRecord | null> {
+      const collection = await getCollection();
+
+      // A key explicitly present with value `undefined` (as opposed to
+      // simply absent from `patch`) means "clear this optional field" —
+      // e.g. Work's repoUrl. MongoDB's driver silently drops `undefined`
+      // values from `$set`, so those keys are routed to `$unset` instead;
+      // every other key is set normally.
+      const setFields: Record<string, unknown> = { updatedAt: new Date() };
+      const unsetFields: Record<string, ''> = {};
+      for (const [key, value] of Object.entries(patch)) {
+        if (value === undefined) {
+          unsetFields[key] = '';
+        } else {
+          setFields[key] = value;
+        }
+      }
+
+      const updateOperation = { $set: setFields } as UpdateFilter<TRecord>;
+      if (Object.keys(unsetFields).length > 0) {
+        (updateOperation as { $unset?: Record<string, ''> }).$unset = unsetFields;
+      }
+
+      const result = await collection.findOneAndUpdate(
+        { _id: new ObjectId(id) } as Filter<TRecord>,
+        updateOperation,
+        { returnDocument: 'after' },
+      );
+      return result as TRecord | null;
+    },
+
+    async remove(id: string): Promise<boolean> {
+      const collection = await getCollection();
+      const result = await collection.deleteOne({ _id: new ObjectId(id) } as Filter<TRecord>);
+      return result.deletedCount === 1;
+    },
+  };
+}

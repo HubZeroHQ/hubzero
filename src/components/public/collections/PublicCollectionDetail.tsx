@@ -1,0 +1,529 @@
+import Link from 'next/link';
+import type { ImmutablePublic, PublicEntityDetail } from '@/lib/public/domain';
+import { publicRoute } from '@/lib/public/routes';
+import { DetailGallery } from '../DetailGallery';
+import {
+  ContributorList,
+  DetailSectionHeading,
+  formatMetadata,
+  formatPublicDate,
+  groupRelationshipsByType,
+  PublicBreadcrumbs,
+  PublicBuildStateBadge,
+  relationshipHref,
+  relationshipKey,
+  TechnologyList,
+} from '../EditorialPrimitives';
+import { EvidenceGraph, EvidenceGraphFocusSync } from '../evidence-graph';
+import { PageContainer, PublicSection } from '../PageContainer';
+import { ProseRenderer } from '../ProseRenderer';
+import { PublicImage } from '../PublicImage';
+import { ReferenceIdCopy } from '../ReferenceIdCopy';
+import { RelatedRecordsSection } from '../RelatedRecordsSection';
+import { BlueprintFeatureList } from './BlueprintFeatureList';
+
+type BuildDetail = Extract<PublicEntityDetail, { type: 'build' }>;
+type BlueprintDetail = Extract<PublicEntityDetail, { type: 'blueprint' }>;
+type LabDetail = Extract<PublicEntityDetail, { type: 'lab' }>;
+type WorkDetail = Extract<PublicEntityDetail, { type: 'work' }>;
+type CollectionDetail = WorkDetail | BuildDetail | BlueprintDetail | LabDetail;
+
+const DOCUMENT_LABELS: Record<string, { eyebrow: string; title: string }> = {
+  caseStudy: { eyebrow: 'Product lens', title: 'Product story' },
+  technical: { eyebrow: 'Technical lens', title: 'Architecture and decisions' },
+  overview: { eyebrow: 'Research record', title: 'Overview' },
+  engineeringJournal: { eyebrow: 'Research record', title: 'Engineering journal' },
+  findings: { eyebrow: 'Research record', title: 'Findings' },
+  researchNotes: { eyebrow: 'Research record', title: 'Research notes' },
+};
+
+/** `EvidenceGraph`'s `subject.meta` for each collection type — singular, matching the fan diagram's existing usage elsewhere (a Build's, a Work item's, an Engineer's). */
+const SUBJECT_META: Record<CollectionDetail['type'], string> = {
+  work: 'Work',
+  build: 'Build',
+  blueprint: 'Blueprint',
+  lab: 'Lab',
+};
+
+export function PublicCollectionDetail({ entity }: { entity: ImmutablePublic<CollectionDetail> }) {
+  const collection =
+    entity.type === 'work'
+      ? 'Work'
+      : entity.type === 'build'
+        ? 'Builds'
+        : entity.type === 'blueprint'
+          ? 'Blueprints'
+          : 'Labs';
+  const collectionHref = publicRoute.collection(entity.type);
+  const lineage = entity.relationships.filter(
+    (relationship) => relationship.kind === 'labGraduatedToBuild',
+  );
+  /**
+   * Excludes `labGraduatedToBuild` (shown separately above, as "Product
+   * lineage") and `teamContributedToEntry` (shown separately in
+   * `DetailRegister`'s `ContributorList`) — the same "don't draw a credit
+   * twice, at two different visual weights" rule the Homepage's own
+   * `evidenceGraphRelationships()` already applies. This keeps the graph fed
+   * here and the `groups` list below it describing the same relationships,
+   * per `EvidenceGraph`'s own contract.
+   */
+  const connected = entity.relationships.filter(
+    (relationship) =>
+      relationship.kind !== 'labGraduatedToBuild' && relationship.kind !== 'teamContributedToEntry',
+  );
+  const workRelationshipGroups =
+    entity.type === 'work'
+      ? groupRelationshipsByType(connected, [
+          { type: 'build', title: 'Engineering foundations' },
+          { type: 'blueprint', title: 'Reusable foundations' },
+          { type: 'lab', title: 'Connected investigations' },
+          { type: 'note', title: 'Engineering notes' },
+          { type: 'career', title: 'Open roles' },
+        ])
+      : [];
+  const buildRelationshipGroups =
+    entity.type === 'build'
+      ? groupRelationshipsByType(connected, [
+          { type: 'work', title: 'Applied in client work' },
+          { type: 'lab', title: 'Connected investigations' },
+          { type: 'note', title: 'Engineering notes' },
+          { type: 'career', title: 'Open roles' },
+        ])
+      : [];
+  const labRelationshipGroups =
+    entity.type === 'lab'
+      ? groupRelationshipsByType(connected, [
+          { type: 'build', title: 'Related Builds' },
+          { type: 'blueprint', title: 'Related Blueprints' },
+          { type: 'note', title: 'Engineering notes' },
+          { type: 'career', title: 'Open roles' },
+        ])
+      : [];
+  const blueprintRelationshipGroups =
+    entity.type === 'blueprint'
+      ? groupRelationshipsByType(connected, [
+          { type: 'work', title: 'Proven in client work' },
+          { type: 'build', title: 'Connected products' },
+          { type: 'lab', title: 'Explored in Labs' },
+          { type: 'note', title: 'Engineering notes' },
+        ])
+      : [];
+
+  return (
+    <main id="main-content" tabIndex={-1} className="collection-main detail-main">
+      <header className="detail-hero">
+        <PageContainer>
+          <PublicBreadcrumbs
+            items={[
+              { label: 'HubZero', href: publicRoute.home() },
+              { label: collection, href: collectionHref },
+              { label: entity.title },
+            ]}
+          />
+          <div className="detail-hero-grid">
+            <div className="detail-title-block">
+              <p className="home-eyebrow">
+                {entity.type === 'work'
+                  ? 'Work / engineering case study'
+                  : entity.type === 'build'
+                    ? 'Build / shipped product'
+                    : entity.type === 'blueprint'
+                      ? 'Blueprint / reusable engineering asset'
+                      : 'Lab / active investigation'}
+              </p>
+              <h1>{entity.title}</h1>
+              {lineage.length ? (
+                <p className="detail-lineage-cue">
+                  <span aria-hidden="true">↳</span>{' '}
+                  {lineage.map((relationship, index) => {
+                    const href = relationshipHref(relationship);
+                    return (
+                      <span key={relationshipKey(relationship)}>
+                        {index > 0 ? ', ' : ''}
+                        {relationship.label}{' '}
+                        {href ? (
+                          <Link href={href}>{relationship.target.title}</Link>
+                        ) : (
+                          relationship.target.title
+                        )}
+                      </span>
+                    );
+                  })}
+                </p>
+              ) : null}
+              <p className="detail-summary">{entity.summary}</p>
+              {entity.links.length ? (
+                <ul className="detail-actions" aria-label="External destinations">
+                  {entity.links.map((link) => (
+                    <li key={`${link.kind}-${link.url}`}>
+                      <a href={link.url} target="_blank" rel="noreferrer">
+                        {link.label} <span aria-hidden="true">↗</span>
+                        <span className="sr-only"> (opens in a new tab)</span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
+            <DetailRegister entity={entity} />
+          </div>
+        </PageContainer>
+      </header>
+
+      {entity.hero ? (
+        <PublicSection className="detail-hero-media" aria-label="Lead media">
+          <PageContainer>
+            <PublicImage media={entity.hero} priority />
+          </PageContainer>
+        </PublicSection>
+      ) : null}
+
+      {lineage.length ? (
+        <RelatedRecordsSection
+          id="relations-product-lineage"
+          title="Product lineage"
+          groups={[{ relationships: lineage }]}
+          sectionClassName="detail-relations"
+          containerClassName="detail-relations-grid"
+        />
+      ) : null}
+
+      {entity.type === 'work' && entity.trace.length ? (
+        <EvidenceGraphFocusSync>
+          <RelatedRecordsSection
+            id="relations-trace"
+            eyebrow="Trace / causal chain"
+            title="Follow this work back to where it began."
+            description="Each step is a real, publicly recorded relationship, walked backward through the same evidence graph — not an inferred or aggregated connection."
+            headerContent={
+              <EvidenceGraph
+                subject={{ label: entity.title, meta: 'Work' }}
+                relationships={entity.trace}
+                layout="chain"
+              />
+            }
+            groups={[{ relationships: entity.trace }]}
+            sectionClassName="detail-relations detail-trace"
+            containerClassName="detail-relations-grid"
+          />
+        </EvidenceGraphFocusSync>
+      ) : null}
+
+      {entity.type === 'lab' && entity.trace.length ? (
+        <EvidenceGraphFocusSync>
+          <RelatedRecordsSection
+            id="relations-trace"
+            eyebrow="Trace / causal chain"
+            title="Follow this investigation forward to where it led."
+            description="Each step is a real, publicly recorded relationship, walked forward through the same evidence graph — not an inferred or aggregated connection."
+            headerContent={
+              <EvidenceGraph
+                subject={{ label: entity.title, meta: 'Lab' }}
+                relationships={entity.trace}
+                layout="chain"
+              />
+            }
+            groups={[{ relationships: entity.trace }]}
+            sectionClassName="detail-relations detail-trace"
+            containerClassName="detail-relations-grid"
+          />
+        </EvidenceGraphFocusSync>
+      ) : null}
+
+      {entity.type === 'lab' ? <LabProgress entity={entity} /> : null}
+
+      {entity.type === 'blueprint' ? <BlueprintSpecification entity={entity} /> : null}
+
+      {entity.documents.map((document) => {
+        const label =
+          entity.type === 'work' && document.role === 'caseStudy'
+            ? { eyebrow: 'Case study / engineering record', title: 'Context to consequence' }
+            : entity.type === 'blueprint' && document.role === 'caseStudy'
+              ? {
+                  eyebrow: 'Documentation / implementation reference',
+                  title: 'Implementation guidance',
+                }
+              : (DOCUMENT_LABELS[document.role] ?? {
+                  eyebrow: 'Document',
+                  title: formatMetadata(document.role),
+                });
+        const sectionId = `document-${document.role}`;
+        return (
+          <PublicSection
+            key={document.role}
+            className="detail-document"
+            aria-labelledby={sectionId}
+          >
+            <PageContainer className="detail-document-grid">
+              <DetailSectionHeading id={sectionId} eyebrow={label.eyebrow} title={label.title}>
+                {document.outline?.length && document.outline.length > 1 ? (
+                  <nav aria-label={`${label.title} contents`} className="detail-outline">
+                    <ol>
+                      {document.outline.map((item) => (
+                        <li key={item.id}>
+                          <a href={`#${item.id}`}>{item.text}</a>
+                        </li>
+                      ))}
+                    </ol>
+                  </nav>
+                ) : null}
+              </DetailSectionHeading>
+              <ProseRenderer document={document} headingOffset={1} />
+            </PageContainer>
+          </PublicSection>
+        );
+      })}
+
+      {'gallery' in entity ? (
+        <DetailGallery
+          id="detail-gallery-title"
+          eyebrow="Media / evidence"
+          title="Recorded views"
+          media={entity.gallery}
+          sectionClassName="detail-gallery"
+        />
+      ) : null}
+
+      {entity.type === 'blueprint' ? (
+        <DetailGallery
+          id="blueprint-preview-title"
+          eyebrow="Implementation / recorded views"
+          title="Preview the system"
+          media={entity.previewMedia}
+          sectionClassName="detail-gallery"
+        />
+      ) : null}
+
+      {entity.type === 'work' && workRelationshipGroups.length ? (
+        <EvidenceGraphFocusSync>
+          <RelatedRecordsSection
+            id="grouped-connections-title"
+            title="Continue through the engineering record"
+            headerContent={
+              <EvidenceGraph
+                subject={{ label: entity.title, meta: SUBJECT_META[entity.type] }}
+                relationships={connected}
+              />
+            }
+            groups={workRelationshipGroups}
+            sectionClassName="detail-relations"
+            containerClassName="detail-relations-grid"
+          />
+        </EvidenceGraphFocusSync>
+      ) : null}
+
+      {entity.type === 'blueprint' && blueprintRelationshipGroups.length ? (
+        <EvidenceGraphFocusSync>
+          <RelatedRecordsSection
+            id="grouped-connections-title"
+            title="Evidence and connected systems"
+            headerContent={
+              <EvidenceGraph
+                subject={{ label: entity.title, meta: SUBJECT_META[entity.type] }}
+                relationships={connected}
+              />
+            }
+            groups={blueprintRelationshipGroups}
+            sectionClassName="detail-relations"
+            containerClassName="detail-relations-grid"
+          />
+        </EvidenceGraphFocusSync>
+      ) : null}
+
+      {entity.type === 'build' && buildRelationshipGroups.length ? (
+        <EvidenceGraphFocusSync>
+          <RelatedRecordsSection
+            id="grouped-connections-title"
+            title="Continue through the engineering record"
+            headerContent={
+              <EvidenceGraph
+                subject={{ label: entity.title, meta: SUBJECT_META[entity.type] }}
+                relationships={connected}
+              />
+            }
+            groups={buildRelationshipGroups}
+            sectionClassName="detail-relations"
+            containerClassName="detail-relations-grid"
+          />
+        </EvidenceGraphFocusSync>
+      ) : null}
+
+      {entity.type === 'lab' && labRelationshipGroups.length ? (
+        <EvidenceGraphFocusSync>
+          <RelatedRecordsSection
+            id="grouped-connections-title"
+            title="Continue through the engineering record"
+            headerContent={
+              <EvidenceGraph
+                subject={{ label: entity.title, meta: SUBJECT_META[entity.type] }}
+                relationships={connected}
+              />
+            }
+            groups={labRelationshipGroups}
+            sectionClassName="detail-relations"
+            containerClassName="detail-relations-grid"
+          />
+        </EvidenceGraphFocusSync>
+      ) : null}
+
+      <footer className="detail-footer">
+        <PageContainer className="detail-footer-grid">
+          <div>
+            <p className="home-eyebrow">Publication record</p>
+            <p>
+              <ReferenceIdCopy value={entity.referenceId} /> /{' '}
+              {entity.type === 'build' ? (
+                <PublicBuildStateBadge state={entity.deploymentState} />
+              ) : (
+                formatMetadata(entity.state ?? entity.type)
+              )}
+            </p>
+          </div>
+          <Link href={collectionHref}>
+            Return to {collection} <span aria-hidden="true">→</span>
+          </Link>
+        </PageContainer>
+      </footer>
+    </main>
+  );
+}
+
+function DetailRegister({ entity }: { entity: ImmutablePublic<CollectionDetail> }) {
+  const values =
+    entity.type === 'work'
+      ? [
+          ['Client', entity.clientType],
+          ['Timeline', entity.timeline],
+          ['HubZero role', entity.hubZeroRole],
+        ]
+      : entity.type === 'build'
+        ? [
+            [
+              'Technology',
+              entity.technologies.length ? `${entity.technologies.length} listed` : 'Not listed',
+            ],
+          ]
+        : entity.type === 'blueprint'
+          ? [
+              ['Version', `v${entity.version}`],
+              ['Architecture', entity.architecture],
+              ['Design language', entity.designLanguage],
+            ]
+          : [
+              ['Stage', formatMetadata(entity.stage)],
+              ['Started', formatPublicDate(entity.startDate)],
+              [
+                'Updated',
+                entity.lastMajorUpdate
+                  ? formatPublicDate(entity.lastMajorUpdate)
+                  : 'No major update listed',
+              ],
+            ];
+  const contributors = entity.relationships.filter(
+    (relationship) => relationship.kind === 'teamContributedToEntry',
+  );
+  return (
+    <aside className="detail-register" aria-label={`${entity.title} publication metadata`}>
+      <dl>
+        <div>
+          <dt>Reference</dt>
+          <dd>
+            <ReferenceIdCopy value={entity.referenceId} />
+          </dd>
+        </div>
+        {entity.type === 'build' ? (
+          <div>
+            <dt>Maintenance status</dt>
+            <dd>
+              <PublicBuildStateBadge state={entity.deploymentState} />
+            </dd>
+          </div>
+        ) : null}
+        {values.map(([term, value]) => (
+          <div key={term}>
+            <dt>{term}</dt>
+            <dd>{value}</dd>
+          </div>
+        ))}
+      </dl>
+      <TechnologyList technologies={entity.technologies} />
+      {entity.type === 'work' ? (
+        <TechnologyList technologies={entity.categories} label="Categories" />
+      ) : null}
+      <ContributorList contributors={contributors} />
+    </aside>
+  );
+}
+
+function BlueprintSpecification({ entity }: { entity: ImmutablePublic<BlueprintDetail> }) {
+  return (
+    <PublicSection
+      className="detail-progress blueprint-specification"
+      aria-labelledby="blueprint-specification-title"
+    >
+      <PageContainer>
+        <DetailSectionHeading
+          id="blueprint-specification-title"
+          eyebrow={`System specification / v${entity.version}`}
+          title="What is designed to be reused"
+          className="detail-section-header"
+        />
+        <dl className="blueprint-system-register">
+          <div>
+            <dt>Information architecture</dt>
+            <dd>{entity.architecture}</dd>
+          </div>
+          <div>
+            <dt>Design language</dt>
+            <dd>{entity.designLanguage}</dd>
+          </div>
+          <div>
+            <dt>Revision</dt>
+            <dd>Version {entity.version}</dd>
+          </div>
+        </dl>
+        {entity.features.length ? <BlueprintFeatureList features={entity.features} /> : null}
+      </PageContainer>
+    </PublicSection>
+  );
+}
+
+function LabProgress({ entity }: { entity: ImmutablePublic<LabDetail> }) {
+  return (
+    <PublicSection className="detail-progress" aria-labelledby="detail-progress-title">
+      <PageContainer>
+        <DetailSectionHeading
+          id="detail-progress-title"
+          eyebrow={`Current state / ${formatMetadata(entity.stage)}`}
+          title="What the investigation is moving toward"
+          className="detail-section-header"
+        />
+        <div className="detail-progress-grid">
+          <section>
+            <h3>Research direction</h3>
+            <p>{entity.researchDirection}</p>
+          </section>
+          <section>
+            <h3>Current milestone</h3>
+            <p>{entity.currentMilestone}</p>
+          </section>
+          <section>
+            <h3>Graduation criteria</h3>
+            <p>{entity.graduationCriteria}</p>
+          </section>
+        </div>
+        {entity.milestones.length ? (
+          <ol className="detail-milestones" aria-label="Lab milestones">
+            {entity.milestones.map((milestone) => (
+              <li key={`${milestone.date}-${milestone.title}`}>
+                <time dateTime={milestone.date}>{formatPublicDate(milestone.date)}</time>
+                <h3>{milestone.title}</h3>
+                <p>{milestone.summary}</p>
+              </li>
+            ))}
+          </ol>
+        ) : null}
+      </PageContainer>
+    </PublicSection>
+  );
+}
