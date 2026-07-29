@@ -100,6 +100,7 @@ export const transitionBlueprintStatusAction = createEntryTransitionAction<Bluep
   setStatus: (id, status, reviewNote) =>
     blueprintRepository.update(id, { status, reviewNote: reviewNote ?? null }),
   detailPath: blueprintDetailPath,
+  listPath: BLUEPRINTS_LIST_PATH,
   publicType: 'blueprint',
 });
 
