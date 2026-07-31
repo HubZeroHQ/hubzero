@@ -1,5 +1,5 @@
 import { ExternalLink, Link2 } from 'lucide-react';
-import DOMPurify from 'isomorphic-dompurify';
+import sanitizeHtml from 'sanitize-html';
 import Image from 'next/image';
 import type { Block } from '@/lib/documents/blocks';
 import { cn } from '@/lib/utils/cn';
@@ -50,9 +50,9 @@ export function BlockRenderer({
  * outside this allowlist, but the renderer doesn't rely on that alone.
  */
 function sanitizeRichText(html: string): string {
-  return DOMPurify.sanitize(html, {
-    ALLOWED_TAGS: ['p', 'strong', 'em', 's', 'code', 'a', 'br'],
-    ALLOWED_ATTR: ['href'],
+  return sanitizeHtml(html, {
+    allowedTags: ['p', 'strong', 'em', 's', 'code', 'a', 'br'],
+    allowedAttributes: { a: ['href'] },
   });
 }
 
