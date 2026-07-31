@@ -1,12 +1,12 @@
-import DOMPurify from 'isomorphic-dompurify';
+import sanitizeHtml from 'sanitize-html';
 import type { ReactNode } from 'react';
 import type { ImmutablePublic, PublicBlock, PublicDocument } from '@/lib/public/domain';
 import { PublicImage } from './PublicImage';
 
 function safeInlineHtml(html: string): string {
-  return DOMPurify.sanitize(html, {
-    ALLOWED_TAGS: ['p', 'strong', 'em', 's', 'code', 'a', 'br'],
-    ALLOWED_ATTR: ['href'],
+  return sanitizeHtml(html, {
+    allowedTags: ['p', 'strong', 'em', 's', 'code', 'a', 'br'],
+    allowedAttributes: { a: ['href'] },
   });
 }
 

@@ -2,6 +2,24 @@
 
 All notable changes to this project are documented in this file. Entries are engineering release notes, not marketing copy — see [`docs/releases/`](docs/releases) for the full reasoning behind each release.
 
+## v3.0.1
+
+### Fixed
+
+- Fixed a production-only runtime failure affecting Studio content detail pages and public rich-text rendering.
+- Replaced `isomorphic-dompurify` with `sanitize-html` for server-side rich-text sanitization.
+- Removed the `jsdom` production dependency chain (`html-encoding-sniffer`, `@exodus/bytes`) from deployed serverless functions.
+- Preserved the existing sanitization allowlist and verified XSS protection parity.
+- Improved production runtime compatibility across supported Node.js versions.
+
+### Verification
+
+- 463/463 tests passing
+- TypeScript clean
+- ESLint clean
+- Production build successful
+- Verified no `jsdom` dependency in production server bundles
+
 ## v3.0.0 — Experience v3
 
 ### Summary
