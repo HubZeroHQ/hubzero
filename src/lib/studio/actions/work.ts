@@ -46,6 +46,10 @@ function readRepoUrl(formData: FormData): string | undefined {
 function parseWorkCreateFormData(formData: FormData): WorkInput {
   const repoUrl = readRepoUrl(formData);
   return {
+    // A new entry is never featured. Featuring is an editorial act performed on
+    // the collection's Featured Order screen, never a side effect of creating
+    // content (v3.1 Milestone 2).
+    featuredOrder: null,
     ...readWorkMetadataFields(formData),
     status: 'draft',
     ...(repoUrl !== undefined ? { repoUrl } : {}),

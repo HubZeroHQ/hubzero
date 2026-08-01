@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState, useTransition } from 'react';
+import { useRef, useState, useTransition } from 'react';
 import { Button } from '@/components/ui/Button';
 import { StatusIndicator } from '@/components/ui/StatusIndicator';
 import type { PublishStatus } from '@/types/studio';
@@ -68,28 +68,81 @@ export function StatusStepper({
   onTransition: (to: PublishStatus, note?: string) => Promise<{ error?: string }>;
 }) {
   const router = useRouter();
-  const [isPending, startTransition] = useTransition();
+  const [isRefreshing, startRefresh] = useTransition();
   const [error, setError] = useState<string | undefined>();
   const [announcement, setAnnouncement] = useState<string | undefined>();
   const [rejecting, setRejecting] = useState(false);
   const [rejectNote, setRejectNote] = useState('');
 
-  function handleTransition(to: PublishStatus, note?: string) {
+  /**
+   * Which action is currently running, keyed by the button that started it —
+   * so the button the editor pressed can show progress while the others
+   * simply wait (v3.1 Milestone 10).
+   */
+  const [runningAction, setRunningAction] = useState<string | null>(null);
+
+  /**
+   * The duplicate-click guard, and the reason it is a ref rather than
+   * `runningAction`.
+   *
+   * `isPending`/state flip on the *next* render, so several clicks dispatched
+   * before React re-renders all pass a state-based check — five rapid clicks
+   * on "Submit for review" previously fired five Server Actions, and the four
+   * that lost the race reported `"inReview" cannot move directly to
+   * "inReview"` over a transition that had actually succeeded. A ref is
+   * written synchronously inside the click handler, so the second click in the
+   * same tick already sees it.
+   */
+  const inFlight = useRef(false);
+
+  const busy = runningAction !== null || isRefreshing;
+
+  function handleTransition(key: string, to: PublishStatus, note?: string) {
+    if (inFlight.current) return;
+    inFlight.current = true;
+    setRunningAction(key);
     setError(undefined);
-    startTransition(async () => {
-      const result = await onTransition(to, note);
-      if (result.error) {
-        setError(result.error);
-        return;
+
+    void (async () => {
+      try {
+        const result = await onTransition(to, note);
+
+        if (result?.error) {
+          setError(result.error);
+          // The server refused. That usually means the entry has already moved
+          // on — another tab, another editor — so the stale buttons this
+          // component is still showing are exactly what caused the refusal.
+          // Refreshing resynchronises them instead of leaving the editor
+          // clicking a button that can no longer work.
+          startRefresh(() => router.refresh());
+          return;
+        }
+
+        // Announced via `aria-live` below — a screen-reader user triggering a
+        // transition otherwise has no non-visual signal that it succeeded
+        // once the refresh re-renders the stepper with new props.
+        setAnnouncement(transitionAnnouncement(status, to));
+        setRejecting(false);
+        setRejectNote('');
+        startRefresh(() => router.refresh());
+      } catch {
+        // A Server Action that never resolves cleanly (a dropped connection, a
+        // 503 on the way out) must not leave the workflow frozen. The entry's
+        // real state is whatever the server has; say so and let the editor
+        // retry rather than silently claiming success.
+        setError('That action could not be completed. Check the entry’s status and try again.');
+      } finally {
+        // The single reason the interface can never stay permanently disabled:
+        // every path out of this function — success, refusal, or throw —
+        // releases the controls.
+        inFlight.current = false;
+        setRunningAction(null);
       }
-      // Announced via `aria-live` below — a screen-reader user triggering a
-      // transition otherwise has no non-visual signal that it succeeded
-      // once `router.refresh()` re-renders the stepper with new props.
-      setAnnouncement(transitionAnnouncement(status, to));
-      setRejecting(false);
-      setRejectNote('');
-      router.refresh();
-    });
+    })();
+  }
+
+  function labelFor(key: string, fallback: string): string {
+    return runningAction === key ? 'Working…' : fallback;
   }
 
   function handleConfirmReject() {
@@ -97,7 +150,7 @@ export function StatusStepper({
       setError('A rejection reason is required.');
       return;
     }
-    handleTransition('draft', rejectNote);
+    handleTransition('reject', 'draft', rejectNote);
   }
 
   return (
@@ -113,24 +166,27 @@ export function StatusStepper({
 
       <div className="flex flex-wrap items-center gap-3">
         <StatusIndicator status={status} />
+        {/*
+          Every transition mutates the same `status`, so while one is running
+          the others are not "unrelated controls" that happen to be disabled —
+          starting a second one is the race that produces the stale-transition
+          error. They are blocked deliberately; only the button actually
+          running reports progress, so the editor can tell which is which.
+        */}
         {availableTransitions.map((to) => (
           <Button
             key={to}
             type="button"
             variant={to === 'published' ? 'primary' : 'secondary'}
-            disabled={isPending}
-            onClick={() => handleTransition(to)}
+            disabled={busy}
+            aria-busy={runningAction === to}
+            onClick={() => handleTransition(to, to)}
           >
-            {transitionLabel(status, to)}
+            {labelFor(to, transitionLabel(status, to))}
           </Button>
         ))}
         {canReject && !rejecting ? (
-          <Button
-            type="button"
-            variant="ghost"
-            disabled={isPending}
-            onClick={() => setRejecting(true)}
-          >
+          <Button type="button" variant="ghost" disabled={busy} onClick={() => setRejecting(true)}>
             Reject
           </Button>
         ) : null}
@@ -138,10 +194,11 @@ export function StatusStepper({
           <Button
             type="button"
             variant="ghost"
-            disabled={isPending}
-            onClick={() => handleTransition('draft')}
+            disabled={busy}
+            aria-busy={runningAction === 'unpublish'}
+            onClick={() => handleTransition('unpublish', 'draft')}
           >
-            Unpublish to draft
+            {labelFor('unpublish', 'Unpublish to draft')}
           </Button>
         ) : null}
       </div>
@@ -166,15 +223,21 @@ export function StatusStepper({
             <Button
               type="button"
               variant="secondary"
-              disabled={isPending}
+              disabled={busy}
+              aria-busy={runningAction === 'reject'}
               onClick={handleConfirmReject}
             >
-              Confirm rejection
+              {labelFor('reject', 'Confirm rejection')}
             </Button>
+            {/*
+              Cancel stays live while a rejection is submitting: it is genuinely
+              unrelated — it closes a local form rather than touching the
+              server — and an editor who changes their mind should never be
+              stuck waiting on a request to back out of a text box.
+            */}
             <Button
               type="button"
               variant="ghost"
-              disabled={isPending}
               onClick={() => {
                 setRejecting(false);
                 setRejectNote('');

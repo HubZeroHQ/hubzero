@@ -15,6 +15,7 @@ import { PUBLISH_WORKFLOW_ORDER } from '@/config/workflow';
 import { buildListHref, filterAndPaginate, parsePage } from '@/lib/studio/list-query';
 import { labRepository } from '@/lib/db/repositories/lab';
 import { taxonomyRepository } from '@/lib/db/repositories/taxonomy';
+import { isFeatured } from '@/lib/studio/featured-order';
 import { formatRelativeTime } from '@/lib/utils/relative-time';
 import type { Lab, LabStage } from '@/types/studio';
 
@@ -75,7 +76,9 @@ export default async function LabsListPage({
       render: (entry) => (
         <span className="inline-flex items-center gap-2">
           {entry.title}
-          {entry.featured ? <Tag>Featured</Tag> : null}
+          {isFeatured(entry.featuredOrder) ? (
+            <Tag>Featured &middot; {entry.featuredOrder}</Tag>
+          ) : null}
         </span>
       ),
     },
@@ -122,7 +125,14 @@ export default async function LabsListPage({
       <PageHeader
         title="Labs"
         description="Active engineering exploration — every entry here is a live view of the Labs collection. These are not finished products; each communicates what's being explored, why, and where it currently stands."
-        actions={<ButtonLink href={`${LABS_LIST_PATH}/new`}>New Lab</ButtonLink>}
+        actions={
+          <>
+            <ButtonLink href={`${LABS_LIST_PATH}/featured`} variant="secondary">
+              Featured Order
+            </ButtonLink>
+            <ButtonLink href={`${LABS_LIST_PATH}/new`}>New Lab</ButtonLink>
+          </>
+        }
       />
 
       <form action={LABS_LIST_PATH} method="GET" className="flex gap-2">

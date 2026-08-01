@@ -1,4 +1,5 @@
 import { ExternalLink, Github, Rocket } from 'lucide-react';
+import { isFeatured } from '@/lib/studio/featured-order';
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
@@ -134,7 +135,7 @@ export default async function LabDetailPage({ params }: { params: Promise<{ id: 
     <div className="flex flex-col gap-8">
       <PageHeader
         title={lab.title}
-        description={`${STAGE_LABEL[lab.stage]}${lab.featured ? ' · Featured' : ''}`}
+        description={`${STAGE_LABEL[lab.stage]}${isFeatured(lab.featuredOrder) ? ` · Featured (#${lab.featuredOrder})` : ''}`}
         actions={
           canEdit ? (
             <>

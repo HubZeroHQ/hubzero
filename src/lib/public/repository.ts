@@ -1,4 +1,5 @@
 import type { OwnerType } from '@/lib/documents/schema';
+import { orderEditorially, selectFeatured } from '@/lib/studio/featured-order';
 import type {
   Blueprint,
   Build,
@@ -114,6 +115,15 @@ export interface PublicRepository {
     types?: readonly PublicEntityType[],
   ): Promise<ImmutablePublic<PublicDiscoveryEntry[]>>;
   getHomepage(now: Date): Promise<ImmutablePublic<PublicHomepageProjection>>;
+  /**
+   * Homepage eligibility per publicly-visible entry of `type`, keyed by slug.
+   * `reason === null` means it would appear if featured. Entries missing from
+   * the result are not publicly visible at all.
+   */
+  listHomepageEligibility(
+    type: PublicDetailEntityType,
+    now?: Date,
+  ): Promise<Array<{ slug: string; reason: string | null }>>;
 }
 
 export function createPublicRepository(source: PublicDataSource): PublicRepository {
@@ -628,8 +638,12 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
   async function listSummaries(type: PublicEntityType): Promise<PublicEntitySummary[]> {
     const entities = await source.listEntities(type);
     const evidence = type === 'service' ? await buildEvidenceQuery() : undefined;
+    // Ordered before mapping, so every public collection page renders the same
+    // editorial ranking the homepage takes its featured entries from. Types
+    // with no `featuredOrder` are unaffected: none of them is featured, so the
+    // ordering is the identity.
     const summaries = await Promise.all(
-      entities.map((entity) => mapSummary(entity, true, evidence)),
+      editoriallyOrdered(entities).map((entity) => mapSummary(entity, true, evidence)),
     );
     return summaries.filter((summary): summary is PublicEntitySummary => summary !== null);
   }
@@ -638,17 +652,29 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
     const entities = await source.listEntities('note');
     const evidence = await buildEvidenceQuery();
     const entries = await Promise.all(
-      entities.map(async (entity): Promise<PublicNoteIndexEntry | null> => {
+      entities.map(async (entity) => {
         const note = await mapSummary(entity);
         if (!note || note.type !== 'note') return null;
-        return { note, relationships: await resolveRelations(entity, evidence) };
+        return {
+          id: entity.id,
+          featuredOrder:
+            'featuredOrder' in entity.record ? (entity.record.featuredOrder ?? null) : null,
+          entry: { note, relationships: await resolveRelations(entity, evidence) },
+        };
       }),
     );
-    return compact(entries).sort(
+
+    // Notes keep publication date as their default order, and editorial intent
+    // is layered on top of it — the same two steps every collection takes. The
+    // summary carries no `featuredOrder`, so it is held alongside from the
+    // entity rather than re-read from the database.
+    const byDate = compact(entries).sort(
       (left, right) =>
-        new Date(right.note.publicationDate).getTime() -
-        new Date(left.note.publicationDate).getTime(),
+        new Date(right.entry.note.publicationDate).getTime() -
+        new Date(left.entry.note.publicationDate).getTime(),
     );
+
+    return orderEditorially(byDate).map((row): PublicNoteIndexEntry => row.entry);
   }
 
   async function listEngineeringProfileIndexEntries(): Promise<
@@ -831,53 +857,43 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
 
     const work = compact(
       await Promise.all(
-        sortEntities(workEntities).map((entity) =>
+        featuredEntities(workEntities).map((entity) =>
           homepageFeature<PublicWorkSummary>(entity, 'work', now, evidence),
         ),
       ),
     ).slice(0, 1);
     const builds = compact(
       await Promise.all(
-        sortEntities(buildEntities.filter(hasFeaturedFlag)).map((entity) =>
+        featuredEntities(buildEntities).map((entity) =>
           homepageFeature<PublicBuildSummary>(entity, 'build', now, evidence),
         ),
       ),
     ).slice(0, 2);
     const blueprints = compact(
       await Promise.all(
-        sortEntities(blueprintEntities.filter(hasFeaturedFlag)).map((entity) =>
+        featuredEntities(blueprintEntities).map((entity) =>
           homepageFeature<PublicBlueprintSummary>(entity, 'blueprint', now, evidence),
         ),
       ),
     );
     const labs = compact(
       await Promise.all(
-        sortEntities(labEntities.filter(hasFeaturedFlag)).map((entity) =>
+        featuredEntities(labEntities).map((entity) =>
           homepageFeature<PublicLabSummary>(entity, 'lab', now, evidence),
         ),
       ),
     ).slice(0, 2);
-    const allSubstantiveNotes = compact(
+    // Previously gated behind "only surface Notes once at least five
+    // substantive ones exist" — a hardcoded editorial judgement the editor
+    // could neither see nor override. Featuring a Note is now that judgement,
+    // made explicitly (v3.1 Milestone 2).
+    const notes = compact(
       await Promise.all(
-        sortEntities(noteEntities).map((entity) =>
+        featuredEntities(noteEntities).map((entity) =>
           homepageFeature<PublicNoteSummary>(entity, 'note', now, evidence),
         ),
       ),
-    );
-    const featuredNoteIds = new Set(
-      noteEntities.filter(hasFeaturedFlag).map((entity) => entity.id),
-    );
-    const notes =
-      allSubstantiveNotes.length >= 5
-        ? allSubstantiveNotes
-            .filter((feature) => {
-              const sourceEntity = noteEntities.find(
-                (entity) => 'slug' in entity.record && entity.record.slug === feature.entity.slug,
-              );
-              return sourceEntity ? featuredNoteIds.has(sourceEntity.id) : false;
-            })
-            .slice(0, 3)
-        : [];
+    ).slice(0, 3);
     const engineeringProfiles = compact(
       await Promise.all(
         profiles.map((entity) =>
@@ -942,6 +958,32 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
     },
     async getHomepage(now) {
       return freezePublicDto(await getHomepage(now));
+    },
+    /**
+     * Per-entry homepage eligibility for a collection, keyed by slug.
+     *
+     * Exists so the Studio can explain, before an editor commits to featuring
+     * something, why it would or would not actually appear — using the same
+     * predicate the homepage itself applies rather than a Studio-side
+     * re-description of it that could drift.
+     *
+     * Entries absent from the returned map are not publicly visible at all
+     * (unpublished, or otherwise failing the visibility gate), which is a
+     * different and more basic reason than failing an editorial quality check.
+     */
+    async listHomepageEligibility(type, now = new Date()) {
+      const entities = await source.listEntities(type);
+      const evidence = await buildEvidenceQuery();
+      const rows = await Promise.all(
+        entities.map(async (entity) => {
+          if (!('slug' in entity.record)) return null;
+          const slug = entity.record.slug;
+          const detail = await findDetail(type as PublicDetailEntityType, slug, evidence);
+          if (!detail) return null;
+          return { slug, reason: homepageIneligibilityReason(detail, now) };
+        }),
+      );
+      return rows.filter((row): row is { slug: string; reason: string | null } => row !== null);
     },
   };
 }
@@ -1013,8 +1055,44 @@ function deduplicateProfileEvidence(
   return [...byTarget.values()];
 }
 
-function hasFeaturedFlag(entity: StudioPublicEntity): boolean {
-  return 'featured' in entity.record && entity.record.featured === true;
+/**
+ * The featured entries of a collection, in the order an editor chose
+ * (v3.1 Milestone 2).
+ *
+ * This replaced two separate mechanisms: a boolean `featured` flag that said
+ * *whether* something was featured but never in what order, and a
+ * `referenceId`-descending sort that silently decided the order for the
+ * editor. Reference-ID order is a fact about when a record was created, not a
+ * statement about what deserves the lead slot — using it as an editorial
+ * ranking was the hardcoded selection this milestone exists to remove.
+ *
+ * Ordering itself is delegated to `selectFeatured` so the public site and the
+ * Studio's own reorder screen cannot disagree about what "first" means.
+ */
+function featuredEntities(entities: readonly StudioPublicEntity[]): StudioPublicEntity[] {
+  return selectFeatured(orderable(entities)).map((row) => row.entity);
+}
+
+/**
+ * The same collection in canonical editorial order: featured first, then
+ * everything else in the order it arrived (v3.1 Milestone 12).
+ *
+ * This and `featuredEntities` read the *same* `featuredOrder` through the
+ * *same* extraction, and the homepage's list is literally the featured prefix
+ * of this one. That is what makes "there is only one editorial order" a
+ * structural fact rather than a convention two call sites have to honour.
+ */
+function editoriallyOrdered(entities: readonly StudioPublicEntity[]): StudioPublicEntity[] {
+  return orderEditorially(orderable(entities)).map((row) => row.entity);
+}
+
+/** The one place a public entity's stored `featuredOrder` is read. */
+function orderable(entities: readonly StudioPublicEntity[]) {
+  return entities.map((entity) => ({
+    id: entity.id,
+    featuredOrder: 'featuredOrder' in entity.record ? (entity.record.featuredOrder ?? null) : null,
+    entity,
+  }));
 }
 
 function sortEntities(entities: readonly StudioPublicEntity[]): StudioPublicEntity[] {
@@ -1032,30 +1110,38 @@ function isRecent(date: string | undefined, now: Date, maxAgeDays = 180): boolea
   return now.getTime() - value.getTime() <= maxAgeDays * 24 * 60 * 60 * 1000;
 }
 
-function isHomepageEligible(detail: PublicEntityDetail, now: Date): boolean {
+/**
+ * Why an entry cannot appear on the homepage, or `null` if it can.
+ *
+ * Same conditions as before, restated so they can be *shown* rather than only
+ * applied (v3.1 Milestone 2 finalization). No rule changed here: an editor who
+ * features something that never appears was previously given no explanation,
+ * and reading the reason out of the same switch that enforces it is what keeps
+ * the Studio's explanation and the public site's behaviour from drifting.
+ */
+function homepageIneligibilityReason(detail: PublicEntityDetail, now: Date): string | null {
   switch (detail.type) {
     case 'work':
-      return hasSubstantiveDocument(detail.documents);
+      return hasSubstantiveDocument(detail.documents) ? null : 'Needs a substantive case study.';
     case 'build':
       return isBuildHomepageEligible({
         hasHero: Boolean(detail.hero),
         documents: detail.documents,
-      });
+      })
+        ? null
+        : 'Needs a hero image and a substantive document.';
     case 'blueprint':
-      return (
-        detail.previewMedia.length > 0 &&
-        detail.features.length > 0 &&
-        hasSubstantiveDocument(detail.documents)
-      );
+      if (detail.previewMedia.length === 0) return 'Needs at least one preview image.';
+      if (detail.features.length === 0) return 'Needs at least one listed feature.';
+      return hasSubstantiveDocument(detail.documents) ? null : 'Needs a substantive case study.';
     case 'lab':
-      return (
-        isRecent(detail.lastMajorUpdate, now) &&
-        detail.milestones.length > 0 &&
-        detail.technologies.length > 0 &&
-        hasSubstantiveDocument(detail.documents)
-      );
+      if (!isRecent(detail.lastMajorUpdate, now)) return 'Needs a recent major update.';
+      if (detail.milestones.length === 0) return 'Needs at least one progress milestone.';
+      if (detail.technologies.length === 0) return 'Needs at least one technology tagged.';
+      return hasSubstantiveDocument(detail.documents) ? null : 'Needs a substantive document.';
     case 'note':
-      return isRecent(detail.publicationDate, now) && hasSubstantiveDocument(detail.documents);
+      if (!isRecent(detail.publicationDate, now)) return 'Publication date is not recent.';
+      return hasSubstantiveDocument(detail.documents) ? null : 'Needs a substantive write-up.';
     case 'engineeringProfile':
       return isEngineeringProfileHomepageEligible({
         hasPortrait: Boolean(detail.portrait),
@@ -1063,13 +1149,19 @@ function isHomepageEligible(detail: PublicEntityDetail, now: Date): boolean {
           (relationship) => relationship.kind === 'teamContributedToEntry',
         ).length,
         documents: detail.documents,
-      });
+      })
+        ? null
+        : 'Needs a portrait, contributions, and a substantive document.';
     case 'career':
       // Careers is not one of the Homepage's four pillars — `getHomepage()`
       // never fetches it, so this branch exists only to keep this switch
       // exhaustive over `PublicEntityDetail`.
-      return false;
+      return 'Careers never appear on the homepage.';
   }
+}
+
+function isHomepageEligible(detail: PublicEntityDetail, now: Date): boolean {
+  return homepageIneligibilityReason(detail, now) === null;
 }
 
 export function compareHomepageEngineeringProfiles(
@@ -1093,7 +1185,17 @@ function evidenceType(
   return OWNER_TO_PUBLIC_TYPE[reference.ownerType] as PublicEntityType;
 }
 
-function assertionsFrom(entity: StudioPublicEntity): RelationshipAssertion[] {
+/**
+ * Every relationship a record asserts, derived from its own stored fields.
+ *
+ * Exported (v3.1 Milestone 4) so Studio-side integrity checking reads the same
+ * derivation the public site does, rather than a second description of which
+ * fields are relationships. It is deliberately status-blind — it reports what a
+ * record *claims*, not what is publicly visible — which is exactly what an
+ * integrity checker needs: a reference to an archived entry is still a
+ * reference, and only a checker that can see it can report it.
+ */
+export function assertionsFrom(entity: StudioPublicEntity): RelationshipAssertion[] {
   const { type, id } = entity;
   if (type === 'work') {
     const record = entity.record as Work;

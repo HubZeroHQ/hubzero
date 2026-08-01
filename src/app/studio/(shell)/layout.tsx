@@ -1,5 +1,6 @@
 import { ObjectId } from 'mongodb';
 import { redirect } from 'next/navigation';
+import { EditorGuardProvider } from '@/components/studio/editor/EditorGuardProvider';
 import { StudioShell } from '@/components/studio/shell/StudioShell';
 import { auth } from '@/lib/auth';
 import { careerInterestRepository } from '@/lib/db/repositories/career-interest';
@@ -33,17 +34,23 @@ export default async function StudioShellLayout({ children }: { children: React.
       : [false, false];
 
   return (
-    <StudioShell
-      role={role}
-      hasAssignedLeads={hasAssignedLeads}
-      hasAssignedCandidates={hasAssignedCandidates}
-      user={{
-        name: session.user.name ?? session.user.email ?? 'Unknown',
-        email: session.user.email ?? '',
-        role,
-      }}
-    >
-      {children}
-    </StudioShell>
+    // Wraps `StudioShell` rather than living inside it: the shell's own
+    // navigation (the `g`-chord jumps in `useKeyboardShortcuts`, the command
+    // palette) has to be able to consult the guard, and a provider rendered
+    // *inside* the shell's JSX would be invisible to the shell's own hooks.
+    <EditorGuardProvider>
+      <StudioShell
+        role={role}
+        hasAssignedLeads={hasAssignedLeads}
+        hasAssignedCandidates={hasAssignedCandidates}
+        user={{
+          name: session.user.name ?? session.user.email ?? 'Unknown',
+          email: session.user.email ?? '',
+          role,
+        }}
+      >
+        {children}
+      </StudioShell>
+    </EditorGuardProvider>
   );
 }

@@ -31,7 +31,6 @@ export default async function NewNotePage() {
           authorId: currentUserId,
           summary: '',
           publicationDate: toDateInputValue(new Date()),
-          featured: false,
           technologyIds: [],
           relatedWorkIds: [],
           relatedBuildIds: [],

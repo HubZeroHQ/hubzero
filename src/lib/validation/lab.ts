@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import {
+  featuredOrderSchema,
   labStageSchema,
   objectIdString,
   progressMilestoneSchema,
@@ -39,7 +40,7 @@ export const labSchema = z.object({
   relatedBlueprintIds: z.array(objectIdString).default([]),
   heroImageId: objectIdString.optional(),
   galleryImageIds: z.array(objectIdString).default([]),
-  featured: z.boolean().default(false),
+  featuredOrder: featuredOrderSchema,
   /** The Progress Timeline (Phase 10) — a lightweight, generic milestone list (`lib/validation/shared.ts`). */
   milestones: z.array(progressMilestoneSchema).default([]),
   contributors: z.array(objectIdString).default([]),

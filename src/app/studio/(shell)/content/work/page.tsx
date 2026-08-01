@@ -9,10 +9,12 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { Input } from '@/components/ui/Input';
 import { ReferenceIdBadge } from '@/components/ui/ReferenceIdBadge';
 import { StatusIndicator } from '@/components/ui/StatusIndicator';
+import { Tag } from '@/components/ui/Tag';
 import { PUBLISH_WORKFLOW_ORDER } from '@/config/workflow';
 import { buildListHref, filterAndPaginate, parsePage } from '@/lib/studio/list-query';
 import { taxonomyRepository } from '@/lib/db/repositories/taxonomy';
 import { workRepository } from '@/lib/db/repositories/work';
+import { isFeatured } from '@/lib/studio/featured-order';
 import { formatRelativeTime } from '@/lib/utils/relative-time';
 import type { Work } from '@/types/studio';
 
@@ -55,7 +57,18 @@ export default async function WorkListPage({
   });
 
   const columns: EntryTableColumn<Work>[] = [
-    { key: 'title', header: 'Title', render: (entry) => entry.title },
+    {
+      key: 'title',
+      header: 'Title',
+      render: (entry) => (
+        <span className="inline-flex items-center gap-2">
+          {entry.title}
+          {isFeatured(entry.featuredOrder) ? (
+            <Tag>Featured &middot; {entry.featuredOrder}</Tag>
+          ) : null}
+        </span>
+      ),
+    },
     {
       key: 'referenceId',
       header: 'Reference ID',
@@ -84,7 +97,14 @@ export default async function WorkListPage({
       <PageHeader
         title="Work"
         description="Client engagements — every entry here is a live view of the Work collection."
-        actions={<ButtonLink href={`${WORK_LIST_PATH}/new`}>New Work entry</ButtonLink>}
+        actions={
+          <>
+            <ButtonLink href={`${WORK_LIST_PATH}/featured`} variant="secondary">
+              Featured Order
+            </ButtonLink>
+            <ButtonLink href={`${WORK_LIST_PATH}/new`}>New Work entry</ButtonLink>
+          </>
+        }
       />
 
       <form action={WORK_LIST_PATH} method="GET" className="flex gap-2">

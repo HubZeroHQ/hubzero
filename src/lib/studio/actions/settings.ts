@@ -39,5 +39,5 @@ export async function updateStudioSettingsAction(
   }
 
   revalidatePath(PATH);
-  return {};
+  return { ok: true };
 }

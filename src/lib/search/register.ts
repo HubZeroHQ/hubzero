@@ -1,5 +1,7 @@
 import { registerSearchAdapter } from './registry';
 import { blueprintsSearchAdapter } from './adapters/blueprints';
+import { careersSearchAdapter } from './adapters/careers';
+import { taxonomySearchAdapter } from './adapters/taxonomy';
 import { engineeringProfilesSearchAdapter } from './adapters/engineering-profiles';
 import { buildsSearchAdapter } from './adapters/builds';
 import { labsSearchAdapter } from './adapters/labs';
@@ -39,4 +41,6 @@ export function ensureSearchAdaptersRegistered(): void {
   registerSearchAdapter(leadsSearchAdapter);
   registerSearchAdapter(usersSearchAdapter);
   registerSearchAdapter(mediaSearchAdapter);
+  registerSearchAdapter(careersSearchAdapter);
+  registerSearchAdapter(taxonomySearchAdapter);
 }

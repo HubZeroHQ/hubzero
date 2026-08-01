@@ -111,8 +111,10 @@ export async function updateTeamAction(
   }
 
   invalidatePublicEntity('teamMember');
+  // Stays on the edit screen — see `createEntryUpdateAction` for why every
+  // Studio metadata save now reports success instead of navigating.
   revalidatePath(detailPath(id));
-  redirect(detailPath(id));
+  return { ok: true };
 }
 
 export async function setTeamArchivedAction(

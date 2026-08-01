@@ -6,6 +6,7 @@ interface PublishableSearchable {
   _id: ObjectId;
   slug: string;
   status: PublishStatus;
+  updatedAt: Date;
 }
 
 /**
@@ -59,8 +60,10 @@ export function createContentAdapter<T extends PublishableSearchable>(config: {
           id: entry._id.toString(),
           type: config.type,
           title: config.getTitle(entry),
+          slug: entry.slug,
           referenceId: config.getReferenceId?.(entry),
           status: entry.status,
+          updatedAt: entry.updatedAt.toISOString(),
           href: typeof config.href === 'function' ? config.href(entry) : config.href,
         }));
     },

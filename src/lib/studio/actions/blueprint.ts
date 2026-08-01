@@ -46,7 +46,6 @@ function readBlueprintMetadataFields(formData: FormData) {
     features: readFeatures(formData),
     technologyIds: formData.getAll('technologyIds').map(String),
     previewAssetIds: formData.getAll('previewAssetIds').map(String),
-    featured: formData.get('featured') === 'on',
     contributors: formData.getAll('contributors').map(String),
   };
 }
@@ -57,6 +56,10 @@ function parseBlueprintCreateFormData(formData: FormData): BlueprintInput {
   const docsUrl = readOptionalString(formData, 'docsUrl');
   const heroImageId = readOptionalString(formData, 'heroImageId');
   return {
+    // A new entry is never featured. Featuring is an editorial act performed on
+    // the collection's Featured Order screen, never a side effect of creating
+    // content (v3.1 Milestone 2).
+    featuredOrder: null,
     ...readBlueprintMetadataFields(formData),
     status: 'draft',
     ...(repoUrl !== undefined ? { repoUrl } : {}),

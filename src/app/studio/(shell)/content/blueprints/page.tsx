@@ -15,6 +15,7 @@ import { PUBLISH_WORKFLOW_ORDER } from '@/config/workflow';
 import { buildListHref, filterAndPaginate, parsePage } from '@/lib/studio/list-query';
 import { blueprintRepository } from '@/lib/db/repositories/blueprint';
 import { taxonomyRepository } from '@/lib/db/repositories/taxonomy';
+import { isFeatured } from '@/lib/studio/featured-order';
 import { formatRelativeTime } from '@/lib/utils/relative-time';
 import type { Blueprint } from '@/types/studio';
 
@@ -81,7 +82,9 @@ export default async function BlueprintsListPage({
       render: (entry) => (
         <span className="inline-flex items-center gap-2">
           {entry.name}
-          {entry.featured ? <Tag>Featured</Tag> : null}
+          {isFeatured(entry.featuredOrder) ? (
+            <Tag>Featured &middot; {entry.featuredOrder}</Tag>
+          ) : null}
         </span>
       ),
     },
@@ -123,7 +126,14 @@ export default async function BlueprintsListPage({
       <PageHeader
         title="Blueprints"
         description="Reusable website foundations — every entry here is a live view of the Blueprints collection. The library is actively growing."
-        actions={<ButtonLink href={`${BLUEPRINTS_LIST_PATH}/new`}>New Blueprint</ButtonLink>}
+        actions={
+          <>
+            <ButtonLink href={`${BLUEPRINTS_LIST_PATH}/featured`} variant="secondary">
+              Featured Order
+            </ButtonLink>
+            <ButtonLink href={`${BLUEPRINTS_LIST_PATH}/new`}>New Blueprint</ButtonLink>
+          </>
+        }
       />
 
       <form action={BLUEPRINTS_LIST_PATH} method="GET" className="flex gap-2">

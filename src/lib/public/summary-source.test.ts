@@ -63,6 +63,7 @@ describe('every public collection produces a summary from its own schema-backed 
       status: 'published',
       slug: 'northwind-migration',
       referenceId: 'HZ-WK-901',
+      featuredOrder: null,
       title: 'Northwind migration',
       summary: 'A concise account of the Northwind migration and its consequences.',
       clientType: 'Private',
@@ -107,7 +108,7 @@ describe('every public collection produces a summary from its own schema-backed 
       technologyIds: [],
       liveDeploymentUrl: 'https://example.com/preview',
       previewAssetIds: [previewAsset._id],
-      featured: false,
+      featuredOrder: null,
       version: '1.0.0',
       contributors: [],
     };
@@ -137,7 +138,7 @@ describe('every public collection produces a summary from its own schema-backed 
       relatedBuildIds: [],
       relatedBlueprintIds: [],
       galleryImageIds: [],
-      featured: false,
+      featuredOrder: null,
       milestones: [],
       contributors: [],
     };
@@ -159,7 +160,7 @@ describe('every public collection produces a summary from its own schema-backed 
       technologyIds: [],
       relatedEntries: [],
       publicationDate: now,
-      featured: false,
+      featuredOrder: null,
       galleryImageIds: [],
       contributors: [],
     };
@@ -181,7 +182,7 @@ describe('every public collection produces a summary from its own schema-backed 
       technologyIds: [],
       relatedWorkIds: [],
       galleryImageIds: [],
-      featured: true,
+      featuredOrder: 1,
       contributors: [],
     };
     await expectSummaryProduced(entity('build', build), build.summary);

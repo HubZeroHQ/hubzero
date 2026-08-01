@@ -91,8 +91,10 @@ export async function updateTaxonomyEntryAction(
     return { error: actionErrorMessage(error) };
   }
 
+  // Stays on the edit screen — see `createEntryUpdateAction` for why every
+  // Studio metadata save now reports success instead of navigating.
   revalidatePath(LIST_PATH);
-  redirect(LIST_PATH);
+  return { ok: true };
 }
 
 export async function deleteTaxonomyEntryAction(id: string): Promise<EntryActionState> {

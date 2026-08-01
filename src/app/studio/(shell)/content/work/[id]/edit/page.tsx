@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+import { EntryHistorySection } from '@/components/studio/history/EntryHistorySection';
+import { EntryInspectorSection } from '@/components/studio/health/EntryInspectorSection';
 import { notFound } from 'next/navigation';
 import { PageHeader } from '@/components/studio/PageHeader';
 import { WorkForm } from '@/components/studio/work/WorkForm';
@@ -116,6 +118,12 @@ export default async function EditWorkPage({ params }: { params: Promise<{ id: s
           previewHref={`/api/preview?type=work&id=${id}`}
         />
       </section>
+      <EntryInspectorSection
+        collectionKey="work"
+        entryId={id}
+        editHref={`/studio/content/work/${id}/edit`}
+      />
+      <EntryHistorySection ownerType="Work" entryId={id} entry={work} />
     </div>
   );
 }

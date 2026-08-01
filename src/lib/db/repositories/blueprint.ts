@@ -2,13 +2,19 @@ import { REFERENCE_ID_PREFIXES } from '@/config/reference-ids';
 import { blueprintSchema, type BlueprintInput } from '@/lib/validation/blueprint';
 import type { Blueprint } from '@/types/studio';
 import { collections } from '../collections';
+import { createFeaturedOrdering } from '../featured-ordering';
 import { createRepository, parsePartialInput } from '../repository';
 
 const base = createRepository<Blueprint, BlueprintInput>(collections.blueprints, {
   referenceIdPrefix: REFERENCE_ID_PREFIXES.blueprints,
 });
 
+const featured = createFeaturedOrdering<Blueprint>(collections.blueprints);
+
 export const blueprintRepository = {
+  // Editorial ordering (v3.1 Milestone 2) — one shared implementation, not a per-collection copy.
+  listFeatured: featured.listFeatured,
+  setFeaturedOrder: featured.setFeaturedOrder,
   findById: base.findById,
   list: base.list,
   remove: base.remove,

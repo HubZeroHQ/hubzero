@@ -16,6 +16,7 @@ import { buildListHref, filterAndPaginate, parsePage } from '@/lib/studio/list-q
 import { noteRepository } from '@/lib/db/repositories/note';
 import { taxonomyRepository } from '@/lib/db/repositories/taxonomy';
 import { userRepository } from '@/lib/db/repositories/user';
+import { isFeatured } from '@/lib/studio/featured-order';
 import { formatRelativeTime } from '@/lib/utils/relative-time';
 import type { Note } from '@/types/studio';
 
@@ -72,7 +73,9 @@ export default async function NotesListPage({
       render: (entry) => (
         <span className="inline-flex items-center gap-2">
           {entry.title}
-          {entry.featured ? <Tag>Featured</Tag> : null}
+          {isFeatured(entry.featuredOrder) ? (
+            <Tag>Featured &middot; {entry.featuredOrder}</Tag>
+          ) : null}
         </span>
       ),
     },
@@ -123,7 +126,14 @@ export default async function NotesListPage({
       <PageHeader
         title="Notes"
         description="HubZero's engineering notebook — architecture decisions, implementation notes, research summaries, performance investigations, and debugging write-ups worth publishing. Every entry here is a live view of the Notes collection."
-        actions={<ButtonLink href={`${NOTES_LIST_PATH}/new`}>New Note</ButtonLink>}
+        actions={
+          <>
+            <ButtonLink href={`${NOTES_LIST_PATH}/featured`} variant="secondary">
+              Featured Order
+            </ButtonLink>
+            <ButtonLink href={`${NOTES_LIST_PATH}/new`}>New Note</ButtonLink>
+          </>
+        }
       />
 
       <form action={NOTES_LIST_PATH} method="GET" className="flex gap-2">

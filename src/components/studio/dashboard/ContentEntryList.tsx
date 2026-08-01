@@ -1,6 +1,5 @@
 import { StatusIndicator } from '@/components/ui/StatusIndicator';
 import { ReferenceIdBadge } from '@/components/ui/ReferenceIdBadge';
-import { EmptyState } from '@/components/ui/EmptyState';
 import { formatRelativeTime } from '@/lib/utils/relative-time';
 import type { ContentSummary } from '@/lib/studio/dashboard-queries';
 import type { ReferenceId, ReferenceIdPrefix } from '@/types/studio';
@@ -15,16 +14,22 @@ import { DashboardListRow } from './DashboardListRow';
 export function ContentEntryList({
   entries,
   emptyTitle,
-  emptyDescription,
   limit = 8,
 }: {
   entries: ContentSummary[];
   emptyTitle: string;
-  emptyDescription?: string;
   limit?: number;
 }) {
   if (entries.length === 0) {
-    return <EmptyState title={emptyTitle} description={emptyDescription} />;
+    // One quiet line, not the full-page `EmptyState` box.
+    //
+    // That component is sized for a screen whose entire content is missing —
+    // dashed border, centred heading, supporting sentence. Inside a dashboard
+    // card it made the widget with *nothing* in it the tallest thing in the
+    // row, so the dashboard drew the eye to the collection that needed the
+    // least attention. The title alone carries the meaning here; the card
+    // heading above it already provides the context the description repeated.
+    return <p className="text-text-muted py-1 text-sm">{emptyTitle}</p>;
   }
 
   return (

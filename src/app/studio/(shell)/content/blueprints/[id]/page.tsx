@@ -1,4 +1,5 @@
 import { BookOpen, ExternalLink, Github } from 'lucide-react';
+import { isFeatured } from '@/lib/studio/featured-order';
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
@@ -68,7 +69,7 @@ export default async function BlueprintDetailPage({ params }: { params: Promise<
     <div className="flex flex-col gap-8">
       <PageHeader
         title={blueprint.name}
-        description={`${blueprint.architecture} · ${blueprint.designLanguage} · v${blueprint.version}${blueprint.featured ? ' · Featured' : ''}`}
+        description={`${blueprint.architecture} · ${blueprint.designLanguage} · v${blueprint.version}${isFeatured(blueprint.featuredOrder) ? ` · Featured (#${blueprint.featuredOrder})` : ''}`}
         actions={
           canEdit ? (
             <>

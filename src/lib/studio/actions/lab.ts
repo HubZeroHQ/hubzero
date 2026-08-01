@@ -56,7 +56,6 @@ function readLabMetadataFields(formData: FormData) {
     relatedBuildIds: formData.getAll('relatedBuildIds').map(String),
     relatedBlueprintIds: formData.getAll('relatedBlueprintIds').map(String),
     galleryImageIds: formData.getAll('galleryImageIds').map(String),
-    featured: formData.get('featured') === 'on',
     milestones: readMilestones(formData),
     contributors: formData.getAll('contributors').map(String),
   };
@@ -69,6 +68,10 @@ function parseLabCreateFormData(formData: FormData): LabInput {
   const heroImageId = readOptionalString(formData, 'heroImageId');
   const lastMajorUpdateAt = readOptionalString(formData, 'lastMajorUpdateAt');
   return {
+    // A new entry is never featured. Featuring is an editorial act performed on
+    // the collection's Featured Order screen, never a side effect of creating
+    // content (v3.1 Milestone 2).
+    featuredOrder: null,
     ...readLabMetadataFields(formData),
     status: 'draft',
     ...(publicRepoUrl !== undefined ? { publicRepoUrl } : {}),
@@ -251,7 +254,9 @@ export async function graduateLabToBuildAction(labId: string): Promise<EntryActi
         relatedWorkIds: [],
         heroImageId: lab.heroImageId?.toString(),
         galleryImageIds: lab.galleryImageIds.map((id) => id.toString()),
-        featured: false,
+        // A graduated Build starts unfeatured: featuring is an editorial decision,
+        // never inherited from the Lab it came from (v3.1 Milestone 2).
+        featuredOrder: null,
         contributors: lab.contributors.map((id) => id.toString()),
       },
       userId,

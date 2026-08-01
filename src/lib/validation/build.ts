@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import {
+  featuredOrderSchema,
   buildDeploymentStateSchema,
   objectIdString,
   publishStatusSchema,
@@ -24,7 +25,7 @@ export const buildSchema = z.object({
   heroImageId: objectIdString.optional(),
   galleryImageIds: z.array(objectIdString).default([]),
   /** Additive beyond §26.2 — the homepage's "Featured Build" slot (PLANNING.md §8) needs one flag to query against. */
-  featured: z.boolean().default(false),
+  featuredOrder: featuredOrderSchema,
   contributors: z.array(objectIdString).default([]),
 });
 

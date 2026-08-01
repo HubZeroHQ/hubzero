@@ -42,7 +42,6 @@ function readBuildMetadataFields(formData: FormData) {
     technologyIds: formData.getAll('technologyIds').map(String),
     relatedWorkIds: formData.getAll('relatedWorkIds').map(String),
     galleryImageIds: formData.getAll('galleryImageIds').map(String),
-    featured: formData.get('featured') === 'on',
     contributors: formData.getAll('contributors').map(String),
   };
 }
@@ -54,6 +53,10 @@ function parseBuildCreateFormData(formData: FormData): BuildInput {
   const originatingLabId = readOptionalId(formData, 'originatingLabId');
   const heroImageId = readOptionalId(formData, 'heroImageId');
   return {
+    // A new entry is never featured. Featuring is an editorial act performed on
+    // the collection's Featured Order screen, never a side effect of creating
+    // content (v3.1 Milestone 2).
+    featuredOrder: null,
     ...readBuildMetadataFields(formData),
     status: 'draft',
     ...(liveUrl !== undefined ? { liveUrl } : {}),

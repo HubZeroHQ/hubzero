@@ -1,5 +1,6 @@
 import { revalidatePath } from 'next/cache';
 import { ZodError } from 'zod';
+import { eventEntityTypeFor, recordEditorialEvent } from '@/lib/events/record';
 import { requireEntryCapability, type OwnableEntry } from '@/lib/auth/permissions';
 import { documentRepository } from '@/lib/db/repositories/document';
 import type { Block } from '@/lib/documents/blocks';
@@ -54,6 +55,19 @@ export function createDocumentSaveAction<TOwner extends OwnableEntry & { slug: s
           ownerId,
           role: config.role,
           blocks,
+        });
+      }
+
+      // Logged from the shared factory, so every collection that owns a
+      // Document is audited without its own call (v3.1 Milestone 8). Autosave
+      // makes this the highest-volume event type — see the milestone log's
+      // note on throttling.
+      const documentEntityType = eventEntityTypeFor(config.ownerType.toLowerCase());
+      if (documentEntityType) {
+        await recordEditorialEvent({
+          entityType: documentEntityType,
+          entityId: ownerId,
+          payload: { type: 'document.updated', role: config.role },
         });
       }
     } catch (error) {

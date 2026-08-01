@@ -116,6 +116,30 @@
 }
 
 @layer components {
+  /**
+   * The Studio shell's height, with a `vh` fallback (v3.1 Milestone 17).
+   *
+   * `h-dvh` alone compiles to a single `height: 100dvh`. `dvh` shipped in
+   * Chrome 108 / Safari 15.4 / Firefox 101 — an older engine treats that
+   * declaration as invalid and **drops it entirely**, leaving the shell at
+   * `height: auto`. It then grows with its content, which is precisely the
+   * reported failure: the document scrolls, the sidebar scrolls away with it
+   * because it is `h-full` inside an auto-height parent, a second scrollbar
+   * appears from the inner scroll regions, and `overflow: hidden` clips
+   * content into apparent blank space.
+   *
+   * Two declarations, oldest first: every engine takes `100vh`, and engines
+   * that understand `dvh` override it on the next line. This is the standard
+   * progressive-enhancement fallback, and it is why the height lives here
+   * rather than in a utility class — the class list cannot express cascade
+   * order between two Tailwind utilities.
+   */
+  .studio-shell {
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+  }
+
   .public-shell {
     min-height: 100svh;
     background: var(--color-bg-base);

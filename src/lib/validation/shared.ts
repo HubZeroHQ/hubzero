@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { FIRST_FEATURED_POSITION } from '@/lib/studio/featured-order';
 import { documentRoleSchema } from '@/lib/documents/schema';
 
 /**
@@ -74,3 +75,25 @@ export const progressMilestoneSchema = z.object({
   summary: z.string().min(1),
   relatedDocumentRole: documentRoleSchema.optional(),
 });
+
+/**
+ * Editorial featured position (v3.1 Milestone 2) — `null` means not featured,
+ * a positive integer means featured with lower sorting first.
+ *
+ * Deliberately strict rather than coercive. `z.number()` already rejects
+ * `NaN`; `.int()` rejects fractional positions; `.min(1)` rejects zero and
+ * negatives. Nothing here accepts a numeric *string*, because every write
+ * originates from `lib/studio/featured-order.ts`, which derives positions from
+ * array index — a string arriving at this boundary means something bypassed
+ * that path, and quietly coercing it would hide the bug.
+ *
+ * Collections opt in by adding this field; `Career`, `Service`, `Team`,
+ * `EngineeringProfile`, `User` and `Taxonomy` deliberately do not (see
+ * `lib/studio/featured-collections.ts`).
+ */
+export const featuredOrderSchema = z
+  .number()
+  .int()
+  .min(FIRST_FEATURED_POSITION)
+  .nullable()
+  .default(null);

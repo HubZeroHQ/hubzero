@@ -47,18 +47,26 @@ export function useAutosave({
 
   blocksRef.current = blocks;
 
-  const performSave = useCallback(async () => {
+  /**
+   * Resolves `true` only when the document is known to be persisted —
+   * including the "nothing to save" case, which is also a state in which no
+   * work is at risk. The Studio's navigation guard (v3.1 Phase 1) decides
+   * whether it may proceed from this value, so "didn't error" is not good
+   * enough: an invalid document or a save already in flight must read as
+   * `false`.
+   */
+  const performSave = useCallback(async (): Promise<boolean> => {
     if (savingRef.current) {
-      return;
+      return false;
     }
     const target = blocksRef.current;
     if (target === lastSavedBlocksRef.current) {
-      return;
+      return true;
     }
 
     if (!validateDocument(target).valid) {
       setStatus('invalid');
-      return;
+      return false;
     }
 
     savingRef.current = true;
@@ -71,14 +79,16 @@ export function useAutosave({
         setStatus('error');
         setError(result.error);
         setFieldErrors(result.fieldErrors);
-        return;
+        return false;
       }
       lastSavedBlocksRef.current = target;
       setStatus('saved');
       setLastSavedAt(new Date());
+      return true;
     } catch (err) {
       setStatus('error');
       setError(err instanceof Error ? err.message : 'Could not save the document.');
+      return false;
     } finally {
       savingRef.current = false;
     }
@@ -103,11 +113,11 @@ export function useAutosave({
   }, [blocks, delayMs, performSave]);
 
   /** Bypasses the debounce — used by the header's Save button and `Ctrl/Cmd+S`. */
-  const saveNow = useCallback(async () => {
+  const saveNow = useCallback(async (): Promise<boolean> => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
-    await performSave();
+    return performSave();
   }, [performSave]);
 
   return {
@@ -116,6 +126,14 @@ export function useAutosave({
     fieldErrors,
     lastSavedAt,
     isDirty: blocks !== lastSavedBlocksRef.current,
+    /**
+     * The last blocks known to be persisted — what "discard" must restore.
+     * Exposed for the Studio's shared editor-state layer (v3.1 Phase 1),
+     * which defines discard as "return to the last saved snapshot"; the
+     * caller's `initialBlocks` prop can't serve that role, because after an
+     * autosave it describes an older version than the one on the server.
+     */
+    lastSavedBlocks: lastSavedBlocksRef.current,
     saveNow,
   };
 }

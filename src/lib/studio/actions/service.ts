@@ -87,8 +87,10 @@ export async function updateServiceAction(
     return { error: actionErrorMessage(error) };
   }
 
+  // Stays on the edit screen — see `createEntryUpdateAction` for why every
+  // Studio metadata save now reports success instead of navigating.
   revalidatePath(detailPath(id));
-  redirect(detailPath(id));
+  return { ok: true };
 }
 
 /** Service's simplified two-state workflow (§26.7) — a plain toggle, not the five-state `StatusStepper`. */

@@ -1,5 +1,11 @@
 import { z } from 'zod';
-import { objectIdString, publishStatusSchema, reviewNoteSchema, slugSchema } from './shared';
+import {
+  featuredOrderSchema,
+  objectIdString,
+  publishStatusSchema,
+  reviewNoteSchema,
+  slugSchema,
+} from './shared';
 
 /**
  * PLANNING.md §26.3. `name` is validated against the mandatory
@@ -25,7 +31,7 @@ export const blueprintSchema = z.object({
   docsUrl: z.string().url().optional(),
   heroImageId: objectIdString.optional(),
   previewAssetIds: z.array(objectIdString).default([]),
-  featured: z.boolean().default(false),
+  featuredOrder: featuredOrderSchema,
   version: z.string().min(1).default('1.0.0'),
   contributors: z.array(objectIdString).default([]),
 });

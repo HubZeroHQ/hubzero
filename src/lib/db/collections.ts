@@ -1,5 +1,6 @@
 import type { Collection } from 'mongodb';
 import { getDb } from './mongodb';
+import type { EditorialEventRecord } from '@/lib/events/schema';
 import type { DocumentRecord } from '@/lib/documents/schema';
 import type { DocumentVersionRecord } from '@/lib/documents/version';
 import type {
@@ -48,4 +49,6 @@ export const collections = {
   documents: () => collection<DocumentRecord>('documents'),
   documentVersions: () => collection<DocumentVersionRecord>('documentVersions'),
   settings: () => collection<StudioSettings>('settings'),
+  /** Append-only editorial event log (v3.1 Milestone 8). */
+  editorialEvents: () => collection<EditorialEventRecord>('editorialEvents'),
 };
