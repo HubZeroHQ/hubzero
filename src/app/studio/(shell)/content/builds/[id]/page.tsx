@@ -1,4 +1,5 @@
 import { ExternalLink, Github } from 'lucide-react';
+import { isFeatured } from '@/lib/studio/featured-order';
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
@@ -133,7 +134,7 @@ export default async function BuildDetailPage({ params }: { params: Promise<{ id
     <div className="flex flex-col gap-8">
       <PageHeader
         title={build.title}
-        description={`${DEPLOYMENT_STATE_LABEL[build.deploymentState]}${build.featured ? ' · Featured' : ''}`}
+        description={`${DEPLOYMENT_STATE_LABEL[build.deploymentState]}${isFeatured(build.featuredOrder) ? ` · Featured (#${build.featuredOrder})` : ''}`}
         actions={
           canEdit ? (
             <>

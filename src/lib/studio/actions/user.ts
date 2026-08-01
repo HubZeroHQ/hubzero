@@ -131,8 +131,10 @@ export async function updateUserAction(
     return { error: actionErrorMessage(error) };
   }
 
+  // Stays on the edit screen — see `createEntryUpdateAction` for why every
+  // Studio metadata save now reports success instead of navigating.
   revalidatePath(detailPath(id));
-  redirect(detailPath(id));
+  return { ok: true };
 }
 
 export async function setUserDisabledAction(
@@ -228,7 +230,7 @@ export async function updateOwnProfileAction(
 
   await userRepository.update(session.user.id, { name });
   revalidatePath('/studio/profile');
-  return {};
+  return { ok: true };
 }
 
 export async function changeOwnPasswordAction(

@@ -18,7 +18,9 @@ import {
 import type { Block, BlockType } from '@/lib/documents/blocks';
 import { blockSchema } from '@/lib/documents/blocks';
 import { deriveDocumentOutline } from '@/lib/documents/ai-summarize';
-import { useAutosave } from '@/lib/documents/use-autosave';
+import { useAutosave, type AutosaveStatus } from '@/lib/documents/use-autosave';
+import type { EditorSaveStatus } from '@/lib/studio/editor-state/types';
+import { useEditorRegistration } from '@/lib/studio/editor-state/use-editor-registration';
 import { useDocumentHistory } from '@/lib/documents/use-document-history';
 import { validateDocument } from '@/lib/documents/validation';
 import { cn } from '@/lib/utils/cn';
@@ -79,6 +81,26 @@ export function BlockEditor({
 }) {
   const { blocks, commit, undo, redo, canUndo, canRedo } = useDocumentHistory(initialBlocks);
   const autosave = useAutosave({ blocks, onSave });
+
+  // Joins the Studio's shared editor-state system (v3.1 Phase 1) so a
+  // document with edits still in the autosave debounce — or with a *failed*
+  // autosave, which is the case that actually loses work — can't be
+  // navigated away from silently. `showsSaveBar: false` because this editor
+  // already renders its own save control and status in `EditorHeader`, and
+  // `savesAutomatically: true` so the guard flushes it instead of
+  // interrupting the author with a dialog they could only answer one way.
+  useEditorRegistration({
+    id: 'document-engine',
+    label: 'Document body',
+    isDirty: autosave.isDirty,
+    status: toEditorStatus(autosave.status),
+    error: autosave.error,
+    save: () => autosave.saveNow(),
+    discard: () => commit(autosave.lastSavedBlocks),
+    savesAutomatically: true,
+    showsSaveBar: false,
+    canDiscard: true,
+  });
 
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
   const [collapsedBlockIds, setCollapsedBlockIds] = useState<Set<string>>(new Set());
@@ -383,6 +405,27 @@ export function BlockEditor({
       />
     </div>
   );
+}
+
+/**
+ * The Document Engine's own status vocabulary is richer than the Studio-wide
+ * one — `invalid` ("fix the highlighted fields to save") is a distinct state
+ * here but not in the shared model, where all the guard needs to know is
+ * that this document is not currently safe to leave. It collapses onto
+ * `error` rather than `dirty` for exactly that reason.
+ */
+function toEditorStatus(status: AutosaveStatus): EditorSaveStatus {
+  switch (status) {
+    case 'saving':
+      return 'saving';
+    case 'dirty':
+      return 'dirty';
+    case 'invalid':
+    case 'error':
+      return 'error';
+    default:
+      return 'saved';
+  }
 }
 
 function EditorHeader({

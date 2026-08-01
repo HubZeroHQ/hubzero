@@ -70,7 +70,7 @@ export function StudioShell({
   const breadcrumbs = getBreadcrumbItems(pathname);
 
   return (
-    <div className="bg-bg-base flex h-dvh overflow-hidden">
+    <div className="studio-shell bg-bg-base flex">
       <a
         href="#main-content"
         className="focus-visible:rounded-control sr-only focus-visible:not-sr-only focus-visible:fixed focus-visible:top-3 focus-visible:left-3 focus-visible:z-[60] focus-visible:bg-white focus-visible:px-3 focus-visible:py-2 focus-visible:text-sm focus-visible:text-black"
@@ -81,19 +81,19 @@ export function StudioShell({
       <Sidebar nav={nav} collapsed={collapsed} onToggleCollapsed={toggleCollapsed} />
       <MobileNavDrawer nav={nav} open={mobileNavOpen} onOpenChange={setMobileNavOpen} />
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <TopBar
           breadcrumbs={breadcrumbs}
           user={user}
           onOpenPalette={() => setPaletteOpen(true)}
           onOpenMobileNav={() => setMobileNavOpen(true)}
         />
-        <main id="main-content" className="flex-1 overflow-y-auto p-6">
+        <main id="main-content" className="min-h-0 flex-1 overflow-y-auto p-6">
           {children}
         </main>
       </div>
 
-      <CommandPalette nav={nav} open={paletteOpen} onOpenChange={setPaletteOpen} />
+      <CommandPalette role={role} nav={nav} open={paletteOpen} onOpenChange={setPaletteOpen} />
     </div>
   );
 }

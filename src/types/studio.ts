@@ -195,6 +195,8 @@ export interface Work extends PublishableEntity {
   summary: string;
   clientType: string;
   categoryTagIds: ObjectId[];
+  /** Editorial featured position (v3.1 Milestone 2). Work previously had no featured concept — the homepage picked its lead entry implicitly. */
+  featuredOrder: number | null;
   timeline: string;
   role: string;
   technologyIds: ObjectId[];
@@ -222,8 +224,8 @@ export interface Build extends PublishableEntity {
   /** Additive beyond PLANNING.md §26.2 — the product hero image and supporting gallery (§10's "screenshots"). */
   heroImageId?: ObjectId;
   galleryImageIds: ObjectId[];
-  /** Additive beyond §26.2 — surfaces a Build on the homepage's "Featured Build" slot (PLANNING.md §8). */
-  featured: boolean;
+  /** Editorial featured position (v3.1 Milestone 2) — `null` is not featured, lower sorts first. Replaces the former boolean `featured` flag. */
+  featuredOrder: number | null;
   /** Explicit public credit, always via Team (the canonical person identity) — never `EngineeringProfile` directly; `createdByUserId` remains internal provenance. */
   contributors: ObjectId[];
 }
@@ -246,8 +248,8 @@ export interface Blueprint extends PublishableEntity {
   /** Additive beyond §26.3 — mirrors Build's `heroImageId`/`galleryImageIds` split between a lead image and supporting gallery. */
   heroImageId?: ObjectId;
   previewAssetIds: ObjectId[];
-  /** Additive beyond §26.3 — mirrors Build's homepage "Featured" slot (PLANNING.md §8). */
-  featured: boolean;
+  /** Editorial featured position (v3.1 Milestone 2) — `null` is not featured, lower sorts first. Replaces the former boolean `featured` flag. */
+  featuredOrder: number | null;
   /** Additive beyond §26.3 — a foundation evolves after its first release; free-form so `1.2.0` and `2024.1` both fit. */
   version: string;
   /** Explicit public credit, always via Team (the canonical person identity) — never `EngineeringProfile` directly; `createdByUserId` remains internal provenance. */
@@ -295,8 +297,8 @@ export interface Lab extends PublishableEntity {
   /** Additive beyond §26.4 — mirrors Build/Blueprint's hero + gallery split. */
   heroImageId?: ObjectId;
   galleryImageIds: ObjectId[];
-  /** Additive beyond §26.4 — mirrors Build/Blueprint's homepage "Featured" slot. */
-  featured: boolean;
+  /** Editorial featured position (v3.1 Milestone 2) — `null` is not featured, lower sorts first. Replaces the former boolean `featured` flag. */
+  featuredOrder: number | null;
   /** The Progress Timeline (Phase 10). */
   milestones: ProgressMilestone[];
   /** Explicit public credit, always via Team (the canonical person identity) — never `EngineeringProfile` directly; `createdByUserId` remains internal provenance. */
@@ -315,8 +317,8 @@ export interface Note extends PublishableEntity {
   relatedEntries: EntryReference[];
   /** Additive beyond §26.5 — an editorial date distinct from `createdAt` and the workflow's `published` transition, for backdating or scheduling a write-up. */
   publicationDate: Date;
-  /** Additive beyond §26.5 — mirrors every other Content collection's homepage "Featured" slot. */
-  featured: boolean;
+  /** Editorial featured position (v3.1 Milestone 2) — `null` is not featured, lower sorts first. Replaces the former boolean `featured` flag. */
+  featuredOrder: number | null;
   /** Additive beyond §26.5 — mirrors Build/Blueprint/Lab's optional hero + gallery split. */
   heroImageId?: ObjectId;
   galleryImageIds: ObjectId[];

@@ -1,4 +1,5 @@
 import { Clock } from 'lucide-react';
+import { isFeatured } from '@/lib/studio/featured-order';
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
@@ -119,7 +120,7 @@ export default async function NoteDetailPage({ params }: { params: Promise<{ id:
     <div className="flex flex-col gap-8">
       <PageHeader
         title={note.title}
-        description={`${author?.name ?? 'Unknown author'} · ${new Intl.DateTimeFormat('en-US', { dateStyle: 'medium' }).format(note.publicationDate)} · ${readingTimeMinutes} min read${note.featured ? ' · Featured' : ''}`}
+        description={`${author?.name ?? 'Unknown author'} · ${new Intl.DateTimeFormat('en-US', { dateStyle: 'medium' }).format(note.publicationDate)} · ${readingTimeMinutes} min read${isFeatured(note.featuredOrder) ? ` · Featured (#${note.featuredOrder})` : ''}`}
         actions={
           canEdit ? (
             <>

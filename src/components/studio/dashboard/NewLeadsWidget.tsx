@@ -1,4 +1,3 @@
-import { EmptyState } from '@/components/ui/EmptyState';
 import { formatRelativeTime } from '@/lib/utils/relative-time';
 import type { Lead } from '@/types/studio';
 import { DashboardListRow } from './DashboardListRow';
@@ -10,12 +9,7 @@ import { DashboardListRow } from './DashboardListRow';
  */
 export function NewLeadsWidget({ leads }: { leads: Lead[] }) {
   if (leads.length === 0) {
-    return (
-      <EmptyState
-        title="No new leads"
-        description="Submissions from the contact form will show up here as they arrive."
-      />
-    );
+    return <p className="text-text-muted py-1 text-sm">No new leads</p>;
   }
 
   return (

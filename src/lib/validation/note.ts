@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import {
+  featuredOrderSchema,
   entryReferenceSchema,
   objectIdString,
   publishStatusSchema,
@@ -18,7 +19,7 @@ export const noteSchema = z.object({
   technologyIds: z.array(objectIdString).default([]),
   relatedEntries: z.array(entryReferenceSchema).default([]),
   publicationDate: z.coerce.date(),
-  featured: z.boolean().default(false),
+  featuredOrder: featuredOrderSchema,
   heroImageId: objectIdString.optional(),
   galleryImageIds: z.array(objectIdString).default([]),
   contributors: z.array(objectIdString).default([]),

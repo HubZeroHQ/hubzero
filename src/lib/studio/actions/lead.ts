@@ -62,7 +62,7 @@ export async function updateLeadNotesAction(
 
   await leadRepository.update(id, { internalNotes: String(formData.get('internalNotes') ?? '') });
   revalidatePath(detailPath(id));
-  return {};
+  return { ok: true };
 }
 
 export async function assignLeadAction(

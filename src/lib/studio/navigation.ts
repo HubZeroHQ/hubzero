@@ -1,4 +1,6 @@
 import {
+  Activity as ActivityIcon,
+  HeartPulse,
   Blocks,
   Box,
   FlaskConical,
@@ -17,6 +19,7 @@ import {
   UsersRound,
   type LucideIcon,
 } from 'lucide-react';
+import { roleHasCapability } from '@/config/permissions';
 import type { UserRole } from '@/types/studio';
 
 /**
@@ -73,6 +76,19 @@ function resource(
 }
 
 const DASHBOARD = leaf('Dashboard', '/studio/dashboard', LayoutDashboard);
+
+/**
+ * "What's changed?" (v3.1 Milestone 9). Sits beside Dashboard rather than
+ * inside a group: it is a Studio-wide view, not a collection.
+ */
+const ACTIVITY = leaf('Activity', '/studio/activity', ActivityIcon);
+
+/**
+ * The full editorial health report (v3.1 Milestone 16). The dashboard shows
+ * only findings that need action; this is where every check lives, including
+ * the passing ones.
+ */
+const HEALTH = leaf('Content Health', '/studio/health', HeartPulse);
 
 const CONTENT: StudioNavGroup = {
   kind: 'group',
@@ -163,7 +179,16 @@ export function getVisibleNav(
   role: UserRole,
   opts: { hasAssignedLeads: boolean; hasAssignedCandidates: boolean },
 ): StudioNavEntry[] {
-  const entries: StudioNavEntry[] = [DASHBOARD, CONTENT, STUDIO];
+  const entries: StudioNavEntry[] = [DASHBOARD];
+
+  // Gated on the same capability the page itself checks — the feed spans every
+  // collection and every author, so a role that can only read its own entries
+  // would be shown rows it cannot open.
+  if (roleHasCapability(role, 'editAnyEntry')) {
+    entries.push(ACTIVITY, HEALTH);
+  }
+
+  entries.push(CONTENT, STUDIO);
 
   if (role !== 'member' || opts.hasAssignedLeads) {
     entries.push(LEADS);
@@ -185,6 +210,8 @@ export function getVisibleNav(
 /** Every leaf, regardless of role — used to resolve breadcrumbs/titles for the current route. */
 const ALL_ENTRIES: StudioNavEntry[] = [
   DASHBOARD,
+  ACTIVITY,
+  HEALTH,
   CONTENT,
   STUDIO,
   LEADS,

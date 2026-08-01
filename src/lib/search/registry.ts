@@ -1,3 +1,4 @@
+import { rankResults } from './ranking';
 import type { SearchAdapter, SearchContext, SearchResult } from './types';
 
 /**
@@ -9,27 +10,6 @@ const adapters: SearchAdapter[] = [];
 
 export function registerSearchAdapter(adapter: SearchAdapter): void {
   adapters.push(adapter);
-}
-
-function normalize(value: string): string {
-  return value.toLowerCase().replace(/[^a-z0-9]/g, '');
-}
-
-/**
- * CMS_PRODUCT_DESIGN.md §7 — reference IDs are a priority exact-match lane
- * above fuzzy text (typing `HZ-WK-014` or a loose `wk 14` should jump
- * straight to that entry).
- */
-function sortByRelevance(query: string, results: SearchResult[]): SearchResult[] {
-  const normalizedQuery = normalize(query);
-  return [...results].sort((a, b) => {
-    const aRefMatch = a.referenceId ? normalize(a.referenceId).includes(normalizedQuery) : false;
-    const bRefMatch = b.referenceId ? normalize(b.referenceId).includes(normalizedQuery) : false;
-    if (aRefMatch !== bRefMatch) {
-      return aRefMatch ? -1 : 1;
-    }
-    return a.title.localeCompare(b.title);
-  });
 }
 
 /**
@@ -48,5 +28,22 @@ export async function searchAll(query: string, ctx: SearchContext): Promise<Sear
     visibleAdapters.map((adapter) => adapter.search(trimmed, ctx)),
   );
 
-  return sortByRelevance(trimmed, resultsPerAdapter.flat());
+  return rankResults(trimmed, resultsPerAdapter.flat());
+}
+
+/**
+ * The whole index the viewer is allowed to see, in one pass (v3.1 Milestone 5).
+ *
+ * Every adapter already filters with `String.includes`, so an empty query
+ * matches everything — the snapshot needs no new adapter method and no
+ * collection-specific code. This is what lets `/studio/search` filter in
+ * memory as the editor types instead of issuing a database round trip per
+ * keystroke.
+ */
+export async function listSearchIndex(ctx: SearchContext): Promise<SearchResult[]> {
+  const visibleAdapters = adapters.filter((adapter) => adapter.isVisible(ctx));
+  const resultsPerAdapter = await Promise.all(
+    visibleAdapters.map((adapter) => adapter.search('', ctx)),
+  );
+  return resultsPerAdapter.flat();
 }

@@ -2,6 +2,66 @@
 
 All notable changes to this project are documented in this file. Entries are engineering release notes, not marketing copy — see [`docs/releases/`](docs/releases) for the full reasoning behind each release.
 
+## v3.1.0 - 2026-08-02
+
+### Added
+
+- Navigation protection with unsaved-changes detection across Studio editors
+- Shared editor state system and sticky save experience
+- Canonical Featured Order system for Work, Builds, Blueprints, Labs and Notes
+- Editorial ordering on public collection pages
+- Content Health dashboard and detailed health reporting
+- Relationship Health diagnostics
+- Entry Inspector with contextual health information
+- Editorial Event Log infrastructure
+- Entry History timeline
+- Studio Activity feed
+- Global Studio Search
+- Studio Command Palette
+- Publishing summaries and improved editorial dashboard
+- Featured coverage monitoring and homepage readiness checks
+
+### Changed
+
+- Reworked Studio dashboard into an editorial workspace focused on actionable tasks
+- Replaced homepage featured selection with canonical editorial ordering
+- Improved review workflow responsiveness and transition feedback
+- Unified search ranking across Studio Search and Command Palette
+- Improved Studio shell layout and scrolling behaviour
+- Refined public cache isolation to prevent cross-database cache contamination during development
+- Improved public collection ordering using editorial priority
+- Consolidated health reporting into reusable services
+- Simplified dashboard health presentation with compact system summaries
+- Improved activity previews and publishing summaries
+
+### Fixed
+
+- Runtime compatibility issues caused by `isomorphic-dompurify` and server-side `jsdom`
+- Multiple navigation edge cases around unsaved changes
+- Concurrent save race conditions
+- Review action duplicate submissions
+- Cross-database development cache contamination
+- Various dashboard consistency issues
+- Multiple editor workflow refresh issues
+- Numerous UI, accessibility, and reliability improvements throughout Studio
+
+### Performance
+
+- Reduced unnecessary dashboard rendering
+- Shared search indexing and ranking logic
+- Improved activity loading
+- Reduced duplicate refreshes and redundant server actions
+- Improved cache behaviour for public content
+- Numerous internal optimizations and test improvements
+
+### Developer Experience
+
+- Expanded automated test coverage
+- Improved internal architecture and shared services
+- Strengthened type safety across Studio
+- Added architectural documentation and ADRs
+- Improved maintainability through shared editor, health and activity systems
+
 ## v3.0.1
 
 ### Fixed

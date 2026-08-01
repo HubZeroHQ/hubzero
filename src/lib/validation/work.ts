@@ -1,5 +1,11 @@
 import { z } from 'zod';
-import { objectIdString, publishStatusSchema, reviewNoteSchema, slugSchema } from './shared';
+import {
+  featuredOrderSchema,
+  objectIdString,
+  publishStatusSchema,
+  reviewNoteSchema,
+  slugSchema,
+} from './shared';
 
 /** PLANNING.md §26.1. */
 export const workSchema = z.object({
@@ -20,6 +26,8 @@ export const workSchema = z.object({
   heroImageId: objectIdString.optional(),
   /** Additive beyond PLANNING.md §26.1 — mirrors Build's identical `repoUrl` (§26.2) for a client/internal repo link. */
   repoUrl: z.string().url().optional(),
+  /** Additive — Work joins the shared editorial ordering system (v3.1 Milestone 2); it previously had no featured concept at all. */
+  featuredOrder: featuredOrderSchema,
 });
 
 export type WorkInput = z.infer<typeof workSchema>;

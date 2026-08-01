@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+import { EntryHistorySection } from '@/components/studio/history/EntryHistorySection';
+import { EntryInspectorSection } from '@/components/studio/health/EntryInspectorSection';
 import { notFound } from 'next/navigation';
 import { PageHeader } from '@/components/studio/PageHeader';
 import { LabForm } from '@/components/studio/labs/LabForm';
@@ -143,7 +145,6 @@ export default async function EditLabPage({ params }: { params: Promise<{ id: st
           internalRepoUrl: lab.internalRepoUrl,
           publicRepoUrl: lab.publicRepoUrl,
           liveDemoUrl: lab.liveDemoUrl,
-          featured: lab.featured,
           technologyIds: lab.technologyIds.map((entryId) => entryId.toString()),
           relatedBuildIds: lab.relatedBuildIds.map((entryId) => entryId.toString()),
           relatedBlueprintIds: lab.relatedBlueprintIds.map((entryId) => entryId.toString()),
@@ -203,6 +204,12 @@ export default async function EditLabPage({ params }: { params: Promise<{ id: st
           previewHref={`/api/preview?type=lab&id=${id}`}
         />
       </section>
+      <EntryInspectorSection
+        collectionKey="labs"
+        entryId={id}
+        editHref={`/studio/content/labs/${id}/edit`}
+      />
+      <EntryHistorySection ownerType="Lab" entryId={id} entry={lab} />
     </div>
   );
 }

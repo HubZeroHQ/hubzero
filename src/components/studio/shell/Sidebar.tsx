@@ -30,7 +30,7 @@ export function Sidebar({ nav, collapsed, onToggleCollapsed }: SidebarProps) {
     <nav
       aria-label="Primary"
       className={cn(
-        'border-border-default bg-bg-base duration-considered ease-standard hidden h-full shrink-0 flex-col border-r transition-[width] md:flex',
+        'border-border-default bg-bg-base duration-considered ease-standard hidden h-full min-h-0 shrink-0 flex-col border-r transition-[width] md:flex',
         collapsed ? 'w-16' : 'w-60',
       )}
     >
@@ -59,7 +59,7 @@ export function Sidebar({ nav, collapsed, onToggleCollapsed }: SidebarProps) {
         </Link>
       </div>
 
-      <div className="flex-1 space-y-4 overflow-y-auto px-2 pb-4">
+      <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-2 pb-4">
         <SidebarNavList nav={nav} pathname={pathname} collapsed={collapsed} />
       </div>
 

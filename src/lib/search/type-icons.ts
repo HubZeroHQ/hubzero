@@ -3,9 +3,11 @@ import {
   Box,
   Briefcase,
   FlaskConical,
+  GraduationCap,
   Handshake,
   Image as ImageIcon,
   Inbox,
+  Tags,
   NotebookPen,
   UserCog,
   Users,
@@ -17,6 +19,8 @@ import type { SearchEntityType } from './types';
 /** Mirrors the icon each type already uses in the sidebar (`lib/studio/navigation.ts`) — one icon per entity type, never per-instance. */
 export const SEARCH_TYPE_META: Record<SearchEntityType, { label: string; icon: LucideIcon }> = {
   work: { label: 'Work', icon: Briefcase },
+  careers: { label: 'Careers', icon: GraduationCap },
+  taxonomy: { label: 'Taxonomy', icon: Tags },
   builds: { label: 'Builds', icon: Box },
   blueprints: { label: 'Blueprints', icon: Blocks },
   labs: { label: 'Labs', icon: FlaskConical },

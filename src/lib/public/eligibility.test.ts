@@ -244,7 +244,7 @@ describe('Studio checklist parity with the public repository', () => {
       technologyIds: [],
       relatedWorkIds: [],
       galleryImageIds: [],
-      featured: true,
+      featuredOrder: 1,
       contributors: [],
     };
     const documents = [toDocumentRecord(build._id, substantiveCaseStudy)];
@@ -274,7 +274,7 @@ describe('Studio checklist parity with the public repository', () => {
       technologyIds: [],
       relatedWorkIds: [],
       galleryImageIds: [],
-      featured: true,
+      featuredOrder: 1,
       contributors: [],
     };
     const documents = [

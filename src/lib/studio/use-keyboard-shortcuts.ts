@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useGuardedRouter } from './editor-state/use-guarded-router';
 import { flattenNav, type StudioNavEntry } from './navigation';
 
 function isTypingTarget(target: EventTarget | null): boolean {
@@ -31,7 +31,9 @@ export function useKeyboardShortcuts({
   nav: StudioNavEntry[];
   onOpenPalette: () => void;
 }): void {
-  const router = useRouter();
+  // A `g`-chord jump is programmatic navigation with no anchor to intercept,
+  // so it opts into the unsaved-changes guard explicitly (v3.1 Phase 1).
+  const router = useGuardedRouter();
   const awaitingChordRef = useRef(false);
 
   useEffect(() => {

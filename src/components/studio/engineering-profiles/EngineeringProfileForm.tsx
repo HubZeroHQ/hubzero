@@ -1,10 +1,9 @@
 'use client';
 
-import { useActionState } from 'react';
+import { EditorForm } from '@/components/studio/editor/EditorForm';
 import { MediaGalleryField } from '@/components/media/MediaGalleryField';
 import { MediaPickerField } from '@/components/media/MediaPickerField';
 import { RelationMultiSelect } from '@/components/studio/collection/RelationMultiSelect';
-import { Button } from '@/components/ui/Button';
 import { Field } from '@/components/ui/Field';
 import { fieldClassName, Input } from '@/components/ui/Input';
 import type { MediaAssetDTO } from '@/lib/media/dto';
@@ -15,7 +14,6 @@ export type EngineeringProfileFormValues = Record<string, string | string[]> & {
   teamMemberId: string;
   slug: string;
 };
-const empty: EntryActionState = {};
 
 export function EngineeringProfileForm({
   action,
@@ -46,133 +44,133 @@ export function EngineeringProfileForm({
   labOptions: Option[];
   noteOptions: Option[];
 }) {
-  const [state, formAction, pending] = useActionState(action, empty);
   const text = (key: string) => (initialValues?.[key] as string | undefined) ?? '';
   const ids = (key: string) => (initialValues?.[key] as string[] | undefined) ?? [];
   return (
-    <form action={formAction} className="flex max-w-3xl flex-col gap-6">
-      {state.error ? (
-        <p role="alert" className="text-danger text-sm">
-          {state.error}
-        </p>
-      ) : null}
-      <Field label="Team member" name="teamMemberId" error={state.fieldErrors?.teamMemberId}>
-        <select
-          id="teamMemberId"
-          name="teamMemberId"
-          defaultValue={initialValues?.teamMemberId ?? ''}
-          className={fieldClassName}
-          required
-        >
-          <option value="" disabled>
-            Select the engineer…
-          </option>
-          {teamOptions.map((o) => (
-            <option key={o.id} value={o.id}>
-              {o.label} · {o.referenceId}
-            </option>
+    <EditorForm
+      action={action}
+      submitLabel={submitLabel}
+      label="Engineering Profile metadata"
+      className="max-w-3xl"
+    >
+      {(state) => (
+        <>
+          <Field label="Team member" name="teamMemberId" error={state.fieldErrors?.teamMemberId}>
+            <select
+              id="teamMemberId"
+              name="teamMemberId"
+              defaultValue={initialValues?.teamMemberId ?? ''}
+              className={fieldClassName}
+              required
+            >
+              <option value="" disabled>
+                Select the engineer…
+              </option>
+              {teamOptions.map((o) => (
+                <option key={o.id} value={o.id}>
+                  {o.label} · {o.referenceId}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Slug" name="slug" error={state.fieldErrors?.slug}>
+            <Input id="slug" name="slug" defaultValue={initialValues?.slug} required />
+          </Field>
+          {(
+            [
+              ['overview', 'Overview'],
+              ['engineeringPhilosophy', 'Engineering philosophy'],
+              ['currentExploration', 'Current exploration'],
+            ] as const
+          ).map(([name, label]) => (
+            <Field key={name} label={label} name={name} error={state.fieldErrors?.[name]}>
+              <textarea
+                id={name}
+                name={name}
+                defaultValue={text(name)}
+                rows={4}
+                required
+                className={fieldClassName}
+              />
+            </Field>
           ))}
-        </select>
-      </Field>
-      <Field label="Slug" name="slug" error={state.fieldErrors?.slug}>
-        <Input id="slug" name="slug" defaultValue={initialValues?.slug} required />
-      </Field>
-      {(
-        [
-          ['overview', 'Overview'],
-          ['engineeringPhilosophy', 'Engineering philosophy'],
-          ['currentExploration', 'Current exploration'],
-        ] as const
-      ).map(([name, label]) => (
-        <Field key={name} label={label} name={name} error={state.fieldErrors?.[name]}>
-          <textarea
-            id={name}
-            name={name}
-            defaultValue={text(name)}
-            rows={4}
-            required
-            className={fieldClassName}
+          {(
+            [
+              ['areasOfExpertise', 'Areas of expertise'],
+              ['currentInterests', 'Current interests'],
+              ['engineeringIdentity', 'Engineering identity'],
+            ] as const
+          ).map(([name, label]) => (
+            <Field key={name} label={label} name={name} hint="One item per line">
+              <textarea
+                id={name}
+                name={name}
+                defaultValue={ids(name).join('\n')}
+                rows={4}
+                className={fieldClassName}
+              />
+            </Field>
+          ))}
+          <Field label="Portrait" name="portraitId" asFieldset>
+            <MediaPickerField
+              name="portraitId"
+              initialAsset={initialPortrait}
+              folder="engineeringProfiles"
+            />
+          </Field>
+          <Field label="Hero media (optional)" name="heroMediaId" asFieldset>
+            <MediaPickerField
+              name="heroMediaId"
+              initialAsset={initialHero}
+              folder="engineeringProfiles"
+            />
+          </Field>
+          <Field label="Gallery (optional)" name="galleryImageIds" asFieldset>
+            <MediaGalleryField
+              name="galleryImageIds"
+              initialAssets={initialGalleryAssets}
+              folder="engineeringProfiles"
+            />
+          </Field>
+          <RelationField
+            label="Technologies"
+            name="technologyIds"
+            options={technologyOptions}
+            selected={ids('technologyIds')}
           />
-        </Field>
-      ))}
-      {(
-        [
-          ['areasOfExpertise', 'Areas of expertise'],
-          ['currentInterests', 'Current interests'],
-          ['engineeringIdentity', 'Engineering identity'],
-        ] as const
-      ).map(([name, label]) => (
-        <Field key={name} label={label} name={name} hint="One item per line">
-          <textarea
-            id={name}
-            name={name}
-            defaultValue={ids(name).join('\n')}
-            rows={4}
-            className={fieldClassName}
+          <RelationField
+            label="Featured Work"
+            name="featuredWorkIds"
+            options={workOptions}
+            selected={ids('featuredWorkIds')}
           />
-        </Field>
-      ))}
-      <Field label="Portrait" name="portraitId" asFieldset>
-        <MediaPickerField
-          name="portraitId"
-          initialAsset={initialPortrait}
-          folder="engineeringProfiles"
-        />
-      </Field>
-      <Field label="Hero media (optional)" name="heroMediaId" asFieldset>
-        <MediaPickerField
-          name="heroMediaId"
-          initialAsset={initialHero}
-          folder="engineeringProfiles"
-        />
-      </Field>
-      <Field label="Gallery (optional)" name="galleryImageIds" asFieldset>
-        <MediaGalleryField
-          name="galleryImageIds"
-          initialAssets={initialGalleryAssets}
-          folder="engineeringProfiles"
-        />
-      </Field>
-      <RelationField
-        label="Technologies"
-        name="technologyIds"
-        options={technologyOptions}
-        selected={ids('technologyIds')}
-      />
-      <RelationField
-        label="Featured Work"
-        name="featuredWorkIds"
-        options={workOptions}
-        selected={ids('featuredWorkIds')}
-      />
-      <RelationField
-        label="Featured Builds"
-        name="featuredBuildIds"
-        options={buildOptions}
-        selected={ids('featuredBuildIds')}
-      />
-      <RelationField
-        label="Featured Blueprints"
-        name="featuredBlueprintIds"
-        options={blueprintOptions}
-        selected={ids('featuredBlueprintIds')}
-      />
-      <RelationField
-        label="Featured Labs"
-        name="featuredLabIds"
-        options={labOptions}
-        selected={ids('featuredLabIds')}
-      />
-      <RelationField
-        label="Featured Notes"
-        name="featuredNoteIds"
-        options={noteOptions}
-        selected={ids('featuredNoteIds')}
-      />
-      <Button type="submit" disabled={pending} className="self-start">
-        {pending ? 'Saving…' : submitLabel}
-      </Button>
-    </form>
+          <RelationField
+            label="Featured Builds"
+            name="featuredBuildIds"
+            options={buildOptions}
+            selected={ids('featuredBuildIds')}
+          />
+          <RelationField
+            label="Featured Blueprints"
+            name="featuredBlueprintIds"
+            options={blueprintOptions}
+            selected={ids('featuredBlueprintIds')}
+          />
+          <RelationField
+            label="Featured Labs"
+            name="featuredLabIds"
+            options={labOptions}
+            selected={ids('featuredLabIds')}
+          />
+          <RelationField
+            label="Featured Notes"
+            name="featuredNoteIds"
+            options={noteOptions}
+            selected={ids('featuredNoteIds')}
+          />
+        </>
+      )}
+    </EditorForm>
   );
 }
 function RelationField({

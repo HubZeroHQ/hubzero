@@ -14,6 +14,7 @@ import { PUBLISH_WORKFLOW_ORDER } from '@/config/workflow';
 import { buildListHref, filterAndPaginate, parsePage } from '@/lib/studio/list-query';
 import { buildRepository } from '@/lib/db/repositories/build';
 import { taxonomyRepository } from '@/lib/db/repositories/taxonomy';
+import { isFeatured } from '@/lib/studio/featured-order';
 import { formatRelativeTime } from '@/lib/utils/relative-time';
 import type { Build, BuildDeploymentState } from '@/types/studio';
 
@@ -69,7 +70,9 @@ export default async function BuildsListPage({
       render: (entry) => (
         <span className="inline-flex items-center gap-2">
           {entry.title}
-          {entry.featured ? <Tag>Featured</Tag> : null}
+          {isFeatured(entry.featuredOrder) ? (
+            <Tag>Featured &middot; {entry.featuredOrder}</Tag>
+          ) : null}
         </span>
       ),
     },
@@ -111,7 +114,14 @@ export default async function BuildsListPage({
       <PageHeader
         title="Builds"
         description="Finished internal products — every entry here is a live view of the Builds collection."
-        actions={<ButtonLink href={`${BUILDS_LIST_PATH}/new`}>New Build</ButtonLink>}
+        actions={
+          <>
+            <ButtonLink href={`${BUILDS_LIST_PATH}/featured`} variant="secondary">
+              Featured Order
+            </ButtonLink>
+            <ButtonLink href={`${BUILDS_LIST_PATH}/new`}>New Build</ButtonLink>
+          </>
+        }
       />
 
       <form action={BUILDS_LIST_PATH} method="GET" className="flex gap-2">

@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+import { EntryHistorySection } from '@/components/studio/history/EntryHistorySection';
+import { EntryInspectorSection } from '@/components/studio/health/EntryInspectorSection';
 import { notFound } from 'next/navigation';
 import { PageHeader } from '@/components/studio/PageHeader';
 import { NoteForm } from '@/components/studio/notes/NoteForm';
@@ -84,7 +86,6 @@ export default async function EditNotePage({ params }: { params: Promise<{ id: s
           authorId: note.authorId.toString(),
           summary: note.summary,
           publicationDate: toDateInputValue(note.publicationDate),
-          featured: note.featured,
           technologyIds: note.technologyIds.map((entryId) => entryId.toString()),
           galleryImageIds: note.galleryImageIds.map((entryId) => entryId.toString()),
           contributors: (note.contributors ?? []).map((entryId) => entryId.toString()),
@@ -105,6 +106,12 @@ export default async function EditNotePage({ params }: { params: Promise<{ id: s
           previewHref={`/api/preview?type=note&id=${id}`}
         />
       </section>
+      <EntryInspectorSection
+        collectionKey="notes"
+        entryId={id}
+        editHref={`/studio/content/notes/${id}/edit`}
+      />
+      <EntryHistorySection ownerType="Note" entryId={id} entry={note} />
     </div>
   );
 }

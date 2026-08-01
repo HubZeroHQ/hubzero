@@ -1,75 +1,106 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Command } from 'cmdk';
 import { Search } from 'lucide-react';
-import { flattenNav, type StudioNavEntry } from '@/lib/studio/navigation';
+import { useGuardedRouter } from '@/lib/studio/editor-state/use-guarded-router';
+import {
+  COMMAND_SECTION_LABEL,
+  commandsForRole,
+  filterCommands,
+  groupCommands,
+} from '@/lib/studio/commands';
+import { groupResults, rankResults } from '@/lib/search/ranking';
 import { SEARCH_TYPE_META } from '@/lib/search/type-icons';
 import type { SearchResult } from '@/lib/search/types';
+import type { StudioNavEntry } from '@/lib/studio/navigation';
+import type { UserRole } from '@/types/studio';
 
 interface CommandPaletteProps {
+  role: UserRole;
+  /** The same tree the sidebar renders — the palette derives "Go to" from it rather than keeping its own list. */
   nav: StudioNavEntry[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
+const GROUP_HEADING_CLASS =
+  '[&_[cmdk-group-heading]]:text-text-muted [&_[cmdk-group-heading]]:px-2.5 [&_[cmdk-group-heading]]:pt-2 [&_[cmdk-group-heading]]:pb-1.5 [&_[cmdk-group-heading]]:font-mono [&_[cmdk-group-heading]]:text-[11px] [&_[cmdk-group-heading]]:tracking-[0.08em] [&_[cmdk-group-heading]]:uppercase';
+
+const ITEM_CLASS =
+  'text-text-secondary data-[selected=true]:bg-surface-elevated data-[selected=true]:text-text-primary rounded-control flex cursor-pointer items-center gap-2.5 px-2.5 py-2 text-sm';
+
 /**
- * CMS_PRODUCT_DESIGN.md §2/§7 — one palette, two entry points (⌘K and the
- * top-bar search button both open this same component). Search-as-you-type
- * is the primary mode; there's no separate search page. Built on `cmdk`
- * (which itself wraps Radix Dialog) for correct focus-trap, arrow-key
- * navigation, and Escape-to-close, rather than hand-rolled overlay/list
- * logic.
+ * The Studio command palette (v3.1 Milestone 6) — a keyboard-first client of
+ * systems that already exist, not a system of its own.
+ *
+ * It owns no index, no ranking, no permission model and no navigation layer:
+ * content comes from the search adapters, ordering from `rankResults`,
+ * commands from `commandsForRole` (which reads the one capability table), and
+ * every destination goes through `useGuardedRouter` so unsaved work is
+ * protected by the same dialog as a sidebar click. There is deliberately no
+ * palette-specific unsaved-changes handling — a second guard is exactly how
+ * one of them ends up wrong.
+ *
+ * ## Why the index is fetched once, not per keystroke
+ *
+ * The palette previously issued a debounced request per keystroke. It now
+ * loads the whole viewer-scoped index on first open and filters in memory,
+ * which is what makes typing feel instant and, more importantly, makes the
+ * palette rank identically to `/studio/search` — both now run the same pure
+ * functions over the same data rather than one calling an endpoint that sorts
+ * server-side.
+ *
+ * The snapshot is kept for the lifetime of the session. It can therefore go
+ * stale against an edit made in another tab; that is an accepted trade for a
+ * navigation surface, and a reload refreshes it.
  */
-export function CommandPalette({ nav, open, onOpenChange }: CommandPaletteProps) {
-  const router = useRouter();
+export function CommandPalette({ role, nav, open, onOpenChange }: CommandPaletteProps) {
+  const router = useGuardedRouter();
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<SearchResult[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [index, setIndex] = useState<SearchResult[] | null>(null);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const loadStarted = useRef(false);
+
+  const commands = useMemo(() => commandsForRole(role, nav), [role, nav]);
 
   useEffect(() => {
     if (!open) {
       setQuery('');
-      setResults([]);
-    }
-  }, [open]);
-
-  useEffect(() => {
-    const trimmed = query.trim();
-    if (!trimmed) {
-      setResults([]);
-      setLoading(false);
       return;
     }
+    if (loadStarted.current) return;
+    loadStarted.current = true;
 
-    setLoading(true);
-    const timeout = setTimeout(() => {
-      fetch(`/api/studio/search?q=${encodeURIComponent(trimmed)}`)
-        .then((res) => res.json())
-        .then((data: { results?: SearchResult[] }) => setResults(data.results ?? []))
-        .catch(() => setResults([]))
-        .finally(() => setLoading(false));
-    }, 200);
+    fetch('/api/studio/search?all=1')
+      .then((response) => response.json())
+      .then((data: { results?: SearchResult[] }) => setIndex(data.results ?? []))
+      .catch(() => {
+        // Commands still work without the content index — the palette degrades
+        // to navigation rather than failing shut.
+        setLoadFailed(true);
+        setIndex([]);
+      });
+  }, [open]);
 
-    return () => clearTimeout(timeout);
-  }, [query]);
+  const commandGroups = useMemo(
+    () => groupCommands(filterCommands(commands, query)),
+    [commands, query],
+  );
 
-  const groupedResults = useMemo(() => {
-    const groups = new Map<string, SearchResult[]>();
-    for (const result of results) {
-      const list = groups.get(result.type) ?? [];
-      list.push(result);
-      groups.set(result.type, list);
-    }
-    return groups;
-  }, [results]);
+  const contentGroups = useMemo(() => {
+    if (!index || query.trim() === '') return [];
+    return groupResults(rankResults(query, index));
+  }, [index, query]);
 
-  const quickNavItems = useMemo(() => flattenNav(nav), [nav]);
+  const hasResults = commandGroups.length > 0 || contentGroups.length > 0;
 
-  function navigateTo(href: string) {
+  function run(href: string) {
     onOpenChange(false);
-    router.push(href);
+    // Deferred one task: a guarded push can open the unsaved-changes dialog
+    // synchronously, and Radix would otherwise still consider this palette the
+    // topmost modal and render that dialog inert behind it.
+    setTimeout(() => router.push(href), 0);
   }
 
   return (
@@ -87,74 +118,75 @@ export function CommandPalette({ nav, open, onOpenChange }: CommandPaletteProps)
           autoFocus
           value={query}
           onValueChange={setQuery}
-          placeholder="Search work, builds, team, leads…"
+          placeholder="Search, navigate, or create…"
           className="text-text-primary placeholder:text-text-muted flex-1 bg-transparent text-sm outline-none"
         />
       </div>
 
       <Command.List className="max-h-[360px] overflow-y-auto p-2">
-        {query.trim() === '' ? (
+        {!hasResults ? (
+          <Command.Empty className="text-text-muted px-2.5 py-6 text-center text-sm">
+            No matching content.
+          </Command.Empty>
+        ) : null}
+
+        {commandGroups.map((group) => (
           <Command.Group
-            heading="Go to"
-            className="[&_[cmdk-group-heading]]:text-text-muted [&_[cmdk-group-heading]]:px-2.5 [&_[cmdk-group-heading]]:pt-2 [&_[cmdk-group-heading]]:pb-1.5 [&_[cmdk-group-heading]]:font-mono [&_[cmdk-group-heading]]:text-[11px] [&_[cmdk-group-heading]]:tracking-[0.08em] [&_[cmdk-group-heading]]:uppercase"
+            key={group.section}
+            heading={COMMAND_SECTION_LABEL[group.section]}
+            className={GROUP_HEADING_CLASS}
           >
-            {quickNavItems.map((item) => {
-              const Icon = item.icon;
-              return (
+            {group.commands.map((command) => (
+              <Command.Item
+                key={command.id}
+                value={command.id}
+                onSelect={() => run(command.href)}
+                className={ITEM_CLASS}
+              >
+                <span className="flex-1 truncate">{command.label}</span>
+                {command.hint ? (
+                  <span className="text-text-muted shrink-0 text-[11px]">{command.hint}</span>
+                ) : null}
+              </Command.Item>
+            ))}
+          </Command.Group>
+        ))}
+
+        {contentGroups.map((group) => {
+          const meta = SEARCH_TYPE_META[group.type];
+          const Icon = meta.icon;
+          return (
+            <Command.Group key={group.type} heading={meta.label} className={GROUP_HEADING_CLASS}>
+              {group.results.map((result) => (
                 <Command.Item
-                  key={item.href}
-                  value={`nav-${item.href}`}
-                  onSelect={() => navigateTo(item.href)}
-                  className="text-text-secondary data-[selected=true]:bg-surface-elevated data-[selected=true]:text-text-primary rounded-control flex cursor-pointer items-center gap-2.5 px-2.5 py-2 text-sm"
+                  key={`${result.type}:${result.id}`}
+                  value={`${result.type}:${result.id}`}
+                  onSelect={() => run(result.href)}
+                  className={ITEM_CLASS}
                 >
                   <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                  {item.label}
+                  <span className="flex-1 truncate">{result.title}</span>
+                  {result.referenceId ? (
+                    <span className="text-text-muted shrink-0 font-mono text-[11px]">
+                      {result.referenceId}
+                    </span>
+                  ) : null}
+                  {result.status ? (
+                    <span className="text-text-muted shrink-0 font-mono text-[10px] uppercase">
+                      {result.status}
+                    </span>
+                  ) : null}
                 </Command.Item>
-              );
-            })}
-          </Command.Group>
-        ) : loading ? (
-          <Command.Loading className="text-text-muted px-2.5 py-6 text-center text-sm">
-            Searching…
-          </Command.Loading>
-        ) : results.length === 0 ? (
-          <Command.Empty className="text-text-muted px-2.5 py-6 text-center text-sm">
-            No results for &ldquo;{query}&rdquo;.
-          </Command.Empty>
-        ) : (
-          [...groupedResults.entries()].map(([type, items]) => (
-            <Command.Group
-              key={type}
-              heading={SEARCH_TYPE_META[type as keyof typeof SEARCH_TYPE_META].label}
-              className="[&_[cmdk-group-heading]]:text-text-muted [&_[cmdk-group-heading]]:px-2.5 [&_[cmdk-group-heading]]:pt-2 [&_[cmdk-group-heading]]:pb-1.5 [&_[cmdk-group-heading]]:font-mono [&_[cmdk-group-heading]]:text-[11px] [&_[cmdk-group-heading]]:tracking-[0.08em] [&_[cmdk-group-heading]]:uppercase"
-            >
-              {items.map((result) => {
-                const Icon = SEARCH_TYPE_META[result.type].icon;
-                return (
-                  <Command.Item
-                    key={result.id}
-                    value={result.id}
-                    onSelect={() => navigateTo(result.href)}
-                    className="text-text-secondary data-[selected=true]:bg-surface-elevated data-[selected=true]:text-text-primary rounded-control flex cursor-pointer items-center gap-2.5 px-2.5 py-2 text-sm"
-                  >
-                    <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                    <span className="flex-1 truncate">{result.title}</span>
-                    {result.referenceId ? (
-                      <span className="text-text-muted shrink-0 font-mono text-[11px]">
-                        {result.referenceId}
-                      </span>
-                    ) : null}
-                    {result.status ? (
-                      <span className="text-text-muted shrink-0 font-mono text-[10px] uppercase">
-                        {result.status}
-                      </span>
-                    ) : null}
-                  </Command.Item>
-                );
-              })}
+              ))}
             </Command.Group>
-          ))
-        )}
+          );
+        })}
+
+        {loadFailed ? (
+          <p className="text-text-muted px-2.5 py-2 text-xs">
+            Content search is unavailable right now — navigation and create commands still work.
+          </p>
+        ) : null}
       </Command.List>
     </Command.Dialog>
   );

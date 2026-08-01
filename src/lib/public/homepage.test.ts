@@ -30,7 +30,7 @@ function document(ownerId: ObjectId, role: 'caseStudy' | 'technical'): DocumentR
   };
 }
 
-function build(featured = true): Build {
+function build(featuredOrder: number | null = 1): Build {
   return {
     _id: new ObjectId(),
     createdAt: now,
@@ -47,7 +47,7 @@ function build(featured = true): Build {
     relatedWorkIds: [],
     heroImageId: new ObjectId(),
     galleryImageIds: [],
-    featured,
+    featuredOrder,
     contributors: [],
   };
 }
@@ -145,7 +145,7 @@ describe('homepage public projection', () => {
   });
 
   it('does not treat publication alone as homepage curation', async () => {
-    const projection = await createPublicRepository(source(build(false))).getHomepage(now);
+    const projection = await createPublicRepository(source(build(null))).getHomepage(now);
     expect(projection.builds).toEqual([]);
   });
 
@@ -184,5 +184,126 @@ describe('homepage public projection', () => {
         .filter((relationship) => relationship.kind === 'teamContributedToEntry')
         .map((relationship) => relationship.target.title),
     ).toEqual(['Rifaque Ahmed', 'Raif Karani', 'Sultan']);
+  });
+});
+
+/**
+ * A multi-record source, so ordering can be asserted rather than inferred from
+ * a single-item list.
+ */
+function multiSource(records: Build[]): PublicDataSource {
+  const wrapped: StudioPublicEntity[] = records.map((record) => ({
+    type: 'build',
+    id: record._id.toString(),
+    record,
+  }));
+  const mediaFor = (record: Build): MediaAsset => ({
+    _id: record.heroImageId!,
+    createdAt: now,
+    updatedAt: now,
+    cloudinaryPublicId: `build/hero-${record.slug}`,
+    url: `https://res.cloudinary.com/demo/image/upload/${record.slug}.png`,
+    altText: 'The product interface showing its primary workflow.',
+    width: 1600,
+    height: 1000,
+    folder: 'builds',
+    reuseTags: [],
+  });
+  const allMedia = records.map(mediaFor);
+
+  return {
+    findEntityBySlug: async (type, slug) =>
+      (type === 'build' && wrapped.find((entry) => (entry.record as Build).slug === slug)) || null,
+    findEntityById: async (type, id) =>
+      (type === 'build' && wrapped.find((entry) => entry.id === id)) || null,
+    listEntities: async (type) => (type === 'build' ? wrapped : []),
+    findDocuments: async (_ownerType, ownerId) => {
+      const record = records.find((entry) => entry._id.toString() === ownerId);
+      return record ? [document(record._id, 'caseStudy'), document(record._id, 'technical')] : [];
+    },
+    findMedia: async (ids) => allMedia.filter((asset) => ids.includes(asset._id.toString())),
+    findTaxonomy: async () => [],
+    findUser: async () => null,
+    findTeamsByUserId: async () => [],
+    findProfileByTeamId: async () => null,
+  };
+}
+
+describe('homepage editorial ordering', () => {
+  it('surfaces featured entries in the editorial order, not reference-ID order', async () => {
+    // Reference IDs deliberately run opposite to the editorial order: the
+    // previous implementation sorted by `referenceId` descending, so if that
+    // were still in play the assertion below would come back reversed.
+    const first: Build = {
+      ...build(2),
+      _id: new ObjectId(),
+      slug: 'second-choice',
+      referenceId: 'HZ-BL-999',
+      title: 'Second choice',
+      heroImageId: new ObjectId(),
+    };
+    const second: Build = {
+      ...build(1),
+      _id: new ObjectId(),
+      slug: 'first-choice',
+      referenceId: 'HZ-BL-001',
+      title: 'First choice',
+      heroImageId: new ObjectId(),
+    };
+
+    const projection = await createPublicRepository(multiSource([first, second])).getHomepage(now);
+
+    expect(projection.builds.map((feature) => feature.entity.title)).toEqual([
+      'First choice',
+      'Second choice',
+    ]);
+  });
+
+  it('omits entries the editor has not featured', async () => {
+    const featured: Build = {
+      ...build(1),
+      _id: new ObjectId(),
+      slug: 'chosen',
+      referenceId: 'HZ-BL-010',
+      title: 'Chosen',
+      heroImageId: new ObjectId(),
+    };
+    const unfeatured: Build = {
+      ...build(null),
+      _id: new ObjectId(),
+      slug: 'not-chosen',
+      referenceId: 'HZ-BL-011',
+      title: 'Not chosen',
+      heroImageId: new ObjectId(),
+    };
+
+    const projection = await createPublicRepository(
+      multiSource([featured, unfeatured]),
+    ).getHomepage(now);
+
+    expect(projection.builds.map((feature) => feature.entity.title)).toEqual(['Chosen']);
+  });
+
+  it('reads a non-canonical stored order without reordering it wrongly', async () => {
+    const a: Build = {
+      ...build(9),
+      _id: new ObjectId(),
+      slug: 'a',
+      referenceId: 'HZ-BL-021',
+      title: 'Nine',
+      heroImageId: new ObjectId(),
+    };
+    const b: Build = {
+      ...build(3),
+      _id: new ObjectId(),
+      slug: 'b',
+      referenceId: 'HZ-BL-022',
+      title: 'Three',
+      heroImageId: new ObjectId(),
+    };
+
+    const projection = await createPublicRepository(multiSource([a, b])).getHomepage(now);
+
+    expect(projection.builds.map((feature) => feature.entity.title)).toEqual(['Three', 'Nine']);
   });
 });

@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+import { EntryHistorySection } from '@/components/studio/history/EntryHistorySection';
+import { EntryInspectorSection } from '@/components/studio/health/EntryInspectorSection';
 import { notFound } from 'next/navigation';
 import { PageHeader } from '@/components/studio/PageHeader';
 import { BuildForm } from '@/components/studio/builds/BuildForm';
@@ -97,7 +99,6 @@ export default async function EditBuildPage({ params }: { params: Promise<{ id: 
           deploymentState: build.deploymentState,
           liveUrl: build.liveUrl,
           repoUrl: build.repoUrl,
-          featured: build.featured,
           technologyIds: build.technologyIds.map((entryId) => entryId.toString()),
           originatingLabId: build.originatingLabId?.toString(),
           relatedWorkIds: build.relatedWorkIds.map((entryId) => entryId.toString()),
@@ -136,6 +137,12 @@ export default async function EditBuildPage({ params }: { params: Promise<{ id: 
           previewHref={`/api/preview?type=build&id=${id}`}
         />
       </section>
+      <EntryInspectorSection
+        collectionKey="builds"
+        entryId={id}
+        editHref={`/studio/content/builds/${id}/edit`}
+      />
+      <EntryHistorySection ownerType="Build" entryId={id} entry={build} />
     </div>
   );
 }

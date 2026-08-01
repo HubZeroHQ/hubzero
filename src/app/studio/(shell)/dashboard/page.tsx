@@ -2,23 +2,37 @@ import type { Metadata } from 'next';
 import { ContentEntryList } from '@/components/studio/dashboard/ContentEntryList';
 import { DashboardWidgetCard } from '@/components/studio/dashboard/DashboardWidgetCard';
 import { NewLeadsWidget } from '@/components/studio/dashboard/NewLeadsWidget';
+import { PublishingSummary } from '@/components/studio/dashboard/PublishingSummary';
 import { RecentActivityWidget } from '@/components/studio/dashboard/RecentActivityWidget';
+import { HealthOverviewSection } from '@/components/studio/health/HealthOverviewSection';
 import { PageHeader } from '@/components/studio/PageHeader';
 import { auth } from '@/lib/auth';
 import { listAllContent } from '@/lib/studio/dashboard-queries';
 import { leadRepository } from '@/lib/db/repositories/lead';
+import type { PublishStatus } from '@/types/studio';
 
 export const metadata: Metadata = {
   title: 'Dashboard — HubZero Studio',
 };
 
 /**
- * CMS_PRODUCT_DESIGN.md §3 — every widget here is a live, filtered view
- * into a real collection, never a summary statistic; each is empty today
- * only because no Studio content exists yet, not because it's mocked.
- * `(shell)/layout.tsx` already guarantees a session exists before this
- * renders, so `auth()` is called here purely to read the session, not to
- * re-guard the route.
+ * The editorial control centre (v3.1 Milestone 16).
+ *
+ * Every section answers one of three questions, in this order:
+ *
+ * 1. **What needs me?** — health findings that actually exist, then the review
+ *    queue and new leads.
+ * 2. **What am I working on?** — the viewer's own drafts.
+ * 3. **What changed?** — a five-row activity preview.
+ *
+ * Anything that answers none of those was moved rather than deleted. The full
+ * health report — including the checks that are currently passing — now lives
+ * at `/studio/health`, and the complete activity feed at `/studio/activity`.
+ * The dashboard previously rendered both in full, which is why a site with
+ * nothing wrong still needed scrolling to say so.
+ *
+ * `(shell)/layout.tsx` already guarantees a session, so `auth()` here reads it
+ * rather than re-guarding the route.
  */
 export default async function DashboardPage() {
   const session = await auth();
@@ -30,49 +44,41 @@ export default async function DashboardPage() {
     (entry) => entry.status === 'draft' && entry.createdByUserId === userId,
   );
   const inReview = content.filter((entry) => entry.status === 'inReview');
-  const recentlyPublished = content
-    .filter((entry) => entry.status === 'published')
-    .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
 
   const newLeads = allLeads.filter(
     (lead) =>
       lead.status === 'new' && (role !== 'member' || lead.assignedToUserId?.toString() === userId),
   );
 
-  // §3: Admin/Head Admin's "Needs Your Attention" is the In Review queue
-  // filtered to collections they can act on — both roles can act on every
-  // collection (§29), so it's the full queue; Member's is their own
-  // Drafts instead.
-  const needsAttention = role === 'member' ? ownDrafts : inReview;
-  const showInReviewQueue = role !== 'member';
+  // One pass over the content already loaded — these totals replace the
+  // previous collection-by-collection breakdown, which listed roughly forty
+  // numbers that asked nobody to do anything.
+  const statusCounts = content.reduce<Record<string, number>>((counts, entry) => {
+    counts[entry.status] = (counts[entry.status] ?? 0) + 1;
+    return counts;
+  }, {});
+
   const showNewLeads = role !== 'member' || newLeads.length > 0;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="Dashboard" description="What needs your attention right now." />
 
-      <DashboardWidgetCard title="Needs your attention">
-        <ContentEntryList
-          entries={needsAttention}
-          emptyTitle={role === 'member' ? 'Nothing waiting on you' : 'Nothing in review'}
-          emptyDescription={
-            role === 'member'
-              ? 'Drafts you own will show up here.'
-              : 'Entries submitted for review will show up here.'
-          }
-        />
-      </DashboardWidgetCard>
+      {/* Findings first, and only the ones that exist. Restricted to the roles
+          that can act on them — most findings require `publish`. */}
+      {role !== 'member' ? <HealthOverviewSection /> : null}
 
-      <div className="grid gap-6 md:grid-cols-2">
-        {showInReviewQueue ? (
-          <DashboardWidgetCard title="In review queue">
-            <ContentEntryList
-              entries={inReview}
-              emptyTitle="Nothing in review"
-              emptyDescription="Entries submitted across Work, Builds, Blueprints, Labs, and Notes will show up here."
-            />
+      <div className="grid items-start gap-6 md:grid-cols-2">
+        {role === 'member' ? (
+          <DashboardWidgetCard title="Needs your attention">
+            <ContentEntryList entries={ownDrafts} emptyTitle="Nothing waiting on you" />
           </DashboardWidgetCard>
-        ) : null}
+        ) : (
+          <DashboardWidgetCard title="Review queue">
+            <ContentEntryList entries={inReview} emptyTitle="Nothing in review" />
+          </DashboardWidgetCard>
+        )}
+
         {showNewLeads ? (
           <DashboardWidgetCard title="New leads">
             <NewLeadsWidget leads={newLeads} />
@@ -80,22 +86,17 @@ export default async function DashboardPage() {
         ) : null}
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      {/* "What am I working on" — kept for the roles whose attention card above
+          is the review queue rather than their own drafts. */}
+      {role !== 'member' ? (
         <DashboardWidgetCard title="Your drafts">
-          <ContentEntryList
-            entries={ownDrafts}
-            emptyTitle="No drafts"
-            emptyDescription="Content you're actively writing will show up here."
-          />
+          <ContentEntryList entries={ownDrafts} emptyTitle="No drafts" />
         </DashboardWidgetCard>
-        <DashboardWidgetCard title="Recently published">
-          <ContentEntryList
-            entries={recentlyPublished}
-            emptyTitle="Nothing published yet"
-            emptyDescription="Entries that go live will show up here, linking straight to what shipped."
-          />
-        </DashboardWidgetCard>
-      </div>
+      ) : null}
+
+      <DashboardWidgetCard title="Publishing">
+        <PublishingSummary counts={statusCounts as Record<PublishStatus, number>} />
+      </DashboardWidgetCard>
 
       <DashboardWidgetCard title="Recent activity">
         <RecentActivityWidget />

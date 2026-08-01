@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+import { EntryHistorySection } from '@/components/studio/history/EntryHistorySection';
+import { EntryInspectorSection } from '@/components/studio/health/EntryInspectorSection';
 import { notFound } from 'next/navigation';
 import { PageHeader } from '@/components/studio/PageHeader';
 import { BlueprintForm } from '@/components/studio/blueprints/BlueprintForm';
@@ -88,7 +90,6 @@ export default async function EditBlueprintPage({ params }: { params: Promise<{ 
           repoUrl: blueprint.repoUrl,
           docsUrl: blueprint.docsUrl,
           version: blueprint.version,
-          featured: blueprint.featured,
           features: blueprint.features,
           technologyIds: blueprint.technologyIds.map((entryId) => entryId.toString()),
           previewAssetIds: blueprint.previewAssetIds.map((entryId) => entryId.toString()),
@@ -112,6 +113,12 @@ export default async function EditBlueprintPage({ params }: { params: Promise<{ 
           previewHref={`/api/preview?type=blueprint&id=${id}`}
         />
       </section>
+      <EntryInspectorSection
+        collectionKey="blueprints"
+        entryId={id}
+        editHref={`/studio/content/blueprints/${id}/edit`}
+      />
+      <EntryHistorySection ownerType="Blueprint" entryId={id} entry={blueprint} />
     </div>
   );
 }

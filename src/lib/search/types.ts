@@ -20,15 +20,21 @@ export type SearchEntityType =
   | 'services'
   | 'leads'
   | 'users'
-  | 'media';
+  | 'media'
+  | 'careers'
+  | 'taxonomy';
 
 export interface SearchResult {
   id: string;
   type: SearchEntityType;
   title: string;
   subtitle?: string;
+  /** Matched and ranked alongside the title; absent for types with no slug (Users, Media, Leads). */
+  slug?: string;
   referenceId?: string;
   status?: PublishStatus | ServicePublishStatus;
+  /** ISO 8601 — a string, not a `Date`, because this crosses the server/client boundary. */
+  updatedAt?: string;
   href: string;
 }
 

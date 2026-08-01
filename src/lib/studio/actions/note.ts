@@ -42,7 +42,6 @@ function readNoteMetadataFields(formData: FormData) {
     technologyIds: formData.getAll('technologyIds').map(String),
     relatedEntries: readRelatedEntries(formData),
     galleryImageIds: formData.getAll('galleryImageIds').map(String),
-    featured: formData.get('featured') === 'on',
     contributors: formData.getAll('contributors').map(String),
   };
 }
@@ -51,6 +50,10 @@ function readNoteMetadataFields(formData: FormData) {
 function parseNoteCreateFormData(formData: FormData): NoteInput {
   const heroImageId = readOptionalString(formData, 'heroImageId');
   return {
+    // A new entry is never featured. Featuring is an editorial act performed on
+    // the collection's Featured Order screen, never a side effect of creating
+    // content (v3.1 Milestone 2).
+    featuredOrder: null,
     ...readNoteMetadataFields(formData),
     status: 'draft',
     ...(heroImageId !== undefined ? { heroImageId } : {}),

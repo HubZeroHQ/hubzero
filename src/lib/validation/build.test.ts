@@ -10,7 +10,7 @@ const valid = {
   technologyIds: [],
   relatedWorkIds: [],
   galleryImageIds: [],
-  featured: true,
+  featuredOrder: 1,
   contributors: [],
 };
 

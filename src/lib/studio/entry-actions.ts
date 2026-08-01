@@ -12,6 +12,7 @@ import { zodErrorToFieldErrors } from '@/lib/validation/form-errors';
 import type { PublishStatus } from '@/types/studio';
 import { invalidatePublicEntity } from '@/lib/public/cache';
 import type { PublicEntityType } from '@/lib/public/domain';
+import { eventEntityTypeFor, recordEditorialEvent } from '@/lib/events/record';
 import { capabilityForTransition } from './workflow-permissions';
 import { isValidPublishTransition } from '@/config/workflow';
 
@@ -43,6 +44,16 @@ import { isValidPublishTransition } from '@/config/workflow';
 export interface EntryActionState {
   error?: string;
   fieldErrors?: Record<string, string>;
+  /**
+   * Set by an action that finished successfully *and stayed on the page*.
+   *
+   * Editor state (v3.1 Phase 1) needs a positive success signal: "no error"
+   * is not the same as "saved", and an editor that shows "✓ Saved" or
+   * navigates on "Save & Leave" must not do either on an action that merely
+   * failed to report a problem. Actions that end in a `redirect` — every
+   * create action — never return at all and so never set this.
+   */
+  ok?: true;
 }
 
 function actionErrorMessage(error: unknown): string {
@@ -84,6 +95,17 @@ export function createEntryCreateAction<
         };
       }
       return { error: actionErrorMessage(error) };
+    }
+
+    // Audit is written from the shared factory, never by the caller — a new
+    // collection joins the log by using this factory (v3.1 Milestone 8).
+    const createdEntityType = config.publicType ? eventEntityTypeFor(config.publicType) : null;
+    if (createdEntityType) {
+      await recordEditorialEvent({
+        entityType: createdEntityType,
+        entityId: config.idOf(record),
+        payload: { type: 'entry.created' },
+      });
     }
 
     revalidatePath(config.listPath);
@@ -147,8 +169,36 @@ export function createEntryUpdateAction<
       return { error: actionErrorMessage(error) };
     }
 
+    const updatedEntityType = config.publicType ? eventEntityTypeFor(config.publicType) : null;
+    if (updatedEntityType) {
+      await recordEditorialEvent({
+        entityType: updatedEntityType,
+        entityId: id,
+        payload: { type: 'entry.updated' },
+      });
+      // Editing a published entry silently re-enters review (see above). That
+      // is a real status change and is logged as one, so the timeline explains
+      // why something left the public site.
+      if (requiresReReview) {
+        await recordEditorialEvent({
+          entityType: updatedEntityType,
+          entityId: id,
+          payload: { type: 'entry.statusChanged', from: 'published', to: 'inReview' },
+        });
+      }
+    }
+
+    // Stays on the edit screen rather than redirecting to the detail view.
+    // A metadata save is now an editor save (v3.1 Phase 1) — the author keeps
+    // their scroll position, their focus, and the ability to keep working,
+    // and the "✓ Saved" state the Studio promises is only observable if the
+    // page the author is looking at is still the one that saved. Leaving is
+    // an explicit choice now ("Save & Leave"), not a side effect of saving.
+    // The detail path is still revalidated so the entry's detail view — and
+    // the status change that editing a published entry triggers above — is
+    // correct the moment the author does navigate there.
     revalidatePath(config.detailPath(id));
-    redirect(config.detailPath(id));
+    return { ok: true };
   };
 }
 
@@ -226,6 +276,20 @@ export function createEntryTransitionAction<
     }
 
     await config.setStatus(id, to, isReject ? note!.trim() : null);
+
+    const transitionEntityType = config.publicType ? eventEntityTypeFor(config.publicType) : null;
+    if (transitionEntityType) {
+      await recordEditorialEvent({
+        entityType: transitionEntityType,
+        entityId: id,
+        payload: {
+          type: 'entry.statusChanged',
+          from: existing.status,
+          to,
+          ...(isReject && note?.trim() ? { reviewNote: note.trim() } : {}),
+        },
+      });
+    }
     if (config.publicType) invalidatePublicEntity(config.publicType, existing.slug);
     // Both the detail page just acted on and the collection list (whose
     // status column/filters go stale otherwise) need invalidating — a

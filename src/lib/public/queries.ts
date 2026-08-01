@@ -2,7 +2,7 @@ import 'server-only';
 
 import { unstable_cache } from 'next/cache';
 import { PUBLIC_ENTITY_ROUTES } from '@/config/public-site';
-import { PUBLIC_CACHE_TAGS, PUBLIC_CACHE_VERSION } from './cache';
+import { PUBLIC_CACHE_TAGS, publicCacheScope } from './cache';
 import {
   createInMemoryPublicSearchProvider,
   createPublicSearchEntryPoint,
@@ -56,7 +56,7 @@ export function listPublicSummaries(type: PublicEntityType) {
 export function listPublicNoteIndexEntries() {
   return unstable_cache(
     () => repository.listNoteIndexEntries(),
-    [PUBLIC_CACHE_VERSION, 'public-note-index'],
+    [publicCacheScope(), 'public-note-index'],
     {
       tags: [PUBLIC_CACHE_TAGS.collection('note'), PUBLIC_CACHE_TAGS.relations],
     },
@@ -66,7 +66,7 @@ export function listPublicNoteIndexEntries() {
 export function listPublicEngineeringProfileIndexEntries() {
   return unstable_cache(
     () => repository.listEngineeringProfileIndexEntries(),
-    [PUBLIC_CACHE_VERSION, 'public-engineering-profile-index'],
+    [publicCacheScope(), 'public-engineering-profile-index'],
     {
       tags: [
         PUBLIC_CACHE_TAGS.collection('engineeringProfile'),
@@ -84,7 +84,7 @@ export function listPublicDiscoveryEntries() {
   if (!activeTypes.length) return Promise.resolve([]);
   return unstable_cache(
     () => repository.listDiscoveryEntries(activeTypes),
-    [PUBLIC_CACHE_VERSION, 'public-discovery', ...activeTypes],
+    [publicCacheScope(), 'public-discovery', ...activeTypes],
     { tags: [PUBLIC_CACHE_TAGS.discovery, PUBLIC_CACHE_TAGS.relations] },
   )();
 }
@@ -99,16 +99,20 @@ export async function searchPublicContent(query: string, limit = 24) {
 
 export function getPublicHomepage(now = new Date()) {
   const day = now.toISOString().slice(0, 10);
-  return unstable_cache(() => repository.getHomepage(now), ['public-homepage', day], {
-    tags: [
-      PUBLIC_CACHE_TAGS.homepage,
-      PUBLIC_CACHE_TAGS.relations,
-      ...Object.keys(PUBLIC_ENTITY_ROUTES).map((type) =>
-        PUBLIC_CACHE_TAGS.collection(type as PublicEntityType),
-      ),
-    ],
-    revalidate: 86_400,
-  })();
+  return unstable_cache(
+    () => repository.getHomepage(now),
+    [publicCacheScope(), 'public-homepage', day],
+    {
+      tags: [
+        PUBLIC_CACHE_TAGS.homepage,
+        PUBLIC_CACHE_TAGS.relations,
+        ...Object.keys(PUBLIC_ENTITY_ROUTES).map((type) =>
+          PUBLIC_CACHE_TAGS.collection(type as PublicEntityType),
+        ),
+      ],
+      revalidate: 86_400,
+    },
+  )();
 }
 
 /**
@@ -126,6 +130,24 @@ export async function getPublicLedger() {
   return buildLedger([...notes, ...labs]);
 }
 
+/**
+ * Every public cache key starts with the scope — schema contract *and* the
+ * database the bytes came from — so an entry can only be reused by a server
+ * reading the same dataset. See `publicCacheScope`.
+ */
 function cacheKey(type: PublicEntityType, ...parts: string[]): string[] {
-  return [PUBLIC_CACHE_VERSION, type, ...parts];
+  return [publicCacheScope(), type, ...parts];
+}
+
+/**
+ * Homepage eligibility for a collection, for the Studio's Featured Order
+ * screen (v3.1 Milestone 2 finalization).
+ *
+ * Deliberately uncached: this is a Studio-side authoring aid read by an
+ * editor who has just changed the very content it describes, and serving them
+ * a day-old answer about why their entry cannot appear would be worse than
+ * recomputing it. The public homepage keeps its own cached path.
+ */
+export function listHomepageEligibility(type: PublicDetailEntityType, now = new Date()) {
+  return repository.listHomepageEligibility(type, now);
 }
