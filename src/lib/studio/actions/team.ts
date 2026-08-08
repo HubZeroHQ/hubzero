@@ -6,13 +6,33 @@ import { ZodError } from 'zod';
 import { requireCapability } from '@/lib/auth/permissions';
 import { engineeringProfileRepository } from '@/lib/db/repositories/engineering-profile';
 import { teamRepository } from '@/lib/db/repositories/team';
+import { recordEditorialEvent } from '@/lib/events/record';
 import type { EntryActionState } from '@/lib/studio/entry-actions';
-import { invalidatePublicEntity } from '@/lib/public/cache';
+import { invalidatePublicTargets, type PublicCacheTarget } from '@/lib/public/cache';
+import { publicCacheTargetsForOwner } from '@/lib/public/cache-targets';
 import { zodErrorToFieldErrors } from '@/lib/validation/form-errors';
 import type { TeamInput } from '@/lib/validation/team';
 
 const LIST_PATH = '/studio/team';
 const detailPath = (id: string) => `${LIST_PATH}/${id}`;
+const TEAM_PUBLIC_FALLBACK_TARGETS: readonly PublicCacheTarget[] = [
+  { type: 'teamMember' },
+  { type: 'engineeringProfile' },
+  { type: 'note' },
+];
+
+async function teamPublicTargets(id: string): Promise<PublicCacheTarget[]> {
+  try {
+    return await publicCacheTargetsForOwner('Team', id);
+  } catch (error) {
+    // A dependency lookup must not turn a successful Team edit into an
+    // unreported stale page. The target-less forms evict the three affected
+    // collection families, while the shared relation tag covers their detail
+    // pages and Career hiring-manager projections.
+    console.error('Team public cache dependencies could not be resolved', { teamId: id, error });
+    return [...TEAM_PUBLIC_FALLBACK_TARGETS];
+  }
+}
 
 function actionErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : 'Something went wrong. Try again.';
@@ -69,7 +89,12 @@ export async function createTeamAction(
     return { error: actionErrorMessage(error) };
   }
 
-  invalidatePublicEntity('teamMember');
+  await recordEditorialEvent({
+    entityType: 'teamMember',
+    entityId: created._id.toString(),
+    payload: { type: 'entry.created' },
+  });
+  invalidatePublicTargets(await teamPublicTargets(created._id.toString()));
   revalidatePath(LIST_PATH);
   redirect(detailPath(created._id.toString()));
 }
@@ -89,6 +114,7 @@ export async function updateTeamAction(
   if (!existing) {
     return { error: 'This Team member no longer exists.' };
   }
+  const previousPublicTargets = await teamPublicTargets(id);
 
   try {
     await teamRepository.update(id, {
@@ -110,10 +136,16 @@ export async function updateTeamAction(
     return { error: actionErrorMessage(error) };
   }
 
-  invalidatePublicEntity('teamMember');
+  await recordEditorialEvent({
+    entityType: 'teamMember',
+    entityId: id,
+    payload: { type: 'entry.updated' },
+  });
+  invalidatePublicTargets([...previousPublicTargets, ...(await teamPublicTargets(id))]);
   // Stays on the edit screen — see `createEntryUpdateAction` for why every
   // Studio metadata save now reports success instead of navigating.
   revalidatePath(detailPath(id));
+  revalidatePath(LIST_PATH);
   return { ok: true };
 }
 
@@ -127,8 +159,19 @@ export async function setTeamArchivedAction(
     return { error: actionErrorMessage(error) };
   }
 
+  const existing = await teamRepository.findById(id);
+  if (!existing) {
+    return { error: 'This Team member no longer exists.' };
+  }
+  const previousPublicTargets = await teamPublicTargets(id);
+
   await teamRepository.update(id, { archived });
-  invalidatePublicEntity('teamMember');
+  await recordEditorialEvent({
+    entityType: 'teamMember',
+    entityId: id,
+    payload: { type: 'entry.updated' },
+  });
+  invalidatePublicTargets([...previousPublicTargets, ...(await teamPublicTargets(id))]);
   revalidatePath(detailPath(id));
   revalidatePath(LIST_PATH);
   return {};
@@ -149,8 +192,9 @@ export async function deleteTeamAction(id: string): Promise<EntryActionState> {
     };
   }
 
+  const publicTargets = await teamPublicTargets(id);
   await teamRepository.remove(id);
-  invalidatePublicEntity('teamMember');
+  invalidatePublicTargets(publicTargets);
   revalidatePath(LIST_PATH);
   redirect(LIST_PATH);
 }

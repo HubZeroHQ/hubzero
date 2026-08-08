@@ -9,7 +9,6 @@ import { PageHeader } from '@/components/studio/PageHeader';
 import { auth } from '@/lib/auth';
 import { listAllContent } from '@/lib/studio/dashboard-queries';
 import { leadRepository } from '@/lib/db/repositories/lead';
-import type { PublishStatus } from '@/types/studio';
 
 export const metadata: Metadata = {
   title: 'Dashboard — HubZero Studio',
@@ -50,14 +49,6 @@ export default async function DashboardPage() {
       lead.status === 'new' && (role !== 'member' || lead.assignedToUserId?.toString() === userId),
   );
 
-  // One pass over the content already loaded — these totals replace the
-  // previous collection-by-collection breakdown, which listed roughly forty
-  // numbers that asked nobody to do anything.
-  const statusCounts = content.reduce<Record<string, number>>((counts, entry) => {
-    counts[entry.status] = (counts[entry.status] ?? 0) + 1;
-    return counts;
-  }, {});
-
   const showNewLeads = role !== 'member' || newLeads.length > 0;
 
   return (
@@ -95,7 +86,7 @@ export default async function DashboardPage() {
       ) : null}
 
       <DashboardWidgetCard title="Publishing">
-        <PublishingSummary counts={statusCounts as Record<PublishStatus, number>} />
+        <PublishingSummary entries={content} />
       </DashboardWidgetCard>
 
       <DashboardWidgetCard title="Recent activity">

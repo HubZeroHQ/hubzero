@@ -88,7 +88,10 @@ export function StudioShell({
           onOpenPalette={() => setPaletteOpen(true)}
           onOpenMobileNav={() => setMobileNavOpen(true)}
         />
-        <main id="main-content" className="min-h-0 flex-1 overflow-y-auto p-6">
+        <main
+          id="main-content"
+          className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain p-4 sm:p-6"
+        >
           {children}
         </main>
       </div>

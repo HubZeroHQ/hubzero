@@ -20,7 +20,12 @@ describe('canonical public visibility', () => {
   });
 
   it('keeps Team and Profile visibility type-aware', () => {
-    expect(isPubliclyVisible({ type: 'teamMember', publicProfile: true })).toBe(true);
+    expect(isPubliclyVisible({ type: 'teamMember', publicProfile: true, archived: false })).toBe(
+      true,
+    );
+    expect(isPubliclyVisible({ type: 'teamMember', publicProfile: true, archived: true })).toBe(
+      false,
+    );
     expect(isPubliclyVisible({ type: 'teamMember', publicProfile: false })).toBe(false);
     expect(
       isPubliclyVisible({ type: 'engineeringProfile', status: 'published', teamPublic: true }),

@@ -16,7 +16,7 @@ export function NewLeadsWidget({ leads }: { leads: Lead[] }) {
     <ul className="divide-border-muted flex flex-col divide-y">
       {leads.slice(0, 8).map((lead) => (
         <li key={lead._id.toString()}>
-          <DashboardListRow href="/studio/leads">
+          <DashboardListRow href={`/studio/leads/${lead._id.toString()}`}>
             <span className="text-text-primary min-w-0 flex-1 truncate">{lead.name}</span>
             <span className="text-text-muted shrink-0 truncate text-xs">{lead.email}</span>
             <span className="text-text-muted shrink-0 text-xs">

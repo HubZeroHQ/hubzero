@@ -13,7 +13,12 @@ import type { PublishStatus } from '@/types/studio';
 import { invalidatePublicEntity } from '@/lib/public/cache';
 import type { PublicEntityType } from '@/lib/public/domain';
 import { eventEntityTypeFor, recordEditorialEvent } from '@/lib/events/record';
-import { capabilityForTransition } from './workflow-permissions';
+import {
+  canReject,
+  canUnpublishOverride,
+  capabilityForTransition,
+  getAvailableTransitions,
+} from './workflow-permissions';
 import { isValidPublishTransition } from '@/config/workflow';
 
 /**
@@ -54,6 +59,14 @@ export interface EntryActionState {
    * create action — never return at all and so never set this.
    */
   ok?: true;
+  /** Server-confirmed workflow state for an in-place detail-panel update. */
+  workflow?: {
+    status: PublishStatus;
+    availableTransitions: PublishStatus[];
+    canUnpublishOverride: boolean;
+    canReject: boolean;
+    reviewNote: string | null;
+  };
 }
 
 function actionErrorMessage(error: unknown): string {
@@ -61,7 +74,7 @@ function actionErrorMessage(error: unknown): string {
 }
 
 export function createEntryCreateAction<
-  TRecord extends { slug: string },
+  TRecord extends { slug: string; status: PublishStatus },
   TInput extends object,
 >(config: {
   create: (input: TInput, createdByUserId: string) => Promise<TRecord>;
@@ -109,7 +122,9 @@ export function createEntryCreateAction<
     }
 
     revalidatePath(config.listPath);
-    if (config.publicType) invalidatePublicEntity(config.publicType, record.slug);
+    if (config.publicType && record.status === 'published') {
+      invalidatePublicEntity(config.publicType, record.slug);
+    }
     redirect(config.detailPath(config.idOf(record)));
   };
 }
@@ -122,6 +137,7 @@ export function createEntryUpdateAction<
   update: (id: string, input: Partial<TInput>) => Promise<TRecord | null>;
   parseFormData: (formData: FormData) => Partial<TInput>;
   detailPath: (id: string) => string;
+  listPath: string;
   publicType?: PublicEntityType;
 }) {
   return async function updateAction(
@@ -146,18 +162,23 @@ export function createEntryUpdateAction<
     // this point at all, per `requireEntryEditCapability` above).
     const requiresReReview = existing.status === 'published';
 
+    let updated: TRecord | null;
     try {
       const patch = config.parseFormData(formData);
-      const updated = await config.update(
+      updated = await config.update(
         id,
         requiresReReview
           ? ({ ...patch, status: 'inReview', reviewNote: null } as Partial<TInput>)
           : patch,
       );
-      if (config.publicType) {
+      if (
+        config.publicType &&
+        (existing.status === 'published' || updated?.status === 'published')
+      ) {
         invalidatePublicEntity(config.publicType, existing.slug);
-        if (updated?.slug !== existing.slug)
+        if (updated?.slug !== existing.slug) {
           invalidatePublicEntity(config.publicType, updated?.slug);
+        }
       }
     } catch (error) {
       if (error instanceof ZodError) {
@@ -194,10 +215,11 @@ export function createEntryUpdateAction<
     // and the "✓ Saved" state the Studio promises is only observable if the
     // page the author is looking at is still the one that saved. Leaving is
     // an explicit choice now ("Save & Leave"), not a side effect of saving.
-    // The detail path is still revalidated so the entry's detail view — and
-    // the status change that editing a published entry triggers above — is
-    // correct the moment the author does navigate there.
+    // Both the detail and collection paths are revalidated so a back/link
+    // return cannot resurrect the pre-save title, summary, or status from the
+    // Router Cache.
     revalidatePath(config.detailPath(id));
+    revalidatePath(config.listPath);
     return { ok: true };
   };
 }
@@ -215,8 +237,8 @@ export function createEntryUpdateAction<
  *   the same `approve` capability as moving an entry forward from review,
  *   plus a required, non-empty reviewer note that's stored on the entry so
  *   the author sees why it was sent back.
- * - **Unpublish override** (`draft`-bound from `published`/`approved`/
- *   `inReview` — the states with no other defined path back): Head Admin's
+ * - **Unpublish override** (`draft`-bound from `published`/`approved` — the
+ *   states with no other defined path back): Head Admin's
  *   blanket escape hatch (§29), no note required. Excludes `archived`, which
  *   has its own non-override path now (see below), so this must be checked
  *   *after* ruling out reject and restore, not merely "any non-draft status".
@@ -290,13 +312,26 @@ export function createEntryTransitionAction<
         },
       });
     }
-    if (config.publicType) invalidatePublicEntity(config.publicType, existing.slug);
+    if (config.publicType && (existing.status === 'published' || to === 'published')) {
+      invalidatePublicEntity(config.publicType, existing.slug);
+    }
     // Both the detail page just acted on and the collection list (whose
     // status column/filters go stale otherwise) need invalidating — a
     // Link/back-button return to the list would otherwise serve the
     // pre-transition Router Cache entry until a hard reload.
     revalidatePath(config.detailPath(id));
     revalidatePath(config.listPath);
-    return {};
+    const session = await auth();
+    const role = session!.user.role;
+    return {
+      ok: true,
+      workflow: {
+        status: to,
+        availableTransitions: getAvailableTransitions(to, role, true),
+        canUnpublishOverride: canUnpublishOverride(to, role),
+        canReject: canReject(to, role),
+        reviewNote: isReject ? note!.trim() : null,
+      },
+    };
   };
 }

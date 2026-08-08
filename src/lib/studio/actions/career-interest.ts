@@ -61,7 +61,7 @@ export async function updateCareerInterestNotesAction(
     internalNotes: String(formData.get('internalNotes') ?? ''),
   });
   revalidatePath(detailPath(id));
-  return {};
+  return { ok: true };
 }
 
 export async function assignCareerInterestAction(

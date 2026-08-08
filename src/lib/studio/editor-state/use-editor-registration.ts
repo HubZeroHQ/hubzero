@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import { useEditorRegistry } from './context';
 import type { EditorHandle } from './types';
 
@@ -34,7 +34,10 @@ export function useEditorRegistration(handle: EditorHandle): void {
   // probe's identity (which changes every render by design).
   const hasLiveProbe = Boolean(handle.isDirtyNow);
 
-  useEffect(() => {
+  // Publishing has to happen before the editor can receive input. A passive
+  // effect leaves a paint-to-effect window where the permanent beforeunload
+  // listener is installed but has no document handle to probe yet.
+  useLayoutEffect(() => {
     registry?.publish({
       id,
       label,
@@ -44,7 +47,7 @@ export function useEditorRegistration(handle: EditorHandle): void {
       savesAutomatically,
       showsSaveBar,
       canDiscard,
-      save: () => latestRef.current.save(),
+      save: (options) => latestRef.current.save(options),
       discard: () => latestRef.current.discard(),
       // Routed through the ref like the callbacks above, so the guard always
       // probes the editor as it stands now rather than through a closure

@@ -43,7 +43,7 @@ export const teamRepository = {
   remove: base.remove,
   findPublicProfiles: async () =>
     (await collections.team())
-      .find({ publicProfile: true })
+      .find({ publicProfile: true, archived: { $ne: true } })
       .toArray()
       .then((docs) => docs.map(normalizeTeam)),
   create: (input: TeamInput) => base.create(teamSchema.parse(input)),

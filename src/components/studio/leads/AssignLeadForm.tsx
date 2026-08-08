@@ -1,6 +1,7 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useActionState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/Button';
 import type { EntryActionState } from '@/lib/studio/entry-actions';
 
@@ -15,7 +16,18 @@ export function AssignLeadForm({
   userOptions: { id: string; label: string }[];
   action: (prevState: EntryActionState, formData: FormData) => Promise<EntryActionState>;
 }) {
+  const router = useRouter();
   const [state, formAction, pending] = useActionState(action, emptyActionState);
+  const submittedRef = useRef(false);
+
+  useEffect(() => {
+    if (pending) {
+      submittedRef.current = true;
+    } else if (submittedRef.current && !state.error) {
+      submittedRef.current = false;
+      router.refresh();
+    }
+  }, [pending, router, state.error]);
 
   return (
     <form action={formAction} className="flex items-center gap-2">

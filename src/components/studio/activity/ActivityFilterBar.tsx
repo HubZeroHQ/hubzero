@@ -1,4 +1,4 @@
-import { EDITORIAL_EVENT_TYPES } from '@/lib/events/schema';
+import { FILTERABLE_EDITORIAL_EVENT_TYPES } from '@/lib/events/schema';
 import { describeEditorialEvent } from '@/lib/events/describe';
 import type { StudioActor } from '@/lib/studio/actors';
 import { ACTIVITY_COLLECTIONS, type ActivityFilters } from '@/lib/studio/activity/types';
@@ -107,7 +107,7 @@ export function ActivityFilterBar({
       <fieldset className="flex flex-col gap-2">
         <legend className="text-text-secondary text-xs font-medium">Event types</legend>
         <div className="flex flex-wrap gap-x-4 gap-y-2">
-          {EDITORIAL_EVENT_TYPES.map((type) => (
+          {FILTERABLE_EDITORIAL_EVENT_TYPES.map((type) => (
             <label key={type} className="text-text-primary flex items-center gap-1.5 text-sm">
               <input
                 type="checkbox"

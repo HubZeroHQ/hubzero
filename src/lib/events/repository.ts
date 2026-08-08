@@ -17,10 +17,9 @@ import {
  * enforced by the absence of a way to violate it rather than by a comment
  * asking callers not to — a log whose entries can be edited is not evidence.
  *
- * Writes are best-effort and never throw into the caller: a failed event write
- * must not roll back or fail the editorial action that produced it. Losing an
- * audit row is bad; losing an editor's save because the audit row failed is
- * worse, and the action has already succeeded by the time we get here.
+ * Write failures propagate to `recordEditorialEvent`, the single reliability
+ * boundary that reports them without failing the editorial mutation that has
+ * already succeeded.
  */
 export const editorialEventRepository = {
   /**
@@ -28,13 +27,8 @@ export const editorialEventRepository = {
    * rejected at the boundary rather than stored and discovered later by a
    * reader that cannot interpret it.
    */
-  async append(input: EditorialEventInput): Promise<EditorialEventRecord | null> {
-    let parsed: EditorialEventInput;
-    try {
-      parsed = editorialEventSchema.parse(input);
-    } catch {
-      return null;
-    }
+  async append(input: EditorialEventInput): Promise<EditorialEventRecord> {
+    const parsed = editorialEventSchema.parse(input);
 
     const doc = {
       entityType: parsed.entityType,
@@ -45,15 +39,11 @@ export const editorialEventRepository = {
       createdAt: new Date(),
     };
 
-    try {
-      const collection = await collections.editorialEvents();
-      const { insertedId } = await collection.insertOne(
-        doc as unknown as OptionalUnlessRequiredId<EditorialEventRecord>,
-      );
-      return { ...doc, _id: insertedId } as EditorialEventRecord;
-    } catch {
-      return null;
-    }
+    const collection = await collections.editorialEvents();
+    const { insertedId } = await collection.insertOne(
+      doc as unknown as OptionalUnlessRequiredId<EditorialEventRecord>,
+    );
+    return { ...doc, _id: insertedId } as EditorialEventRecord;
   },
 
   /** One entry's history, newest first. */
@@ -66,7 +56,7 @@ export const editorialEventRepository = {
     const collection = await collections.editorialEvents();
     return collection
       .find({ entityType, entityId: new ObjectId(entityId) })
-      .sort({ createdAt: -1 })
+      .sort({ createdAt: -1, _id: -1 })
       .limit(limit)
       .toArray();
   },
@@ -77,13 +67,13 @@ export const editorialEventRepository = {
     limit = 100,
   ): Promise<EditorialEventRecord[]> {
     const collection = await collections.editorialEvents();
-    return collection.find({ entityType }).sort({ createdAt: -1 }).limit(limit).toArray();
+    return collection.find({ entityType }).sort({ createdAt: -1, _id: -1 }).limit(limit).toArray();
   },
 
   /** Studio-wide recent activity, newest first. */
   async listRecent(limit = 50): Promise<EditorialEventRecord[]> {
     const collection = await collections.editorialEvents();
-    return collection.find({}).sort({ createdAt: -1 }).limit(limit).toArray();
+    return collection.find({}).sort({ createdAt: -1, _id: -1 }).limit(limit).toArray();
   },
 
   /**
@@ -247,9 +237,10 @@ export async function ensureEditorialEventIndexes(): Promise<void> {
   try {
     const collection = await collections.editorialEvents();
     await collection.createIndexes([...EDITORIAL_EVENT_INDEXES]);
-  } catch {
-    // A missing index degrades performance, never correctness — and must not
-    // take down the action that triggered the write.
+  } catch (error) {
+    // Let the recording boundary report the failure. Resetting the flag makes
+    // the next event retry index creation instead of assuming it succeeded.
     indexesEnsured = false;
+    throw error;
   }
 }

@@ -1,4 +1,4 @@
-import { useCallback, useReducer } from 'react';
+import { useCallback, useReducer, useRef } from 'react';
 import type { Block } from './blocks';
 
 /**
@@ -97,10 +97,17 @@ export function historyReducer(state: HistoryState, action: HistoryAction): Hist
 
 export function useDocumentHistory(initialBlocks: Block[]) {
   const [state, dispatch] = useReducer(historyReducer, initialBlocks, createHistoryState);
+  // The browser-unload guard runs outside React's render lifecycle. Keep the
+  // newest committed blocks in a mutable reference as well as reducer state,
+  // so a refresh in the same event turn as typing cannot observe stale data.
+  const blocksRef = useRef(state.present);
+  blocksRef.current = state.present;
 
   const commit = useCallback(
     (blocks: Block[] | ((present: Block[]) => Block[]), coalesceKey?: string) => {
-      dispatch({ type: 'commit', blocks, coalesceKey, now: Date.now() });
+      const nextBlocks = typeof blocks === 'function' ? blocks(blocksRef.current) : blocks;
+      blocksRef.current = nextBlocks;
+      dispatch({ type: 'commit', blocks: nextBlocks, coalesceKey, now: Date.now() });
     },
     [],
   );
@@ -110,6 +117,7 @@ export function useDocumentHistory(initialBlocks: Block[]) {
 
   return {
     blocks: state.present,
+    blocksRef,
     commit,
     undo,
     redo,

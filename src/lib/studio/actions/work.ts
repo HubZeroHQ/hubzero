@@ -81,6 +81,7 @@ export const updateWorkAction = createEntryUpdateAction<Work, WorkInput>({
   update: workRepository.update,
   parseFormData: parseWorkUpdateFormData,
   detailPath: workDetailPath,
+  listPath: WORK_LIST_PATH,
   publicType: 'work',
 });
 
@@ -97,7 +98,9 @@ export const saveWorkCaseStudyAction = createDocumentSaveAction<Work>({
   ownerType: 'Work',
   role: 'caseStudy',
   findOwnerById: workRepository.findById,
+  setOwnerStatus: (id, status) => workRepository.update(id, { status, reviewNote: null }),
   detailPath: workDetailPath,
+  listPath: WORK_LIST_PATH,
 });
 
 export const generateWorkCaseStudyDocumentAction = createGenerateDocumentAction<Work>({

@@ -19,10 +19,13 @@ import {
 } from '@/lib/studio/generate-content-actions';
 import { buildRepository } from '@/lib/db/repositories/build';
 import { labRepository } from '@/lib/db/repositories/lab';
+import { recordEditorialEvent } from '@/lib/events/record';
+import { invalidatePublicEntity } from '@/lib/public/cache';
 import type { LabInput } from '@/lib/validation/lab';
 import type { Lab } from '@/types/studio';
 
 const LABS_LIST_PATH = '/studio/content/labs';
+const BUILDS_LIST_PATH = '/studio/content/builds';
 const labDetailPath = (id: string) => `/studio/content/labs/${id}`;
 const buildDetailPath = (id: string) => `/studio/content/builds/${id}`;
 
@@ -117,6 +120,7 @@ export const updateLabAction = createEntryUpdateAction<Lab, LabInput>({
   update: labRepository.update,
   parseFormData: parseLabUpdateFormData,
   detailPath: labDetailPath,
+  listPath: LABS_LIST_PATH,
   publicType: 'lab',
 });
 
@@ -134,28 +138,36 @@ export const saveLabOverviewAction = createDocumentSaveAction<Lab>({
   ownerType: 'Lab',
   role: 'overview',
   findOwnerById: labRepository.findById,
+  setOwnerStatus: (id, status) => labRepository.update(id, { status, reviewNote: null }),
   detailPath: labDetailPath,
+  listPath: LABS_LIST_PATH,
 });
 
 export const saveLabEngineeringJournalAction = createDocumentSaveAction<Lab>({
   ownerType: 'Lab',
   role: 'engineeringJournal',
   findOwnerById: labRepository.findById,
+  setOwnerStatus: (id, status) => labRepository.update(id, { status, reviewNote: null }),
   detailPath: labDetailPath,
+  listPath: LABS_LIST_PATH,
 });
 
 export const saveLabFindingsAction = createDocumentSaveAction<Lab>({
   ownerType: 'Lab',
   role: 'findings',
   findOwnerById: labRepository.findById,
+  setOwnerStatus: (id, status) => labRepository.update(id, { status, reviewNote: null }),
   detailPath: labDetailPath,
+  listPath: LABS_LIST_PATH,
 });
 
 export const saveLabResearchNotesAction = createDocumentSaveAction<Lab>({
   ownerType: 'Lab',
   role: 'researchNotes',
   findOwnerById: labRepository.findById,
+  setOwnerStatus: (id, status) => labRepository.update(id, { status, reviewNote: null }),
   detailPath: labDetailPath,
+  listPath: LABS_LIST_PATH,
 });
 
 /** "Generate content" for each of a Lab's four Documents — same four-action shape as every other collection, repeated per role rather than per collection. */
@@ -269,9 +281,42 @@ export async function graduateLabToBuildAction(labId: string): Promise<EntryActi
     return { error: error instanceof Error ? error.message : 'Could not create the Build.' };
   }
 
-  await labRepository.update(labId, { graduatedToBuildId: buildId });
+  let claimed = false;
+  try {
+    claimed = await labRepository.claimGraduatedBuild(labId, buildId);
+  } catch (error) {
+    const removed = await buildRepository.remove(buildId).catch(() => false);
+    if (!removed) {
+      console.error('Failed to compensate an unlinked graduated Build', { labId, buildId, error });
+    }
+    return { error: 'The Build was not linked to its Lab. Try again.' };
+  }
+  if (!claimed) {
+    const removed = await buildRepository.remove(buildId).catch(() => false);
+    if (!removed) {
+      console.error('Failed to remove a duplicate graduated Build', { labId, buildId });
+    }
+    return { error: 'This Lab has already graduated to a Build.' };
+  }
 
+  await Promise.all([
+    recordEditorialEvent({
+      entityType: 'build',
+      entityId: buildId,
+      payload: { type: 'entry.created' },
+    }),
+    recordEditorialEvent({
+      entityType: 'lab',
+      entityId: labId,
+      payload: { type: 'entry.updated' },
+    }),
+  ]);
+  if (lab.status === 'published') {
+    invalidatePublicEntity('lab', lab.slug);
+  }
   revalidatePath(labDetailPath(labId));
   revalidatePath(buildDetailPath(buildId));
+  revalidatePath(LABS_LIST_PATH);
+  revalidatePath(BUILDS_LIST_PATH);
   redirect(buildDetailPath(buildId));
 }

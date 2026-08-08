@@ -2,6 +2,7 @@
 
 import { ClipboardPaste, ExternalLink, Redo2, Sparkles, Undo2 } from 'lucide-react';
 import { useCallback, useMemo, useRef, useState } from 'react';
+import { SaveStateIndicator } from '@/components/studio/editor/SaveStateIndicator';
 import { Button } from '@/components/ui/Button';
 import {
   createBlockId,
@@ -23,7 +24,6 @@ import type { EditorSaveStatus } from '@/lib/studio/editor-state/types';
 import { useEditorRegistration } from '@/lib/studio/editor-state/use-editor-registration';
 import { useDocumentHistory } from '@/lib/documents/use-document-history';
 import { validateDocument } from '@/lib/documents/validation';
-import { cn } from '@/lib/utils/cn';
 import { GenerateContentPanel } from './ai/GenerateContentPanel';
 import type { BlockEditorAiConfig } from './ai/types';
 import { BlockCanvas } from './editor/BlockCanvas';
@@ -63,6 +63,8 @@ export function BlockEditor({
   technologyOptions = [],
   ai,
   previewHref,
+  editorId = 'document-engine',
+  editorLabel = 'Document body',
 }: {
   initialBlocks: Block[];
   onSave: (blocks: Block[]) => Promise<BlockEditorSaveResult>;
@@ -78,9 +80,22 @@ export function BlockEditor({
    * public page is the only one worth showing.
    */
   previewHref?: string;
+  /** Stable registry identity used to flush this editor before it unmounts. */
+  editorId?: string;
+  /** Human-readable name used by the shared save/leave system. */
+  editorLabel?: string;
 }) {
-  const { blocks, commit, undo, redo, canUndo, canRedo } = useDocumentHistory(initialBlocks);
-  const autosave = useAutosave({ blocks, onSave });
+  const { blocks, blocksRef, commit, undo, redo, canUndo, canRedo } =
+    useDocumentHistory(initialBlocks);
+  const autosave = useAutosave({ blocks, onSave, liveBlocksRef: blocksRef });
+  // React may not have reconciled a controlled field by the time a browser
+  // refresh follows its native input event. This latch is set in the editor's
+  // capture phase, ahead of React state, so the shared unload guard has no
+  // timing window in which it can decide that freshly typed text is clean.
+  const pendingInputRef = useRef(false);
+  if (!autosave.isDirty && autosave.status !== 'saving') {
+    pendingInputRef.current = false;
+  }
 
   // Joins the Studio's shared editor-state system (v3.1 Phase 1) so a
   // document with edits still in the autosave debounce — or with a *failed*
@@ -90,13 +105,21 @@ export function BlockEditor({
   // `savesAutomatically: true` so the guard flushes it instead of
   // interrupting the author with a dialog they could only answer one way.
   useEditorRegistration({
-    id: 'document-engine',
-    label: 'Document body',
+    id: editorId,
+    label: editorLabel,
     isDirty: autosave.isDirty,
+    isDirtyNow: () => pendingInputRef.current || autosave.isDirtyNow(),
     status: toEditorStatus(autosave.status),
     error: autosave.error,
-    save: () => autosave.saveNow(),
-    discard: () => commit(autosave.lastSavedBlocks),
+    save: async () => {
+      const saved = await autosave.saveNow();
+      if (saved) pendingInputRef.current = false;
+      return saved;
+    },
+    discard: () => {
+      pendingInputRef.current = false;
+      commit(autosave.lastSavedBlocks);
+    },
     savesAutomatically: true,
     showsSaveBar: false,
     canDiscard: true,
@@ -114,13 +137,9 @@ export function BlockEditor({
 
   const outline = useMemo(() => deriveDocumentOutline(blocks), [blocks]);
 
-  // Lets the row-action callbacks below stay referentially stable (empty/near-empty
-  // useCallback deps) while still always acting on the latest blocks — a ref assigned
-  // during render is guaranteed current by the time any event handler actually runs.
-  // Stability here is what lets BlockCanvas's per-row memoization (BlockRow) skip
-  // re-rendering blocks that weren't touched by a given edit.
-  const blocksRef = useRef(blocks);
-  blocksRef.current = blocks;
+  // `blocksRef` is updated synchronously by the history hook before React
+  // rerenders, so row actions and the unload guard share the exact same live
+  // source of truth.
 
   const selectedBlock = blocks.find((block) => block.id === selectedBlockId) ?? null;
   const documentValidation = useMemo(() => validateDocument(blocks), [blocks]);
@@ -179,18 +198,21 @@ export function BlockEditor({
         focusBlock(duplicated.id);
       }
     },
-    [commit, focusBlock],
+    [blocksRef, commit, focusBlock],
   );
 
-  const handleCopy = useCallback((id: string) => {
-    void (async () => {
-      const block = blocksRef.current.find((entry) => entry.id === id);
-      if (!block || typeof navigator === 'undefined' || !navigator.clipboard) {
-        return;
-      }
-      await navigator.clipboard.writeText(serializeBlockForClipboard(block));
-    })();
-  }, []);
+  const handleCopy = useCallback(
+    (id: string) => {
+      void (async () => {
+        const block = blocksRef.current.find((entry) => entry.id === id);
+        if (!block || typeof navigator === 'undefined' || !navigator.clipboard) {
+          return;
+        }
+        await navigator.clipboard.writeText(serializeBlockForClipboard(block));
+      })();
+    },
+    [blocksRef],
+  );
 
   async function handlePaste() {
     setPasteError(undefined);
@@ -314,17 +336,35 @@ export function BlockEditor({
   // Flushes the latest edits before opening the real page — otherwise a
   // preview opened right after typing could still show the previous
   // autosave rather than what's on screen right now.
-  function handlePreview() {
+  async function handlePreview() {
     if (!previewHref) return;
-    void autosave.saveNow();
-    window.open(previewHref, '_blank', 'noopener,noreferrer');
+    // Reserve the user-initiated tab synchronously so popup blockers do not
+    // reject it after the async save. It receives the real URL only after the
+    // newest blocks persist; a failed save closes the placeholder and leaves
+    // the editor/work untouched.
+    const preview = window.open('about:blank', '_blank');
+    if (!preview) return;
+    preview.opener = null;
+    if (!(await autosave.saveNow())) {
+      preview.close();
+      return;
+    }
+    preview.location.replace(previewHref);
   }
 
   return (
-    <div ref={containerRef} className="flex flex-col gap-3">
+    <div
+      ref={containerRef}
+      className="flex flex-col gap-3"
+      onInputCapture={() => {
+        pendingInputRef.current = true;
+      }}
+    >
       <EditorHeader
-        autosaveStatus={autosave.status}
-        autosaveError={autosave.error}
+        saveStatus={toEditorStatus(autosave.status)}
+        saveError={
+          autosave.status === 'invalid' ? 'Fix the highlighted fields to save.' : autosave.error
+        }
         lastSavedAt={autosave.lastSavedAt}
         documentValid={documentValidation.valid}
         canUndo={canUndo}
@@ -334,7 +374,7 @@ export function BlockEditor({
         onSave={() => void autosave.saveNow()}
         onPaste={() => void handlePaste()}
         previewHref={previewHref}
-        onPreview={handlePreview}
+        onPreview={() => void handlePreview()}
         onGenerate={ai ? () => setGeneratePanelOpen(true) : undefined}
       />
 
@@ -429,8 +469,8 @@ function toEditorStatus(status: AutosaveStatus): EditorSaveStatus {
 }
 
 function EditorHeader({
-  autosaveStatus,
-  autosaveError,
+  saveStatus,
+  saveError,
   lastSavedAt,
   documentValid,
   canUndo,
@@ -443,8 +483,8 @@ function EditorHeader({
   onPreview,
   onGenerate,
 }: {
-  autosaveStatus: 'idle' | 'dirty' | 'saving' | 'saved' | 'invalid' | 'error';
-  autosaveError?: string;
+  saveStatus: EditorSaveStatus;
+  saveError?: string;
   lastSavedAt: Date | null;
   documentValid: boolean;
   canUndo: boolean;
@@ -460,9 +500,7 @@ function EditorHeader({
 }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">
-      <p role="status" aria-live="polite" className="text-text-muted text-xs">
-        <SaveStatusLabel status={autosaveStatus} error={autosaveError} lastSavedAt={lastSavedAt} />
-      </p>
+      <SaveStateIndicator status={saveStatus} error={saveError} lastSavedAt={lastSavedAt} />
 
       <div className="flex items-center gap-1.5">
         <Button
@@ -519,45 +557,12 @@ function EditorHeader({
         <Button
           type="button"
           onClick={onSave}
-          disabled={!documentValid || autosaveStatus === 'saving'}
+          disabled={!documentValid || saveStatus === 'saving'}
           title="Save (Ctrl/Cmd+S)"
         >
-          {autosaveStatus === 'saving' ? 'Saving…' : 'Save'}
+          {saveStatus === 'saving' ? 'Saving' : 'Save'}
         </Button>
       </div>
     </div>
   );
-}
-
-function SaveStatusLabel({
-  status,
-  error,
-  lastSavedAt,
-}: {
-  status: 'idle' | 'dirty' | 'saving' | 'saved' | 'invalid' | 'error';
-  error?: string;
-  lastSavedAt: Date | null;
-}) {
-  switch (status) {
-    case 'saving':
-      return <span>Saving…</span>;
-    case 'saved':
-      return (
-        <span className={cn('text-success')}>
-          Saved{lastSavedAt ? ` at ${lastSavedAt.toLocaleTimeString()}` : ''}
-        </span>
-      );
-    case 'dirty':
-      return <span>Unsaved changes…</span>;
-    case 'invalid':
-      return <span className="text-danger">Fix highlighted fields to save.</span>;
-    case 'error':
-      return <span className="text-danger">{error ?? 'Could not save.'}</span>;
-    default:
-      return (
-        <span>
-          {lastSavedAt ? `Saved at ${lastSavedAt.toLocaleTimeString()}` : 'No changes yet.'}
-        </span>
-      );
-  }
 }

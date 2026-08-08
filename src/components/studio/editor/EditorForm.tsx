@@ -85,7 +85,7 @@ export function EditorForm({
 
       <div className="flex flex-wrap items-center gap-3">
         <Button type="submit" disabled={editor.pending}>
-          {editor.pending ? 'Saving…' : submitLabel}
+          {editor.pending ? 'Saving' : submitLabel}
         </Button>
         {/* No inline Discard: while there is anything to discard, the sticky
             save bar is on screen offering exactly that, and two live Discard

@@ -13,7 +13,7 @@ import {
 import { useRouter } from 'next/navigation';
 import type { EntryActionState } from '@/lib/studio/entry-actions';
 import { serializeForm, serializeFormEntries } from './form-snapshot';
-import type { EditorSaveStatus } from './types';
+import type { EditorSaveOptions, EditorSaveStatus } from './types';
 import { useEditorRegistration } from './use-editor-registration';
 
 const EMPTY_ACTION_STATE: EntryActionState = {};
@@ -67,7 +67,7 @@ export interface FormEditorState {
   lastSavedAt: Date | null;
   /** Bumped by `discard()`; use as a React `key` to remount the fields at their saved values. */
   resetKey: number;
-  save: () => Promise<boolean>;
+  save: (options?: EditorSaveOptions) => Promise<boolean>;
   discard: () => void;
   canDiscard: boolean;
 }
@@ -170,6 +170,7 @@ export function useFormEditorState({
   const inFlightSaveRef = useRef<{
     promise: Promise<boolean>;
     resolve: (saved: boolean) => void;
+    refresh: boolean;
   } | null>(null);
   /** Set by the submit handler, so `save()` can tell a submit that never happened from one that did. */
   const submitObservedRef = useRef(false);
@@ -329,13 +330,16 @@ export function useFormEditorState({
       baselineRef.current = submittedSnapshotRef.current ?? readSnapshot();
       setStatus('saved');
       setLastSavedAt(new Date());
-      // Re-reads the server state the fields would remount from, so a later
-      // discard restores the version that was just saved. `isRefreshing`
-      // stays true for the whole round trip, which is what `canDiscard`
-      // gates on.
-      startRefresh(() => {
-        router.refresh();
-      });
+      // Re-read the server state after an ordinary in-place save so a later
+      // discard restores the saved version. Save & Leave supplies
+      // `refresh: false`: its next route is the authoritative fresh read,
+      // and starting a competing refresh here can strand its leave dialog.
+      const refresh = inFlightSaveRef.current?.refresh ?? true;
+      if (refresh) {
+        startRefresh(() => {
+          router.refresh();
+        });
+      }
       scheduleRecompute();
       settleSave(true);
       return;
@@ -359,40 +363,43 @@ export function useFormEditorState({
    * `Ctrl/Cmd+S` pressed while it was in flight could leave the leave-dialog
    * waiting on a result that would never arrive.
    */
-  const save = useCallback((): Promise<boolean> => {
-    if (inFlightSaveRef.current) {
-      return inFlightSaveRef.current.promise;
-    }
+  const save = useCallback(
+    (options: EditorSaveOptions = {}): Promise<boolean> => {
+      if (inFlightSaveRef.current) {
+        return inFlightSaveRef.current.promise;
+      }
 
-    const form = formRef.current;
-    if (!form) {
-      return Promise.resolve(false);
-    }
-    // Native constraint validation first: `requestSubmit` would silently do
-    // nothing on an invalid form, leaving the caller waiting forever for a
-    // result that is never coming.
-    if (!form.reportValidity()) {
-      return Promise.resolve(false);
-    }
+      const form = formRef.current;
+      if (!form) {
+        return Promise.resolve(false);
+      }
+      // Native constraint validation first: `requestSubmit` would silently do
+      // nothing on an invalid form, leaving the caller waiting forever for a
+      // result that is never coming.
+      if (!form.reportValidity()) {
+        return Promise.resolve(false);
+      }
 
-    let resolve!: (saved: boolean) => void;
-    const promise = new Promise<boolean>((resolveFn) => {
-      resolve = resolveFn;
-    });
-    inFlightSaveRef.current = { promise, resolve };
+      let resolve!: (saved: boolean) => void;
+      const promise = new Promise<boolean>((resolveFn) => {
+        resolve = resolveFn;
+      });
+      inFlightSaveRef.current = { promise, resolve, refresh: options.refresh !== false };
 
-    // `requestSubmit` dispatches the submit event synchronously, so if the
-    // handler hasn't run by the time it returns, no submission happened and
-    // no action result is ever coming. Settling here rather than waiting is
-    // the difference between a save that reports failure and one that hangs.
-    submitObservedRef.current = false;
-    form.requestSubmit();
-    if (!submitObservedRef.current) {
-      settleSave(false);
-    }
+      // `requestSubmit` dispatches the submit event synchronously, so if the
+      // handler hasn't run by the time it returns, no submission happened and
+      // no action result is ever coming. Settling here rather than waiting is
+      // the difference between a save that reports failure and one that hangs.
+      submitObservedRef.current = false;
+      form.requestSubmit();
+      if (!submitObservedRef.current) {
+        settleSave(false);
+      }
 
-    return promise;
-  }, [settleSave]);
+      return promise;
+    },
+    [settleSave],
+  );
 
   const discard = useCallback(() => {
     submittedSnapshotRef.current = null;

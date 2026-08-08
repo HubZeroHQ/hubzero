@@ -7,7 +7,7 @@ export type VisibilityRecord =
       status?: unknown;
     }
   | { type: 'service'; status?: unknown }
-  | { type: 'teamMember'; publicProfile?: unknown }
+  | { type: 'teamMember'; publicProfile?: unknown; archived?: unknown }
   | { type: 'engineeringProfile'; status?: unknown; teamPublic?: unknown };
 
 const PUBLIC_DOCUMENT_ROLES: Readonly<Record<OwnerType, readonly DocumentRole[]>> = {
@@ -24,7 +24,7 @@ const PUBLIC_DOCUMENT_ROLES: Readonly<Record<OwnerType, readonly DocumentRole[]>
 /** The one fail-closed predicate used before any public expansion or mapping. */
 export function isPubliclyVisible(record: VisibilityRecord): boolean {
   if (record.type === 'teamMember') {
-    return record.publicProfile === true;
+    return record.publicProfile === true && record.archived !== true;
   }
   if (record.type === 'engineeringProfile') {
     return record.status === 'published' && record.teamPublic === true;

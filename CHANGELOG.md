@@ -2,6 +2,22 @@
 
 All notable changes to this project are documented in this file. Entries are engineering release notes, not marketing copy — see [`docs/releases/`](docs/releases) for the full reasoning behind each release.
 
+## v3.1.1 - 2026-08-08
+
+### Fixed
+
+- Eliminated the document-editor unload protection race so a refresh immediately after typing is guarded.
+- Made Save & Leave navigate only after a successful save, without competing with an in-place refresh.
+- Refreshed workflow state after archive and restore actions, including status controls and entry panels.
+- Removed the invalid review-stage unpublish action; rejection is now the single reasoned path back to Draft.
+- Standardized Studio editor save state labels to Unsaved, Saving, Saved, and Failed.
+- Removed the desktop sidebar's independent scrolling region and tightened navigation spacing to keep the shell fixed.
+- Refined dashboard and Studio mutation refresh behaviour.
+
+### Changed
+
+- Updated safe dependency versions, including React, Radix primitives, and sanitize-html.
+
 ## v3.1.0 - 2026-08-02
 
 ### Added

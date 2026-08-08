@@ -5,7 +5,12 @@ import { redirect } from 'next/navigation';
 import { ZodError } from 'zod';
 import { requireCapability } from '@/lib/auth/permissions';
 import { taxonomyRepository } from '@/lib/db/repositories/taxonomy';
-import { reassignTaxonomyReferences, totalTaxonomyUsage } from '@/lib/studio/safeguards/taxonomy';
+import { invalidatePublicTaxonomyTargets } from '@/lib/public/cache';
+import {
+  reassignTaxonomyReferences,
+  taxonomyPublicCacheTargets,
+  totalTaxonomyUsage,
+} from '@/lib/studio/safeguards/taxonomy';
 import type { EntryActionState } from '@/lib/studio/entry-actions';
 import { zodErrorToFieldErrors } from '@/lib/validation/form-errors';
 
@@ -82,6 +87,7 @@ export async function updateTaxonomyEntryAction(
     }
   }
 
+  const publicTargets = await taxonomyPublicCacheTargets(id);
   try {
     await taxonomyRepository.update(id, fields);
   } catch (error) {
@@ -93,6 +99,7 @@ export async function updateTaxonomyEntryAction(
 
   // Stays on the edit screen — see `createEntryUpdateAction` for why every
   // Studio metadata save now reports success instead of navigating.
+  invalidatePublicTaxonomyTargets(publicTargets);
   revalidatePath(LIST_PATH);
   return { ok: true };
 }
@@ -145,9 +152,11 @@ export async function mergeTaxonomyEntriesAction(
     return { error: 'Only entries of the same kind can be merged.' };
   }
 
+  const publicTargets = await taxonomyPublicCacheTargets(sourceId);
   await reassignTaxonomyReferences(sourceId, targetId);
   await taxonomyRepository.remove(sourceId);
 
+  invalidatePublicTaxonomyTargets(publicTargets);
   revalidatePath(LIST_PATH);
   return {};
 }

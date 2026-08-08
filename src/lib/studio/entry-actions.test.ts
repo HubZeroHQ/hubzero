@@ -6,17 +6,22 @@ import { describe, expect, it, vi } from 'vitest';
 // `lib/auth/permissions.test.ts`. A stub session is enough since nothing
 // under test needs a real NextAuth session.
 vi.mock('@/lib/auth', () => ({ auth: vi.fn() }));
+vi.mock('@/lib/events/record', () => ({
+  eventEntityTypeFor: (value: string) => value,
+  recordEditorialEvent: vi.fn(),
+}));
 
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
 
 // `invalidatePublicEntity` pulls in `server-only`, which throws outside a
-// real Next.js server bundle. None of these tests pass `publicType`, so the
-// real implementation is never reached — a stub just lets the module load.
+// real Next.js server bundle. A spy also verifies the publish-boundary rule.
 vi.mock('@/lib/public/cache', () => ({ invalidatePublicEntity: vi.fn() }));
 
 import { revalidatePath } from 'next/cache';
 import { auth } from '@/lib/auth';
-import { createEntryTransitionAction } from './entry-actions';
+import { invalidatePublicEntity } from '@/lib/public/cache';
+import type { PublishStatus } from '@/types/studio';
+import { createEntryTransitionAction, createEntryUpdateAction } from './entry-actions';
 
 function mockSession(role: 'headAdmin' | 'admin' | 'member') {
   vi.mocked(auth).mockResolvedValue({
@@ -42,7 +47,7 @@ describe('createEntryTransitionAction', () => {
 
     const result = await transitionAction('entry-1', 'draft');
 
-    expect(result).toEqual({});
+    expect(result).toMatchObject({ ok: true, workflow: { status: 'draft' } });
     expect(setStatus).toHaveBeenCalledWith('entry-1', 'draft', null);
     // Regression coverage for the Studio review-page staleness bug: the
     // collection list must be revalidated alongside the detail page,
@@ -69,10 +74,37 @@ describe('createEntryTransitionAction', () => {
 
     const result = await transitionAction('entry-2', 'draft', 'Needs another pass.');
 
-    expect(result).toEqual({});
+    expect(result).toMatchObject({
+      ok: true,
+      workflow: { status: 'draft', reviewNote: 'Needs another pass.' },
+    });
     expect(setStatus).toHaveBeenCalledWith('entry-2', 'draft', 'Needs another pass.');
     expect(vi.mocked(revalidatePath)).toHaveBeenCalledWith('/studio/content/notes/entry-2');
     expect(vi.mocked(revalidatePath)).toHaveBeenCalledWith('/studio/content/notes');
+  });
+
+  it('invalidates public reads only when a transition crosses the published boundary', async () => {
+    vi.mocked(invalidatePublicEntity).mockClear();
+    mockSession('headAdmin');
+
+    const draft = { _id: 'entry-5', status: 'draft' as const, slug: 'entry-5' };
+    const transitionAction = createEntryTransitionAction({
+      findById: vi
+        .fn()
+        .mockResolvedValueOnce(draft)
+        .mockResolvedValueOnce({ ...draft, status: 'approved' }),
+      setStatus: vi.fn().mockImplementation(async (_id, status) => ({ ...draft, status })),
+      detailPath: (id) => `/studio/content/work/${id}`,
+      listPath: '/studio/content/work',
+      publicType: 'work',
+    });
+
+    await transitionAction('entry-5', 'inReview');
+    expect(vi.mocked(invalidatePublicEntity)).not.toHaveBeenCalled();
+
+    await transitionAction('entry-5', 'published');
+    expect(vi.mocked(invalidatePublicEntity)).toHaveBeenCalledTimes(1);
+    expect(vi.mocked(invalidatePublicEntity)).toHaveBeenCalledWith('work', 'entry-5');
   });
 
   describe('Restore (archived -> draft)', () => {
@@ -93,7 +125,7 @@ describe('createEntryTransitionAction', () => {
 
       const result = await transitionAction('entry-3', 'draft');
 
-      expect(result).toEqual({});
+      expect(result).toMatchObject({ ok: true, workflow: { status: 'draft' } });
       // No note required for Restore, unlike Reject.
       expect(setStatus).toHaveBeenCalledWith('entry-3', 'draft', null);
       expect(vi.mocked(revalidatePath)).toHaveBeenCalledWith('/studio/content/blueprints/entry-3');
@@ -119,5 +151,33 @@ describe('createEntryTransitionAction', () => {
       expect(result.error).toBeTruthy();
       expect(setStatus).not.toHaveBeenCalled();
     });
+  });
+});
+
+describe('createEntryUpdateAction', () => {
+  it('revalidates both the detail and collection paths after a metadata save', async () => {
+    vi.mocked(revalidatePath).mockClear();
+    mockSession('headAdmin');
+
+    const record = {
+      _id: 'entry-6',
+      status: 'draft' as const,
+      slug: 'entry-6',
+      title: 'Before',
+    };
+    const updateAction = createEntryUpdateAction<
+      typeof record,
+      { title: string; status?: PublishStatus; reviewNote?: string | null }
+    >({
+      findById: vi.fn().mockResolvedValue(record),
+      update: vi.fn().mockResolvedValue({ ...record, title: 'After' }),
+      parseFormData: () => ({ title: 'After' }),
+      detailPath: (id) => `/studio/content/work/${id}`,
+      listPath: '/studio/content/work',
+    });
+
+    await expect(updateAction('entry-6', {}, new FormData())).resolves.toEqual({ ok: true });
+    expect(vi.mocked(revalidatePath)).toHaveBeenCalledWith('/studio/content/work/entry-6');
+    expect(vi.mocked(revalidatePath)).toHaveBeenCalledWith('/studio/content/work');
   });
 });

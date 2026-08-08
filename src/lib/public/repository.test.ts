@@ -55,6 +55,28 @@ function fakeSource(input: {
 }
 
 describe('public repository boundary', () => {
+  it('hides archived Team members and their published Engineering Profiles', async () => {
+    const archivedTeam = {
+      _id: new ObjectId(),
+      publicProfile: true,
+      archived: true,
+    } as Team;
+    const profile = {
+      _id: new ObjectId(),
+      status: 'published',
+      slug: 'archived-engineer',
+      teamMemberId: archivedTeam._id,
+    } as EngineeringProfile;
+    const repository = createPublicRepository(
+      fakeSource({
+        entities: [entity('teamMember', archivedTeam), entity('engineeringProfile', profile)],
+      }),
+    );
+
+    await expect(repository.listSummaries('teamMember')).resolves.toEqual([]);
+    await expect(repository.findDetail('engineeringProfile', profile.slug)).resolves.toBeNull();
+  });
+
   it('returns allow-listed public objects without Studio identifiers or workflow metadata', async () => {
     const previewAsset: MediaAsset = {
       _id: new ObjectId(),
@@ -279,6 +301,15 @@ describe('public repository boundary', () => {
     expect(JSON.stringify(result)).not.toContain(user.email);
     expect(JSON.stringify(result)).not.toContain('Internal account');
     expect(JSON.stringify(result)).not.toContain(user._id.toString());
+
+    team.archived = true;
+    const afterArchive = await repository.findSummary('note', note.slug);
+    expect(afterArchive?.type).toBe('note');
+    if (afterArchive?.type !== 'note') throw new Error('Expected note summary');
+    expect(afterArchive.author).toMatchObject({
+      kind: 'organization',
+      name: 'HubZero',
+    });
   });
 
   it('uses the organization fallback for duplicate Team matches', async () => {

@@ -140,6 +140,18 @@
     overflow: hidden;
   }
 
+  /**
+   * Studio owns its viewport. Prevent the root document from becoming a
+   * second scroll container when browser zoom, a wide table, or mobile
+   * browser chrome changes the available dimensions.
+   */
+  html:has(.studio-shell),
+  body:has(.studio-shell) {
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+
   .public-shell {
     min-height: 100svh;
     background: var(--color-bg-base);

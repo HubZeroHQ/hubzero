@@ -37,6 +37,21 @@ export const documentRepository = {
     return collection.findOne({ ownerType, ownerId: new ObjectId(ownerId), role });
   },
 
+  /** Documents containing a Technology Stack block that references a term. */
+  async findUsingTaxonomyEntry(entryId: string): Promise<DocumentRecord[]> {
+    const collection = await collections.documents();
+    return collection
+      .find({
+        blocks: {
+          $elemMatch: {
+            type: 'technologyStack',
+            'data.technologyIds': entryId,
+          },
+        },
+      })
+      .toArray();
+  },
+
   async create(input: DocumentInput): Promise<DocumentRecord> {
     const parsed = documentSchema.parse(input);
     const now = new Date();
@@ -80,6 +95,38 @@ export const documentRepository = {
       { $set: { blocks: parsedBlocks, updatedAt: new Date() } },
       { returnDocument: 'after' },
     );
+  },
+
+  /**
+   * Replaces one taxonomy id in every Technology Stack block, preserving the
+   * normal validation and version-snapshot path used by editor saves.
+   */
+  async replaceTaxonomyReference(sourceId: string, targetId: string): Promise<void> {
+    const collection = await collections.documents();
+    const documents = await collection
+      .find({
+        blocks: {
+          $elemMatch: {
+            type: 'technologyStack',
+            'data.technologyIds': sourceId,
+          },
+        },
+      })
+      .toArray();
+
+    for (const document of documents) {
+      const blocks = document.blocks.map((block) => {
+        if (block.type !== 'technologyStack') return block;
+        const technologyIds = block.data.technologyIds.map((id) =>
+          id === sourceId ? targetId : id,
+        );
+        return {
+          ...block,
+          data: { ...block.data, technologyIds: [...new Set(technologyIds)] },
+        };
+      });
+      await documentRepository.updateBlocks(document._id.toString(), blocks);
+    }
   },
 
   async remove(id: string): Promise<boolean> {

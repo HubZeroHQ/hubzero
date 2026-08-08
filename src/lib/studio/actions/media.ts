@@ -10,16 +10,18 @@ import {
   type SignedUploadParams,
 } from '@/lib/media/cloudinary';
 import { toMediaAssetDTO, type MediaAssetDTO } from '@/lib/media/dto';
-import { findMediaUsage } from '@/lib/media/usage';
+import { findMediaUsage, publicCacheTargetsForMediaUsage } from '@/lib/media/usage';
 import { mediaAssetSchema } from '@/lib/validation/media';
 import type { MediaFolder } from '@/types/studio';
-import { invalidatePublicMedia } from '@/lib/public/cache';
+import { invalidatePublicMediaTargets } from '@/lib/public/cache';
+import type { EntryActionState } from '@/lib/studio/entry-actions';
 
 const MEDIA_LIST_PATH = '/studio/library/media';
 const mediaDetailPath = (id: string) => `${MEDIA_LIST_PATH}/${id}`;
 
 export interface MediaActionState {
   error?: string;
+  ok?: true;
 }
 
 /** The Cloudinary upload response's shape, trimmed to the fields Media actually persists. */
@@ -81,7 +83,6 @@ export async function createMediaFromUploadAction(input: {
     });
 
     const created = await mediaRepository.create(parsed, { createdByUserId: userId });
-    invalidatePublicMedia(created._id.toString());
     revalidatePath(MEDIA_LIST_PATH);
     return { data: toMediaAssetDTO(created) };
   } catch (error) {
@@ -105,6 +106,7 @@ export async function updateMediaMetadataAction(
     return { error: error instanceof Error ? error.message : 'You cannot edit media.' };
   }
 
+  const publicTargets = await findMediaUsage(id).then(publicCacheTargetsForMediaUsage);
   try {
     const updated = await mediaRepository.update(id, input);
     if (!updated) {
@@ -116,8 +118,26 @@ export async function updateMediaMetadataAction(
 
   revalidatePath(mediaDetailPath(id));
   revalidatePath(MEDIA_LIST_PATH);
-  invalidatePublicMedia(id);
-  return {};
+  invalidatePublicMediaTargets(publicTargets);
+  return { ok: true };
+}
+
+/** Native-form adapter so Media metadata uses the shared Studio editor lifecycle. */
+export async function updateMediaMetadataFormAction(
+  id: string,
+  _prevState: EntryActionState,
+  formData: FormData,
+): Promise<EntryActionState> {
+  return updateMediaMetadataAction(id, {
+    altText: String(formData.get('altText') ?? ''),
+    caption: String(formData.get('caption') ?? '').trim() || undefined,
+    credit: String(formData.get('credit') ?? '').trim() || undefined,
+    folder: String(formData.get('folder') ?? 'general') as MediaFolder,
+    reuseTags: String(formData.get('reuseTags') ?? '')
+      .split(',')
+      .map((tag) => tag.trim())
+      .filter(Boolean),
+  });
 }
 
 /**
@@ -146,6 +166,7 @@ export async function replaceMediaAssetFileAction(
     return { error: 'This asset no longer exists.' };
   }
 
+  const publicTargets = await findMediaUsage(id).then(publicCacheTargetsForMediaUsage);
   let updated;
   try {
     updated = await mediaRepository.update(id, {
@@ -171,7 +192,7 @@ export async function replaceMediaAssetFileAction(
 
   revalidatePath(mediaDetailPath(id));
   revalidatePath(MEDIA_LIST_PATH);
-  invalidatePublicMedia(id);
+  invalidatePublicMediaTargets(publicTargets);
   return { data: toMediaAssetDTO(updated) };
 }
 
@@ -198,8 +219,8 @@ export async function deleteMediaAction(
     return { error: 'This asset no longer exists.' };
   }
 
+  const usage = await findMediaUsage(id);
   if (!options?.force) {
-    const usage = await findMediaUsage(id);
     if (usage.length > 0) {
       return {
         error: `This asset is used in ${usage.length} place${usage.length === 1 ? '' : 's'}. Confirm to delete it anyway.`,
@@ -207,9 +228,10 @@ export async function deleteMediaAction(
     }
   }
 
+  const publicTargets = await publicCacheTargetsForMediaUsage(usage);
   await deleteCloudinaryAsset(asset.cloudinaryPublicId);
   await mediaRepository.remove(id);
-  invalidatePublicMedia(id);
+  invalidatePublicMediaTargets(publicTargets);
   revalidatePath(MEDIA_LIST_PATH);
   return {};
 }

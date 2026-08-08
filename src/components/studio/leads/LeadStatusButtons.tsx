@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useRef, useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import type { LeadStatus } from '@/types/studio';
 
@@ -21,13 +22,24 @@ export function LeadStatusButtons({
   status: LeadStatus;
   action: (id: string, status: LeadStatus) => Promise<{ error?: string } | void>;
 }) {
+  const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string>();
+  const inFlightRef = useRef(false);
 
   function handleClick(candidate: LeadStatus) {
+    if (inFlightRef.current) return;
+    inFlightRef.current = true;
     startTransition(async () => {
-      const result = await action(leadId, candidate);
-      setError(result?.error);
+      try {
+        const result = await action(leadId, candidate);
+        setError(result?.error);
+        if (!result?.error) {
+          router.refresh();
+        }
+      } finally {
+        inFlightRef.current = false;
+      }
     });
   }
 
