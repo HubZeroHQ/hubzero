@@ -49,7 +49,15 @@ export function getPublicDetail(
 
 export function listPublicSummaries(type: PublicEntityType) {
   return unstable_cache(() => repository.listSummaries(type), cacheKey(type, 'public-collection'), {
-    tags: [PUBLIC_CACHE_TAGS.collection(type), PUBLIC_CACHE_TAGS.relations],
+    // Service cards derive their evidence count from the relationship graph.
+    // Other collection summaries do not, so tagging all of them with the
+    // global graph used to evict every public index after any entity edit.
+    tags:
+      type === 'service'
+        ? [PUBLIC_CACHE_TAGS.collection(type), PUBLIC_CACHE_TAGS.relations]
+        : type === 'note'
+          ? [PUBLIC_CACHE_TAGS.collection(type), PUBLIC_CACHE_TAGS.authors]
+          : [PUBLIC_CACHE_TAGS.collection(type)],
   })();
 }
 
@@ -58,7 +66,11 @@ export function listPublicNoteIndexEntries() {
     () => repository.listNoteIndexEntries(),
     [publicCacheScope(), 'public-note-index'],
     {
-      tags: [PUBLIC_CACHE_TAGS.collection('note'), PUBLIC_CACHE_TAGS.relations],
+      tags: [
+        PUBLIC_CACHE_TAGS.collection('note'),
+        PUBLIC_CACHE_TAGS.relations,
+        PUBLIC_CACHE_TAGS.authors,
+      ],
     },
   )();
 }

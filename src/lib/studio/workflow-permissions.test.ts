@@ -48,10 +48,10 @@ describe('canUnpublishOverride', () => {
     expect(canUnpublishOverride('archived', 'headAdmin')).toBe(false);
   });
 
-  it('still covers published/approved/inReview, which have no other path back to draft', () => {
+  it('covers published and approved, while inReview uses the reasoned rejection path', () => {
     expect(canUnpublishOverride('published', 'headAdmin')).toBe(true);
     expect(canUnpublishOverride('approved', 'headAdmin')).toBe(true);
-    expect(canUnpublishOverride('inReview', 'headAdmin')).toBe(true);
+    expect(canUnpublishOverride('inReview', 'headAdmin')).toBe(false);
   });
 
   it('never applies to draft itself', () => {

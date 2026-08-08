@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useRef, useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button, type ButtonVariant } from '@/components/ui/Button';
 import { Dialog } from '@/components/ui/Dialog';
 
@@ -31,19 +32,28 @@ export function ConfirmActionDialog({
   confirmVariant?: ButtonVariant;
   action: () => Promise<{ error?: string } | void>;
 }) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string>();
   const [pending, startTransition] = useTransition();
+  const inFlightRef = useRef(false);
 
   function handleConfirm() {
+    if (inFlightRef.current) return;
+    inFlightRef.current = true;
     startTransition(async () => {
-      const result = await action();
-      if (result?.error) {
-        setError(result.error);
-        return;
+      try {
+        const result = await action();
+        if (result?.error) {
+          setError(result.error);
+          return;
+        }
+        setError(undefined);
+        setOpen(false);
+        router.refresh();
+      } finally {
+        inFlightRef.current = false;
       }
-      setError(undefined);
-      setOpen(false);
     });
   }
 

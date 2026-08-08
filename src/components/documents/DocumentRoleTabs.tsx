@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState, type KeyboardEvent } from 'react';
 import type { Block } from '@/lib/documents/blocks';
 import type { DocumentRole } from '@/lib/documents/schema';
+import { useEditorRegistry } from '@/lib/studio/editor-state/context';
 import { cn } from '@/lib/utils/cn';
 import type { BlockEditorAiConfig } from './ai/types';
 import { BlockEditor, type BlockEditorSaveResult } from './BlockEditor';
@@ -28,10 +29,9 @@ export interface DocumentRoleTab {
  * (§36's changelog-as-a-role example) reuses this instead of another
  * bespoke tab strip.
  *
- * Each tab keeps its own `BlockEditor` mounted only while active — swapping
- * tabs is a full unmount/remount, so each editor's undo history and
- * autosave state stay scoped to its own Document rather than bleeding
- * across roles.
+ * Each tab keeps its own `BlockEditor` mounted only while active. A swap
+ * flushes the current role successfully before that unmount, so undo and
+ * autosave state stay role-scoped without making unmount a data-loss path.
  */
 export function DocumentRoleTabs({
   tabs,
@@ -44,10 +44,69 @@ export function DocumentRoleTabs({
   previewHref?: string;
 }) {
   const [activeRole, setActiveRole] = useState<DocumentRole>(tabs[0]?.role ?? 'caseStudy');
+  const [switching, setSwitching] = useState(false);
+  const activeRoleRef = useRef(activeRole);
+  const pendingRoleRef = useRef<DocumentRole | null>(null);
+  const switchingRef = useRef(false);
+  const registry = useEditorRegistry();
   const activeTab = tabs.find((tab) => tab.role === activeRole) ?? tabs[0];
+
+  activeRoleRef.current = activeRole;
 
   if (!activeTab) {
     return null;
+  }
+
+  const editorId = (role: DocumentRole) => `document-engine:${role}`;
+
+  async function requestRole(nextRole: DocumentRole) {
+    pendingRoleRef.current = nextRole;
+    if (switchingRef.current || nextRole === activeRoleRef.current) {
+      return;
+    }
+
+    switchingRef.current = true;
+    setSwitching(true);
+    try {
+      const saved = registry ? await registry.flushEditor(editorId(activeRoleRef.current)) : true;
+      if (!saved) {
+        pendingRoleRef.current = null;
+        return;
+      }
+
+      // Rapid clicks while the save is in flight collapse to the latest role.
+      // Intermediate editors are never mounted, so there is no second
+      // unsaved state to account for.
+      const requestedRole = pendingRoleRef.current;
+      pendingRoleRef.current = null;
+      if (requestedRole && requestedRole !== activeRoleRef.current) {
+        activeRoleRef.current = requestedRole;
+        setActiveRole(requestedRole);
+      }
+    } finally {
+      switchingRef.current = false;
+      setSwitching(false);
+    }
+  }
+
+  function handleTabKeyDown(event: KeyboardEvent<HTMLButtonElement>, index: number) {
+    let nextIndex: number | null = null;
+    if (event.key === 'ArrowRight') nextIndex = (index + 1) % tabs.length;
+    if (event.key === 'ArrowLeft') nextIndex = (index - 1 + tabs.length) % tabs.length;
+    if (event.key === 'Home') nextIndex = 0;
+    if (event.key === 'End') nextIndex = tabs.length - 1;
+    if (nextIndex === null) return;
+
+    event.preventDefault();
+    const next = tabs[nextIndex];
+    const button =
+      event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>('[role="tab"]')[
+        nextIndex
+      ];
+    button?.focus();
+    if (next) {
+      void requestRole(next.role);
+    }
   }
 
   if (tabs.length === 1) {
@@ -58,6 +117,8 @@ export function DocumentRoleTabs({
         technologyOptions={technologyOptions}
         ai={activeTab.ai}
         previewHref={previewHref}
+        editorId={editorId(activeTab.role)}
+        editorLabel={`${activeTab.label} document`}
       />
     );
   }
@@ -67,15 +128,18 @@ export function DocumentRoleTabs({
       <div
         role="tablist"
         aria-label="Document"
+        aria-busy={switching}
         className="border-border-muted flex gap-1.5 border-b pb-3"
       >
-        {tabs.map((tab) => (
+        {tabs.map((tab, index) => (
           <button
             key={tab.role}
             type="button"
             role="tab"
             aria-selected={tab.role === activeRole}
-            onClick={() => setActiveRole(tab.role)}
+            tabIndex={tab.role === activeRole ? 0 : -1}
+            onClick={() => void requestRole(tab.role)}
+            onKeyDown={(event) => handleTabKeyDown(event, index)}
             className={cn(
               'rounded-control duration-fast ease-standard px-3 py-1.5 text-sm font-medium transition-colors',
               tab.role === activeRole
@@ -95,6 +159,8 @@ export function DocumentRoleTabs({
         technologyOptions={technologyOptions}
         ai={activeTab.ai}
         previewHref={previewHref}
+        editorId={editorId(activeTab.role)}
+        editorLabel={`${activeTab.label} document`}
       />
     </div>
   );

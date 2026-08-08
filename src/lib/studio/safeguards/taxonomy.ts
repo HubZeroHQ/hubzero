@@ -7,23 +7,38 @@ import {
   noteRepository,
   workRepository,
 } from '@/lib/db/repositories';
+import { documentRepository } from '@/lib/db/repositories/document';
 import { idsEqual, toIdString, type IdLike } from '@/lib/ids/compare';
+import type { PublicCacheTarget } from '@/lib/public/cache';
+import { publicCacheTargetsForOwner } from '@/lib/public/cache-targets';
+import { isPublicDocumentRole } from '@/lib/public/visibility';
 
 /**
- * Every collection + field that can reference a Taxonomy entry (Taxonomy
- * completion sprint, Part 5). `Work.categoryTagIds` also points at
- * Taxonomy despite the field name predating the shared collection — see
- * `types/studio.ts`'s `Work` interface. Service/Lead/Team/User carry no
- * taxonomy reference field, so they're intentionally absent here.
+ * Every metadata field that can reference a Taxonomy entry. Document
+ * `technologyStack` blocks are handled separately through the shared
+ * Document repository below. `Work.categoryTagIds` also points at Taxonomy
+ * despite the field name predating the shared collection. Service, Lead,
+ * Team, and User carry no direct taxonomy reference field.
  */
 const TAXONOMY_REFERENCE_SOURCES = [
-  { name: 'Work', repository: workRepository, fields: ['technologyIds', 'categoryTagIds'] },
-  { name: 'Builds', repository: buildRepository, fields: ['technologyIds'] },
-  { name: 'Blueprints', repository: blueprintRepository, fields: ['technologyIds'] },
-  { name: 'Labs', repository: labRepository, fields: ['technologyIds'] },
-  { name: 'Notes', repository: noteRepository, fields: ['technologyIds'] },
+  {
+    name: 'Work',
+    publicType: 'work',
+    repository: workRepository,
+    fields: ['technologyIds', 'categoryTagIds'],
+  },
+  { name: 'Builds', publicType: 'build', repository: buildRepository, fields: ['technologyIds'] },
+  {
+    name: 'Blueprints',
+    publicType: 'blueprint',
+    repository: blueprintRepository,
+    fields: ['technologyIds'],
+  },
+  { name: 'Labs', publicType: 'lab', repository: labRepository, fields: ['technologyIds'] },
+  { name: 'Notes', publicType: 'note', repository: noteRepository, fields: ['technologyIds'] },
   {
     name: 'Engineering Profiles',
+    publicType: 'engineeringProfile',
     repository: engineeringProfileRepository,
     fields: ['technologyIds'],
   },
@@ -31,6 +46,8 @@ const TAXONOMY_REFERENCE_SOURCES = [
 
 interface TaxonomyReferencingRecord {
   _id: ObjectId;
+  slug?: string;
+  status?: string;
   [field: string]: unknown;
 }
 
@@ -51,21 +68,71 @@ export interface TaxonomyUsageEntry {
 
 /** How many entries, across every referencing collection, currently point at a given Taxonomy entry — the delete/merge guard's basis. */
 export async function taxonomyUsage(entryId: string): Promise<TaxonomyUsageEntry[]> {
-  const results = await Promise.all(
-    TAXONOMY_REFERENCE_SOURCES.map(async ({ name, repository, fields }) => {
-      const entries = (await repository.list()) as unknown as TaxonomyReferencingRecord[];
-      const count = entries.filter((entry) =>
-        fields.some((field) => referenceFields(entry, field).some((id) => idsEqual(id, entryId))),
-      ).length;
-      return { collection: name, count };
-    }),
+  const [recordUsage, documents] = await Promise.all([
+    Promise.all(
+      TAXONOMY_REFERENCE_SOURCES.map(async ({ name, repository, fields }) => {
+        const entries = (await repository.list()) as unknown as TaxonomyReferencingRecord[];
+        const count = entries.filter((entry) =>
+          fields.some((field) => referenceFields(entry, field).some((id) => idsEqual(id, entryId))),
+        ).length;
+        return { collection: name, count };
+      }),
+    ),
+    documentRepository.findUsingTaxonomyEntry(entryId),
+  ]);
+  const documentOwners = new Set(
+    documents.map((document) => `${document.ownerType}:${document.ownerId.toString()}`),
   );
+  const results = [...recordUsage, { collection: 'Document blocks', count: documentOwners.size }];
   return results.filter((result) => result.count > 0);
 }
 
 export async function totalTaxonomyUsage(entryId: string): Promise<number> {
   const usage = await taxonomyUsage(entryId);
   return usage.reduce((sum, entry) => sum + entry.count, 0);
+}
+
+/**
+ * Published records whose public projection depends on this term. Mutation
+ * actions snapshot these before changing/merging the term, then invalidate
+ * only those public entities instead of flushing every collection.
+ */
+export async function taxonomyPublicCacheTargets(entryId: string): Promise<PublicCacheTarget[]> {
+  const [recordGroups, documents] = await Promise.all([
+    Promise.all(
+      TAXONOMY_REFERENCE_SOURCES.map(async ({ publicType, repository, fields }) => {
+        const entries = (await repository.list()) as unknown as TaxonomyReferencingRecord[];
+        return entries
+          .filter(
+            (entry) =>
+              entry.status === 'published' &&
+              fields.some((field) =>
+                referenceFields(entry, field).some((id) => idsEqual(id, entryId)),
+              ),
+          )
+          .map((entry): PublicCacheTarget => ({
+            type: publicType,
+            ...(entry.slug ? { slug: entry.slug } : {}),
+          }));
+      }),
+    ),
+    documentRepository.findUsingTaxonomyEntry(entryId),
+  ]);
+  const documentTargets = await Promise.all(
+    documents
+      .filter((document) => isPublicDocumentRole(document.ownerType, document.role))
+      .map((document) =>
+        publicCacheTargetsForOwner(document.ownerType, document.ownerId.toString()),
+      ),
+  );
+
+  const unique = new Map(
+    [...recordGroups.flat(), ...documentTargets.flat()].map((target) => [
+      `${target.type}:${target.slug ?? ''}`,
+      target,
+    ]),
+  );
+  return [...unique.values()];
 }
 
 /**
@@ -78,8 +145,9 @@ export async function reassignTaxonomyReferences(
   sourceId: string,
   targetId: string,
 ): Promise<void> {
-  await Promise.all(
-    TAXONOMY_REFERENCE_SOURCES.map(async ({ repository, fields }) => {
+  await Promise.all([
+    documentRepository.replaceTaxonomyReference(sourceId, targetId),
+    ...TAXONOMY_REFERENCE_SOURCES.map(async ({ repository, fields }) => {
       const entries = (await repository.list()) as unknown as TaxonomyReferencingRecord[];
 
       for (const entry of entries) {
@@ -99,5 +167,5 @@ export async function reassignTaxonomyReferences(
         }
       }
     }),
-  );
+  ]);
 }

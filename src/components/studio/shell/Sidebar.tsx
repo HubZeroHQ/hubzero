@@ -59,7 +59,7 @@ export function Sidebar({ nav, collapsed, onToggleCollapsed }: SidebarProps) {
         </Link>
       </div>
 
-      <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-2 pb-4">
+      <div className="min-h-0 flex-1 space-y-1 overflow-hidden px-2 pb-2">
         <SidebarNavList nav={nav} pathname={pathname} collapsed={collapsed} />
       </div>
 

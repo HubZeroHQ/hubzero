@@ -91,10 +91,14 @@ const TYPE_TO_OWNER: Record<PublicDetailEntityType, OwnerType> = {
  * which needs the same OwnerType→PublicEntityType fact to invalidate the
  * right public cache entry after a Document save.
  */
-export const OWNER_TO_PUBLIC_TYPE: Partial<Record<OwnerType, PublicEntityType>> =
-  Object.fromEntries(
+export const OWNER_TO_PUBLIC_TYPE: Partial<Record<OwnerType, PublicEntityType>> = {
+  ...Object.fromEntries(
     Object.entries(TYPE_TO_OWNER).map(([publicType, owner]) => [owner, publicType]),
-  );
+  ),
+  // Team has a public collection projection but no standalone detail route,
+  // so it is intentionally absent from TYPE_TO_OWNER and added only here.
+  Team: 'teamMember',
+};
 
 export interface PublicRepository {
   findSummary(
@@ -153,15 +157,23 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
       return isPubliclyVisible({
         type: 'teamMember',
         publicProfile: (entity.record as Team).publicProfile,
+        archived: (entity.record as Team).archived,
       });
     }
     if (entity.type === 'engineeringProfile') {
       const profile = entity.record as EngineeringProfile;
       const team = await source.findEntityById('teamMember', profile.teamMemberId.toString());
+      const teamRecord = team?.record as Team | undefined;
       return isPubliclyVisible({
         type: 'engineeringProfile',
         status: bypassStatus ? 'published' : profile.status,
-        teamPublic: team ? (team.record as Team).publicProfile : false,
+        teamPublic: teamRecord
+          ? isPubliclyVisible({
+              type: 'teamMember',
+              publicProfile: teamRecord.publicProfile,
+              archived: teamRecord.archived,
+            })
+          : false,
       });
     }
     if (bypassStatus) return true;
@@ -205,8 +217,17 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
     const user = await source.findUser(userId);
     if (!user) return ORGANIZATION_AUTHOR;
     const matches = await source.findTeamsByUserId(userId);
-    if (matches.length !== 1 || !matches[0]?.publicProfile) return ORGANIZATION_AUTHOR;
+    if (matches.length !== 1 || !matches[0]) return ORGANIZATION_AUTHOR;
     const team = matches[0];
+    if (
+      !isPubliclyVisible({
+        type: 'teamMember',
+        publicProfile: team.publicProfile,
+        archived: team.archived,
+      })
+    ) {
+      return ORGANIZATION_AUTHOR;
+    }
     const profile = await source.findProfileByTeamId(team._id.toString());
     const profileEntity = profile
       ? await source.findEntityById('engineeringProfile', profile._id.toString())
@@ -242,14 +263,19 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
     const entity = await source.findEntityById('teamMember', teamId);
     if (!entity) return undefined;
     const record = entity.record as Team;
-    if (!record.publicProfile) return undefined;
+    const teamPublic = isPubliclyVisible({
+      type: 'teamMember',
+      publicProfile: record.publicProfile,
+      archived: record.archived,
+    });
+    if (!teamPublic) return undefined;
     const profile = await source.findProfileByTeamId(teamId);
     const profileVisible = Boolean(
       profile &&
       isPubliclyVisible({
         type: 'engineeringProfile',
         status: profile.status,
-        teamPublic: record.publicProfile,
+        teamPublic,
       }),
     );
     return {
@@ -454,13 +480,18 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
       }
       case 'teamMember': {
         const record = entity.record as Team;
+        const teamPublic = isPubliclyVisible({
+          type: 'teamMember',
+          publicProfile: record.publicProfile,
+          archived: record.archived,
+        });
         const profile = await source.findProfileByTeamId(entity.id);
         const profileVisible = Boolean(
           profile &&
           isPubliclyVisible({
             type: 'engineeringProfile',
             status: profile.status,
-            teamPublic: record.publicProfile,
+            teamPublic,
           }),
         );
         const portrait = await media(record.portraitId, 'portrait');

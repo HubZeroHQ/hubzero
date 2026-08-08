@@ -93,7 +93,11 @@ async function list(type: PublicEntityType): Promise<StudioPublicEntity[]> {
         .toArray();
       break;
     case 'teamMember':
-      records = await (await collections.team()).find({ publicProfile: true }).toArray();
+      records = await (
+        await collections.team()
+      )
+        .find({ publicProfile: true, archived: { $ne: true } })
+        .toArray();
       break;
     case 'service':
       records = await (await collections.services()).find({ status: 'published' }).toArray();

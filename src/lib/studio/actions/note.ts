@@ -89,6 +89,7 @@ export const updateNoteAction = createEntryUpdateAction<Note, NoteInput>({
   update: noteRepository.update,
   parseFormData: parseNoteUpdateFormData,
   detailPath: noteDetailPath,
+  listPath: NOTES_LIST_PATH,
   publicType: 'note',
 });
 
@@ -106,7 +107,9 @@ export const saveNoteBodyAction = createDocumentSaveAction<Note>({
   ownerType: 'Note',
   role: 'body',
   findOwnerById: noteRepository.findById,
+  setOwnerStatus: (id, status) => noteRepository.update(id, { status, reviewNote: null }),
   detailPath: noteDetailPath,
+  listPath: NOTES_LIST_PATH,
 });
 
 /** "Generate content" for the Note body Document (Phase 10, §31/§32) — same authorization as saving it. */

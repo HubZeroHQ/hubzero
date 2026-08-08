@@ -9,13 +9,11 @@ import type { EditorSaveStatus } from '@/lib/studio/editor-state/types';
  *
  * `role="status"` + `aria-live="polite"` announces each transition without
  * interrupting the author mid-sentence, and the spinner carries
- * `aria-hidden` because the text beside it already says "Saving…" — a
+ * `aria-hidden` because the text beside it already says "Saving" — a
  * screen reader should hear the state once, not twice (phase brief §11).
  */
 export function SaveStateIndicator({
   status,
-  lastSavedAt,
-  error,
   className,
 }: {
   status: EditorSaveStatus;
@@ -23,7 +21,7 @@ export function SaveStateIndicator({
   error?: string;
   className?: string;
 }) {
-  const { icon, label, tone } = describe(status, lastSavedAt, error);
+  const { icon, label, tone } = describe(status);
 
   return (
     <p
@@ -37,34 +35,34 @@ export function SaveStateIndicator({
   );
 }
 
-function describe(
-  status: EditorSaveStatus,
-  lastSavedAt: Date | null | undefined,
-  error: string | undefined,
-): { icon: React.ReactNode; label: string; tone: string } {
+function describe(status: EditorSaveStatus): {
+  icon: React.ReactNode;
+  label: string;
+  tone: string;
+} {
   switch (status) {
     case 'saving':
       return {
         icon: <Loader2 className="h-3 w-3 animate-spin" aria-hidden />,
-        label: 'Saving…',
+        label: 'Saving',
         tone: 'text-text-secondary',
       };
     case 'dirty':
       return {
         icon: <Circle className="h-2 w-2 fill-current" aria-hidden />,
-        label: 'Unsaved changes',
+        label: 'Unsaved',
         tone: 'text-text-secondary',
       };
     case 'error':
       return {
         icon: <AlertTriangle className="h-3 w-3" aria-hidden />,
-        label: error ? `Save failed — ${error}` : 'Save failed',
+        label: 'Failed',
         tone: 'text-danger',
       };
     default:
       return {
         icon: <Check className="h-3 w-3" aria-hidden />,
-        label: lastSavedAt ? `Saved at ${lastSavedAt.toLocaleTimeString()}` : 'Saved',
+        label: 'Saved',
         tone: 'text-text-muted',
       };
   }

@@ -30,6 +30,11 @@
  */
 export type EditorSaveStatus = 'saved' | 'dirty' | 'saving' | 'error';
 
+export interface EditorSaveOptions {
+  /** Skip an in-place refresh when an approved navigation immediately follows the save. */
+  refresh?: boolean;
+}
+
 export interface EditorHandle {
   /** Stable within a screen. Two editors on one page (metadata + Document) must not collide. */
   id: string;
@@ -69,7 +74,7 @@ export interface EditorHandle {
    * stored; resolves `false` for a validation failure or a server error, in
    * which case the caller must not navigate.
    */
-  save: () => Promise<boolean>;
+  save: (options?: EditorSaveOptions) => Promise<boolean>;
   /** Restores the last successfully saved snapshot in place. Never a page reload. */
   discard: () => void;
   /**

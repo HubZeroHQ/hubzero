@@ -1,7 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { useRef, useState, useTransition } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { StatusIndicator } from '@/components/ui/StatusIndicator';
 import type { PublishStatus } from '@/types/studio';
@@ -20,6 +19,14 @@ const STATUS_ANNOUNCEMENT: Record<PublishStatus, string> = {
   approved: 'Approved.',
   published: 'Published.',
   archived: 'Archived.',
+};
+
+type WorkflowState = {
+  status: PublishStatus;
+  availableTransitions: PublishStatus[];
+  canUnpublishOverride: boolean;
+  canReject: boolean;
+  reviewNote?: string | null;
 };
 
 /**
@@ -65,14 +72,32 @@ export function StatusStepper({
   canReject: boolean;
   /** The reviewer's reason the last time this entry was rejected — cleared once it moves past `inReview` again. */
   reviewNote?: string | null;
-  onTransition: (to: PublishStatus, note?: string) => Promise<{ error?: string }>;
+  onTransition: (
+    to: PublishStatus,
+    note?: string,
+  ) => Promise<{
+    error?: string;
+    workflow?: WorkflowState;
+  }>;
 }) {
-  const router = useRouter();
-  const [isRefreshing, startRefresh] = useTransition();
   const [error, setError] = useState<string | undefined>();
   const [announcement, setAnnouncement] = useState<string | undefined>();
   const [rejecting, setRejecting] = useState(false);
   const [rejectNote, setRejectNote] = useState('');
+  const serverWorkflow = {
+    status,
+    availableTransitions,
+    canUnpublishOverride,
+    canReject,
+    reviewNote,
+  };
+  const [workflow, setWorkflow] = useState<WorkflowState>(serverWorkflow);
+
+  // Route props remain canonical. The success payload below is also produced
+  // on the server and bridges the period before a refreshed RSC payload lands.
+  useEffect(() => {
+    setWorkflow({ status, availableTransitions, canUnpublishOverride, canReject, reviewNote });
+  }, [status, availableTransitions, canUnpublishOverride, canReject, reviewNote]);
 
   /**
    * Which action is currently running, keyed by the button that started it —
@@ -95,7 +120,7 @@ export function StatusStepper({
    */
   const inFlight = useRef(false);
 
-  const busy = runningAction !== null || isRefreshing;
+  const busy = runningAction !== null;
 
   function handleTransition(key: string, to: PublishStatus, note?: string) {
     if (inFlight.current) return;
@@ -114,17 +139,17 @@ export function StatusStepper({
           // component is still showing are exactly what caused the refusal.
           // Refreshing resynchronises them instead of leaving the editor
           // clicking a button that can no longer work.
-          startRefresh(() => router.refresh());
           return;
         }
 
         // Announced via `aria-live` below — a screen-reader user triggering a
-        // transition otherwise has no non-visual signal that it succeeded
-        // once the refresh re-renders the stepper with new props.
-        setAnnouncement(transitionAnnouncement(status, to));
+        // transition otherwise has no non-visual signal that it succeeded.
+        if (result.workflow) {
+          setWorkflow(result.workflow);
+        }
+        setAnnouncement(transitionAnnouncement(workflow.status, to));
         setRejecting(false);
         setRejectNote('');
-        startRefresh(() => router.refresh());
       } catch {
         // A Server Action that never resolves cleanly (a dropped connection, a
         // 503 on the way out) must not leave the workflow frozen. The entry's
@@ -155,17 +180,17 @@ export function StatusStepper({
 
   return (
     <div className="flex flex-col gap-2">
-      {reviewNote ? (
+      {workflow.reviewNote ? (
         <div className="border-danger/40 bg-danger/5 rounded-md border p-3 text-sm">
           <p className="text-text-muted font-mono text-xs tracking-[0.05em] uppercase">
             Reviewer feedback
           </p>
-          <p className="text-text-secondary mt-1">{reviewNote}</p>
+          <p className="text-text-secondary mt-1">{workflow.reviewNote}</p>
         </div>
       ) : null}
 
       <div className="flex flex-wrap items-center gap-3">
-        <StatusIndicator status={status} />
+        <StatusIndicator status={workflow.status} />
         {/*
           Every transition mutates the same `status`, so while one is running
           the others are not "unrelated controls" that happen to be disabled —
@@ -173,7 +198,7 @@ export function StatusStepper({
           error. They are blocked deliberately; only the button actually
           running reports progress, so the editor can tell which is which.
         */}
-        {availableTransitions.map((to) => (
+        {workflow.availableTransitions.map((to) => (
           <Button
             key={to}
             type="button"
@@ -182,15 +207,15 @@ export function StatusStepper({
             aria-busy={runningAction === to}
             onClick={() => handleTransition(to, to)}
           >
-            {labelFor(to, transitionLabel(status, to))}
+            {labelFor(to, transitionLabel(workflow.status, to))}
           </Button>
         ))}
-        {canReject && !rejecting ? (
+        {workflow.canReject && !rejecting ? (
           <Button type="button" variant="ghost" disabled={busy} onClick={() => setRejecting(true)}>
             Reject
           </Button>
         ) : null}
-        {canUnpublishOverride ? (
+        {workflow.canUnpublishOverride && !workflow.canReject ? (
           <Button
             type="button"
             variant="ghost"

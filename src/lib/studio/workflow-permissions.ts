@@ -13,8 +13,8 @@ import type { PublishStatus, UserRole } from '@/types/studio';
  * `publish` rather than inventing new capabilities — §29 never names a
  * distinct "archive" or "restore" capability, and the people who may
  * publish are the same people who may retire an entry from public view or
- * bring it back. Head Admin's unpublish override (`published`/`approved`/
- * `inReview` back to `draft`, for states with no other defined path) is
+ * bring it back. Head Admin's unpublish override (`published`/`approved`
+ * back to `draft`, for states with no other defined path) is
  * handled separately by `unpublishOverride`, not modeled as a forward
  * transition here — `archived` no longer needs that escape hatch now that
  * it has a real modeled transition of its own (see `canUnpublishOverride`).
@@ -67,7 +67,8 @@ export function getAvailableTransitions(
  */
 export function canUnpublishOverride(current: PublishStatus, role: UserRole): boolean {
   return (
-    current !== 'draft' && current !== 'archived' && roleHasCapability(role, 'unpublishOverride')
+    (current === 'approved' || current === 'published') &&
+    roleHasCapability(role, 'unpublishOverride')
   );
 }
 

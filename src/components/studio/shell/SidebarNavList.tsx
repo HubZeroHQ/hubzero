@@ -27,7 +27,7 @@ function NavLink({
       title={collapsed ? item.label : undefined}
       onClick={onNavigate}
       className={cn(
-        'rounded-control duration-fast ease-standard flex items-center gap-2.5 px-3 py-2 text-sm transition-colors',
+        'rounded-control duration-fast ease-standard flex items-center gap-2.5 px-3 py-1.5 text-sm transition-colors',
         collapsed && 'justify-center px-0',
         active
           ? 'bg-surface-elevated text-text-primary'

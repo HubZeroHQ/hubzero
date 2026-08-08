@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useRef, useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import type { EntryActionState } from '@/lib/studio/entry-actions';
 
@@ -17,15 +18,28 @@ export function GraduateToBuildButton({
 }: {
   onGraduate: () => Promise<EntryActionState>;
 }) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | undefined>();
+  const inFlightRef = useRef(false);
 
   function handleClick() {
+    if (inFlightRef.current) return;
+    inFlightRef.current = true;
     setError(undefined);
     startTransition(async () => {
-      const result = await onGraduate();
-      if (result.error) {
-        setError(result.error);
+      try {
+        const result = await onGraduate();
+        if (result.error) {
+          setError(result.error);
+        } else {
+          // Production success redirects from the Server Action. This refresh
+          // covers a successful non-redirecting implementation/test double and
+          // keeps the component's mutation contract complete.
+          router.refresh();
+        }
+      } finally {
+        inFlightRef.current = false;
       }
     });
   }

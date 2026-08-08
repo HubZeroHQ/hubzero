@@ -95,6 +95,7 @@ export const updateBlueprintAction = createEntryUpdateAction<Blueprint, Blueprin
   update: blueprintRepository.update,
   parseFormData: parseBlueprintUpdateFormData,
   detailPath: blueprintDetailPath,
+  listPath: BLUEPRINTS_LIST_PATH,
   publicType: 'blueprint',
 });
 
@@ -112,7 +113,9 @@ export const saveBlueprintCaseStudyAction = createDocumentSaveAction<Blueprint>(
   ownerType: 'Blueprint',
   role: 'caseStudy',
   findOwnerById: blueprintRepository.findById,
+  setOwnerStatus: (id, status) => blueprintRepository.update(id, { status, reviewNote: null }),
   detailPath: blueprintDetailPath,
+  listPath: BLUEPRINTS_LIST_PATH,
 });
 
 export const generateBlueprintCaseStudyDocumentAction = createGenerateDocumentAction<Blueprint>({

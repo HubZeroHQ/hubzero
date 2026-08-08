@@ -94,6 +94,7 @@ export const updateBuildAction = createEntryUpdateAction<Build, BuildInput>({
   update: buildRepository.update,
   parseFormData: parseBuildUpdateFormData,
   detailPath: buildDetailPath,
+  listPath: BUILDS_LIST_PATH,
   publicType: 'build',
 });
 
@@ -111,14 +112,18 @@ export const saveBuildCaseStudyAction = createDocumentSaveAction<Build>({
   ownerType: 'Build',
   role: 'caseStudy',
   findOwnerById: buildRepository.findById,
+  setOwnerStatus: (id, status) => buildRepository.update(id, { status, reviewNote: null }),
   detailPath: buildDetailPath,
+  listPath: BUILDS_LIST_PATH,
 });
 
 export const saveBuildTechnicalAction = createDocumentSaveAction<Build>({
   ownerType: 'Build',
   role: 'technical',
   findOwnerById: buildRepository.findById,
+  setOwnerStatus: (id, status) => buildRepository.update(id, { status, reviewNote: null }),
   detailPath: buildDetailPath,
+  listPath: BUILDS_LIST_PATH,
 });
 
 export const generateBuildCaseStudyDocumentAction = createGenerateDocumentAction<Build>({

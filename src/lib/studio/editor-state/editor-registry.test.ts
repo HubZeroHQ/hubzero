@@ -122,6 +122,19 @@ describe('EditorRegistry', () => {
     expect(registry.getSnapshot().pendingIntent).toBeNull();
   });
 
+  it('skips an in-place refresh when Save & Leave has an approved destination', async () => {
+    const save = vi.fn(async () => true);
+    const registry = new EditorRegistry();
+    registry.publish(editor({ isDirty: true, save }));
+    const perform = vi.fn();
+
+    registry.requestNavigation({ perform });
+    await registry.saveAndProceed();
+
+    expect(save).toHaveBeenCalledWith({ refresh: false });
+    expect(perform).toHaveBeenCalledOnce();
+  });
+
   it('stays on the page and reports why when "Save & Leave" fails', async () => {
     const registry = new EditorRegistry();
     registry.publish(
@@ -360,5 +373,31 @@ describe('EditorRegistry', () => {
 
     expect(stale).not.toHaveBeenCalled();
     expect(fresh).toHaveBeenCalledOnce();
+  });
+
+  it('flushes one dirty editor before an intra-page role switch', async () => {
+    const activeSave = vi.fn(async () => true);
+    const inactiveSave = vi.fn(async () => true);
+    const registry = new EditorRegistry();
+    registry.publish(editor({ id: 'document:caseStudy', isDirty: true, save: activeSave }));
+    registry.publish(editor({ id: 'document:technical', isDirty: true, save: inactiveSave }));
+
+    await expect(registry.flushEditor('document:caseStudy')).resolves.toBe(true);
+
+    expect(activeSave).toHaveBeenCalledOnce();
+    expect(inactiveSave).not.toHaveBeenCalled();
+  });
+
+  it('refuses to authorize an unmount when the targeted editor save fails', async () => {
+    const registry = new EditorRegistry();
+    registry.publish(editor({ id: 'document:caseStudy', isDirty: true, save: async () => false }));
+
+    await expect(registry.flushEditor('document:caseStudy')).resolves.toBe(false);
+  });
+
+  it('refuses to authorize an unmount when the targeted editor is not registered', async () => {
+    const registry = new EditorRegistry();
+
+    await expect(registry.flushEditor('document:missing')).resolves.toBe(false);
   });
 });

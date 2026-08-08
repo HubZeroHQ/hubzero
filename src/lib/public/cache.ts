@@ -6,33 +6,12 @@ import type { PublicEntityType } from './domain';
 /** Bump when the serialized public-read contract or editorial eligibility changes. */
 export const PUBLIC_CACHE_VERSION = 'phase-22-v1';
 
-/**
- * The dataset a cache entry was produced from (v3.1 Milestone 14).
- *
- * Every public cache key is prefixed with this. Without it a key states only
- * *what shape* the cached bytes have, never *which database they came from* —
- * and since `unstable_cache` entries persist to `.next/cache`, which every dev
- * server started from the same working directory shares, a server pointed at a
- * scratch database will happily serve entries another server wrote from
- * production. That is not hypothetical: it is exactly what invalidated
- * Milestone 12's verification, and this prefix is what makes it impossible.
- *
- * The database name is the right identifier because it is **canonical and
- * stable**: it is the dataset's actual name, it is already what `getDb()`
- * connects to, and it cannot vary between two requests of the same process.
- * Deliberately *not* the connection string — a cache key can surface in file
- * names and logs, and credentials must never travel there. Host is excluded
- * for the same reason and because two hosts serving the same database name in
- * development is not a case worth encoding.
- *
- * In production this changes the key exactly once, on the deploy that
- * introduces it: existing entries are simply not found, are recomputed on
- * first read, and the old ones age out. There is one database per deployment
- * there, so this can never cause a cross-database read in production — it only
- * closes the development hole.
- */
 let cachedDatasetId: string | undefined;
 
+/**
+ * Every public cache key is scoped to the Mongo dataset. The database name is
+ * stable and contains no credentials, unlike the connection string.
+ */
 export function publicCacheDatasetId(): string {
   if (cachedDatasetId === undefined) {
     cachedDatasetId = databaseNameFrom(process.env.MONGODB_URI);
@@ -40,14 +19,6 @@ export function publicCacheDatasetId(): string {
   return cachedDatasetId;
 }
 
-/**
- * The database name from a Mongo connection string, with no credentials.
- *
- * Falls back to a constant rather than throwing: a missing or unparseable URI
- * is already fatal elsewhere (`serverEnv()`), and a cache key is the wrong
- * place to raise it. The fallback is deliberately not random — a value that
- * changed per process would defeat the persistent cache entirely.
- */
 function databaseNameFrom(uri: string | undefined): string {
   if (!uri) return 'unknown-db';
   try {
@@ -58,10 +29,6 @@ function databaseNameFrom(uri: string | undefined): string {
   }
 }
 
-/**
- * The prefix every public cache key starts with: schema contract *and*
- * dataset. Both must match for an entry to be reused.
- */
 export function publicCacheScope(): string {
   return `${PUBLIC_CACHE_VERSION}:${publicCacheDatasetId()}`;
 }
@@ -69,46 +36,108 @@ export function publicCacheScope(): string {
 export const PUBLIC_CACHE_TAGS = {
   entity: (type: PublicEntityType, slug: string) => `public:entity:${type}:${slug}`,
   collection: (type: PublicEntityType) => `public:collection:${type}`,
+  /**
+   * Public detail pages and the evidence-derived indexes share one graph.
+   * An entity relation can affect a reciprocal page in another collection,
+   * so this cross-cutting tag is intentionally global. Plain collection
+   * summaries do not carry it.
+   */
   relations: 'public:relations',
+  authors: 'public:authors',
   homepage: 'public:homepage',
   discovery: 'public:discovery',
-  sitemap: 'public:sitemap',
-  feed: 'public:feed',
-  media: (id: string) => `public:media:${id}`,
 } as const;
 
-const ALL_PUBLIC_TYPES: readonly PublicEntityType[] = [
-  'work',
-  'build',
-  'blueprint',
-  'lab',
-  'note',
-  'engineeringProfile',
-  'teamMember',
-  'service',
-  'career',
-];
-
-function invalidateAllCollections(): void {
-  for (const type of ALL_PUBLIC_TYPES) revalidateTag(PUBLIC_CACHE_TAGS.collection(type));
+export interface PublicCacheTarget {
+  type: PublicEntityType;
+  slug?: string;
 }
 
+function invalidateTargets(
+  targets: readonly PublicCacheTarget[],
+  surfaces: {
+    collections?: boolean;
+    relations?: boolean;
+    authors?: boolean;
+    homepage?: boolean;
+    discovery?: boolean;
+  },
+): void {
+  const entityTags = new Set<string>();
+  const collectionTypes = new Set<PublicEntityType>();
+
+  for (const target of targets) {
+    if (target.slug) {
+      entityTags.add(PUBLIC_CACHE_TAGS.entity(target.type, target.slug));
+    }
+    if (surfaces.collections) {
+      collectionTypes.add(target.type);
+    }
+  }
+
+  for (const tag of entityTags) revalidateTag(tag);
+  for (const type of collectionTypes) revalidateTag(PUBLIC_CACHE_TAGS.collection(type));
+  if (surfaces.relations) revalidateTag(PUBLIC_CACHE_TAGS.relations);
+  if (surfaces.authors) revalidateTag(PUBLIC_CACHE_TAGS.authors);
+  if (surfaces.homepage) revalidateTag(PUBLIC_CACHE_TAGS.homepage);
+  if (surfaces.discovery) revalidateTag(PUBLIC_CACHE_TAGS.discovery);
+}
+
+/**
+ * Metadata, visibility, or relationship mutations can affect the entity,
+ * its index, reciprocal relationship pages, homepage, search, sitemap, JSON-LD,
+ * and route metadata. Sitemap reads discovery; RSS reads the Note collection,
+ * so their correctness follows from these real query dependencies rather than
+ * dead surface-specific tags.
+ */
 export function invalidatePublicEntity(type: PublicEntityType, slug?: string): void {
-  if (slug) revalidateTag(PUBLIC_CACHE_TAGS.entity(type, slug));
-  revalidateTag(PUBLIC_CACHE_TAGS.collection(type));
-  revalidateTag(PUBLIC_CACHE_TAGS.relations);
-  revalidateTag(PUBLIC_CACHE_TAGS.homepage);
-  revalidateTag(PUBLIC_CACHE_TAGS.discovery);
-  revalidateTag(PUBLIC_CACHE_TAGS.sitemap);
-  revalidateTag(PUBLIC_CACHE_TAGS.feed);
+  invalidatePublicTargets([{ type, ...(slug ? { slug } : {}) }]);
 }
 
-export function invalidatePublicMedia(id: string): void {
-  revalidateTag(PUBLIC_CACHE_TAGS.media(id));
-  invalidateAllCollections();
-  revalidateTag(PUBLIC_CACHE_TAGS.relations);
+/** Full public dependency invalidation for an already-resolved target set. */
+export function invalidatePublicTargets(targets: readonly PublicCacheTarget[]): void {
+  if (targets.length === 0) return;
+  invalidateTargets(targets, {
+    collections: true,
+    relations: true,
+    authors: targets.some(
+      (target) => target.type === 'teamMember' || target.type === 'engineeringProfile',
+    ),
+    homepage: true,
+    discovery: true,
+  });
+}
+
+/** Featured order is consumed only by the owning collection and homepage. */
+export function invalidatePublicFeaturedOrder(type: PublicEntityType): void {
+  revalidateTag(PUBLIC_CACHE_TAGS.collection(type));
   revalidateTag(PUBLIC_CACHE_TAGS.homepage);
-  revalidateTag(PUBLIC_CACHE_TAGS.discovery);
-  revalidateTag(PUBLIC_CACHE_TAGS.sitemap);
-  revalidateTag(PUBLIC_CACHE_TAGS.feed);
+}
+
+/**
+ * Media metadata/file changes affect only entries that reference the asset.
+ * Their detail/collection presentation, homepage cards, and media-bearing
+ * discovery projection are refreshed; unrelated collections and the evidence
+ * graph remain warm.
+ */
+export function invalidatePublicMediaTargets(targets: readonly PublicCacheTarget[]): void {
+  if (targets.length === 0) return;
+  invalidateTargets(targets, { collections: true, homepage: true, discovery: true });
+}
+
+/**
+ * Taxonomy labels/slugs affect the precise referencing entries, their
+ * collection indexes, homepage cards, and discovery/search projection.
+ */
+export function invalidatePublicTaxonomyTargets(targets: readonly PublicCacheTarget[]): void {
+  if (targets.length === 0) return;
+  invalidateTargets(targets, {
+    collections: true,
+    // Engineering-profile technologies are embedded in relationship targets
+    // on other cached detail pages. Other entity taxonomy stays local.
+    relations: targets.some((target) => target.type === 'engineeringProfile'),
+    authors: targets.some((target) => target.type === 'engineeringProfile'),
+    homepage: true,
+    discovery: true,
+  });
 }

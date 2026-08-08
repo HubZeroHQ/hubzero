@@ -1,41 +1,56 @@
 import Link from 'next/link';
+import { DASHBOARD_CONTENT_COLLECTIONS, type ContentSummary } from '@/lib/studio/dashboard-queries';
 import type { PublishStatus } from '@/types/studio';
 
-/**
- * Publishing as four totals rather than a collection-by-collection list
- * (v3.1 Milestone 16).
- *
- * The previous version listed every collection's counts individually — around
- * forty numbers, none of which asked the editor to do anything. A total per
- * status answers the question this section is actually for ("how much is in
- * flight?") in one glance, and the link goes where the work is.
- *
- * `inReview` links to the dashboard's own review queue rather than a filtered
- * list, because that queue is the thing an editor acts on.
- */
-const STATUS_ORDER: readonly { status: PublishStatus; label: string; href: string }[] = [
-  { status: 'published', label: 'Published', href: '/studio/content/work?status=published' },
-  { status: 'draft', label: 'Drafts', href: '/studio/content/work?status=draft' },
-  { status: 'inReview', label: 'In review', href: '/studio/content/work?status=inReview' },
-  { status: 'archived', label: 'Archived', href: '/studio/content/work?status=archived' },
+const STATUS_ORDER: readonly { status: PublishStatus; label: string }[] = [
+  { status: 'published', label: 'published' },
+  { status: 'draft', label: 'draft' },
+  { status: 'inReview', label: 'in review' },
+  { status: 'archived', label: 'archived' },
 ];
 
-export function PublishingSummary({ counts }: { counts: Record<PublishStatus, number> }) {
+/**
+ * Publishing state grouped by the collection the destination actually opens.
+ *
+ * The former aggregate tiles combined every collection, then linked every
+ * total to Work. A mixed total has no existing filtered destination. One
+ * compact link per collection preserves the overview while every navigation
+ * now lands on the records it describes.
+ */
+export function PublishingSummary({ entries }: { entries: ContentSummary[] }) {
   return (
-    <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-      {STATUS_ORDER.map(({ status, label, href }) => (
-        <li key={status}>
-          <Link
-            href={href}
-            className="border-border-muted hover:border-border-default hover:bg-surface-elevated duration-fast ease-standard flex flex-col gap-0.5 rounded-[4px] border px-3 py-2.5 transition-colors"
-          >
-            <span className="text-text-primary text-lg leading-none font-semibold tabular-nums">
-              {counts[status] ?? 0}
-            </span>
-            <span className="text-text-muted text-xs">{label}</span>
-          </Link>
-        </li>
-      ))}
+    <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      {Object.entries(DASHBOARD_CONTENT_COLLECTIONS).map(([type, collection]) => {
+        const collectionEntries = entries.filter((entry) => entry.type === type);
+        const counts = collectionEntries.reduce<Partial<Record<PublishStatus, number>>>(
+          (result, entry) => {
+            result[entry.status] = (result[entry.status] ?? 0) + 1;
+            return result;
+          },
+          {},
+        );
+
+        return (
+          <li key={type}>
+            <Link
+              href={collection.href}
+              className="border-border-muted hover:border-border-default hover:bg-surface-elevated duration-fast ease-standard flex h-full flex-col gap-2 rounded-[4px] border px-3 py-2.5 transition-colors"
+            >
+              <span className="text-text-primary text-sm font-medium">{collection.label}</span>
+              <span className="text-text-muted flex flex-wrap gap-x-3 gap-y-1 text-xs">
+                {STATUS_ORDER.map(({ status, label }) => (
+                  <span key={status}>
+                    <span className="text-text-secondary font-mono tabular-nums">
+                      {counts[status] ?? 0}
+                    </span>{' '}
+                    {label}
+                  </span>
+                ))}
+              </span>
+            </Link>
+          </li>
+        );
+      })}
     </ul>
   );
 }

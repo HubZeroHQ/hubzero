@@ -5,6 +5,8 @@ import { redirect } from 'next/navigation';
 import { ZodError } from 'zod';
 import { requireCapability } from '@/lib/auth/permissions';
 import { serviceRepository } from '@/lib/db/repositories/service';
+import { recordEditorialEvent } from '@/lib/events/record';
+import { invalidatePublicEntity } from '@/lib/public/cache';
 import { SERVICE_EVIDENCE_FIELDS } from '@/lib/studio/service-relations';
 import { readEntriesFromFormData } from '@/lib/studio/relation-fields';
 import type { EntryActionState } from '@/lib/studio/entry-actions';
@@ -58,6 +60,11 @@ export async function createServiceAction(
     return { error: actionErrorMessage(error) };
   }
 
+  await recordEditorialEvent({
+    entityType: 'service',
+    entityId: created._id.toString(),
+    payload: { type: 'entry.created' },
+  });
   revalidatePath(LIST_PATH);
   redirect(detailPath(created._id.toString()));
 }
@@ -78,8 +85,9 @@ export async function updateServiceAction(
     return { error: 'This Service no longer exists.' };
   }
 
+  let updated;
   try {
-    await serviceRepository.update(id, readServiceMetadataFields(formData));
+    updated = await serviceRepository.update(id, readServiceMetadataFields(formData));
   } catch (error) {
     if (error instanceof ZodError) {
       return { error: 'Check the highlighted fields.', fieldErrors: zodErrorToFieldErrors(error) };
@@ -87,9 +95,18 @@ export async function updateServiceAction(
     return { error: actionErrorMessage(error) };
   }
 
+  await recordEditorialEvent({
+    entityType: 'service',
+    entityId: id,
+    payload: { type: 'entry.updated' },
+  });
+  if (existing.status === 'published' || updated?.status === 'published') {
+    invalidatePublicEntity('service');
+  }
   // Stays on the edit screen — see `createEntryUpdateAction` for why every
   // Studio metadata save now reports success instead of navigating.
   revalidatePath(detailPath(id));
+  revalidatePath(LIST_PATH);
   return { ok: true };
 }
 
@@ -110,6 +127,14 @@ export async function setServiceStatusAction(
   }
 
   await serviceRepository.update(id, { status });
+  await recordEditorialEvent({
+    entityType: 'service',
+    entityId: id,
+    payload: { type: 'entry.statusChanged', from: existing.status, to: status },
+  });
+  if (existing.status === 'published' || status === 'published') {
+    invalidatePublicEntity('service');
+  }
   revalidatePath(detailPath(id));
   revalidatePath(LIST_PATH);
   return {};
@@ -122,7 +147,11 @@ export async function deleteServiceAction(id: string): Promise<EntryActionState>
     return { error: actionErrorMessage(error) };
   }
 
+  const existing = await serviceRepository.findById(id);
   await serviceRepository.remove(id);
+  if (existing?.status === 'published') {
+    invalidatePublicEntity('service');
+  }
   revalidatePath(LIST_PATH);
   redirect(LIST_PATH);
 }

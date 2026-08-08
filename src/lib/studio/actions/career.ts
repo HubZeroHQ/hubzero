@@ -99,6 +99,7 @@ export const updateCareerAction = createEntryUpdateAction<Career, CareerInput>({
   update: careerRepository.update,
   parseFormData: parseCareerUpdateFormData,
   detailPath: careerDetailPath,
+  listPath: CAREERS_LIST_PATH,
   publicType: 'career',
 });
 
@@ -116,7 +117,9 @@ export const saveCareerOverviewAction = createDocumentSaveAction<Career>({
   ownerType: 'Career',
   role: 'overview',
   findOwnerById: careerRepository.findById,
+  setOwnerStatus: (id, status) => careerRepository.update(id, { status, reviewNote: null }),
   detailPath: careerDetailPath,
+  listPath: CAREERS_LIST_PATH,
 });
 
 /** "Generate content" for the Career overview Document — same authorization as saving it. */

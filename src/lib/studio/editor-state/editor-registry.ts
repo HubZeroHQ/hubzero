@@ -1,4 +1,9 @@
-import type { EditorGuardSnapshot, EditorHandle, NavigationIntent } from './types';
+import type {
+  EditorGuardSnapshot,
+  EditorHandle,
+  EditorSaveOptions,
+  NavigationIntent,
+} from './types';
 
 /**
  * The one place that knows which editors on the current screen hold unsaved
@@ -231,7 +236,11 @@ export class EditorRegistry {
     this.resolveError = null;
     this.emit();
 
-    const results = await Promise.all(dirty.map((editor) => this.safeSave(editor)));
+    // Save & Leave immediately performs an approved navigation. A metadata
+    // editor must not start an in-place RSC refresh that races that departure.
+    const results = await Promise.all(
+      dirty.map((editor) => this.safeSave(editor, { refresh: false })),
+    );
 
     if (resolutionId !== this.resolutionId) {
       // "Stay Editing" was pressed while this save was in flight. The save
@@ -268,9 +277,30 @@ export class EditorRegistry {
     await Promise.all(this.dirtyEditors().map((editor) => this.safeSave(editor)));
   }
 
-  private async safeSave(editor: EditorHandle): Promise<boolean> {
+  /**
+   * Flushes one registered editor without starting a navigation.
+   *
+   * Document-role tabs use this before unmounting the active role. Keeping
+   * that coordination here means an intra-page role switch and a full route
+   * change ask the editor the same live dirty question and use the same
+   * guarded save callback. A missing handle is a failure, not permission to
+   * continue: unmounting an editor whose state cannot be accounted for is
+   * exactly the data-loss case this method exists to prevent.
+   */
+  async flushEditor(id: string): Promise<boolean> {
+    const editor = this.handles.get(id);
+    if (!editor) {
+      return false;
+    }
+    if (!this.isEditorDirty(editor)) {
+      return true;
+    }
+    return this.safeSave(editor);
+  }
+
+  private async safeSave(editor: EditorHandle, options?: EditorSaveOptions): Promise<boolean> {
     try {
-      return await editor.save();
+      return await editor.save(options);
     } catch {
       return false;
     }

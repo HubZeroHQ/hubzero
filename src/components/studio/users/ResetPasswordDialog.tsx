@@ -1,6 +1,7 @@
 'use client';
 
 import { useActionState, useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { Dialog } from '@/components/ui/Dialog';
 import { Field } from '@/components/ui/Field';
@@ -15,6 +16,7 @@ export function ResetPasswordDialog({
 }: {
   action: (prevState: EntryActionState, formData: FormData) => Promise<EntryActionState>;
 }) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [state, formAction, pending] = useActionState(action, emptyActionState);
   const submittedRef = useRef(false);
@@ -25,8 +27,9 @@ export function ResetPasswordDialog({
     } else if (submittedRef.current && !state.error) {
       submittedRef.current = false;
       setOpen(false);
+      router.refresh();
     }
-  }, [pending, state]);
+  }, [pending, router, state]);
 
   return (
     <>

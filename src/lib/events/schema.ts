@@ -40,6 +40,17 @@ export const EDITORIAL_EVENT_TYPES = [
 
 export type EditorialEventType = (typeof EDITORIAL_EVENT_TYPES)[number];
 
+/**
+ * Kept readable for historical compatibility, but no current mutation emits
+ * `entry.mediaChanged`: replacing a shared Media asset is not an entry-field
+ * mutation. The Activity screen must not offer a filter guaranteed to be
+ * empty.
+ */
+export const FILTERABLE_EDITORIAL_EVENT_TYPES = EDITORIAL_EVENT_TYPES.filter(
+  (type): type is Exclude<EditorialEventType, 'entry.mediaChanged'> =>
+    type !== 'entry.mediaChanged',
+);
+
 /** Mirrors `OwnerType`/collection keys — the entity the event is *about*. */
 export const eventEntityTypeSchema = z.enum([
   'work',
@@ -137,7 +148,13 @@ export interface EditorialEventRecord {
  * the recent-activity feed, and `(actorUserId, createdAt)` per-person audit.
  */
 export const EDITORIAL_EVENT_INDEXES = [
-  { key: { entityType: 1, entityId: 1, createdAt: -1 }, name: 'entity_createdAt' },
-  { key: { createdAt: -1 }, name: 'createdAt' },
-  { key: { actorUserId: 1, createdAt: -1 }, name: 'actor_createdAt' },
+  {
+    key: { entityType: 1, entityId: 1, createdAt: -1, _id: -1 },
+    name: 'entity_createdAt_id',
+  },
+  { key: { createdAt: -1, _id: -1 }, name: 'createdAt_id' },
+  {
+    key: { actorUserId: 1, createdAt: -1, _id: -1 },
+    name: 'actor_createdAt_id',
+  },
 ] as const;

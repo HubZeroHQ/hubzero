@@ -618,3 +618,89 @@ Compiled 2026-08-02. This section deliberately restates what each milestone's ow
 
 - `LeadStatusButtons` and `GraduateToBuildButton` mutate state with no `router.refresh()` at all (found in M25). Outside that brief's six actions, but the same class of bug as the one fixed there.
 - `DOCUMENT_OWNERS` in `health/inspector.ts` restates each collection's document roles locally (M26) — accurate today, but a second statement that can drift.
+
+---
+
+# v3.1.1 Stability & Correctness — implementation status
+
+Checked 2026-08-02 on `dev`. This patch remains uncommitted. The implementation is statically clean, but the required browser matrix is incomplete because the connected browser became unavailable during verification. The release recommendation therefore remains **Further Changes Required** until the critical document and public-cache scenarios are completed in a real browser.
+
+## Architecture and fixes
+
+- **Document saves are serialized and role-scoped.** `useAutosave` now coalesces concurrent callers, waits for an in-flight request, and drains any edits made during that request before reporting success. A failed or invalid save remains dirty. `DocumentRoleTabs` flushes only the editor being left and does not unmount it on failure; rapid role requests collapse to the latest requested role. Preview creation also waits for a successful current save.
+- **Published document edits re-enter review before live content changes.** The shared document action demotes a published owner to `inReview` before writing its Document. If the write fails, the owner is compensated back to `published`; a failed compensation is logged internally and invalidates the potentially inconsistent public projection. This closes a path where document-only edits could rewrite live content without review.
+- **Public invalidation follows explicit dependencies.** Entity mutations invalidate the entity, its collection, relationship projections where applicable, homepage, and discovery. Featured ordering, media, and taxonomy use target-specific invalidators instead of dead global tags or all-collection flushes. Media also refreshes its media-bearing discovery/search projection. Public visibility is resolved centrally for every owner type; a Team dependency expands to its public Engineering Profile and authored Notes instead of stopping at the Team collection.
+- **Archived Team members are consistently non-public.** The public Mongo source and canonical visibility predicate now match Studio's existing archive semantics, so an archived public-profile record and its Engineering Profile cannot remain visible after the archive invalidation runs.
+- **Taxonomy safeguards now include Document blocks.** `technologyStack` references participate in usage counts, deletion protection, merge reassignment, and public invalidation. Reassignment goes through the existing Document validation/version path and deduplicates ids.
+- **Mutation refresh is consistent.** Lead status, lab graduation, confirmation dialogs, lead assignment, password reset, taxonomy merge, media metadata, and career-interest note actions now refresh or return a success state through their existing UI path. Shared entry, document, workflow, and featured-order actions retain their existing server revalidation/redirect model.
+- **Lab graduation is single-winner.** The repository atomically claims `graduatedToBuildId`; a concurrent loser removes the Build it created and reports that graduation already occurred. Lead status, graduation, and confirmation controls also use synchronous single-flight guards, closing the same pre-render duplicate-click window previously fixed in the publish workflow.
+- **Dashboard navigation is collection-specific.** Publishing cards and entry summaries now link to the exact collection or entry. Careers are included. The previous aggregate publishing card no longer sends non-Work counts to Work.
+- **The Studio shell owns scrolling.** The document root is locked while the shell is mounted; the sidebar remains fixed and the main region is the single vertical scroller. Responsive padding and horizontal containment are applied at the content boundary.
+- **Tables and document tabs have explicit keyboard semantics.** Entry rows contain one link rather than repeated identical links, headers use `scope="col"`, the overflow region is focusable and labelled, focus remains visible, and role tabs implement roving focus with Arrow, Home, and End keys.
+- **Save wording uses the shared lifecycle.** Document and media editors now use `Unsaved`, `Saving`, `Saved`, and `Failed`; validation failures map to the failed state rather than inventing another lifecycle.
+- **Editorial-event failures are observable without losing the primary edit.** Repository failures reach `recordEditorialEvent`, which logs contextual internal errors without exposing event payloads or review notes. Reads use `createdAt` plus `_id` ordering, index creation is awaited and retryable, Engineering Profile and Team entity mappings are correct, and bespoke Service, Team, and Lab-graduation writes now emit expected events. The unproducible `entry.mediaChanged` filter was removed while the historical schema value remains readable.
+- **Dependencies remain patch-compatible.** The application is versioned `3.1.1`; safe dependency updates include `sanitize-html` 2.17.6 and React/React DOM 19.2.8, a patch update from the 19.2.7 versions actually locked by v3.1.0. Sharp is pinned to 0.35.3. No direct dependency was removed because the only apparent non-import, `@tiptap/core`, is a required peer of the editor packages.
+
+## Defects found
+
+- **Critical:** pending/in-flight autosaves could be lost when a role editor unmounted, and a save could report success while a newer edit remained unsaved.
+- **Critical:** document-only changes to a published owner bypassed the review-state integrity enforced by metadata edits.
+- **Critical:** public cache invalidation mixed missing dependency paths with broad dead tags, causing both stale projections and unrelated cache eviction.
+- **Critical:** Team identity and portrait changes did not invalidate dependent Engineering Profile and Note projections, and media changes omitted the media-bearing discovery/search cache.
+- **High:** deleting a User changed published Note author attribution without invalidating those Note projections.
+- **Critical:** taxonomy usage and merge logic ignored `technologyStack` references inside Documents.
+- **High:** several successful mutations left mounted client views stale.
+- **Critical:** concurrent Lab graduation requests could both create Builds before either wrote `graduatedToBuildId`, leaving duplicate/orphan graduation results.
+- **High:** dashboard publishing and entry links used collection-agnostic destinations; Careers were omitted from the publishing summary.
+- **High:** the Studio root could participate in scrolling in addition to the content region.
+- **High:** tables repeated the same destination link in multiple cells and lacked an explicit keyboard-reachable overflow region.
+- **High:** editorial-event insert and index failures were swallowed before the reliability boundary, equal-timestamp ordering was ambiguous, and Engineering Profile history used the wrong entity-type mapping.
+- **High:** bespoke Service, Team, and Lab-graduation mutations bypassed shared event producers.
+- **High:** Team archive actions treated archived members as hidden, but the public read model still selected them and could also expose their published Engineering Profiles.
+- **Medium:** media and document surfaces did not use one save-state vocabulary.
+- **Medium:** Activity exposed an `entry.mediaChanged` filter that no current mutation can produce.
+- **Medium:** `sanitize-html` was on a version covered by an audit advisory.
+
+## Verification completed
+
+Static verification after all changes:
+
+- `eslint .`: 0 errors and 0 warnings.
+- `tsc --noEmit`: 0 errors.
+- Vitest: **731/731 tests** across **99/99 files**.
+- Changed-file Prettier check: clean.
+- `git diff --check`: clean.
+- `npm audit --audit-level=low`: **0 vulnerabilities**.
+- Dependency tree: React and React DOM 19.2.8, `sanitize-html` 2.17.6, Cloudinary 2.10.0, Sharp 0.35.3; no invalid peer tree.
+- `next build`: successful on Next.js 15.5.22; 86 static pages generated and build traces completed.
+
+Browser observations completed against `hubzero_scratch` before the browser connection was lost:
+
+- Authenticated Studio dashboard loaded and rendered collection-specific Publishing destinations, including Careers.
+- A Work entry was created through the UI.
+- Metadata showed `Unsaved`; guarded navigation opened the shared leave dialog.
+- Save & Leave waited for persistence, navigated, and retained the saved summary.
+- Send for Review, Reject with a note, resubmit, Approve, and Publish all refreshed status, actions, and review UI.
+- Entry History rendered the same ordered status sequence with the resolved actor.
+- The stored editorial events were newest-first and actor-resolved.
+- The published Work route correctly remained unavailable because its required case-study Document had not yet been completed; this was the existing public-visibility contract, not a cache result.
+
+## Required browser verification still outstanding
+
+The connected in-app browser disappeared while the case-study Document was being prepared. One clean reconnect following the browser-control troubleshooting procedure found no available browser. No standalone Playwright or headless substitute was used because it would not satisfy the required connected-browser verification.
+
+Outstanding scenarios:
+
+- Rapid switching across multiple document roles, including edits made while a prior save is in flight.
+- A real failed document save, followed by retry, role switch, browser Back, refresh, and tab close.
+- Archive and Restore in this patch run.
+- Public invalidation after a fully visible entry mutation: homepage, every collection family, metadata, JSON-LD/structured data, search, discovery, media, taxonomy, relationships, and featured order.
+- Every dashboard navigation click, including Activity, Health, Publishing, Review Queue, Drafts, and Leads.
+- Media create/update/replace/delete UI paths.
+- Desktop, tablet, mobile, browser zoom, keyboard-only tables and tabs, nested-scroll detection, console errors, hydration warnings, and failed Server Action recovery.
+
+The scratch database contains only the QA fixtures created by this run. The configured database user does not have permission to drop the database, so it was not deleted. Production data was not used for the verification writes.
+
+## Recommendation
+
+**Further Changes Required.** All static gates pass, but the milestone explicitly prohibits a merge recommendation until every Critical fix has browser evidence. The connected-browser gap prevents that claim.

@@ -69,6 +69,7 @@ export const updateEngineeringProfileAction = createEntryUpdateAction<
   update: engineeringProfileRepository.update,
   parseFormData: parseUpdate,
   detailPath,
+  listPath: LIST_PATH,
   publicType: 'engineeringProfile',
 });
 export const transitionEngineeringProfileStatusAction =
@@ -90,5 +91,8 @@ export const saveEngineeringProfileDocumentAction = async (
     ownerType: 'EngineeringProfile',
     role,
     findOwnerById: engineeringProfileRepository.findById,
+    setOwnerStatus: (entryId, status) =>
+      engineeringProfileRepository.update(entryId, { status, reviewNote: null }),
     detailPath,
+    listPath: LIST_PATH,
   })(ownerId, blocks);

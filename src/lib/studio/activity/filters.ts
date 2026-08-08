@@ -1,4 +1,4 @@
-import { EDITORIAL_EVENT_TYPES, eventEntityTypeFor } from '@/lib/events/schema';
+import { FILTERABLE_EDITORIAL_EVENT_TYPES, eventEntityTypeFor } from '@/lib/events/schema';
 import type { EditorialEventType, EventEntityType } from '@/lib/events/schema';
 import type { ActivityFilters } from './types';
 
@@ -16,7 +16,7 @@ import type { ActivityFilters } from './types';
 
 export type ActivitySearchParams = Record<string, string | string[] | undefined>;
 
-const EVENT_TYPES: readonly string[] = EDITORIAL_EVENT_TYPES;
+const EVENT_TYPES: readonly string[] = FILTERABLE_EDITORIAL_EVENT_TYPES;
 
 function values(raw: string | string[] | undefined): string[] {
   if (raw === undefined) return [];

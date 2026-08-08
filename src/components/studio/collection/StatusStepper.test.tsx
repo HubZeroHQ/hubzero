@@ -14,9 +14,6 @@ import { StatusStepper } from './StatusStepper';
  * same transition twice.
  */
 
-const refresh = vi.fn();
-vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: () => refresh() }) }));
-
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
@@ -35,16 +32,18 @@ function setup(onTransition: (to: string, note?: string) => Promise<{ error?: st
 }
 
 describe('StatusStepper', () => {
-  it('runs the transition and refreshes from the server on success', async () => {
+  it('runs the transition and restores its controls on success', async () => {
     const onTransition = vi.fn().mockResolvedValue({});
     setup(onTransition);
 
     await userEvent.click(screen.getByRole('button', { name: 'Submit for review' }));
 
     await waitFor(() => expect(onTransition).toHaveBeenCalledWith('inReview', undefined));
-    // The server stays authoritative: nothing is mirrored into client state,
-    // the page is re-rendered from fresh data instead.
-    await waitFor(() => expect(refresh).toHaveBeenCalledTimes(1));
+    await waitFor(() =>
+      expect(
+        (screen.getByRole('button', { name: 'Submit for review' }) as HTMLButtonElement).disabled,
+      ).toBe(false),
+    );
   });
 
   /**
@@ -69,7 +68,11 @@ describe('StatusStepper', () => {
     expect(onTransition).toHaveBeenCalledTimes(1);
 
     release({});
-    await waitFor(() => expect(refresh).toHaveBeenCalledTimes(1));
+    await waitFor(() =>
+      expect(
+        (screen.getByRole('button', { name: 'Submit for review' }) as HTMLButtonElement).disabled,
+      ).toBe(false),
+    );
   });
 
   it('shows progress on the button that is running, and restores it afterwards', async () => {
@@ -97,7 +100,7 @@ describe('StatusStepper', () => {
     });
   });
 
-  it('surfaces the real error, re-enables the controls and resynchronises', async () => {
+  it('surfaces the real error and re-enables the controls', async () => {
     const onTransition = vi.fn().mockResolvedValue({ error: '"inReview" cannot move directly.' });
     setup(onTransition);
 
@@ -109,9 +112,6 @@ describe('StatusStepper', () => {
         (screen.getByRole('button', { name: 'Submit for review' }) as HTMLButtonElement).disabled,
       ).toBe(false),
     );
-    // A refusal usually means the entry moved on elsewhere, so the stale
-    // buttons that caused it are resynchronised rather than left in place.
-    expect(refresh).toHaveBeenCalledTimes(1);
   });
 
   it('never leaves the interface disabled when the action throws', async () => {
@@ -126,8 +126,6 @@ describe('StatusStepper', () => {
         (screen.getByRole('button', { name: 'Submit for review' }) as HTMLButtonElement).disabled,
       ).toBe(false),
     );
-    // Nothing was claimed to have succeeded, and no refresh pretended otherwise.
-    expect(refresh).not.toHaveBeenCalled();
   });
 
   it('allows a fresh transition once the previous one has settled', async () => {
@@ -136,13 +134,17 @@ describe('StatusStepper', () => {
 
     const button = screen.getByRole('button', { name: 'Submit for review' });
     await userEvent.click(button);
-    await waitFor(() => expect(refresh).toHaveBeenCalledTimes(1));
+    await waitFor(() =>
+      expect(
+        (screen.getByRole('button', { name: 'Submit for review' }) as HTMLButtonElement).disabled,
+      ).toBe(false),
+    );
 
     await userEvent.click(screen.getByRole('button', { name: 'Submit for review' }));
     await waitFor(() => expect(onTransition).toHaveBeenCalledTimes(2));
   });
 
-  it('blocks other transitions while one is running, but keeps Cancel usable', async () => {
+  it('blocks other transitions while one is running, keeps Cancel usable, and never duplicates Reject', async () => {
     let release: (value: { error?: string }) => void = () => {};
     const onTransition = vi.fn(
       () => new Promise<{ error?: string }>((resolve) => (release = resolve)),
@@ -157,6 +159,8 @@ describe('StatusStepper', () => {
       />,
     );
 
+    expect(screen.queryByRole('button', { name: 'Unpublish to draft' })).toBeNull();
+
     await userEvent.click(screen.getByRole('button', { name: 'Reject' }));
     await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
     // Cancel is a local form control, so it works with no request in flight.
@@ -165,9 +169,9 @@ describe('StatusStepper', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Approve' }));
 
     await waitFor(() =>
-      expect(
-        (screen.getByRole('button', { name: 'Unpublish to draft' }) as HTMLButtonElement).disabled,
-      ).toBe(true),
+      expect((screen.getByRole('button', { name: 'Working…' }) as HTMLButtonElement).disabled).toBe(
+        true,
+      ),
     );
     release({});
   });

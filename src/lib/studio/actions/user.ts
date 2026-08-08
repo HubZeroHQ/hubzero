@@ -7,6 +7,8 @@ import { auth, signOut } from '@/lib/auth';
 import { hashPassword, verifyPassword } from '@/lib/auth/password';
 import { requireCapability } from '@/lib/auth/permissions';
 import { userRepository } from '@/lib/db/repositories/user';
+import { invalidatePublicTargets, type PublicCacheTarget } from '@/lib/public/cache';
+import { publicNoteCacheTargetsForAuthorUser } from '@/lib/public/cache-targets';
 import { isLastActiveHeadAdmin } from '@/lib/studio/safeguards/users';
 import { zodErrorToFieldErrors } from '@/lib/validation/form-errors';
 import { userSchema } from '@/lib/validation/user';
@@ -134,6 +136,7 @@ export async function updateUserAction(
   // Stays on the edit screen — see `createEntryUpdateAction` for why every
   // Studio metadata save now reports success instead of navigating.
   revalidatePath(detailPath(id));
+  revalidatePath(LIST_PATH);
   return { ok: true };
 }
 
@@ -174,7 +177,16 @@ export async function deleteUserAction(id: string): Promise<EntryActionState> {
     };
   }
 
+  let publicTargets: PublicCacheTarget[];
+  try {
+    publicTargets = await publicNoteCacheTargetsForAuthorUser(id);
+  } catch (error) {
+    console.error('User public author dependencies could not be resolved', { userId: id, error });
+    return { error: 'Public author references could not be verified. Try again.' };
+  }
+
   await userRepository.remove(id);
+  invalidatePublicTargets(publicTargets);
   revalidatePath(LIST_PATH);
   redirect(LIST_PATH);
 }

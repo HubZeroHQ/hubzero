@@ -80,7 +80,7 @@ export function UnsavedChangesDialog() {
             Discard Changes
           </Button>
           <Button type="button" onClick={() => void registry.saveAndProceed()} disabled={resolving}>
-            {resolving ? 'Saving…' : 'Save & Leave'}
+            {resolving ? 'Saving' : 'Save & Leave'}
           </Button>
         </div>
       </div>

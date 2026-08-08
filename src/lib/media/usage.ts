@@ -3,12 +3,14 @@ import { collections } from '@/lib/db/collections';
 import { blueprintRepository } from '@/lib/db/repositories/blueprint';
 import { buildRepository } from '@/lib/db/repositories/build';
 import { careerRepository } from '@/lib/db/repositories/career';
+import { engineeringProfileRepository } from '@/lib/db/repositories/engineering-profile';
 import { labRepository } from '@/lib/db/repositories/lab';
 import { noteRepository } from '@/lib/db/repositories/note';
 import { teamRepository } from '@/lib/db/repositories/team';
-import { engineeringProfileRepository } from '@/lib/db/repositories/engineering-profile';
 import { workRepository } from '@/lib/db/repositories/work';
 import type { DocumentRole, OwnerType } from '@/lib/documents/schema';
+import type { PublicCacheTarget } from '@/lib/public/cache';
+import { publicCacheTargetsForOwner } from '@/lib/public/cache-targets';
 
 /**
  * Everywhere a Media asset can be referenced today: inside a Document's
@@ -285,4 +287,28 @@ export async function findMediaUsage(mediaId: string): Promise<MediaUsageRef[]> 
     findDirectFieldUsage(mediaId),
   ]);
   return [...documentUsage, ...directUsage];
+}
+
+/**
+ * Resolves the exact currently-public entities represented by a usage list.
+ * Media mutations use this snapshot to invalidate only pages that can render
+ * the changed asset.
+ */
+export async function publicCacheTargetsForMediaUsage(
+  usage: readonly MediaUsageRef[],
+): Promise<PublicCacheTarget[]> {
+  const owners = new Map(
+    usage.map((reference) => [`${reference.ownerType}:${reference.ownerId}`, reference]),
+  );
+
+  const targetGroups = await Promise.all(
+    [...owners.values()].map((reference) =>
+      publicCacheTargetsForOwner(reference.ownerType, reference.ownerId),
+    ),
+  );
+
+  const unique = new Map(
+    targetGroups.flat().map((target) => [`${target.type}:${target.slug ?? ''}`, target]),
+  );
+  return [...unique.values()];
 }

@@ -97,9 +97,9 @@ function guardableHref(anchor: HTMLAnchorElement): URL | null {
  *    the first Back press pops a duplicate of the page the author is already
  *    on: nothing renders, nothing is lost, and the guard re-pushes the
  *    sentinel to keep the position stable while it asks.
- * 3. **`beforeunload`** covers refresh, tab close, and typed-URL departure —
- *    registered only while work is actually at risk, so it never suppresses
- *    the back/forward cache for a clean page.
+ * 3. **`beforeunload`** covers refresh, tab close, and typed-URL departure.
+ *    The listener remains mounted for the provider lifetime and synchronously
+ *    probes the registry, eliminating the render-timing gap after an edit.
  *
  * Programmatic navigation (the command palette, keyboard jumps) has no DOM
  * event to intercept and opts in through `useGuardedRouter` instead.
@@ -195,9 +195,12 @@ export function EditorGuardProvider({ children }: { children: ReactNode }) {
   }, [guardState, registry]);
 
   useEffect(() => {
-    if (!guardState) {
-      return;
-    }
+    // This listener must exist before the first edit. Registering it only
+    // after React has rendered a dirty state leaves a real event-loop gap:
+    // typing and immediately reloading can beat the effect and discard text.
+    // The listener itself is cheap and consults the registry's synchronous
+    // probe, so clean Studio pages still proceed without a prompt or render
+    // work on every keystroke.
     function handleBeforeUnload(event: BeforeUnloadEvent) {
       if (!registry.hasUnsavedWork()) {
         return;
@@ -208,7 +211,7 @@ export function EditorGuardProvider({ children }: { children: ReactNode }) {
     }
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [guardState, registry]);
+  }, [registry]);
 
   return (
     <EditorGuardContext.Provider value={registry}>

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { requireCapability } from '@/lib/auth/permissions';
-import { invalidatePublicEntity } from '@/lib/public/cache';
+import { invalidatePublicFeaturedOrder } from '@/lib/public/cache';
 import {
   FEATURED_COLLECTIONS,
   isFeaturedCollectionKey,
@@ -88,10 +88,9 @@ export async function setFeaturedOrderAction(
     }
   }
 
-  // Featuring changes the homepage, every collection index, and the caches
-  // derived from them — the slug-less call invalidates the collection and all
-  // cross-cutting tags, which is exactly the blast radius of a reorder.
-  invalidatePublicEntity(collection.publicType);
+  // Ordering is consumed by this collection's index and the homepage only.
+  // Detail, relationship, discovery, sitemap, and feed data are unchanged.
+  invalidatePublicFeaturedOrder(collection.publicType);
   revalidatePath(collection.featuredPath);
   revalidatePath(collection.listPath);
 

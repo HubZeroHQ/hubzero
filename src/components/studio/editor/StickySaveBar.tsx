@@ -54,7 +54,7 @@ export function StickySaveBar() {
       <div className="border-border-default bg-surface-overlay rounded-overlay pointer-events-auto flex w-full max-w-2xl flex-col gap-3 border p-4 shadow-[0_24px_60px_-28px_rgba(0,0,0,0.7)] sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 flex-col gap-0.5">
           <p className="text-text-primary text-sm font-semibold">
-            {single ? 'Unsaved changes' : `${dirty.length} sections have unsaved changes`}
+            {single ? 'Unsaved' : `${dirty.length} sections unsaved`}
           </p>
           <p className="text-text-secondary text-xs">
             {failed?.error
@@ -79,7 +79,7 @@ export function StickySaveBar() {
             Discard
           </Button>
           <Button type="button" onClick={handleSave} disabled={saving}>
-            {saving ? 'Saving…' : 'Save'}
+            {saving ? 'Saving' : 'Save'}
           </Button>
         </div>
       </div>

@@ -1,5 +1,6 @@
 import { blueprintRepository } from '@/lib/db/repositories/blueprint';
 import { buildRepository } from '@/lib/db/repositories/build';
+import { careerRepository } from '@/lib/db/repositories/career';
 import { labRepository } from '@/lib/db/repositories/lab';
 import { noteRepository } from '@/lib/db/repositories/note';
 import { engineeringProfileRepository } from '@/lib/db/repositories/engineering-profile';
@@ -7,17 +8,20 @@ import { teamRepository } from '@/lib/db/repositories/team';
 import { workRepository } from '@/lib/db/repositories/work';
 import type { PublishStatus } from '@/types/studio';
 
-type ContentEntityType =
-  'work' | 'builds' | 'blueprints' | 'labs' | 'notes' | 'engineeringProfiles';
+export const DASHBOARD_CONTENT_COLLECTIONS = {
+  work: { label: 'Work', href: '/studio/content/work' },
+  builds: { label: 'Builds', href: '/studio/content/builds' },
+  blueprints: { label: 'Blueprints', href: '/studio/content/blueprints' },
+  labs: { label: 'Labs', href: '/studio/content/labs' },
+  notes: { label: 'Notes', href: '/studio/content/notes' },
+  careers: { label: 'Careers', href: '/studio/content/careers' },
+  engineeringProfiles: {
+    label: 'Engineering profiles',
+    href: '/studio/engineering-profiles',
+  },
+} as const;
 
-const CONTENT_HREF: Record<ContentEntityType, string> = {
-  work: '/studio/content/work',
-  builds: '/studio/content/builds',
-  blueprints: '/studio/content/blueprints',
-  labs: '/studio/content/labs',
-  notes: '/studio/content/notes',
-  engineeringProfiles: '/studio/engineering-profiles',
-};
+export type ContentEntityType = keyof typeof DASHBOARD_CONTENT_COLLECTIONS;
 
 export interface ContentSummary {
   id: string;
@@ -33,16 +37,17 @@ export interface ContentSummary {
 /**
  * Dashboard widgets (CMS_PRODUCT_DESIGN.md §3) are "live, filtered views
  * into a real collection," so this merges the five workflow-driven
- * Content collections into one lightweight shape rather than each widget
- * hand-rolling its own aggregation across five repositories.
+ * workflow-driven Content collections into one lightweight shape rather
+ * than each widget hand-rolling its own cross-repository aggregation.
  */
 export async function listAllContent(): Promise<ContentSummary[]> {
-  const [work, builds, blueprints, labs, notes, profiles, team] = await Promise.all([
+  const [work, builds, blueprints, labs, notes, careers, profiles, team] = await Promise.all([
     workRepository.list(),
     buildRepository.list(),
     blueprintRepository.list(),
     labRepository.list(),
     noteRepository.list(),
+    careerRepository.list(),
     engineeringProfileRepository.list(),
     teamRepository.list(),
   ]);
@@ -55,7 +60,7 @@ export async function listAllContent(): Promise<ContentSummary[]> {
       title: entry.title,
       referenceId: entry.referenceId,
       status: entry.status,
-      href: CONTENT_HREF.work,
+      href: `${DASHBOARD_CONTENT_COLLECTIONS.work.href}/${entry._id.toString()}`,
       updatedAt: entry.updatedAt,
       createdByUserId: entry.createdByUserId.toString(),
     })),
@@ -65,7 +70,7 @@ export async function listAllContent(): Promise<ContentSummary[]> {
       title: entry.title,
       referenceId: entry.referenceId,
       status: entry.status,
-      href: CONTENT_HREF.builds,
+      href: `${DASHBOARD_CONTENT_COLLECTIONS.builds.href}/${entry._id.toString()}`,
       updatedAt: entry.updatedAt,
       createdByUserId: entry.createdByUserId.toString(),
     })),
@@ -75,7 +80,7 @@ export async function listAllContent(): Promise<ContentSummary[]> {
       title: entry.name,
       referenceId: entry.referenceId,
       status: entry.status,
-      href: CONTENT_HREF.blueprints,
+      href: `${DASHBOARD_CONTENT_COLLECTIONS.blueprints.href}/${entry._id.toString()}`,
       updatedAt: entry.updatedAt,
       createdByUserId: entry.createdByUserId.toString(),
     })),
@@ -85,7 +90,7 @@ export async function listAllContent(): Promise<ContentSummary[]> {
       title: entry.title,
       referenceId: entry.referenceId,
       status: entry.status,
-      href: CONTENT_HREF.labs,
+      href: `${DASHBOARD_CONTENT_COLLECTIONS.labs.href}/${entry._id.toString()}`,
       updatedAt: entry.updatedAt,
       createdByUserId: entry.createdByUserId.toString(),
     })),
@@ -95,7 +100,17 @@ export async function listAllContent(): Promise<ContentSummary[]> {
       title: entry.title,
       referenceId: entry.referenceId,
       status: entry.status,
-      href: CONTENT_HREF.notes,
+      href: `${DASHBOARD_CONTENT_COLLECTIONS.notes.href}/${entry._id.toString()}`,
+      updatedAt: entry.updatedAt,
+      createdByUserId: entry.createdByUserId.toString(),
+    })),
+    ...careers.map((entry) => ({
+      id: entry._id.toString(),
+      type: 'careers' as const,
+      title: entry.title,
+      referenceId: entry.referenceId,
+      status: entry.status,
+      href: `${DASHBOARD_CONTENT_COLLECTIONS.careers.href}/${entry._id.toString()}`,
       updatedAt: entry.updatedAt,
       createdByUserId: entry.createdByUserId.toString(),
     })),
@@ -105,7 +120,7 @@ export async function listAllContent(): Promise<ContentSummary[]> {
       title: teamNames.get(entry.teamMemberId.toString()) ?? 'Unknown engineer',
       referenceId: entry.referenceId,
       status: entry.status,
-      href: CONTENT_HREF.engineeringProfiles,
+      href: `${DASHBOARD_CONTENT_COLLECTIONS.engineeringProfiles.href}/${entry._id.toString()}`,
       updatedAt: entry.updatedAt,
       createdByUserId: entry.createdByUserId.toString(),
     })),

@@ -5,6 +5,7 @@ import { documentRepository } from '@/lib/db/repositories/document';
 import { documentVersionRepository } from '@/lib/db/repositories/document-version';
 import type { OwnerType } from '@/lib/documents/schema';
 import { editorialEventRepository } from '@/lib/events/repository';
+import { OWNER_TO_PUBLIC_TYPE } from '@/lib/public/repository';
 import { resolveActors } from '@/lib/studio/actors';
 import { eventEntityTypeFor } from '@/lib/events/schema';
 import {
@@ -43,7 +44,8 @@ export async function loadEntryHistory(input: {
   // Derived events remain as a fallback for records that predate the log —
   // without it, every entry created before this milestone would show an empty
   // history, which would read as "nothing happened" rather than "not recorded".
-  const entityType = eventEntityTypeFor(ownerType.toLowerCase());
+  const publicType = OWNER_TO_PUBLIC_TYPE[ownerType];
+  const entityType = publicType ? eventEntityTypeFor(publicType) : null;
   const recorded = entityType
     ? await editorialEventRepository.listForEntry(entityType, entryId).catch(() => [])
     : [];

@@ -26,6 +26,7 @@ describe('parseActivityFilters', () => {
       'entry.created',
     ]);
     expect(parseActivityFilters({ type: 'entry.exploded' }).types).toBeUndefined();
+    expect(parseActivityFilters({ type: 'entry.mediaChanged' }).types).toBeUndefined();
   });
 
   it('parses a date range with an inclusive upper bound', () => {

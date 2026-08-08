@@ -1,22 +1,15 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type MutableRefObject } from 'react';
 import type { Block } from './blocks';
 import { validateDocument } from './validation';
 
 /**
  * Debounced autosave over the same `onSave` server action the manual Save
- * control already calls (`document-actions.ts`'s `createDocumentSaveAction`
- * — no separate autosave endpoint). Reference (not deep) equality against
- * the last-saved blocks array is enough to detect dirtiness, since every
- * mutation in `block-ops.ts` returns a new array/object rather than
- * mutating in place.
+ * control calls. Reference equality against the last-saved block array is
+ * sufficient because every document mutation returns a new array/object.
  *
- * An invalid document (a required field emptied mid-edit) is deliberately
- * never autosaved — `documentRepository`'s Zod parse would reject it
- * anyway, and silently discarding the author's in-progress edit on a failed
- * autosave would be worse than just waiting, so the status surfaces
- * "invalid" and retries on the next change once the document parses again.
+ * Invalid documents are never sent to the repository. They remain dirty and
+ * visible to the navigation guard until the author repairs or discards them.
  */
-
 export type AutosaveStatus = 'idle' | 'dirty' | 'saving' | 'saved' | 'invalid' | 'error';
 
 export interface AutosaveActionResult {
@@ -30,10 +23,13 @@ export function useAutosave({
   blocks,
   onSave,
   delayMs = AUTOSAVE_DELAY_MS,
+  liveBlocksRef,
 }: {
   blocks: Block[];
   onSave: (blocks: Block[]) => Promise<AutosaveActionResult>;
   delayMs?: number;
+  /** A synchronous source for unload/navigation guards between React renders. */
+  liveBlocksRef?: MutableRefObject<Block[]>;
 }) {
   const [status, setStatus] = useState<AutosaveStatus>('idle');
   const [error, setError] = useState<string | undefined>();
@@ -41,84 +37,118 @@ export function useAutosave({
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
 
   const lastSavedBlocksRef = useRef(blocks);
-  const blocksRef = useRef(blocks);
+  const localBlocksRef = useRef(blocks);
+  const blocksRef = liveBlocksRef ?? localBlocksRef;
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const savingRef = useRef(false);
+  const inFlightSaveRef = useRef<Promise<boolean> | null>(null);
 
   blocksRef.current = blocks;
 
-  /**
-   * Resolves `true` only when the document is known to be persisted —
-   * including the "nothing to save" case, which is also a state in which no
-   * work is at risk. The Studio's navigation guard (v3.1 Phase 1) decides
-   * whether it may proceed from this value, so "didn't error" is not good
-   * enough: an invalid document or a save already in flight must read as
-   * `false`.
-   */
-  const performSave = useCallback(async (): Promise<boolean> => {
-    if (savingRef.current) {
-      return false;
-    }
-    const target = blocksRef.current;
-    if (target === lastSavedBlocksRef.current) {
-      return true;
-    }
-
-    if (!validateDocument(target).valid) {
-      setStatus('invalid');
-      return false;
-    }
-
-    savingRef.current = true;
-    setStatus('saving');
-    setError(undefined);
-    setFieldErrors(undefined);
-    try {
-      const result = await onSave(target);
-      if (result.error) {
-        setStatus('error');
-        setError(result.error);
-        setFieldErrors(result.fieldErrors);
+  /** Persists one immutable snapshot. `saveNow` serializes access to it. */
+  const persistSnapshot = useCallback(
+    async (target: Block[]): Promise<boolean> => {
+      if (!validateDocument(target).valid) {
+        setStatus('invalid');
         return false;
       }
-      lastSavedBlocksRef.current = target;
-      setStatus('saved');
-      setLastSavedAt(new Date());
-      return true;
-    } catch (err) {
-      setStatus('error');
-      setError(err instanceof Error ? err.message : 'Could not save the document.');
-      return false;
-    } finally {
-      savingRef.current = false;
+
+      setStatus('saving');
+      setError(undefined);
+      setFieldErrors(undefined);
+
+      const request = (async () => {
+        try {
+          const result = await onSave(target);
+          if (result.error) {
+            setStatus('error');
+            setError(result.error);
+            setFieldErrors(result.fieldErrors);
+            return false;
+          }
+
+          lastSavedBlocksRef.current = target;
+          // Edits can land while this request is running. Never label that
+          // newer state Saved merely because the older snapshot succeeded.
+          setStatus(blocksRef.current === target ? 'saved' : 'dirty');
+          setLastSavedAt(new Date());
+          return true;
+        } catch (saveError) {
+          setStatus('error');
+          setError(saveError instanceof Error ? saveError.message : 'Could not save the document.');
+          return false;
+        }
+      })();
+
+      inFlightSaveRef.current = request;
+      try {
+        return await request;
+      } finally {
+        if (inFlightSaveRef.current === request) {
+          inFlightSaveRef.current = null;
+        }
+      }
+    },
+    [blocksRef, onSave],
+  );
+
+  /**
+   * Resolves `true` only when the latest document state is persisted.
+   *
+   * Concurrent callers join the in-flight request. Once it lands, the loop
+   * immediately persists any blocks changed during that request. Role
+   * switches, route navigation, and manual saves therefore all wait for the
+   * newest snapshot instead of dropping or rejecting a pending autosave.
+   */
+  const saveNow = useCallback(async (): Promise<boolean> => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = undefined;
     }
-  }, [onSave]);
+
+    while (true) {
+      const inFlight = inFlightSaveRef.current;
+      if (inFlight) {
+        if (!(await inFlight)) {
+          return false;
+        }
+        continue;
+      }
+
+      const target = blocksRef.current;
+      if (target === lastSavedBlocksRef.current) {
+        return true;
+      }
+      if (!(await persistSnapshot(target))) {
+        return false;
+      }
+    }
+  }, [blocksRef, persistSnapshot]);
 
   useEffect(() => {
     if (blocks === lastSavedBlocksRef.current) {
       return;
     }
-    setStatus((prev) => (prev === 'saving' ? prev : 'dirty'));
+
+    setStatus((previous) => (previous === 'saving' ? previous : 'dirty'));
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
     timeoutRef.current = setTimeout(() => {
-      void performSave();
+      void saveNow();
     }, delayMs);
+
     return () => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
+        timeoutRef.current = undefined;
       }
     };
-  }, [blocks, delayMs, performSave]);
+  }, [blocks, delayMs, saveNow]);
 
-  /** Bypasses the debounce — used by the header's Save button and `Ctrl/Cmd+S`. */
-  const saveNow = useCallback(async (): Promise<boolean> => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-    return performSave();
-  }, [performSave]);
+  const isDirtyNow = useCallback(
+    () => blocksRef.current !== lastSavedBlocksRef.current,
+    [blocksRef],
+  );
 
   return {
     status,
@@ -126,12 +156,10 @@ export function useAutosave({
     fieldErrors,
     lastSavedAt,
     isDirty: blocks !== lastSavedBlocksRef.current,
+    isDirtyNow,
     /**
-     * The last blocks known to be persisted — what "discard" must restore.
-     * Exposed for the Studio's shared editor-state layer (v3.1 Phase 1),
-     * which defines discard as "return to the last saved snapshot"; the
-     * caller's `initialBlocks` prop can't serve that role, because after an
-     * autosave it describes an older version than the one on the server.
+     * The last blocks known to be persisted — what Discard restores. The
+     * initial prop cannot serve this role after one or more autosaves.
      */
     lastSavedBlocks: lastSavedBlocksRef.current,
     saveNow,
