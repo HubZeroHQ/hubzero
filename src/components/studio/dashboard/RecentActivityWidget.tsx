@@ -2,6 +2,7 @@ import { ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { auth } from '@/lib/auth';
 import { loadActivity } from '@/lib/studio/activity/service';
+import { measureServerOperation } from '@/lib/performance/server';
 
 /**
  * A short preview of Studio-wide activity (v3.1 Milestone 16).
@@ -20,6 +21,10 @@ import { loadActivity } from '@/lib/studio/activity/service';
 const PREVIEW_LIMIT = 5;
 
 export async function RecentActivityWidget() {
+  return measureServerOperation('/studio/dashboard', 'recent-activity', renderRecentActivityWidget);
+}
+
+async function renderRecentActivityWidget() {
   const session = await auth();
   if (!session) return null;
 

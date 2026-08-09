@@ -17,6 +17,7 @@ import { workRepository } from '@/lib/db/repositories/work';
 import { isFeatured } from '@/lib/studio/featured-order';
 import { formatRelativeTime } from '@/lib/utils/relative-time';
 import type { Work } from '@/types/studio';
+import { measureServerOperation } from '@/lib/performance/server';
 
 export const metadata: Metadata = { title: 'Work — HubZero Studio' };
 
@@ -35,6 +36,12 @@ export default async function WorkListPage({
 }: {
   searchParams: Promise<WorkSearchParams>;
 }) {
+  return measureServerOperation('/studio/content/work', 'page', () =>
+    renderWorkListPage(searchParams),
+  );
+}
+
+async function renderWorkListPage(searchParams: Promise<WorkSearchParams>) {
   const params = await searchParams;
   const [allEntries, technologies] = await Promise.all([
     workRepository.list(),

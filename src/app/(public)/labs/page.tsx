@@ -6,6 +6,7 @@ import type { PublicLabSummary } from '@/lib/public/domain';
 import { createPublicMetadata } from '@/lib/public/discovery/metadata';
 import { breadcrumbJsonLd, collectionPageJsonLd } from '@/lib/public/discovery/structured-data';
 import { listPublicSummaries } from '@/lib/public/queries';
+import { measureServerOperation } from '@/lib/performance/server';
 
 const description =
   'Active HubZero engineering investigations with explicit stages, dated progress, technical evidence, and graduation criteria.';
@@ -24,6 +25,10 @@ export default async function LabsIndexPage({
 }: {
   searchParams: Promise<{ stage?: string | string[] }>;
 }) {
+  return measureServerOperation('/labs', 'page', () => renderLabsIndexPage(searchParams));
+}
+
+async function renderLabsIndexPage(searchParams: Promise<{ stage?: string | string[] }>) {
   const summaries = await listPublicSummaries('lab').catch((error) => {
     console.error('Labs public index read failed.', error);
     return [] as Awaited<ReturnType<typeof listPublicSummaries>>;

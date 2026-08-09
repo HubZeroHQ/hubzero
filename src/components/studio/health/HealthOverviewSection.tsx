@@ -1,5 +1,6 @@
 import { loadHealthReport } from '@/lib/studio/health/service';
 import { HealthOverview } from './HealthOverview';
+import { measureServerOperation } from '@/lib/performance/server';
 
 /**
  * Server boundary for the dashboard's health overview: one load, then pure
@@ -8,6 +9,8 @@ import { HealthOverview } from './HealthOverview';
  * presentation, never in what was computed.
  */
 export async function HealthOverviewSection() {
-  const report = await loadHealthReport();
-  return <HealthOverview report={report} />;
+  return measureServerOperation('/studio/dashboard', 'health-overview', async () => {
+    const report = await loadHealthReport();
+    return <HealthOverview report={report} />;
+  });
 }

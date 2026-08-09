@@ -128,6 +128,16 @@ export interface PublicRepository {
     type: PublicDetailEntityType,
     now?: Date,
   ): Promise<Array<{ slug: string; reason: string | null }>>;
+  /**
+   * The multi-collection form used by Studio health. All requested types share
+   * one evidence graph and one batched media/taxonomy resolution pass.
+   */
+  listHomepageEligibilityForTypes(
+    types: readonly PublicDetailEntityType[],
+    now?: Date,
+  ): Promise<
+    Partial<Record<PublicDetailEntityType, Array<{ slug: string; reason: string | null }>>>
+  >;
 }
 
 export function createPublicRepository(source: PublicDataSource): PublicRepository {
@@ -139,7 +149,22 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
   type EvidenceContext = {
     query: EvidenceQuery;
     destinations: ReadonlyMap<string, PublicEntityLink>;
+    entities: readonly StudioPublicEntity[];
+    entitiesByRef: ReadonlyMap<string, StudioPublicEntity>;
+    entitiesBySlug: ReadonlyMap<string, StudioPublicEntity>;
+    summariesByRef: ReadonlyMap<string, PublicEntitySummary>;
+    mediaById: ReadonlyMap<string, Parameters<typeof toPublicMedia>[0]>;
+    taxonomyById: ReadonlyMap<
+      string,
+      Awaited<ReturnType<PublicDataSource['findTaxonomy']>>[number]
+    >;
+    profilesByTeamId: ReadonlyMap<string, EngineeringProfile>;
   };
+
+  type ResolutionContext = Pick<
+    EvidenceContext,
+    'entitiesByRef' | 'mediaById' | 'taxonomyById' | 'profilesByTeamId'
+  >;
 
   /**
    * `bypassStatus` exists for exactly one caller: `findDetail`'s Draft Mode
@@ -152,7 +177,11 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
    * *other* entities — a still-draft related entry stays invisible in a
    * preview exactly as it would once the subject actually publishes.
    */
-  async function visible(entity: StudioPublicEntity, bypassStatus = false): Promise<boolean> {
+  async function visible(
+    entity: StudioPublicEntity,
+    bypassStatus = false,
+    context?: ResolutionContext,
+  ): Promise<boolean> {
     if (entity.type === 'teamMember') {
       return isPubliclyVisible({
         type: 'teamMember',
@@ -162,7 +191,11 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
     }
     if (entity.type === 'engineeringProfile') {
       const profile = entity.record as EngineeringProfile;
-      const team = await source.findEntityById('teamMember', profile.teamMemberId.toString());
+      const team = context
+        ? context.entitiesByRef.get(
+            refKey({ type: 'teamMember', id: profile.teamMemberId.toString() }),
+          )
+        : await source.findEntityById('teamMember', profile.teamMemberId.toString());
       const teamRecord = team?.record as Team | undefined;
       return isPubliclyVisible({
         type: 'engineeringProfile',
@@ -186,9 +219,16 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
   async function terms(
     ids: readonly { toString(): string }[],
     kind: PublicTaxonomyKind,
+    context?: ResolutionContext,
   ): Promise<PublicTaxonomyTerm[]> {
-    const records = await source.findTaxonomy(ids.map((id) => id.toString()));
-    const byId = new Map(records.map((term) => [term._id.toString(), term]));
+    const byId =
+      context?.taxonomyById ??
+      new Map(
+        (await source.findTaxonomy(ids.map((id) => id.toString()))).map((term) => [
+          term._id.toString(),
+          term,
+        ]),
+      );
     return ids.flatMap((id) => {
       const term = byId.get(id.toString());
       return term?.kind === kind ? [{ kind, label: term.label, slug: term.slug }] : [];
@@ -198,24 +238,36 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
   async function media(
     id: { toString(): string } | undefined,
     role: Parameters<typeof toPublicMedia>[1],
+    context?: ResolutionContext,
   ) {
     if (!id) return undefined;
-    const [record] = await source.findMedia([id.toString()]);
+    const record = context
+      ? context.mediaById.get(id.toString())
+      : (await source.findMedia([id.toString()]))[0];
     return toPublicMedia(record, role);
   }
 
-  async function gallery(ids: readonly { toString(): string }[]) {
-    const records = await source.findMedia(ids.map((id) => id.toString()));
-    const byId = new Map(records.map((item) => [item._id.toString(), item]));
+  async function gallery(ids: readonly { toString(): string }[], context?: ResolutionContext) {
+    const byId =
+      context?.mediaById ??
+      new Map(
+        (await source.findMedia(ids.map((id) => id.toString()))).map((item) => [
+          item._id.toString(),
+          item,
+        ]),
+      );
     return ids.flatMap((id) => {
       const resolved = toPublicMedia(byId.get(id.toString()), 'gallery');
       return resolved ? [resolved] : [];
     });
   }
 
-  async function resolveAuthor(userId: string): Promise<PublicAuthor> {
+  async function resolveAuthor(userId: string, context?: ResolutionContext): Promise<PublicAuthor> {
     const user = await source.findUser(userId);
     if (!user) return ORGANIZATION_AUTHOR;
+    // The uniqueness check intentionally includes hidden and archived Team
+    // records. The graph's Team population is visibility-filtered, so using it
+    // here could turn a duplicate linkage into a public person attribution.
     const matches = await source.findTeamsByUserId(userId);
     if (matches.length !== 1 || !matches[0]) return ORGANIZATION_AUTHOR;
     const team = matches[0];
@@ -228,14 +280,22 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
     ) {
       return ORGANIZATION_AUTHOR;
     }
-    const profile = await source.findProfileByTeamId(team._id.toString());
+    const profile = context
+      ? context.profilesByTeamId.get(team._id.toString())
+      : await source.findProfileByTeamId(team._id.toString());
     const profileEntity = profile
-      ? await source.findEntityById('engineeringProfile', profile._id.toString())
+      ? context
+        ? context.entitiesByRef.get(
+            refKey({ type: 'engineeringProfile', id: profile._id.toString() }),
+          )
+        : await source.findEntityById('engineeringProfile', profile._id.toString())
       : null;
-    const profileAvailable = Boolean(profileEntity && (await visible(profileEntity)));
-    const portrait = await media(team.portraitId, 'portrait');
+    const profileAvailable = Boolean(
+      profileEntity && (await visible(profileEntity, false, context)),
+    );
+    const portrait = await media(team.portraitId, 'portrait', context);
     const technologies =
-      profileAvailable && profile ? await terms(profile.technologyIds, 'technology') : [];
+      profileAvailable && profile ? await terms(profile.technologyIds, 'technology', context) : [];
     return {
       kind: 'person',
       name: team.name,
@@ -258,9 +318,14 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
    * person on a public page would violate their own visibility switch, not
    * just the Career listing's.
    */
-  async function resolveHiringManager(teamId?: string): Promise<PublicEntityLink | undefined> {
+  async function resolveHiringManager(
+    teamId?: string,
+    context?: ResolutionContext,
+  ): Promise<PublicEntityLink | undefined> {
     if (!teamId) return undefined;
-    const entity = await source.findEntityById('teamMember', teamId);
+    const entity = context
+      ? context.entitiesByRef.get(refKey({ type: 'teamMember', id: teamId }))
+      : await source.findEntityById('teamMember', teamId);
     if (!entity) return undefined;
     const record = entity.record as Team;
     const teamPublic = isPubliclyVisible({
@@ -269,7 +334,9 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
       archived: record.archived,
     });
     if (!teamPublic) return undefined;
-    const profile = await source.findProfileByTeamId(teamId);
+    const profile = context
+      ? context.profilesByTeamId.get(teamId)
+      : await source.findProfileByTeamId(teamId);
     const profileVisible = Boolean(
       profile &&
       isPubliclyVisible({
@@ -295,17 +362,18 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
     includeRelationships = true,
     evidence?: EvidenceContext,
     bypassStatus = false,
+    context?: ResolutionContext,
   ): Promise<PublicEntitySummary | null> {
-    if (!(await visible(entity, bypassStatus))) return null;
+    if (!(await visible(entity, bypassStatus, context))) return null;
 
     switch (entity.type) {
       case 'work': {
         const record = entity.record as Work;
         if (typeof record.summary !== 'string' || !record.summary.trim()) return null;
         const [technologies, categories, hero] = await Promise.all([
-          terms(record.technologyIds, 'technology'),
-          terms(record.categoryTagIds, 'category'),
-          media(record.heroImageId, 'hero'),
+          terms(record.technologyIds, 'technology', context),
+          terms(record.categoryTagIds, 'category', context),
+          media(record.heroImageId, 'hero', context),
         ]);
         const summary: PublicWorkSummary = {
           type: 'work',
@@ -327,8 +395,8 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
         const record = entity.record as Build;
         if (typeof record.summary !== 'string' || !record.summary.trim()) return null;
         const [technologies, hero] = await Promise.all([
-          terms(record.technologyIds, 'technology'),
-          media(record.heroImageId, 'hero'),
+          terms(record.technologyIds, 'technology', context),
+          media(record.heroImageId, 'hero', context),
         ]);
         const links = [
           externalLink('live', 'Open product', record.liveUrl, record.deploymentState),
@@ -353,9 +421,9 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
         const record = entity.record as Blueprint;
         if (!record.shortDescription?.trim() || !record.liveDeploymentUrl) return null;
         const [technologies, hero, previewMedia] = await Promise.all([
-          terms(record.technologyIds, 'technology'),
-          media(record.heroImageId, 'hero'),
-          gallery(record.previewAssetIds),
+          terms(record.technologyIds, 'technology', context),
+          media(record.heroImageId, 'hero', context),
+          gallery(record.previewAssetIds, context),
         ]);
         // Blueprint publication has a stronger editorial gate than workflow visibility:
         // another team must be able to inspect a real implementation before the record is
@@ -397,8 +465,8 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
           return null;
         }
         const [technologies, hero] = await Promise.all([
-          terms(record.technologyIds, 'technology'),
-          media(record.heroImageId, 'hero'),
+          terms(record.technologyIds, 'technology', context),
+          media(record.heroImageId, 'hero', context),
         ]);
         const links = [
           externalLink('repository', 'View repository', record.publicRepoUrl),
@@ -429,9 +497,9 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
         const record = entity.record as Note;
         if (!record.summary?.trim() || !(record.publicationDate instanceof Date)) return null;
         const [technologies, hero, author] = await Promise.all([
-          terms(record.technologyIds, 'technology'),
-          media(record.heroImageId, 'hero'),
-          resolveAuthor(record.authorId.toString()),
+          terms(record.technologyIds, 'technology', context),
+          media(record.heroImageId, 'hero', context),
+          resolveAuthor(record.authorId.toString(), context),
         ]);
         const summary: PublicNoteSummary = {
           type: 'note',
@@ -450,16 +518,17 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
       }
       case 'engineeringProfile': {
         const record = entity.record as EngineeringProfile;
-        const teamEntity = await source.findEntityById(
-          'teamMember',
-          record.teamMemberId.toString(),
-        );
-        if (!teamEntity || !(await visible(teamEntity))) return null;
+        const teamEntity = context
+          ? context.entitiesByRef.get(
+              refKey({ type: 'teamMember', id: record.teamMemberId.toString() }),
+            )
+          : await source.findEntityById('teamMember', record.teamMemberId.toString());
+        if (!teamEntity || !(await visible(teamEntity, false, context))) return null;
         const team = teamEntity.record as Team;
         const [technologies, portrait, hero] = await Promise.all([
-          terms(record.technologyIds, 'technology'),
-          media(record.portraitId ?? team.portraitId, 'portrait'),
-          media(record.heroMediaId, 'hero'),
+          terms(record.technologyIds, 'technology', context),
+          media(record.portraitId ?? team.portraitId, 'portrait', context),
+          media(record.heroMediaId, 'hero', context),
         ]);
         const summary: PublicEngineeringProfileSummary = {
           type: 'engineeringProfile',
@@ -485,7 +554,9 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
           publicProfile: record.publicProfile,
           archived: record.archived,
         });
-        const profile = await source.findProfileByTeamId(entity.id);
+        const profile = context
+          ? context.profilesByTeamId.get(entity.id)
+          : await source.findProfileByTeamId(entity.id);
         const profileVisible = Boolean(
           profile &&
           isPubliclyVisible({
@@ -494,9 +565,11 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
             teamPublic,
           }),
         );
-        const portrait = await media(record.portraitId, 'portrait');
+        const portrait = await media(record.portraitId, 'portrait', context);
         const profileTechnologies =
-          profileVisible && profile ? await terms(profile.technologyIds, 'technology') : [];
+          profileVisible && profile
+            ? await terms(profile.technologyIds, 'technology', context)
+            : [];
         const summary: PublicTeamMemberSummary = {
           type: 'teamMember',
           title: record.name,
@@ -542,7 +615,7 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
       case 'career': {
         const record = entity.record as Career;
         if (!record.summary?.trim()) return null;
-        const technologies = await terms(record.technologyIds, 'technology');
+        const technologies = await terms(record.technologyIds, 'technology', context);
         const summary: PublicCareerSummary = {
           type: 'career',
           title: record.title,
@@ -568,15 +641,111 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
    * `buildEvidenceQuery` and `listDiscoveryEntries` used to each duplicate
    * this sequence independently; both now call this with their own `types`.
    */
+  async function buildResolutionContext(
+    entities: readonly StudioPublicEntity[],
+  ): Promise<ResolutionContext & { entitiesBySlug: ReadonlyMap<string, StudioPublicEntity> }> {
+    const entitiesByRef = new Map(
+      entities.map((entity) => [refKey({ type: entity.type, id: entity.id }), entity]),
+    );
+    const entitiesBySlug = new Map<string, StudioPublicEntity>();
+    const profilesByTeamId = new Map<string, EngineeringProfile>();
+    const mediaIds = new Set<string>();
+    const taxonomyIds = new Set<string>();
+
+    const addIds = (target: Set<string>, ids: readonly { toString(): string }[] | undefined) => {
+      for (const id of ids ?? []) target.add(id.toString());
+    };
+    const addId = (target: Set<string>, id: { toString(): string } | undefined) => {
+      if (id) target.add(id.toString());
+    };
+
+    for (const entity of entities) {
+      if ('slug' in entity.record && typeof entity.record.slug === 'string') {
+        entitiesBySlug.set(`${entity.type}:${entity.record.slug}`, entity);
+      }
+
+      switch (entity.type) {
+        case 'work': {
+          const record = entity.record as Work;
+          addIds(taxonomyIds, record.technologyIds);
+          addIds(taxonomyIds, record.categoryTagIds);
+          addId(mediaIds, record.heroImageId);
+          break;
+        }
+        case 'build': {
+          const record = entity.record as Build;
+          addIds(taxonomyIds, record.technologyIds);
+          addId(mediaIds, record.heroImageId);
+          addIds(mediaIds, record.galleryImageIds);
+          break;
+        }
+        case 'blueprint': {
+          const record = entity.record as Blueprint;
+          addIds(taxonomyIds, record.technologyIds);
+          addId(mediaIds, record.heroImageId);
+          addIds(mediaIds, record.previewAssetIds);
+          break;
+        }
+        case 'lab': {
+          const record = entity.record as Lab;
+          addIds(taxonomyIds, record.technologyIds);
+          addId(mediaIds, record.heroImageId);
+          addIds(mediaIds, record.galleryImageIds);
+          break;
+        }
+        case 'note': {
+          const record = entity.record as Note;
+          addIds(taxonomyIds, record.technologyIds);
+          addId(mediaIds, record.heroImageId);
+          addIds(mediaIds, record.galleryImageIds);
+          break;
+        }
+        case 'engineeringProfile': {
+          const record = entity.record as EngineeringProfile;
+          profilesByTeamId.set(record.teamMemberId.toString(), record);
+          addIds(taxonomyIds, record.technologyIds);
+          addId(mediaIds, record.portraitId);
+          addId(mediaIds, record.heroMediaId);
+          addIds(mediaIds, record.galleryImageIds);
+          break;
+        }
+        case 'teamMember': {
+          const record = entity.record as Team;
+          addId(mediaIds, record.portraitId);
+          break;
+        }
+        case 'career':
+          addIds(taxonomyIds, (entity.record as Career).technologyIds);
+          break;
+        case 'service':
+          break;
+      }
+    }
+
+    const [mediaRecords, taxonomyRecords] = await Promise.all([
+      source.findMedia([...mediaIds]),
+      source.findTaxonomy([...taxonomyIds]),
+    ]);
+
+    return {
+      entitiesByRef,
+      entitiesBySlug,
+      profilesByTeamId,
+      mediaById: new Map(mediaRecords.map((record) => [record._id.toString(), record])),
+      taxonomyById: new Map(taxonomyRecords.map((record) => [record._id.toString(), record])),
+    };
+  }
+
   async function buildGraph(
     types: readonly PublicEntityType[],
   ): Promise<
     EvidenceContext & { visible: { entity: StudioPublicEntity; summary: PublicEntitySummary }[] }
   > {
     const entities = (await Promise.all(types.map((type) => source.listEntities(type)))).flat();
+    const resolution = await buildResolutionContext(entities);
     const projected = await Promise.all(
       entities.map(async (entity) => {
-        const summary = await mapSummary(entity, false);
+        const summary = await mapSummary(entity, false, undefined, false, resolution);
         return summary ? { entity, summary } : null;
       }),
     );
@@ -600,13 +769,20 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
         ),
       ),
       destinations,
+      entities,
+      ...resolution,
+      summariesByRef: new Map(
+        visible.map(({ entity, summary }) => [
+          refKey({ type: entity.type, id: entity.id }),
+          summary,
+        ]),
+      ),
       visible,
     };
   }
 
   async function buildEvidenceQuery(): Promise<EvidenceContext> {
-    const { query, destinations } = await buildGraph(ALL_PUBLIC_TYPES);
-    return { query, destinations };
+    return buildGraph(ALL_PUBLIC_TYPES);
   }
 
   async function resolveRelations(
@@ -736,11 +912,24 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
     evidence?: EvidenceContext,
     options?: { preview?: boolean },
   ): Promise<PublicEntityDetail | null> {
-    const entity = await source.findEntityBySlug(type, slug);
+    // A detail can ask for both one-hop relationships and a multi-hop Trace.
+    // Without carrying one context through both, each resolver independently
+    // rebuilt the complete public graph. Build it once at the boundary and
+    // reuse it for the subject summary, relationships, and trace.
+    if (!evidence) {
+      return findDetail(type, slug, await buildEvidenceQuery(), options);
+    }
+
+    const evidenceEntity = evidence?.entitiesBySlug.get(`${type}:${slug}`);
+    const entity = evidenceEntity ?? (await source.findEntityBySlug(type, slug));
     if (!entity) return null;
     // Only the subject's own status gate bypasses — everything downstream
     // (relationships, trace) still resolves other entities' real visibility.
-    const summary = await mapSummary(entity, true, undefined, options?.preview);
+    const summary = options?.preview
+      ? await mapSummary(entity, true, undefined, true)
+      : evidenceEntity
+        ? (evidence?.summariesByRef.get(refKey({ type: entity.type, id: entity.id })) ?? null)
+        : await mapSummary(entity, true);
     if (!summary || summary.type !== type) return null;
     const documents = await publicDocuments(type, entity.id);
     const relationships = await resolveRelations(entity, evidence);
@@ -764,7 +953,7 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
           ...summary,
           documents,
           relationships,
-          gallery: await gallery((entity.record as Build).galleryImageIds),
+          gallery: await gallery((entity.record as Build).galleryImageIds, evidence),
         };
       }
       case 'blueprint': {
@@ -784,7 +973,7 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
           documents,
           relationships,
           graduationCriteria: record.graduationCriteria,
-          gallery: await gallery(record.galleryImageIds),
+          gallery: await gallery(record.galleryImageIds, evidence),
           milestones: record.milestones.map((milestone) => ({
             title: milestone.title,
             date: milestone.date.toISOString(),
@@ -801,7 +990,7 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
           ...summary,
           documents,
           relationships,
-          gallery: await gallery((entity.record as Note).galleryImageIds),
+          gallery: await gallery((entity.record as Note).galleryImageIds, evidence),
           readingTimeMinutes: estimateReadingTimeMinutes(body.blocks),
         };
       }
@@ -815,13 +1004,16 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
           engineeringPhilosophy: record.engineeringPhilosophy,
           currentInterests: [...record.currentInterests],
           areasOfExpertise: [...record.areasOfExpertise],
-          gallery: await gallery(record.galleryImageIds),
+          gallery: await gallery(record.galleryImageIds, evidence),
         };
       }
       case 'career': {
         if (summary.type !== 'career') return null;
         const record = entity.record as Career;
-        const hiringManager = await resolveHiringManager(record.hiringManagerTeamId?.toString());
+        const hiringManager = await resolveHiringManager(
+          record.hiringManagerTeamId?.toString(),
+          evidence,
+        );
         return {
           ...summary,
           documents,
@@ -875,16 +1067,15 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
    * section happens to be toggled on for navigation right now.
    */
   async function getHomepage(now: Date): Promise<PublicHomepageProjection> {
-    const [workEntities, buildEntities, blueprintEntities, labEntities, noteEntities, profiles] =
-      await Promise.all([
-        source.listEntities('work'),
-        source.listEntities('build'),
-        source.listEntities('blueprint'),
-        source.listEntities('lab'),
-        source.listEntities('note'),
-        source.listEntities('engineeringProfile'),
-      ]);
     const evidence = await buildEvidenceQuery();
+    const byType = (type: PublicEntityType) =>
+      evidence.entities.filter((entity) => entity.type === type);
+    const workEntities = byType('work');
+    const buildEntities = byType('build');
+    const blueprintEntities = byType('blueprint');
+    const labEntities = byType('lab');
+    const noteEntities = byType('note');
+    const profiles = byType('engineeringProfile');
 
     const work = compact(
       await Promise.all(
@@ -962,6 +1153,43 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
     };
   }
 
+  async function listHomepageEligibilityForTypes(
+    types: readonly PublicDetailEntityType[],
+    now: Date,
+  ): Promise<
+    Partial<Record<PublicDetailEntityType, Array<{ slug: string; reason: string | null }>>>
+  > {
+    const uniqueTypes = [...new Set(types)];
+    if (uniqueTypes.length === 0) return {};
+
+    // Relationship eligibility must see every public type, but that graph is
+    // built once for the whole health snapshot rather than once per collection.
+    const evidence = await buildEvidenceQuery();
+    const result: Partial<
+      Record<PublicDetailEntityType, Array<{ slug: string; reason: string | null }>>
+    > = {};
+
+    await Promise.all(
+      uniqueTypes.map(async (type) => {
+        const entities = evidence.entities.filter((entity) => entity.type === type);
+        const rows = await Promise.all(
+          entities.map(async (entity) => {
+            if (!('slug' in entity.record)) return null;
+            const slug = entity.record.slug;
+            const detail = await findDetail(type, slug, evidence);
+            if (!detail) return null;
+            return { slug, reason: homepageIneligibilityReason(detail, now) };
+          }),
+        );
+        result[type] = rows.filter(
+          (row): row is { slug: string; reason: string | null } => row !== null,
+        );
+      }),
+    );
+
+    return result;
+  }
+
   return {
     async findSummary(type, slug) {
       return freezePublicDto(await findSummary(type, slug));
@@ -1003,18 +1231,11 @@ export function createPublicRepository(source: PublicDataSource): PublicReposito
      * different and more basic reason than failing an editorial quality check.
      */
     async listHomepageEligibility(type, now = new Date()) {
-      const entities = await source.listEntities(type);
-      const evidence = await buildEvidenceQuery();
-      const rows = await Promise.all(
-        entities.map(async (entity) => {
-          if (!('slug' in entity.record)) return null;
-          const slug = entity.record.slug;
-          const detail = await findDetail(type as PublicDetailEntityType, slug, evidence);
-          if (!detail) return null;
-          return { slug, reason: homepageIneligibilityReason(detail, now) };
-        }),
-      );
-      return rows.filter((row): row is { slug: string; reason: string | null } => row !== null);
+      const result = await listHomepageEligibilityForTypes([type], now);
+      return result[type] ?? [];
+    },
+    async listHomepageEligibilityForTypes(types, now = new Date()) {
+      return listHomepageEligibilityForTypes(types, now);
     },
   };
 }

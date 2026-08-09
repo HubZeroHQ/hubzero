@@ -6,8 +6,9 @@ import { labRepository } from '@/lib/db/repositories/lab';
 import { noteRepository } from '@/lib/db/repositories/note';
 import { workRepository } from '@/lib/db/repositories/work';
 import type { PublicDetailEntityType, PublicEntityType } from '@/lib/public/domain';
-import { listHomepageEligibility } from '@/lib/public/queries';
+import { listHomepageEligibility, listHomepageEligibilityForTypes } from '@/lib/public/queries';
 import { isFeatured } from '@/lib/studio/featured-order';
+import type { StudioContentSnapshot } from '@/lib/studio/request-data';
 import type {
   Blueprint,
   Build,
@@ -240,6 +241,40 @@ export const FEATURED_COLLECTIONS: Record<FeaturedCollectionKey, FeaturedCollect
 
 export function isFeaturedCollectionKey(value: string): value is FeaturedCollectionKey {
   return value in FEATURED_COLLECTIONS;
+}
+
+/**
+ * Loads the five orderable Studio collections and their public eligibility as
+ * one snapshot. The record queries remain independent and parallel; public
+ * eligibility shares one evidence graph instead of rebuilding it five times.
+ */
+export async function listAllFeaturedCollectionEntries(
+  snapshot?: StudioContentSnapshot,
+): Promise<Record<FeaturedCollectionKey, FeaturedCollectionEntry[]>> {
+  const [work, builds, blueprints, labs, notes, eligibility] = await Promise.all([
+    snapshot ? Promise.resolve(snapshot.work) : workRepository.list(),
+    snapshot ? Promise.resolve(snapshot.builds) : buildRepository.list(),
+    snapshot ? Promise.resolve(snapshot.blueprints) : blueprintRepository.list(),
+    snapshot ? Promise.resolve(snapshot.labs) : labRepository.list(),
+    snapshot ? Promise.resolve(snapshot.notes) : noteRepository.list(),
+    listHomepageEligibilityForTypes(['work', 'build', 'blueprint', 'lab', 'note']),
+  ]);
+
+  const map = (type: PublicDetailEntityType) =>
+    new Map((eligibility[type] ?? []).map((row) => [row.slug, row.reason]));
+  const workEligibility = map('work');
+  const buildEligibility = map('build');
+  const blueprintEligibility = map('blueprint');
+  const labEligibility = map('lab');
+  const noteEligibility = map('note');
+
+  return {
+    work: work.map((record) => toEntry(record, record.title, workEligibility)),
+    builds: builds.map((record) => toEntry(record, record.title, buildEligibility)),
+    blueprints: blueprints.map((record) => toEntry(record, record.name, blueprintEligibility)),
+    labs: labs.map((record) => toEntry(record, record.title, labEligibility)),
+    notes: notes.map((record) => toEntry(record, record.title, noteEligibility)),
+  };
 }
 
 export interface FeaturedCoverageGap {

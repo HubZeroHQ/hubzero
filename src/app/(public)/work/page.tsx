@@ -6,6 +6,7 @@ import type { PublicTaxonomyTerm, PublicWorkSummary } from '@/lib/public/domain'
 import { createPublicMetadata } from '@/lib/public/discovery/metadata';
 import { breadcrumbJsonLd, collectionPageJsonLd } from '@/lib/public/discovery/structured-data';
 import { listPublicSummaries } from '@/lib/public/queries';
+import { measureServerOperation } from '@/lib/performance/server';
 
 const description =
   'Documented client engineering: the constraints, decisions, implementation, outcomes, and lessons behind HubZero work.';
@@ -24,6 +25,10 @@ export default async function WorkIndexPage({
 }: {
   searchParams: Promise<{ category?: string | string[] }>;
 }) {
+  return measureServerOperation('/work', 'page', () => renderWorkIndexPage(searchParams));
+}
+
+async function renderWorkIndexPage(searchParams: Promise<{ category?: string | string[] }>) {
   const summaries = await listPublicSummaries('work').catch((error) => {
     console.error('Work public index read failed.', error);
     return [] as Awaited<ReturnType<typeof listPublicSummaries>>;

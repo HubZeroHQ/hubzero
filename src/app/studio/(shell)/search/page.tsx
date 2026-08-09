@@ -4,6 +4,7 @@ import { StudioSearch } from '@/components/studio/search/StudioSearch';
 import { auth } from '@/lib/auth';
 import { ensureSearchAdaptersRegistered } from '@/lib/search/register';
 import { listSearchIndex } from '@/lib/search/registry';
+import { measureServerOperation } from '@/lib/performance/server';
 
 export const metadata: Metadata = { title: 'Search — HubZero Studio' };
 
@@ -17,6 +18,10 @@ export const metadata: Metadata = { title: 'Search — HubZero Studio' };
  * browser contains nothing they could not already have listed.
  */
 export default async function StudioSearchPage() {
+  return measureServerOperation('/studio/search', 'page', renderStudioSearchPage);
+}
+
+async function renderStudioSearchPage() {
   const session = await auth();
   ensureSearchAdaptersRegistered();
   const index = session

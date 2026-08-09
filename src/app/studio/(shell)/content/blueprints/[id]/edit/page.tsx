@@ -22,10 +22,17 @@ import { blueprintRepository } from '@/lib/db/repositories/blueprint';
 import { documentRepository } from '@/lib/db/repositories/document';
 import { toMediaAssetDTO } from '@/lib/media/dto';
 import { resolveHeroAndGallery } from '@/lib/media/resolve';
+import { measureServerOperation } from '@/lib/performance/server';
 
 export const metadata: Metadata = { title: 'Edit Blueprint — HubZero Studio' };
 
 export default async function EditBlueprintPage({ params }: { params: Promise<{ id: string }> }) {
+  return measureServerOperation('/studio/content/blueprints/[id]/edit', 'page', () =>
+    renderEditBlueprintPage(params),
+  );
+}
+
+async function renderEditBlueprintPage(params: Promise<{ id: string }>) {
   const { id } = await params;
   const blueprint = await blueprintRepository.findById(id);
   if (!blueprint) {

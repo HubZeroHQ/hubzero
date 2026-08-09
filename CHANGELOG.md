@@ -2,6 +2,26 @@
 
 All notable changes to this project are documented in this file. Entries are engineering release notes, not marketing copy — see [`docs/releases/`](docs/releases) for the full reasoning behind each release.
 
+## v3.2.0 - 2026-08-10
+
+### Performance
+
+- Removed the principal public and Studio MongoDB query-amplification paths through request-scoped snapshots, batched enrichment, shared projections, and safe parallel composition.
+- Reduced controlled operation maxima to 21 for the homepage, 13 for Work detail, 28 for Studio health, 39 for a Studio editor, and 47 for the dashboard, below the retained 40/13/45/56/64 regression budgets.
+- Added a repeatable query-operation regression harness and structured Preview telemetry for connection, checkout, command, composition, and runtime-instance timing.
+
+### Reliability
+
+- Bounded initial MongoDB readiness to five seconds and discarded timed-out clients so 47–80 second cold connection attempts cannot remain on the application request path.
+- Added a pre-stream Studio root readiness gate so database-unavailable document requests fail with HTTP 5xx before Studio begins rendering, rather than becoming an apparent HTTP 200 through a streamed error boundary.
+- Preserved race-safe process-level client reuse and made failed initialization retryable for repositories and the Auth.js MongoDB adapter.
+- Added an authenticated, detail-free Studio readiness endpoint for operational checks.
+
+### Infrastructure decision
+
+- Kept MongoDB, the existing pool configuration, Atlas tier/region, cache semantics, and indexes unchanged. Evidence supports Mumbai-proximate Vercel execution as a future controlled rollout, but this release does not change Production infrastructure.
+- The underlying cold-instance DNS/TLS/network-path variability is not claimed fixed; v3.2.0 bounds its application impact and reports failure correctly where a pre-stream contract is technically available.
+
 ## v3.1.1 - 2026-08-08
 
 ### Fixed

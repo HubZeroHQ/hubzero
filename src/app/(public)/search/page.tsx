@@ -3,6 +3,7 @@ import { SearchPage } from '@/components/public/search/SearchPage';
 import { createPublicMetadata } from '@/lib/public/discovery/metadata';
 import type { PublicSearchResult } from '@/lib/public/discovery/search';
 import { searchPublicContent } from '@/lib/public/queries';
+import { measureServerOperation } from '@/lib/performance/server';
 
 export const metadata: Metadata = createPublicMetadata({
   title: 'Search',
@@ -16,6 +17,10 @@ export default async function PublicSearchRoute({
 }: {
   searchParams: Promise<{ q?: string | string[] }>;
 }) {
+  return measureServerOperation('/search', 'page', () => renderPublicSearch(searchParams));
+}
+
+async function renderPublicSearch(searchParams: Promise<{ q?: string | string[] }>) {
   const parameters = await searchParams;
   const rawQuery = Array.isArray(parameters.q) ? parameters.q[0] : parameters.q;
   const query = (rawQuery ?? '').trim().slice(0, 120);

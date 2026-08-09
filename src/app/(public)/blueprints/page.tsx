@@ -6,6 +6,7 @@ import type { ImmutablePublic, PublicBlueprintSummary } from '@/lib/public/domai
 import { createPublicMetadata } from '@/lib/public/discovery/metadata';
 import { breadcrumbJsonLd, collectionPageJsonLd } from '@/lib/public/discovery/structured-data';
 import { listPublicSummaries } from '@/lib/public/queries';
+import { measureServerOperation } from '@/lib/performance/server';
 
 const description =
   'Reusable, versioned engineering foundations documented through their information architecture, design language, implementation guidance, and evidence.';
@@ -24,6 +25,17 @@ export default async function BlueprintsIndexPage({
 }: {
   searchParams: Promise<{ architecture?: string | string[]; designLanguage?: string | string[] }>;
 }) {
+  return measureServerOperation('/blueprints', 'page', () =>
+    renderBlueprintsIndexPage(searchParams),
+  );
+}
+
+async function renderBlueprintsIndexPage(
+  searchParams: Promise<{
+    architecture?: string | string[];
+    designLanguage?: string | string[];
+  }>,
+) {
   const blueprints = await safeBlueprintSummaries();
   const architectureFilters = uniqueValues(blueprints, (entry) => entry.architecture);
   const designLanguageFilters = uniqueValues(blueprints, (entry) => entry.designLanguage);

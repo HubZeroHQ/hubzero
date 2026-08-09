@@ -163,3 +163,15 @@ function cacheKey(type: PublicEntityType, ...parts: string[]): string[] {
 export function listHomepageEligibility(type: PublicDetailEntityType, now = new Date()) {
   return repository.listHomepageEligibility(type, now);
 }
+
+/**
+ * Studio health asks the same eligibility question for every featured
+ * collection. Sharing one repository call prevents five independent evidence
+ * graph builds while retaining the uncached, current authoring semantics.
+ */
+export function listHomepageEligibilityForTypes(
+  types: readonly PublicDetailEntityType[],
+  now = new Date(),
+) {
+  return repository.listHomepageEligibilityForTypes(types, now);
+}

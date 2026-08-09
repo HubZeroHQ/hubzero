@@ -66,7 +66,9 @@ export default auth((req) => {
     return NextResponse.redirect(new URL('/studio/profile/change-password', req.nextUrl.origin));
   }
 
-  return NextResponse.next();
+  const requestHeaders = new Headers(req.headers);
+  requestHeaders.set('x-hubzero-request-id', crypto.randomUUID().slice(0, 12));
+  return NextResponse.next({ request: { headers: requestHeaders } });
 });
 
 export const config = {

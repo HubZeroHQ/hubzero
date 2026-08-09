@@ -9,6 +9,7 @@ import { PageHeader } from '@/components/studio/PageHeader';
 import { auth } from '@/lib/auth';
 import { listAllContent } from '@/lib/studio/dashboard-queries';
 import { leadRepository } from '@/lib/db/repositories/lead';
+import { measureServerOperation } from '@/lib/performance/server';
 
 export const metadata: Metadata = {
   title: 'Dashboard — HubZero Studio',
@@ -34,6 +35,10 @@ export const metadata: Metadata = {
  * rather than re-guarding the route.
  */
 export default async function DashboardPage() {
+  return measureServerOperation('/studio/dashboard', 'page', renderDashboardPage);
+}
+
+async function renderDashboardPage() {
   const session = await auth();
   const { role, id: userId } = session!.user;
 

@@ -11,6 +11,7 @@ import { resolveActors } from '@/lib/studio/actors';
 import { parseActivityFilters, type ActivitySearchParams } from '@/lib/studio/activity/filters';
 import { ACTIVITY_PAGE_SIZE } from '@/lib/studio/activity/page-size';
 import { loadActivity } from '@/lib/studio/activity/service';
+import { measureServerOperation } from '@/lib/performance/server';
 
 export const metadata: Metadata = { title: 'Activity — HubZero Studio' };
 
@@ -33,6 +34,12 @@ export default async function StudioActivityPage({
 }: {
   searchParams: Promise<ActivitySearchParams>;
 }) {
+  return measureServerOperation('/studio/activity', 'page', () =>
+    renderStudioActivityPage(searchParams),
+  );
+}
+
+async function renderStudioActivityPage(searchParams: Promise<ActivitySearchParams>) {
   const session = await auth();
   if (!session || !roleHasCapability(session.user.role, 'editAnyEntry')) {
     return (

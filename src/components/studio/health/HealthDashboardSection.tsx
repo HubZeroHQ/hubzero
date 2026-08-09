@@ -1,5 +1,6 @@
 import { loadHealthReport } from '@/lib/studio/health/service';
 import { HealthDashboard } from './HealthDashboard';
+import { measureServerOperation } from '@/lib/performance/server';
 
 /**
  * Server boundary for the health dashboard: one load, then pure rendering.
@@ -7,6 +8,8 @@ import { HealthDashboard } from './HealthDashboard';
  * a `HealthReport` and can be exercised without a database.
  */
 export async function HealthDashboardSection() {
-  const report = await loadHealthReport();
-  return <HealthDashboard report={report} />;
+  return measureServerOperation('/studio/health', 'health-report', async () => {
+    const report = await loadHealthReport();
+    return <HealthDashboard report={report} />;
+  });
 }
