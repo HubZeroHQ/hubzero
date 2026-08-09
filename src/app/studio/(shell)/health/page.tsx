@@ -5,6 +5,7 @@ import { ButtonLink } from '@/components/ui/ButtonLink';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { roleHasCapability } from '@/config/permissions';
 import { auth } from '@/lib/auth';
+import { measureServerOperation } from '@/lib/performance/server';
 
 export const metadata: Metadata = { title: 'Content health — HubZero Studio' };
 
@@ -22,6 +23,10 @@ export const metadata: Metadata = { title: 'Content health — HubZero Studio' }
  * it here — the same loader, the same rules, the same rendering.
  */
 export default async function ContentHealthPage() {
+  return measureServerOperation('/studio/health', 'page', renderContentHealthPage);
+}
+
+async function renderContentHealthPage() {
   const session = await auth();
   if (!session || !roleHasCapability(session.user.role, 'editAnyEntry')) {
     return (

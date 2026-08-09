@@ -15,18 +15,26 @@ export async function resolveHeroAndGallery(
   heroImageId: ObjectId | undefined,
   galleryImageIds: ObjectId[],
 ): Promise<{ heroAsset: MediaAsset | null; galleryAssets: MediaAsset[] }> {
-  const [heroAsset, galleryAssets] = await Promise.all([
-    heroImageId ? mediaRepository.findById(heroImageId.toString()) : Promise.resolve(null),
-    Promise.all(galleryImageIds.map((imageId) => mediaRepository.findById(imageId.toString()))),
-  ]);
+  const ids = [heroImageId, ...galleryImageIds]
+    .filter((id): id is ObjectId => Boolean(id))
+    .map((id) => id.toString());
+  const assets = await mediaRepository.findByIds(ids);
+  const byId = new Map(assets.map((asset) => [asset._id.toString(), asset]));
 
   return {
-    heroAsset,
-    galleryAssets: galleryAssets.filter((asset): asset is MediaAsset => asset !== null),
+    heroAsset: heroImageId ? (byId.get(heroImageId.toString()) ?? null) : null,
+    galleryAssets: galleryImageIds.flatMap((id) => {
+      const asset = byId.get(id.toString());
+      return asset ? [asset] : [];
+    }),
   };
 }
 
 export async function resolveMediaAssets(ids: ObjectId[]): Promise<MediaAsset[]> {
-  const assets = await Promise.all(ids.map((id) => mediaRepository.findById(id.toString())));
-  return assets.filter((asset): asset is MediaAsset => asset !== null);
+  const assets = await mediaRepository.findByIds(ids.map((id) => id.toString()));
+  const byId = new Map(assets.map((asset) => [asset._id.toString(), asset]));
+  return ids.flatMap((id) => {
+    const asset = byId.get(id.toString());
+    return asset ? [asset] : [];
+  });
 }

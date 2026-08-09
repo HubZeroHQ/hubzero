@@ -28,7 +28,7 @@ import { credentialsProvider } from './providers/credentials';
  */
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
-  adapter: MongoDBAdapter(getMongoClient()),
+  adapter: MongoDBAdapter(getMongoClient),
   secret: serverEnv().AUTH_SECRET,
   providers: [credentialsProvider],
 });

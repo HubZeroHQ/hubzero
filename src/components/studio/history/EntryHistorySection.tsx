@@ -1,6 +1,7 @@
 import type { OwnerType } from '@/lib/documents/schema';
 import { loadEntryHistory } from '@/lib/studio/history/service';
 import { EntryHistory } from './EntryHistory';
+import { measureServerOperation } from '@/lib/performance/server';
 
 /**
  * Server boundary for the timeline: one load, then pure rendering. Split from
@@ -19,6 +20,8 @@ export async function EntryHistorySection({
   entryId: string;
   entry: { createdAt: Date; updatedAt: Date; createdByUserId?: { toString(): string } };
 }) {
-  const events = await loadEntryHistory({ ownerType, entryId, entry });
-  return <EntryHistory events={events} />;
+  return measureServerOperation('/studio/content/[type]/[id]/edit', 'entry-history', async () => {
+    const events = await loadEntryHistory({ ownerType, entryId, entry });
+    return <EntryHistory events={events} />;
+  });
 }

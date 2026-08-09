@@ -1,17 +1,9 @@
 import 'server-only';
 
-import { blueprintRepository } from '@/lib/db/repositories/blueprint';
-import { buildRepository } from '@/lib/db/repositories/build';
-import { careerRepository } from '@/lib/db/repositories/career';
-import { engineeringProfileRepository } from '@/lib/db/repositories/engineering-profile';
-import { labRepository } from '@/lib/db/repositories/lab';
-import { noteRepository } from '@/lib/db/repositories/note';
-import { serviceRepository } from '@/lib/db/repositories/service';
-import { teamRepository } from '@/lib/db/repositories/team';
-import { workRepository } from '@/lib/db/repositories/work';
 import { assertionsFrom } from '@/lib/public/repository';
 import type { StudioPublicEntity, StudioPublicRecord } from '@/lib/public/source';
 import type { PublicEntityType } from '@/lib/public/domain';
+import { loadStudioContentSnapshot, type StudioContentSnapshot } from '../request-data';
 import { findRelationshipIssues, type RelationshipIssue, type RelationshipSnapshot } from './rules';
 
 /**
@@ -33,19 +25,11 @@ import { findRelationshipIssues, type RelationshipIssue, type RelationshipSnapsh
  * publicly visible ones. That difference is the entire point — the public layer
  * drops references it cannot resolve, and the dropped ones are the broken ones.
  */
-export async function loadRelationshipIssues(): Promise<RelationshipIssue[]> {
-  const [work, builds, blueprints, labs, notes, careers, services, team, profiles] =
-    await Promise.all([
-      workRepository.list(),
-      buildRepository.list(),
-      blueprintRepository.list(),
-      labRepository.list(),
-      noteRepository.list(),
-      careerRepository.list(),
-      serviceRepository.list(),
-      teamRepository.list(),
-      engineeringProfileRepository.list(),
-    ]);
+export async function loadRelationshipIssues(
+  providedSnapshot?: StudioContentSnapshot,
+): Promise<RelationshipIssue[]> {
+  const snapshotData = providedSnapshot ?? (await loadStudioContentSnapshot());
+  const { work, builds, blueprints, labs, notes, careers, services, team, profiles } = snapshotData;
 
   const snapshot: RelationshipSnapshot = { entities: [], assertions: [] };
 

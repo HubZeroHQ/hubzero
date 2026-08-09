@@ -1,7 +1,7 @@
 import { ObjectId } from 'mongodb';
 import { describe, expect, it } from 'vitest';
 import type { DocumentRecord } from '@/lib/documents/schema';
-import type { Build, MediaAsset, Team } from '@/types/studio';
+import type { Build, MediaAsset, Team, Work } from '@/types/studio';
 import { createPublicRepository } from './repository';
 import type { PublicDataSource, StudioPublicEntity } from './source';
 
@@ -305,5 +305,111 @@ describe('homepage editorial ordering', () => {
     const projection = await createPublicRepository(multiSource([a, b])).getHomepage(now);
 
     expect(projection.builds.map((feature) => feature.entity.title)).toEqual(['Three', 'Nine']);
+  });
+});
+
+describe('public repository query amplification guards', () => {
+  it('builds one evidence graph for a Work detail with relationships and Trace', async () => {
+    const workId = new ObjectId();
+    const heroId = new ObjectId();
+    const record = {
+      _id: workId,
+      createdAt: now,
+      updatedAt: now,
+      createdByUserId: creator,
+      status: 'published',
+      slug: 'measured-work',
+      referenceId: 'HZ-WK-901',
+      title: 'Measured work',
+      summary: 'A complete case study used to pin the detail query shape.',
+      clientType: 'Product company',
+      timeline: 'Eight weeks',
+      role: 'Engineering partner',
+      technologyIds: [],
+      categoryTagIds: [],
+      relatedBuildIds: [],
+      relatedBlueprintIds: [],
+      relatedLabIds: [],
+      contributors: [],
+      heroImageId: heroId,
+      featuredOrder: 1,
+    } as Work;
+    const wrapped: StudioPublicEntity = { type: 'work', id: workId.toString(), record };
+    const hero: MediaAsset = {
+      _id: heroId,
+      createdAt: now,
+      updatedAt: now,
+      cloudinaryPublicId: 'work/measured-hero',
+      url: 'https://res.cloudinary.com/demo/image/upload/measured-work.png',
+      altText: 'Measured Work interface',
+      width: 1600,
+      height: 1000,
+      folder: 'work',
+      reuseTags: [],
+    };
+    const listCalls = new Map<string, number>();
+    let slugLookups = 0;
+    let nonEmptyMediaReads = 0;
+    const dataSource: PublicDataSource = {
+      findEntityBySlug: async () => {
+        slugLookups += 1;
+        return wrapped;
+      },
+      findEntityById: async () => null,
+      listEntities: async (type) => {
+        listCalls.set(type, (listCalls.get(type) ?? 0) + 1);
+        return type === 'work' ? [wrapped] : [];
+      },
+      findDocuments: async () => [
+        {
+          _id: new ObjectId(),
+          ownerType: 'Work',
+          ownerId: workId,
+          role: 'caseStudy',
+          blocks: [paragraph('work-one', 'measured'), paragraph('work-two', 'evidence')],
+          createdAt: now,
+          updatedAt: now,
+        },
+      ],
+      findMedia: async (ids) => {
+        if (ids.length > 0) nonEmptyMediaReads += 1;
+        return ids.includes(heroId.toString()) ? [hero] : [];
+      },
+      findTaxonomy: async () => [],
+      findUser: async () => null,
+      findTeamsByUserId: async () => [],
+      findProfileByTeamId: async () => null,
+    };
+
+    const detail = await createPublicRepository(dataSource).findDetail('work', 'measured-work');
+
+    expect(detail?.type).toBe('work');
+    expect(slugLookups).toBe(0);
+    expect(nonEmptyMediaReads).toBe(1);
+    expect([...listCalls.values()]).toHaveLength(9);
+    expect([...listCalls.values()].every((count) => count === 1)).toBe(true);
+  });
+
+  it('shares one evidence graph across a multi-collection eligibility pass', async () => {
+    const record = build(1);
+    const base = source(record);
+    const listCalls = new Map<string, number>();
+    const dataSource: PublicDataSource = {
+      ...base,
+      listEntities: async (type) => {
+        listCalls.set(type, (listCalls.get(type) ?? 0) + 1);
+        return base.listEntities(type);
+      },
+    };
+
+    const result = await createPublicRepository(dataSource).listHomepageEligibilityForTypes(
+      ['build', 'work'],
+      now,
+    );
+
+    expect(result.build).toEqual([{ slug: record.slug, reason: null }]);
+    expect(result.work).toEqual([]);
+    expect([...listCalls.values()]).toHaveLength(9);
+    expect([...listCalls.values()].every((count) => count === 1)).toBe(true);
   });
 });

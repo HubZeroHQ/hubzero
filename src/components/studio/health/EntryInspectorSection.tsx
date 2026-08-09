@@ -1,5 +1,6 @@
 import { loadEntryInspection } from '@/lib/studio/health/inspector';
 import { EntryInspector } from './EntryInspector';
+import { measureServerOperation } from '@/lib/performance/server';
 
 /**
  * Server boundary for the entry inspector (v3.1 Milestone 11): one load, then
@@ -25,7 +26,13 @@ export async function EntryInspectorSection({
   /** Where "fix this" sends the editor for document and metadata gaps — the editor they are already in. */
   editHref: string;
 }) {
-  const inspection = await loadEntryInspection({ collectionKey, entryId, editHref });
-  if (!inspection) return null;
-  return <EntryInspector inspection={inspection} />;
+  return measureServerOperation(
+    `/studio/content/${collectionKey}/[id]/edit`,
+    'entry-inspector',
+    async () => {
+      const inspection = await loadEntryInspection({ collectionKey, entryId, editHref });
+      if (!inspection) return null;
+      return <EntryInspector inspection={inspection} />;
+    },
+  );
 }

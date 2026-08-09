@@ -28,6 +28,7 @@ This directory contains HubZero's engineering, design, and product documentation
 - [`ADR_PHASE_8_COLLECTIONS_DISCOVERY.md`](architecture/ADR_PHASE_8_COLLECTIONS_DISCOVERY.md) — How v2.5 Phase 8 audited all six public collections against Phases 2–7's primitives, closing five real gaps (missing nav entry, missing Ledger cross-links, a duplicated capped-relationship-list pattern, five collections missing `EvidenceGraph`, Trace missing from Lab) without adding any new rendering pattern.
 - [`ADR_EDITOR_STATE.md`](architecture/ADR_EDITOR_STATE.md) — The Studio's shared editor-state layer (v3.1 Phase 1) and the native-form-control invariant every editable field depends on. Required reading before adding a field or an editor to the Studio — a field that bypasses it loses dirty detection and navigation protection silently.
 - [`EXPERIENCE_V3_PROGRESS.md`](architecture/EXPERIENCE_V3_PROGRESS.md) — The canonical, in-repo log of what Experience v3 has shipped, milestone by milestone. Read this for current project stage instead of relying on conversation memory.
+- [`V3_2_0_PERFORMANCE_PLAN.md`](architecture/V3_2_0_PERFORMANCE_PLAN.md) — The v3.2 performance baseline, production-path evidence, database architecture decision, budgets, and measurement-gated M31–M56 record.
 
 ## Design
 

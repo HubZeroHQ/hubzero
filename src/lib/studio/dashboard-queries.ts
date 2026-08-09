@@ -1,11 +1,4 @@
-import { blueprintRepository } from '@/lib/db/repositories/blueprint';
-import { buildRepository } from '@/lib/db/repositories/build';
-import { careerRepository } from '@/lib/db/repositories/career';
-import { labRepository } from '@/lib/db/repositories/lab';
-import { noteRepository } from '@/lib/db/repositories/note';
-import { engineeringProfileRepository } from '@/lib/db/repositories/engineering-profile';
-import { teamRepository } from '@/lib/db/repositories/team';
-import { workRepository } from '@/lib/db/repositories/work';
+import { loadStudioContentSnapshot, type StudioContentSnapshot } from '@/lib/studio/request-data';
 import type { PublishStatus } from '@/types/studio';
 
 export const DASHBOARD_CONTENT_COLLECTIONS = {
@@ -40,17 +33,11 @@ export interface ContentSummary {
  * workflow-driven Content collections into one lightweight shape rather
  * than each widget hand-rolling its own cross-repository aggregation.
  */
-export async function listAllContent(): Promise<ContentSummary[]> {
-  const [work, builds, blueprints, labs, notes, careers, profiles, team] = await Promise.all([
-    workRepository.list(),
-    buildRepository.list(),
-    blueprintRepository.list(),
-    labRepository.list(),
-    noteRepository.list(),
-    careerRepository.list(),
-    engineeringProfileRepository.list(),
-    teamRepository.list(),
-  ]);
+export async function listAllContent(
+  providedSnapshot?: StudioContentSnapshot,
+): Promise<ContentSummary[]> {
+  const { work, builds, blueprints, labs, notes, careers, profiles, team } =
+    providedSnapshot ?? (await loadStudioContentSnapshot());
   const teamNames = new Map(team.map((entry) => [entry._id.toString(), entry.name]));
 
   return [

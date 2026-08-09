@@ -1,15 +1,13 @@
 import 'server-only';
 
-import { careerRepository } from '@/lib/db/repositories/career';
-import { engineeringProfileRepository } from '@/lib/db/repositories/engineering-profile';
-import { serviceRepository } from '@/lib/db/repositories/service';
-import { teamRepository } from '@/lib/db/repositories/team';
 import {
   FEATURED_COLLECTIONS,
+  listAllFeaturedCollectionEntries,
   type FeaturedCollectionEntry,
 } from '@/lib/studio/featured-collections';
 import type { Career, EngineeringProfile, Service, Team } from '@/types/studio';
 import { loadRelationshipIssues } from '@/lib/studio/relationship-health/service';
+import { loadStudioContentSnapshot, type StudioContentSnapshot } from '@/lib/studio/request-data';
 import type { RelationshipIssue } from '@/lib/studio/relationship-health/rules';
 import { buildSections, type HealthCollectionSnapshot, type HealthSnapshot } from './rules';
 import { countBySeverity, type HealthReportWithSnapshot } from './types';
@@ -19,16 +17,15 @@ import { countBySeverity, type HealthReportWithSnapshot } from './types';
  *
  * ## Query shape
  *
- * Every collection is read exactly once, all nine in parallel, and the result
- * is handed to pure rules. There is no per-issue lookup and no per-entry
- * query — the N+1 the brief warns about would come from rules fetching their
- * own data, so rules are given a snapshot and cannot fetch at all.
+ * Studio records, public eligibility, and relationship integrity are loaded
+ * as three bounded snapshots and handed to pure rules. There is no per-issue
+ * lookup. Public eligibility uses one evidence graph for all five orderable
+ * collections; before M32 each collection rebuilt that graph independently.
  *
- * The five orderable collections come through `FEATURED_COLLECTIONS`, which
- * already joins each entry with its homepage eligibility in one pass per
- * collection. That is deliberate reuse rather than a second read path: the
- * Featured Order screen and this dashboard see byte-identical data, so they
- * can never disagree about whether an entry would appear.
+ * The five orderable collections still use `FEATURED_COLLECTIONS` as their
+ * canonical definitions, while `listAllFeaturedCollectionEntries` performs
+ * their shared batched read. The Featured Order screen and this dashboard use
+ * the same projection and cannot disagree about eligibility.
  *
  * ## What the four non-orderable collections contribute
  *
@@ -42,24 +39,26 @@ import { countBySeverity, type HealthReportWithSnapshot } from './types';
  */
 export async function loadHealthReport(
   now = new Date(),
+  providedSnapshot?: StudioContentSnapshot,
 ): Promise<HealthReportWithSnapshot<HealthCollectionSnapshot, RelationshipIssue>> {
-  const [featuredCollections, careers, services, team, profiles, relationshipIssues] =
+  const studioSnapshot = providedSnapshot ?? (await loadStudioContentSnapshot());
+  const [featuredEntries, careers, services, team, profiles, relationshipIssues] =
     await Promise.all([
-      Promise.all(
-        Object.values(FEATURED_COLLECTIONS).map(async (collection) => ({
-          key: collection.key,
-          label: collection.label,
-          listPath: collection.listPath,
-          featuredPath: collection.featuredPath,
-          entries: await collection.listEntries(),
-        })),
-      ),
-      careerRepository.list(),
-      serviceRepository.list(),
-      teamRepository.list(),
-      engineeringProfileRepository.list(),
-      loadRelationshipIssues(),
+      listAllFeaturedCollectionEntries(studioSnapshot),
+      Promise.resolve(studioSnapshot.careers),
+      Promise.resolve(studioSnapshot.services),
+      Promise.resolve(studioSnapshot.team),
+      Promise.resolve(studioSnapshot.profiles),
+      loadRelationshipIssues(studioSnapshot),
     ]);
+
+  const featuredCollections = Object.values(FEATURED_COLLECTIONS).map((collection) => ({
+    key: collection.key,
+    label: collection.label,
+    listPath: collection.listPath,
+    featuredPath: collection.featuredPath,
+    entries: featuredEntries[collection.key],
+  }));
 
   const collections: HealthCollectionSnapshot[] = [
     ...featuredCollections,
