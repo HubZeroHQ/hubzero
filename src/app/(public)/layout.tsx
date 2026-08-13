@@ -7,6 +7,7 @@ import { RootDocument } from '@/app/root-document';
 import { publicEnv } from '@/lib/env';
 import { organizationJsonLd, websiteJsonLd } from '@/lib/public/discovery/structured-data';
 import { isPreviewRequest } from '@/lib/public/preview';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 export const metadata: Metadata = {
   metadataBase: new URL(publicEnv().NEXT_PUBLIC_SITE_URL),
@@ -60,6 +61,7 @@ export default async function PublicLayout({ children }: { children: ReactNode }
             />
           ))}
           {children}
+          <SpeedInsights />
         </PublicShell>
       </div>
     </RootDocument>
