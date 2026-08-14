@@ -29,10 +29,7 @@ export default async function WorkIndexPage({
 }
 
 async function renderWorkIndexPage(searchParams: Promise<{ category?: string | string[] }>) {
-  const summaries = await listPublicSummaries('work').catch((error) => {
-    console.error('Work public index read failed.', error);
-    return [] as Awaited<ReturnType<typeof listPublicSummaries>>;
-  });
+  const summaries = await listPublicSummaries('work');
   const work = summaries.filter((summary): summary is PublicWorkSummary => summary.type === 'work');
   const categoryFilters = uniqueCategories(work);
   const requestedCategory = await categoryFrom(searchParams);

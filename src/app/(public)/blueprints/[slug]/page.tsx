@@ -3,7 +3,6 @@ import { notFound } from 'next/navigation';
 import { PublicCollectionDetail } from '@/components/public/collections/PublicCollectionDetail';
 import { PublicJsonLd } from '@/components/public/PublicJsonLd';
 import { PUBLIC_SITE } from '@/config/public-site';
-import type { ImmutablePublic, PublicEntityDetail } from '@/lib/public/domain';
 import { createPublicMetadata } from '@/lib/public/discovery/metadata';
 import { breadcrumbJsonLd, publicArtifactJsonLd } from '@/lib/public/discovery/structured-data';
 import { isPreviewRequest } from '@/lib/public/preview';
@@ -23,15 +22,8 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const preview = await isPreviewRequest();
-  const entity = await safeBlueprintDetail(slug, preview);
-  if (!entity || entity.type !== 'blueprint') {
-    return createPublicMetadata({
-      title: 'Blueprint not found',
-      description: 'This Blueprint is not available in the public record.',
-      path: `/blueprints/${slug}`,
-      noIndex: true,
-    });
-  }
+  const entity = await getPublicDetail('blueprint', slug, { preview });
+  if (!entity || entity.type !== 'blueprint') notFound();
   return createPublicMetadata({
     title: entity.title,
     description: entity.summary,
@@ -49,7 +41,7 @@ export default async function BlueprintDetailPage({
 }) {
   const { slug } = await params;
   const preview = await isPreviewRequest();
-  const entity = await safeBlueprintDetail(slug, preview);
+  const entity = await getPublicDetail('blueprint', slug, { preview });
   if (!entity || entity.type !== 'blueprint') notFound();
 
   return (
@@ -68,16 +60,4 @@ export default async function BlueprintDetailPage({
       <PublicCollectionDetail entity={entity} />
     </>
   );
-}
-
-async function safeBlueprintDetail(
-  slug: string,
-  preview: boolean,
-): Promise<ImmutablePublic<PublicEntityDetail> | null> {
-  try {
-    return await getPublicDetail('blueprint', slug, { preview });
-  } catch (error) {
-    console.error(`Blueprint public detail read failed for "${slug}".`, error);
-    return null;
-  }
 }

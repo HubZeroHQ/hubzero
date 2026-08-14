@@ -23,14 +23,7 @@ export async function generateMetadata({
   const { slug } = await params;
   const preview = await isPreviewRequest();
   const entity = await getPublicDetail('build', slug, { preview });
-  if (!entity || entity.type !== 'build') {
-    return createPublicMetadata({
-      title: 'Build not found',
-      description: 'This Build is not available in the public record.',
-      path: `/builds/${slug}`,
-      noIndex: true,
-    });
-  }
+  if (!entity || entity.type !== 'build') notFound();
   return createPublicMetadata({
     title: entity.title,
     description: entity.summary,

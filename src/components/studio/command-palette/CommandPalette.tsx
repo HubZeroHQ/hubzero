@@ -73,7 +73,10 @@ export function CommandPalette({ role, nav, open, onOpenChange }: CommandPalette
     loadStarted.current = true;
 
     fetch('/api/studio/search?all=1')
-      .then((response) => response.json())
+      .then((response) => {
+        if (!response.ok) throw new Error(`Studio search returned ${response.status}`);
+        return response.json();
+      })
       .then((data: { results?: SearchResult[] }) => setIndex(data.results ?? []))
       .catch(() => {
         // Commands still work without the content index — the palette degrades

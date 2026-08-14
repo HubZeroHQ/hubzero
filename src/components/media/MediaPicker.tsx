@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Dialog } from '@/components/ui/Dialog';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Input } from '@/components/ui/Input';
@@ -40,17 +40,26 @@ export function MediaPicker({
   const [folder, setFolder] = useState<MediaFolder | undefined>(undefined);
   const [results, setResults] = useState<MediaAssetDTO[]>([]);
   const [loading, setLoading] = useState(false);
+  const requestGeneration = useRef(0);
 
   useEffect(() => {
+    const generation = ++requestGeneration.current;
     if (!open) {
+      setLoading(false);
       return;
     }
     setLoading(true);
     const timeout = setTimeout(() => {
       searchMediaAction({ query, folder })
-        .then(setResults)
-        .catch(() => setResults([]))
-        .finally(() => setLoading(false));
+        .then((assets) => {
+          if (requestGeneration.current === generation) setResults(assets);
+        })
+        .catch(() => {
+          if (requestGeneration.current === generation) setResults([]);
+        })
+        .finally(() => {
+          if (requestGeneration.current === generation) setLoading(false);
+        });
     }, 200);
     return () => clearTimeout(timeout);
   }, [open, query, folder]);

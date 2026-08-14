@@ -245,6 +245,7 @@ export function PublicSearchDialog() {
                     placeholder="Title, technology, reference, or topic"
                     autoComplete="off"
                     role="combobox"
+                    aria-label="Search published records"
                     aria-autocomplete="list"
                     aria-expanded={Boolean(query.trim())}
                     aria-controls={listId}

@@ -3,7 +3,6 @@ import { notFound } from 'next/navigation';
 import { CareerDetail } from '@/components/public/careers/CareerDetail';
 import { PublicJsonLd } from '@/components/public/PublicJsonLd';
 import { PUBLIC_SITE } from '@/config/public-site';
-import type { ImmutablePublic, PublicEntityDetail } from '@/lib/public/domain';
 import { createPublicMetadata } from '@/lib/public/discovery/metadata';
 import { breadcrumbJsonLd } from '@/lib/public/discovery/structured-data';
 import { isPreviewRequest } from '@/lib/public/preview';
@@ -23,15 +22,8 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const preview = await isPreviewRequest();
-  const career = await safeCareerDetail(slug, preview);
-  if (!career || career.type !== 'career') {
-    return createPublicMetadata({
-      title: 'Role not found',
-      description: 'This role is not available in the public record.',
-      path: `/careers/${slug}`,
-      noIndex: true,
-    });
-  }
+  const career = await getPublicDetail('career', slug, { preview });
+  if (!career || career.type !== 'career') notFound();
   return createPublicMetadata({
     title: `${career.title} — Careers`,
     description: career.summary,
@@ -43,7 +35,7 @@ export async function generateMetadata({
 export default async function CareerDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const preview = await isPreviewRequest();
-  const career = await safeCareerDetail(slug, preview);
+  const career = await getPublicDetail('career', slug, { preview });
   if (!career || career.type !== 'career') notFound();
 
   return (
@@ -61,16 +53,4 @@ export default async function CareerDetailPage({ params }: { params: Promise<{ s
       <CareerDetail career={career} />
     </>
   );
-}
-
-async function safeCareerDetail(
-  slug: string,
-  preview: boolean,
-): Promise<ImmutablePublic<PublicEntityDetail> | null> {
-  try {
-    return await getPublicDetail('career', slug, { preview });
-  } catch (error) {
-    console.error(`Career public detail read failed for "${slug}".`, error);
-    return null;
-  }
 }

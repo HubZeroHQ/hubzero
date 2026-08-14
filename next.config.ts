@@ -91,6 +91,12 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  experimental: {
+    // HubZero deliberately has independent public and Studio root layouts.
+    // Next 15.5's routing-level fallback is the supported way to serve one
+    // complete unmatched-route document without reintroducing a shared root.
+    globalNotFound: true,
+  },
   async headers() {
     return [{ source: '/(.*)', headers: securityHeaders }];
   },

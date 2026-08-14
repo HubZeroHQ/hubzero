@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { PublicCollectionIndex } from '@/components/public/collections/PublicCollectionIndex';
 import { PublicJsonLd } from '@/components/public/PublicJsonLd';
 import { PUBLIC_SITE } from '@/config/public-site';
-import type { ImmutablePublic, PublicBlueprintSummary } from '@/lib/public/domain';
+import type { PublicBlueprintSummary } from '@/lib/public/domain';
 import { createPublicMetadata } from '@/lib/public/discovery/metadata';
 import { breadcrumbJsonLd, collectionPageJsonLd } from '@/lib/public/discovery/structured-data';
 import { listPublicSummaries } from '@/lib/public/queries';
@@ -36,7 +36,10 @@ async function renderBlueprintsIndexPage(
     designLanguage?: string | string[];
   }>,
 ) {
-  const blueprints = await safeBlueprintSummaries();
+  const summaries = await listPublicSummaries('blueprint');
+  const blueprints = summaries.filter(
+    (summary): summary is PublicBlueprintSummary => summary.type === 'blueprint',
+  );
   const architectureFilters = uniqueValues(blueprints, (entry) => entry.architecture);
   const designLanguageFilters = uniqueValues(blueprints, (entry) => entry.designLanguage);
   const requested = await requestedFilters(searchParams);
@@ -79,20 +82,6 @@ async function renderBlueprintsIndexPage(
       />
     </>
   );
-}
-
-async function safeBlueprintSummaries(): Promise<
-  readonly ImmutablePublic<PublicBlueprintSummary>[]
-> {
-  try {
-    const summaries = await listPublicSummaries('blueprint');
-    return summaries.filter(
-      (summary): summary is ImmutablePublic<PublicBlueprintSummary> => summary.type === 'blueprint',
-    );
-  } catch (error) {
-    console.error('Blueprint public index read failed.', error);
-    return [];
-  }
 }
 
 async function requestedFilters(

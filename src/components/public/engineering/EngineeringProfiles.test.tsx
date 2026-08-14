@@ -125,6 +125,50 @@ describe('public Engineering Profiles experience', () => {
     expect(graphAriaLabel).toContain('Senior Engineer');
   });
 
+  it('keeps interview and timeline headings one level below their profile section heading', () => {
+    const detail: Extract<PublicEntityDetail, { type: 'engineeringProfile' }> = {
+      ...summary,
+      engineeringPhilosophy: 'Systems should expose their decisions.',
+      currentInterests: [],
+      areasOfExpertise: ['Systems design'],
+      relationships: [],
+      gallery: [],
+      documents: [
+        {
+          role: 'interview',
+          outline: [{ id: 'question', level: 3, text: 'What changed?' }],
+          blocks: [{ id: 'question', type: 'heading', data: { level: 3, text: 'What changed?' } }],
+        },
+        {
+          role: 'timeline',
+          blocks: [
+            {
+              id: 'changes',
+              type: 'timeline',
+              data: {
+                events: [
+                  { date: '2026', title: 'Made the public contract explicit', description: '' },
+                ],
+              },
+            },
+          ],
+        },
+      ],
+    };
+
+    const markup = renderToStaticMarkup(<EngineeringProfileDetail profile={detail} />);
+    const headingLevels = [...markup.matchAll(/<h([1-6])(?:\s|>)/g)].map((match) =>
+      Number(match[1]),
+    );
+    expect(markup).toContain('<h2 id="profile-document-interview">Questions from the work</h2>');
+    expect(markup).toContain('<h3 id="question">What changed?</h3>');
+    expect(markup).toContain('<h2 id="profile-document-timeline">Changes in practice</h2>');
+    expect(markup).toContain('<h3>Made the public contract explicit</h3>');
+    expect(
+      headingLevels.every((level, index) => index === 0 || level <= headingLevels[index - 1]! + 1),
+    ).toBe(true);
+  });
+
   it.each([
     ['rifaque', 'founder-profile-network'],
     ['raif', 'founder-profile-dependency-graph'],
