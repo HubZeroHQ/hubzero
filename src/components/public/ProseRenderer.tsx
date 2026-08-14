@@ -13,17 +13,24 @@ function safeInlineHtml(html: string): string {
 export function ProseRenderer({
   document,
   headingOffset = 0,
+  timelineHeadingLevel = 4,
   as = 'article',
 }: {
   document: ImmutablePublic<PublicDocument>;
   headingOffset?: 0 | 1;
+  timelineHeadingLevel?: 3 | 4;
   as?: 'article' | 'div';
 }) {
   const Root = as;
   return (
     <Root className="public-prose" data-document-role={document.role}>
       {document.blocks.map((block) => (
-        <PublicBlockView key={block.id} block={block} headingOffset={headingOffset} />
+        <PublicBlockView
+          key={block.id}
+          block={block}
+          headingOffset={headingOffset}
+          timelineHeadingLevel={timelineHeadingLevel}
+        />
       ))}
     </Root>
   );
@@ -32,9 +39,11 @@ export function ProseRenderer({
 function PublicBlockView({
   block,
   headingOffset,
+  timelineHeadingLevel,
 }: {
   block: ImmutablePublic<PublicBlock>;
   headingOffset: 0 | 1;
+  timelineHeadingLevel: 3 | 4;
 }): ReactNode {
   switch (block.type) {
     case 'heading': {
@@ -167,18 +176,20 @@ function PublicBlockView({
           ))}
         </dl>
       );
-    case 'timeline':
+    case 'timeline': {
+      const TimelineHeading = timelineHeadingLevel === 3 ? 'h3' : 'h4';
       return (
         <ol className="public-timeline">
           {block.data.events.map((event, index) => (
             <li key={index}>
               <time>{event.date}</time>
-              <h4>{event.title}</h4>
+              <TimelineHeading>{event.title}</TimelineHeading>
               {event.description ? <p>{event.description}</p> : null}
             </li>
           ))}
         </ol>
       );
+    }
     case 'technologyStack':
       return (
         <ul className="public-taxonomy-list" aria-label="Technology stack">

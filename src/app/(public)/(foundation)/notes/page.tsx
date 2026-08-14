@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import { NotesIndex } from '@/components/public/notes/NotesIndex';
 import { PublicJsonLd } from '@/components/public/PublicJsonLd';
 import { PUBLIC_SITE } from '@/config/public-site';
-import type { ImmutablePublic, PublicNoteIndexEntry } from '@/lib/public/domain';
 import { createPublicMetadata } from '@/lib/public/discovery/metadata';
 import { breadcrumbJsonLd, collectionPageJsonLd } from '@/lib/public/discovery/structured-data';
 import { listPublicNoteIndexEntries } from '@/lib/public/queries';
@@ -21,7 +20,7 @@ export const metadata: Metadata = createPublicMetadata({
 });
 
 export default async function NotesIndexPage() {
-  const entries = await safeNoteIndexEntries();
+  const entries = await listPublicNoteIndexEntries();
   return (
     <>
       <PublicJsonLd
@@ -42,13 +41,4 @@ export default async function NotesIndexPage() {
       <NotesIndex entries={entries} />
     </>
   );
-}
-
-async function safeNoteIndexEntries(): Promise<readonly ImmutablePublic<PublicNoteIndexEntry>[]> {
-  try {
-    return await listPublicNoteIndexEntries();
-  } catch (error) {
-    console.error('Notes public index read failed.', error);
-    return [];
-  }
 }

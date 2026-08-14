@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import { EngineeringProfilesIndex } from '@/components/public/engineering/EngineeringProfilesIndex';
 import { PublicJsonLd } from '@/components/public/PublicJsonLd';
 import { PUBLIC_SITE } from '@/config/public-site';
-import type { ImmutablePublic, PublicEngineeringProfileIndexEntry } from '@/lib/public/domain';
 import { createPublicMetadata } from '@/lib/public/discovery/metadata';
 import { breadcrumbJsonLd, collectionPageJsonLd } from '@/lib/public/discovery/structured-data';
 import { listPublicEngineeringProfileIndexEntries } from '@/lib/public/queries';
@@ -20,7 +19,7 @@ export const metadata: Metadata = createPublicMetadata({
 });
 
 export default async function EngineeringProfilesPage() {
-  const entries = await safeEngineeringProfiles();
+  const entries = await listPublicEngineeringProfileIndexEntries();
   return (
     <>
       <PublicJsonLd
@@ -41,15 +40,4 @@ export default async function EngineeringProfilesPage() {
       <EngineeringProfilesIndex entries={entries} />
     </>
   );
-}
-
-async function safeEngineeringProfiles(): Promise<
-  readonly ImmutablePublic<PublicEngineeringProfileIndexEntry>[]
-> {
-  try {
-    return await listPublicEngineeringProfileIndexEntries();
-  } catch (error) {
-    console.error('Engineering Profile public index read failed.', error);
-    return [];
-  }
 }

@@ -3,7 +3,6 @@ import { notFound } from 'next/navigation';
 import { NoteDetail } from '@/components/public/notes/NoteDetail';
 import { PublicJsonLd } from '@/components/public/PublicJsonLd';
 import { PUBLIC_SITE } from '@/config/public-site';
-import type { ImmutablePublic, PublicEntityDetail } from '@/lib/public/domain';
 import { createPublicMetadata } from '@/lib/public/discovery/metadata';
 import { breadcrumbJsonLd, publicNoteJsonLd } from '@/lib/public/discovery/structured-data';
 import { isPreviewRequest } from '@/lib/public/preview';
@@ -23,15 +22,8 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const preview = await isPreviewRequest();
-  const note = await safeNoteDetail(slug, preview);
-  if (!note || note.type !== 'note') {
-    return createPublicMetadata({
-      title: 'Note not found',
-      description: 'This Note is not available in the public engineering journal.',
-      path: `/notes/${slug}`,
-      noIndex: true,
-    });
-  }
+  const note = await getPublicDetail('note', slug, { preview });
+  if (!note || note.type !== 'note') notFound();
   return createPublicMetadata({
     title: note.title,
     description: note.summary,
@@ -47,7 +39,7 @@ export async function generateMetadata({
 export default async function NoteDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const preview = await isPreviewRequest();
-  const note = await safeNoteDetail(slug, preview);
+  const note = await getPublicDetail('note', slug, { preview });
   if (!note || note.type !== 'note') notFound();
 
   return (
@@ -66,16 +58,4 @@ export default async function NoteDetailPage({ params }: { params: Promise<{ slu
       <NoteDetail note={note} />
     </>
   );
-}
-
-async function safeNoteDetail(
-  slug: string,
-  preview: boolean,
-): Promise<ImmutablePublic<PublicEntityDetail> | null> {
-  try {
-    return await getPublicDetail('note', slug, { preview });
-  } catch (error) {
-    console.error(`Note public detail read failed for "${slug}".`, error);
-    return null;
-  }
 }

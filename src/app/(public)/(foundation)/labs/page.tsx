@@ -29,10 +29,7 @@ export default async function LabsIndexPage({
 }
 
 async function renderLabsIndexPage(searchParams: Promise<{ stage?: string | string[] }>) {
-  const summaries = await listPublicSummaries('lab').catch((error) => {
-    console.error('Labs public index read failed.', error);
-    return [] as Awaited<ReturnType<typeof listPublicSummaries>>;
-  });
+  const summaries = await listPublicSummaries('lab');
   const labs = summaries.filter((summary): summary is PublicLabSummary => summary.type === 'lab');
   const stageFilters = [...new Set(labs.map((entry) => entry.stage))].sort(
     (left, right) => STAGE_ORDER.indexOf(left) - STAGE_ORDER.indexOf(right),

@@ -2,6 +2,22 @@
 
 All notable changes to this project are documented in this file. Entries are engineering release notes, not marketing copy — see [`docs/releases/`](docs/releases) for the full reasoning behind each release.
 
+## v3.2.1 - 2026-08-14
+
+### Fixed
+
+- Added an independently styled global 404 document compatible with the separate public and Studio root layouts.
+- Made missing records across all seven public detail families return server-readable HTTP 404 responses without invalid canonical or duplicate robots metadata.
+- Replaced the empty public loading boundary with stable, foundation-aware skeleton geometry so the footer retains its place during navigation.
+- Corrected the public browser-title delimiter to a UTF-8 em dash.
+- Added an accessible name to the public search combobox and corrected Engineering Profile heading levels in their profile-specific embedding context.
+- Prevented stale Media Picker searches from replacing newer results, and made the Studio Command Palette enter its existing degraded state for non-successful HTTP responses.
+- Distinguished public query failures from genuinely empty collections or missing records on the confirmed affected routes.
+
+### Privacy
+
+- Updated the public disclosure to describe the anonymous performance data reported by the existing Vercel Speed Insights integration.
+
 ## v3.2.0 - 2026-08-10
 
 ### Performance

@@ -20,10 +20,7 @@ export const metadata: Metadata = createPublicMetadata({
 });
 
 export default async function CareersIndexPage() {
-  const summaries = await listPublicSummaries('career').catch((error) => {
-    console.error('Careers public index read failed.', error);
-    return [] as Awaited<ReturnType<typeof listPublicSummaries>>;
-  });
+  const summaries = await listPublicSummaries('career');
   const openings = summaries.filter(
     (summary): summary is PublicCareerSummary => summary.type === 'career',
   );

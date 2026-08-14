@@ -116,12 +116,26 @@ export function ProfileDocuments({
                 </nav>
               ) : null}
             </DetailSectionHeading>
-            <ProseRenderer document={document} headingOffset={1} as="div" />
+            <ProseRenderer
+              document={document}
+              headingOffset={profileHeadingOffset(document)}
+              timelineHeadingLevel={3}
+              as="div"
+            />
           </PageContainer>
         </PublicSection>
       ))}
     </>
   );
+}
+
+function profileHeadingOffset(
+  document: ReturnType<typeof resolveDocuments>[number]['document'],
+): 0 | 1 {
+  const authoredLevels = document.blocks.flatMap((block) =>
+    block.type === 'heading' ? [block.data.level] : [],
+  );
+  return authoredLevels.length && Math.min(...authoredLevels) >= 3 ? 0 : 1;
 }
 
 /**

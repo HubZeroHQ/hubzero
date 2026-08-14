@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
-import { PUBLIC_SITE } from '@/config/public-site';
+import { PUBLIC_SITE, PUBLIC_TITLE_TEMPLATE } from '@/config/public-site';
 import { PreviewBanner } from '@/components/public/PreviewBanner';
 import { PublicShell } from '@/components/public/PublicShell';
 import { RootDocument } from '@/app/root-document';
@@ -13,15 +13,15 @@ export const metadata: Metadata = {
   metadataBase: new URL(publicEnv().NEXT_PUBLIC_SITE_URL),
   title: {
     default: PUBLIC_SITE.name,
-    template: `%s â€” ${PUBLIC_SITE.name}`,
+    template: PUBLIC_TITLE_TEMPLATE,
   },
   description: PUBLIC_SITE.description,
   alternates: PUBLIC_SITE.release.feed
     ? { types: { 'application/rss+xml': '/feed.xml' } }
     : undefined,
-  robots: PUBLIC_SITE.release.live
-    ? { index: true, follow: true }
-    : { index: false, follow: false },
+  // Index/follow is the browser default. Omitting it on a live release lets
+  // Next's automatic 404 noindex be the only robots directive on missing pages.
+  robots: PUBLIC_SITE.release.live ? undefined : { index: false, follow: false },
   openGraph: {
     type: 'website',
     siteName: PUBLIC_SITE.name,

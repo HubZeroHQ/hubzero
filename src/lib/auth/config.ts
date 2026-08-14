@@ -7,18 +7,15 @@ import type { UserRole } from '@/types/studio';
 // blocks apply globally without a runtime import. `auth-jwt.ts` in
 // particular does a real (non-type-only) `import 'next-auth/jwt'` to work
 // around a resolution gotcha (see its own comment) — importing it from
-// this file would pull that runtime import into the Edge bundle
-// `middleware.ts` builds from, which is exactly the module graph that
-// should stay minimal here.
+// this file would still enlarge the middleware's runtime module graph,
+// which should stay minimal here.
 
 /**
- * The edge-safe half of the Auth.js configuration — no adapter, no
- * providers that touch MongoDB/bcrypt. `middleware.ts` runs on the Edge
- * runtime, which cannot load the `mongodb` driver, so it can only ever
- * import this file, never `./index.ts`. Middleware only needs to verify an
- * existing session's JWT, never to run a provider's `authorize()`, so
- * omitting providers here costs nothing at the point this config is used
- * for route protection.
+ * The database-free half of the Auth.js configuration — no adapter and no
+ * providers that touch MongoDB/bcrypt. Middleware only needs to verify an
+ * existing session's JWT, never to run a provider's `authorize()`, so it
+ * imports this file rather than `./index.ts`. That remains true now that the
+ * middleware uses the Node runtime for its separate public-detail preflight.
  *
  * `./index.ts` spreads this config and adds the adapter + providers for
  * every other (Node runtime) context. Keep session/callback/pages logic

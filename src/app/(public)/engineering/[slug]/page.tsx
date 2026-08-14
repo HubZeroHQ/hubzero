@@ -3,7 +3,6 @@ import { notFound } from 'next/navigation';
 import { EngineeringProfileDetail } from '@/components/public/engineering/EngineeringProfileDetail';
 import { PublicJsonLd } from '@/components/public/PublicJsonLd';
 import { PUBLIC_SITE } from '@/config/public-site';
-import type { ImmutablePublic, PublicEntityDetail } from '@/lib/public/domain';
 import { createPublicMetadata } from '@/lib/public/discovery/metadata';
 import {
   breadcrumbJsonLd,
@@ -26,15 +25,8 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const preview = await isPreviewRequest();
-  const profile = await safeEngineeringProfile(slug, preview);
-  if (!profile || profile.type !== 'engineeringProfile') {
-    return createPublicMetadata({
-      title: 'Engineering Profile not found',
-      description: 'This Engineering Profile is not available in the public record.',
-      path: `/engineering/${slug}`,
-      noIndex: true,
-    });
-  }
+  const profile = await getPublicDetail('engineeringProfile', slug, { preview });
+  if (!profile || profile.type !== 'engineeringProfile') notFound();
   return createPublicMetadata({
     title: `${profile.title}, ${profile.role}`,
     description: profile.summary,
@@ -51,7 +43,7 @@ export default async function EngineeringProfilePage({
 }) {
   const { slug } = await params;
   const preview = await isPreviewRequest();
-  const profile = await safeEngineeringProfile(slug, preview);
+  const profile = await getPublicDetail('engineeringProfile', slug, { preview });
   if (!profile || profile.type !== 'engineeringProfile') notFound();
 
   return (
@@ -70,16 +62,4 @@ export default async function EngineeringProfilePage({
       <EngineeringProfileDetail profile={profile} />
     </>
   );
-}
-
-async function safeEngineeringProfile(
-  slug: string,
-  preview: boolean,
-): Promise<ImmutablePublic<PublicEntityDetail> | null> {
-  try {
-    return await getPublicDetail('engineeringProfile', slug, { preview });
-  } catch (error) {
-    console.error(`Engineering Profile public detail read failed for "${slug}".`, error);
-    return null;
-  }
 }

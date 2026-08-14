@@ -20,6 +20,8 @@ export const PUBLIC_SITE = {
   },
 } as const;
 
+export const PUBLIC_TITLE_TEMPLATE = `%s — ${PUBLIC_SITE.name}`;
+
 export const PUBLIC_SERVICES = {
   eyebrow: 'Services / evidence by need',
   title: {
@@ -126,12 +128,12 @@ export const PUBLIC_CONTACT = {
  * Describes only what the current implementation actually does — verified
  * directly against the code, not a generic template. Update this alongside
  * any change to what the Contact or Career Interest forms collect, store,
- * or do with submitted data.
+ * or do with submitted data, and alongside any public telemetry change.
  */
 export const PUBLIC_PRIVACY = {
   eyebrow: 'Privacy',
   title: 'How HubZero handles the information you share.',
-  lastUpdated: '28 July 2026',
+  lastUpdated: '14 August 2026',
   introduction:
     'This page describes what HubZero collects through this website, why, and what happens to it. It covers the current implementation only — nothing more is done with your information than what is written here.',
   sections: [
@@ -141,25 +143,28 @@ export const PUBLIC_PRIVACY = {
         'The Contact form collects your name, email address, message, and the public page you came from.',
         'The Career Interest form collects your name, email address, and any of the following you choose to provide: a résumé link, a portfolio link, a GitHub link, a LinkedIn link, your areas of interest, and a short introduction. If you submit interest from a specific role, that role is recorded alongside your submission.',
         'Both forms include a hidden field used only to detect automated spam submissions; it is never shown to you and holds no information about you.',
+        'The public site uses Vercel Speed Insights to collect anonymous website-performance measurements. Vercel documents each data point as including the route and URL, network speed, browser, device type and operating system, country, Web Vital measurement and attribution, SDK information, and the time the event reached its server.',
       ],
     },
     {
       heading: 'Why it is collected',
       body: [
         'Solely to review your enquiry or expression of interest and, where relevant, to follow up with you by email.',
+        'Performance measurements are used to understand how the public site behaves on real devices and to identify speed and layout-stability problems.',
       ],
     },
     {
       heading: 'How it is stored',
       body: [
         "Submissions are stored in HubZero's own database and are not published on the website. They are kept for as long as needed to review and respond, and are not sold, rented, or shared with any third party for marketing purposes.",
+        'Speed Insights measurements are reported by your browser to Vercel. Vercel states that these data points are not tied to an individual visitor or IP address and do not enable a browsing session to be reconstructed or a visitor to be identified.',
       ],
     },
     {
       heading: 'What this site does not do',
       body: [
-        'This site does not use analytics, advertising, or tracking cookies, and does not share visitor data with any third-party analytics or marketing service.',
-        'A cookie is set only when a HubZero team member signs in to the internal content-management system used to run this site. It is not set for visitors browsing the public site, and it does not identify or track you.',
+        'This site does not use advertising or marketing analytics. Vercel Speed Insights, described above, is the only performance telemetry currently enabled on the public site.',
+        "HubZero's application sets an authentication cookie only when a HubZero team member signs in to the internal content-management system used to run this site. That cookie is used for Studio authentication, not public-site analytics.",
       ],
     },
     {
