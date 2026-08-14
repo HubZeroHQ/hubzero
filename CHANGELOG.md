@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file. Entries are engineering release notes, not marketing copy — see [`docs/releases/`](docs/releases) for the full reasoning behind each release.
 
+## v3.2.2 - 2026-08-14
+
+### Fixed
+
+- Fixed production 500 errors on public content-entry routes by keeping cached content resolution in the App Router server-data boundary rather than Middleware.
+
 ## v3.2.1 - 2026-08-14
 
 ### Fixed
