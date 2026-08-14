@@ -1,6 +1,6 @@
 {
   "name": "hubzero",
-  "version": "3.2.1",
+  "version": "3.2.2",
   "description": "The public HubZero site and the Studio CMS that publishes it, in one Next.js application.",
   "keywords": [
     "hubzero",
